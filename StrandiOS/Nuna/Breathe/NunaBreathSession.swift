@@ -93,6 +93,7 @@ struct NunaBreathSessionView: View {
     private var title: String { request.templateId.flatMap { NunaBreathLibrary.template(id: $0)?.title } ?? proto.map { String(localized: String.LocalizationValue($0.title)) } ?? "" }
 
     @State private var tab = 0
+    @State private var full = false
 
     private var zone: Int { model.bpm.map { model.profile.hrZoneSet.zoneNumber(forBPM: Double($0)) } ?? 0 }
     private var zoneColor: Color { model.bpm == nil ? NunaPalette.effortModerate : NunaHeartBeat.zoneColors[min(max(zone, 1), 5) - 1] }
@@ -133,6 +134,14 @@ struct NunaBreathSessionView: View {
                 .background(NunaPalette.canvas)
                 .overlay(alignment: .top) { NunaDivider() }
         }
+        .overlay {
+            if full {
+                NunaBreathFullLayer(orb: pacer(size: 360, big: true), bpm: model.bpm, timeText: clock(max(0, request.seconds - seconds))) {
+                    withAnimation(.easeInOut(duration: 0.25)) { full = false }
+                }
+            }
+        }
+        .statusBarHidden(full)
         .preferredColorScheme(NunaTheme.colorScheme)
         .onReceive(clockTimer) { now in onClock(now) }
         .onRRPackets(live) { ingest($0) }
@@ -159,6 +168,10 @@ struct NunaBreathSessionView: View {
                 Text(verbatim: request.goal.shortTitle + " · " + buzz).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
             }
             Spacer(minLength: 8)
+            Button { withAnimation(.easeInOut(duration: 0.25)) { full = true } } label: {
+                Image(systemName: "arrow.up.left.and.arrow.down.right").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    .frame(width: 40, height: 44).contentShape(Rectangle())
+            }.buttonStyle(.plain).accessibilityLabel(Text("Full screen"))
             Menu {
                 ForEach(NunaBreathAudioMode.allCases) { m in
                     Button { audioModeRaw = m.rawValue; cue.apply(m) } label: {
@@ -186,19 +199,20 @@ struct NunaBreathSessionView: View {
         .padding(.vertical, 4)
     }
 
-    private func pacer(size: CGFloat) -> some View {
+    private func pacer(size: CGFloat, big: Bool = false) -> some View {
         ZStack {
-            NunaBreathPacer(progress: orb, animated: running, tint: request.goal.tint)
+            NunaDustOrb(progress: orb, tint: request.goal.tint)
             if let c = countdown {
-                Text(verbatim: "\(c)").font(.nuna(size: 96, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: "\(c)").font(.nuna(size: big ? 76 : 60, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             } else {
-                VStack(spacing: 6) {
-                    Text(verbatim: phaseWord).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.center)
+                VStack(spacing: 4) {
+                    Text(verbatim: phaseWord).font(.nuna(size: big ? 22 : 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        .multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
                     if running, !guided, phaseLeft > 0 {
-                        Text(verbatim: "\(phaseLeft)").font(.nuna(size: 18, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
+                        Text(verbatim: "\(phaseLeft)").font(.nuna(size: big ? 22 : 17, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
                     }
                 }
-                .padding(.horizontal, 40)
+                .frame(width: size * 0.34)
             }
         }
         .frame(width: size, height: size).frame(maxWidth: .infinity)

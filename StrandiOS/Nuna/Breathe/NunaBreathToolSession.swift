@@ -38,6 +38,7 @@ private struct NunaToolSessionBody: View {
     @State private var confirmEnd = false
     @State private var tab = 0
     @State private var notStarted: String?
+    @State private var full = false
     @State private var discarding = false
     @State private var lastRow: WorkoutRow?
     @State private var saved: NunaWorkoutKey?
@@ -100,6 +101,14 @@ private struct NunaToolSessionBody: View {
                 .background(NunaPalette.canvas)
                 .overlay(alignment: .top) { NunaDivider() }
         }
+        .overlay {
+            if full && c.running {
+                NunaBreathFullLayer(orb: visual(size: 360, big: true), bpm: model.bpm, timeText: clock(c.elapsedSeconds), timeLabel: "Time") {
+                    withAnimation(.easeInOut(duration: 0.25)) { full = false }
+                }
+            }
+        }
+        .statusBarHidden(full && c.running)
         .preferredColorScheme(NunaTheme.colorScheme)
         .onAppear { begin() }
         .onDisappear { c.stop() }
@@ -161,7 +170,10 @@ private struct NunaToolSessionBody: View {
                 Text(verbatim: String(localized: "Biofeedback") + " · " + buzz).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
             }
             Spacer(minLength: 8)
-            Color.clear.frame(width: 44, height: 44)
+            Button { withAnimation(.easeInOut(duration: 0.25)) { full = true } } label: {
+                Image(systemName: "arrow.up.left.and.arrow.down.right").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    .frame(width: 44, height: 44).contentShape(Rectangle())
+            }.buttonStyle(.plain).accessibilityLabel(Text("Full screen")).opacity(c.running ? 1 : 0).disabled(!c.running)
         }
     }
 
@@ -184,25 +196,26 @@ private struct NunaToolSessionBody: View {
         .padding(.vertical, 4)
     }
 
-    /// The glow: Resonance breathes with the cue; Calm me beats at the tempo it is buzzing.
-    @ViewBuilder private func visual(size: CGFloat) -> some View {
+    /// The dust: Resonance breathes with the cue; Calm me beats at the tempo it is buzzing.
+    @ViewBuilder private func visual(size: CGFloat, big: Bool = false) -> some View {
         ZStack {
             if tool == .calmMe {
                 TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { ctx in
                     let bpm = max(40, c.calmTargetBpm ?? Double(model.bpm ?? 70))
                     let p = 0.5 + 0.5 * sin(ctx.date.timeIntervalSinceReferenceDate * bpm / 60 * 2 * .pi)
-                    NunaBreathPacer(progress: CGFloat(0.35 + 0.35 * p), animated: false, tint: tool.tintColor)
+                    NunaDustOrb(progress: CGFloat(0.3 + 0.4 * p), tint: tool.tintColor)
                 }
             } else {
-                NunaBreathPacer(progress: orb, animated: c.running, tint: tool.tintColor)
+                NunaDustOrb(progress: orb, tint: tool.tintColor)
             }
-            VStack(spacing: 6) {
-                Text(verbatim: centerWord).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.center)
+            VStack(spacing: 4) {
+                Text(verbatim: centerWord).font(.nuna(size: big ? 21 : 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    .multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
                 if tool == .calmMe, let t = c.calmTargetBpm {
-                    Text(verbatim: "\(Int(t.rounded())) bpm").font(.nuna(size: 16, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
+                    Text(verbatim: "\(Int(t.rounded())) bpm").font(.nuna(size: big ? 18 : 15, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
                 }
             }
-            .padding(.horizontal, 44)
+            .frame(width: size * 0.34)
         }
         .frame(width: size, height: size).frame(maxWidth: .infinity)
     }
