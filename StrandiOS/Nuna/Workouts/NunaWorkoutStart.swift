@@ -1753,18 +1753,18 @@ struct NunaLiveWorkoutView: View {
 
     private func controls(_ w: AppModel.ActiveWorkout, elapsed: TimeInterval) -> some View {
         HStack(spacing: 12) {
-            // The time is part of the button: it reads as the session's clock, and it turns amber while the session is paused.
+            // The icon and the time are one control, centred, with no card behind it: the icon says what a touch does (pause or resume) and
+            // the time is the session's clock, amber while the session is paused.
             Button { model.toggleWorkoutPause() } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: w.isPaused ? "play.fill" : "pause.fill").font(.nuna(size: NunaTypeSize.sub, weight: .bold))
-                    Text(w.isPaused ? "Resume" : "Pause").font(.nuna(size: NunaTypeSize.h3, weight: .bold))
-                    Spacer(minLength: 8)
+                HStack(spacing: 12) {
+                    Image(systemName: w.isPaused ? "play.fill" : "pause.fill").font(.nuna(size: NunaTypeSize.h2, weight: .bold))
                     Text(verbatim: clock(elapsed)).font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).monospacedDigit()
-                        .foregroundStyle(w.isPaused ? NunaPalette.warning : NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.75)
+                        .lineLimit(1).minimumScaleFactor(0.75)
                 }
-                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 22).frame(maxWidth: .infinity).frame(height: 60)
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                .foregroundStyle(w.isPaused ? NunaPalette.warning : NunaPalette.textPrimary)
+                .frame(maxWidth: .infinity).frame(height: 60).contentShape(Rectangle())
             }.buttonStyle(.plain)
+            .accessibilityLabel(Text(w.isPaused ? "Resume" : "Pause"))
             .accessibilityValue(Text("Session time \(clock(elapsed))"))
             // End is offered only while the session is paused: a running one cannot be ended by a stray tap, and pausing first is the way out.
             if w.isPaused {
