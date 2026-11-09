@@ -16,8 +16,9 @@ struct NunaBreathView: View {
     @AppStorage(NunaBreathPrefs.lengthKey) private var lengthPref = 0
 
     @State private var group: NunaBreathGroup = .calm
-    /// What Explore is narrowed to; nil shows everything.
-    @State private var filter: NunaBreathGroup?
+    /// What Explore is narrowed to; empty shows everything.
+    @State private var filter = NunaBreathFilter()
+    @State private var showFilters = false
     @State private var pickedGoal = false
     @State private var suggestion: NunaBreathSuggestion?
     @State private var request: NunaBreathRequest?
@@ -72,6 +73,11 @@ struct NunaBreathView: View {
             NunaBreathSettingsView { showSettings = false }.nunaSheetChrome(detents: [.large])
         }
         .sheet(item: $route) { r in detailSheet(r) }
+        .sheet(isPresented: $showFilters) {
+            NunaBreathFilterSheet(filter: $filter, resultCount: filter.apply(to: NunaBreathGroup.allItems).count) { showFilters = false }
+                .nunaSheetChrome(detents: [.large])
+        }
+        .onChange(of: filter.groups) { _, g in if g.count == 1, let one = g.first { group = one; pickedGoal = true } }
         .sheet(item: $opened) { r in
             NunaBreathReportView(record: r, readOnly: true, onDone: { opened = nil }).nunaSheetChrome(detents: [.large])
         }
@@ -207,15 +213,15 @@ struct NunaBreathView: View {
 
     // MARK: Explore
 
-    /// One section: a row of filters (All, then what the breath is for) over a two-column grid of techniques, like WHOOP's workouts. A touch on a
-    /// card opens its page, with Start at the bottom. A chosen group has its own page too, reached from the line under the filters.
+    /// One section: a search box with the filter button, then every technique that fits as a row. With nothing searched or ticked it is all of them. A
+    /// touch on a row opens its page, with Start at the bottom; when a single purpose is ticked its own page is reached from the line under the box.
     private var explore: some View {
-        let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
-        let items = filter?.items ?? NunaBreathGroup.allItems
-        return VStack(alignment: .leading, spacing: 12) {
+        let items = filter.apply(to: NunaBreathGroup.allItems)
+        let single: NunaBreathGroup? = filter.groups.count == 1 ? filter.groups.first : nil
+        return VStack(alignment: .leading, spacing: 14) {
             NunaTitleRow(title: "Explore") { EmptyView() }
-            filters
-            if let g = filter {
+            NunaBreathSearchBar(query: $filter.query, filterCount: filter.count) { showFilters = true }
+            if let g = single {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
                     Text(verbatim: g.blurb).font(.nunaWords(size: NunaTypeSize.sub)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(2)
                     Spacer(minLength: 8)
@@ -227,40 +233,22 @@ struct NunaBreathView: View {
                     }.buttonStyle(.plain)
                 }
             }
-            LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(items) { item in
-                    let picked: Bool = { if case .template(let t) = item { return suggestion?.advice.template.id == t.id && anyaOn }; return false }()
-                    Button { open(item) } label: {
-                        NunaBreathExploreCard(icon: item.icon, title: item.title, level: item.levelTitle,
+            if items.isEmpty {
+                Text("No technique matches").font(.nunaWords(size: 15)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    .frame(maxWidth: .infinity).padding(.vertical, 28)
+            } else {
+                LazyVStack(spacing: 10) {
+                    ForEach(items) { item in
+                        let picked: Bool = { if case .template(let t) = item { return suggestion?.advice.template.id == t.id && anyaOn }; return false }()
+                        Button { open(item) } label: {
+                            NunaBreathListRow(icon: item.icon, title: item.title, level: item.levelTitle,
                                               minutes: "\(item.minutesText(lengthPref: lengthPref)) \(String(localized: "min"))",
                                               badge: picked ? String(localized: "Anya's pick") : nil)
-                    }.buttonStyle(.plain)
+                        }.buttonStyle(.plain)
+                    }
                 }
             }
         }
-    }
-
-    /// All, then one chip for each group. Choosing one narrows the grid; it does not open anything.
-    private var filters: some View {
-        let options: [NunaBreathGroup?] = [nil] + NunaBreathGroup.allCases.map { Optional($0) }
-        return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(options, id: \.?.rawValue) { g in
-                    let on = g == filter
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.15)) { filter = g }
-                        if let g { group = g; pickedGoal = true }
-                    } label: {
-                        Text(verbatim: g?.title ?? String(localized: "All")).font(.nuna(size: 14, weight: .bold))
-                            .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary).lineLimit(1)
-                            .padding(.horizontal, 14).frame(height: 36)
-                            .background(on ? NunaPalette.accent : NunaPalette.card, in: Capsule())
-                            .overlay(Capsule().strokeBorder(on ? Color.clear : NunaPalette.hairlineSoft, lineWidth: 1))
-                    }.buttonStyle(.plain)
-                }
-            }
-        }
-        .padding(.horizontal, -NunaSpacing.screenH).contentMargins(.horizontal, NunaSpacing.screenH, for: .scrollContent)
     }
 
     private func open(_ item: NunaBreathItem) {

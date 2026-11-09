@@ -9062,5 +9062,9 @@
  "%lld notes": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld catatan"}}}},
  "Forget Anya's notes?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lupakan catatan Anya?"}}}},
  "Forget Anya's notes": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lupakan catatan Anya"}}}},
- "This cannot be undone.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tindakan ini tidak bisa dibatalkan."}}}}
+ "This cannot be undone.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tindakan ini tidak bisa dibatalkan."}}}},
+ "Search for a technique…": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cari teknik…"}}}},
+ "Purpose": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tujuan"}}}},
+ "Show %lld": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tampilkan %lld"}}}},
+ "No technique matches": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak ada teknik yang cocok"}}}}
 }, "version":"1.0" }
