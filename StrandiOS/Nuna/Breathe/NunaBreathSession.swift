@@ -92,36 +92,47 @@ struct NunaBreathSessionView: View {
     private var still: Bool { motion.poseStill(reduceMotion) }
     private var title: String { request.templateId.flatMap { NunaBreathLibrary.template(id: $0)?.title } ?? proto.map { String(localized: String.LocalizationValue($0.title)) } ?? "" }
 
+    @State private var tab = 0
+
+    private var zone: Int { model.bpm.map { model.profile.hrZoneSet.zoneNumber(forBPM: Double($0)) } ?? 0 }
+    private var zoneColor: Color { model.bpm == nil ? NunaPalette.effortModerate : NunaHeartBeat.zoneColors[min(max(zone, 1), 5) - 1] }
+
+    /// Laid out like the live screen of a Strain activity: a header with the name and what is on, a progress line, two tabs, the big picture
+    /// (here the glow of the breath), the heart rate, three figures, and Pause (with End once paused) on a bar of its own.
     var body: some View {
-        VStack(spacing: 16) {
-            topBar
-            Spacer(minLength: 0)
-            ZStack {
-                NunaBreathPacer(progress: orb, animated: running, tint: request.goal.tint)
-                if let c = countdown {
-                    Text(verbatim: "\(c)").font(.nuna(size: 96, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                } else {
-                    VStack(spacing: 6) {
-                        Text(verbatim: phaseWord).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            .multilineTextAlignment(.center)
-                        if running, !guided, phaseLeft > 0 {
-                            Text(verbatim: "\(phaseLeft)").font(.nuna(size: 18, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
+        VStack(spacing: 0) {
+            VStack(spacing: 8) {
+                header
+                progressLine
+                NunaPageTabs([(value: 0, title: "Breathing"), (value: 1, title: "Heart rate")], selection: $tab)
+                    .transaction { if reduceMotion { $0.disablesAnimations = true } }
+            }
+            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8)
+            GeometryReader { viewport in
+                ScrollView {
+                    VStack(spacing: NunaSpacing.section) {
+                        if tab == 1 {
+                            NunaHeartBeat(bpm: model.bpm, color: zoneColor, zone: zone, size: min(250, max(170, (viewport.size.height - 80) / 1.2)))
+                                .frame(maxWidth: .infinity, minHeight: max(viewport.size.height - NunaSpacing.section * 2, 0), alignment: .center)
+                        } else {
+                            pacer(size: min(300, max(200, viewport.size.height - 150)))
+                            heartReadout
                         }
                     }
-                    .padding(.horizontal, 40)
+                    .padding(.vertical, NunaSpacing.section).padding(.horizontal, NunaSpacing.screenH)
                 }
+                .scrollIndicators(.hidden)
             }
-            .frame(maxWidth: 320).aspectRatio(1, contentMode: .fit).padding(.horizontal, 20)
-            Spacer(minLength: 0)
-            VStack(spacing: 4) {
-                Text(verbatim: clock(max(0, request.seconds - seconds))).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
-                Text(verbatim: String(localized: "\(breaths) breaths")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-            liveRow
-            controls
+            .transaction(value: tab) { $0.animation = nil }
+            statistics.padding(.horizontal, NunaSpacing.screenH)
         }
-        .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 20)
         .background(NunaBackdrop())
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            controls
+                .padding(.horizontal, NunaSpacing.screenH).padding(.vertical, 12)
+                .background(NunaPalette.canvas)
+                .overlay(alignment: .top) { NunaDivider() }
+        }
         .preferredColorScheme(NunaTheme.colorScheme)
         .onReceive(clockTimer) { now in onClock(now) }
         .onRRPackets(live) { ingest($0) }
@@ -135,17 +146,18 @@ struct NunaBreathSessionView: View {
 
     // MARK: Parts
 
-    private var topBar: some View {
-        HStack(spacing: 10) {
+    private var header: some View {
+        let buzz = live.bonded && haptics ? String(localized: "strap buzz on") : String(localized: "silent session")
+        return HStack(alignment: .center) {
             Button { seconds >= 20 ? (confirmEnd = true) : cancel() } label: {
-                Image(systemName: "xmark").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44)
+                Image(systemName: "xmark").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle())
             }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
-            VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: title).font(.nuna(size: 18, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-                Text(request.goal.title).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            Spacer(minLength: 8)
+            VStack(spacing: 2) {
+                Text(verbatim: title).font(.nuna(size: NunaTypeSize.sub, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+                Text(verbatim: request.goal.shortTitle + " · " + buzz).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
             }
-            Spacer()
+            Spacer(minLength: 8)
             Menu {
                 ForEach(NunaBreathAudioMode.allCases) { m in
                     Button { audioModeRaw = m.rawValue; cue.apply(m) } label: {
@@ -159,44 +171,93 @@ struct NunaBreathSessionView: View {
         }
     }
 
-    private var liveRow: some View {
-        HStack(spacing: 10) {
-            liveTile("Heart rate", model.bpm.map(String.init) ?? "–", "bpm", NunaPalette.alertText)
-            liveTile("HRV (RMSSD)", rmssd.map { String(format: "%.0f", $0) } ?? "–", "ms", NunaPalette.restLight)
-            liveTile("Haptics", live.bonded && haptics ? String(localized: "On") : String(localized: "Off"), "", live.bonded && haptics ? NunaPalette.charge : NunaPalette.textMuted)
+    /// The time target and how far along the session is.
+    private var progressLine: some View {
+        let fraction = min(max(Double(seconds) / Double(max(request.seconds, 1)), 0), 1)
+        return HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Time target").font(.nuna(size: NunaTypeSize.caption, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: "\(request.seconds / 60) \(String(localized: "min"))").font(.nuna(size: NunaTypeSize.h3, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
+            }
+            Capsule().fill(NunaPalette.glassStrong).frame(height: 6)
+                .overlay(alignment: .leading) { GeometryReader { g in Capsule().fill(NunaPalette.charge).frame(width: g.size.width * fraction) } }
         }
+        .padding(.vertical, 4)
     }
 
-    private func liveTile(_ label: LocalizedStringKey, _ value: String, _ unit: String, _ color: Color) -> some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12)) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
-                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(color).monospacedDigit()
-                    if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
+    private func pacer(size: CGFloat) -> some View {
+        ZStack {
+            NunaBreathPacer(progress: orb, animated: running, tint: request.goal.tint)
+            if let c = countdown {
+                Text(verbatim: "\(c)").font(.nuna(size: 96, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            } else {
+                VStack(spacing: 6) {
+                    Text(verbatim: phaseWord).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.center)
+                    if running, !guided, phaseLeft > 0 {
+                        Text(verbatim: "\(phaseLeft)").font(.nuna(size: 18, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
+                    }
                 }
+                .padding(.horizontal, 40)
             }
         }
+        .frame(width: size, height: size).frame(maxWidth: .infinity)
+    }
+
+    /// The heart rate under the glow, at the left: the heart, its name and the reading.
+    private var heartReadout: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Image(systemName: "heart.fill").font(.nuna(size: 22, weight: .semibold)).foregroundStyle(model.bpm == nil ? NunaPalette.textMuted : zoneColor)
+            Text("Heart rate").font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                Text(verbatim: model.bpm.map(String.init) ?? "–").font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                Text("bpm").font(.nuna(size: NunaTypeSize.caption, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Three plain figures with a hairline between them, as the statistics row of an activity.
+    private var statistics: some View {
+        let tiles: [(icon: String, label: LocalizedStringKey, value: String, unit: String)] = [
+            ("timer", "Time left", clock(max(0, request.seconds - seconds)), ""),
+            ("lungs", "Breaths", "\(breaths)", ""),
+            ("waveform.path.ecg", "HRV (RMSSD)", rmssd.map { String(format: "%.0f", $0) } ?? "–", "ms"),
+        ]
+        return HStack(alignment: .top, spacing: 12) {
+            ForEach(tiles.indices, id: \.self) { i in
+                if i > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 96) }
+                VStack(alignment: .leading, spacing: 8) {
+                    Image(systemName: tiles[i].icon).font(.nuna(size: NunaTypeSize.h2, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(tiles[i].label).font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(verbatim: tiles[i].value).font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit().lineLimit(1).minimumScaleFactor(0.75)
+                        Text(verbatim: tiles[i].unit.isEmpty ? " " : tiles[i].unit).font(.nuna(size: NunaTypeSize.caption, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .padding(.vertical, 8)
     }
 
     private var controls: some View {
         HStack(spacing: 12) {
             Button { togglePause() } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: paused ? "play.fill" : "pause.fill").font(.nuna(size: 15, weight: .bold))
-                    Text(paused ? "Resume" : "Pause").font(.nuna(size: 17, weight: .bold))
+                    Image(systemName: paused ? "play.fill" : "pause.fill").font(.nuna(size: NunaTypeSize.sub, weight: .bold))
+                    Text(paused ? "Resume" : "Pause").font(.nuna(size: NunaTypeSize.h3, weight: .bold))
                 }
-                .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
-                .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 60)
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
             }.buttonStyle(.plain).disabled(countdown != nil).opacity(countdown != nil ? 0.4 : 1)
             // End is offered only while the session is paused, as in a workout: a running one cannot be ended by a stray tap.
             if paused {
                 Button { seconds >= 20 ? finish() : cancel() } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: "stop.fill").font(.nuna(size: 15, weight: .bold))
-                        Text("End").font(.nuna(size: 17, weight: .bold))
+                        Image(systemName: "stop.fill").font(.nuna(size: NunaTypeSize.sub, weight: .bold))
+                        Text("End").font(.nuna(size: NunaTypeSize.h3, weight: .bold))
                     }
-                    .foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 24).frame(height: 54)
+                    .foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 24).frame(height: 60)
                     .background(NunaPalette.alertText, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
                 }.buttonStyle(.plain)
                 .transition(.move(edge: .trailing).combined(with: .opacity))
