@@ -1329,7 +1329,7 @@ struct NunaLiveWorkoutView: View {
         return VStack(spacing: 0) {
             VStack(spacing: 8) {
                 header(w)
-                sessionProgress(w, elapsed: elapsed, distance: gps.distanceM)
+                if !goal.isFree { sessionProgress(w, elapsed: elapsed, distance: gps.distanceM) }
                 NunaPageTabs([(value: LiveTab.effort, title: "Strain"), (value: .heartRate, title: "Heart rate")], selection: $selectedTab)
                     .transaction { if reduceMotion { $0.disablesAnimations = true } }
             }
@@ -1343,8 +1343,8 @@ struct NunaLiveWorkoutView: View {
                                           showMap: hideBpm && usesRoute(w) && gps.isRecording)
                         } else {
                             activityRing(w, bpm: bpm, zone: zone, color: tone,
-                                         size: min(260,
-                                                   max(188, viewport.size.height - NunaSpacing.section * 2 - 104)))
+                                         size: min(330,
+                                                   max(188, viewport.size.height - NunaSpacing.section * 2 - 80)))
                             effortHeartRate(bpm: bpm, color: tone)
                         }
                         if !liveActivitiesOn { liveActivityOffCard }
@@ -1368,10 +1368,7 @@ struct NunaLiveWorkoutView: View {
             .padding(.horizontal, NunaSpacing.screenH)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: 12) {
-                footnote(state: state, now: now)
-                controls(w)
-            }
+            controls(w, elapsed: elapsed)
             .padding(.horizontal, NunaSpacing.screenH)
             .padding(.vertical, 12)
             .background(NunaPalette.canvas)
@@ -1389,20 +1386,11 @@ struct NunaLiveWorkoutView: View {
     // MARK: header + ring
 
     private func header(_ w: AppModel.ActiveWorkout) -> some View {
-        let gps = model.gpsRecorder
-        let gpsText = usesRoute(w) ? (gps.pointCount == 0 ? String(localized: "Searching GPS") : String(localized: "GPS on")) : String(localized: "No GPS")
-        let buzzText = zoneBuzz && !goal.isFree ? String(localized: "target alerts on") : String(localized: "silent session")
         let title = String(localized: String.LocalizationValue(w.sport))
-        return HStack(alignment: .center) {
-            // A running session has no way out but End (reached through Pause), so there is one window to be in.
-            Spacer(minLength: 8)
-            VStack(spacing: 2) {
-                Text(verbatim: title).font(.nuna(size: NunaTypeSize.sub, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
-                Text(verbatim: gpsText + " · " + buzzText).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
-            }
-            Spacer(minLength: 8)
-        }
-        .frame(minHeight: 44)
+        // A running session has no way out but End (reached through Pause), so there is one window to be in, and the page says only what it is.
+        return Text(verbatim: title).font(.nuna(size: NunaTypeSize.sub, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+            .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+            .frame(maxWidth: .infinity, minHeight: 44)
     }
 
     /// The Heart rate tab: the beating disc in the colour of the current zone (see `NunaHeartBeat`). With the heart rate hidden and a route being
@@ -1442,8 +1430,6 @@ struct NunaLiveWorkoutView: View {
     private func effortHeartRate(bpm: Int?, color: Color) -> some View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 6) {
-                Image(systemName: "heart.fill").font(.nuna(size: 22, weight: .semibold))
-                    .foregroundStyle(bpm == nil ? NunaPalette.textMuted : color)
                 Text("Heart rate").font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 5) {
@@ -1536,36 +1522,14 @@ struct NunaLiveWorkoutView: View {
         // The zone only, as a number: the range in bpm is on the Heart rate tab.
         if goal.zoneOn { targetParts.append(String(localized: "Zone \(goal.zone)")) }
         let targetText = targetParts.joined(separator: " · ")
-        let targetLabel: LocalizedStringKey = targetParts.count > 1 ? "Target"
-            : (goal.timeOn ? "Time target" : (goal.distanceOn ? "Distance target" : "Heart rate target"))
-        return HStack(alignment: .center, spacing: 16) {
-            if hasTarget {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(targetLabel)
-                        .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
-                        .foregroundStyle(NunaPalette.textSecondary)
-                    Text(verbatim: targetText)
-                        .font(.nuna(size: NunaTypeSize.h3, weight: .bold, design: NunaType.design))
-                        .foregroundStyle(NunaPalette.textPrimary)
-                        .monospacedDigit()
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.75)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            HStack(spacing: 8) {
-                Image(systemName: w.isPaused ? "pause.fill" : "stopwatch")
-                    .font(.nuna(size: NunaTypeSize.h3, weight: .semibold))
-                    .foregroundStyle(w.isPaused ? NunaPalette.warning : NunaPalette.effortModerate)
-                Text(verbatim: clock(elapsed))
-                    .font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design))
-                    .foregroundStyle(NunaPalette.textPrimary)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-            }
-            .frame(maxWidth: .infinity, alignment: hasTarget ? .trailing : .center)
-        }
+        return Text(verbatim: targetText)
+            .font(.nuna(size: NunaTypeSize.h3, weight: .bold, design: NunaType.design))
+            .foregroundStyle(NunaPalette.textPrimary)
+            .monospacedDigit()
+            .lineLimit(2)
+            .minimumScaleFactor(0.75)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity, alignment: .center)
         .padding(.horizontal, NunaSpacing.screenH)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, minHeight: 48)
@@ -1583,7 +1547,6 @@ struct NunaLiveWorkoutView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text("Session time \(clock(elapsed))"))
         .accessibilityValue(Text(verbatim: hasProgress ? targetText + " · " + fraction.formatted(.percent.precision(.fractionLength(0))) : targetText))
     }
 
@@ -1770,32 +1733,6 @@ struct NunaLiveWorkoutView: View {
 
     // MARK: footnote + controls
 
-    @ViewBuilder private func footnote(state: ZoneState, now: Date) -> some View {
-        if zoneBuzz, !goal.isFree {
-            let text: String = {
-                if lastBuzz != .distantPast { return String(localized: "Last buzz \(clock(now.timeIntervalSince(lastBuzz))) ago") }
-                if goal.zoneOn {
-                    switch state {
-                    case .none: return String(localized: "Waiting for HR before checking your target zone.")
-                    case .inZone: return String(localized: "In target zone · no buzz needed.")
-                    default: return String(localized: "1 short buzz every 45 seconds while outside your target zone.")
-                    }
-                }
-                return String(localized: "Your strap will buzz when the target is reached.")
-            }()
-            HStack(spacing: 8) {
-                Image(systemName: "applewatch.radiowaves.left.and.right")
-                    .font(.nuna(size: NunaTypeSize.sub, weight: .semibold))
-                    .foregroundStyle(NunaPalette.charge)
-                Text(verbatim: text)
-                    .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
-                    .foregroundStyle(NunaPalette.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-
     /// Shown only while iOS has Live Activities switched off for this app: the session then has no banner on the Lock Screen or in the Island.
     private var liveActivityOffCard: some View {
         NunaCard(small: true) {
@@ -1814,16 +1751,21 @@ struct NunaLiveWorkoutView: View {
         }
     }
 
-    private func controls(_ w: AppModel.ActiveWorkout) -> some View {
+    private func controls(_ w: AppModel.ActiveWorkout, elapsed: TimeInterval) -> some View {
         HStack(spacing: 12) {
+            // The time is part of the button: it reads as the session's clock, and it turns amber while the session is paused.
             Button { model.toggleWorkoutPause() } label: {
                 HStack(spacing: 8) {
                     Image(systemName: w.isPaused ? "play.fill" : "pause.fill").font(.nuna(size: NunaTypeSize.sub, weight: .bold))
                     Text(w.isPaused ? "Resume" : "Pause").font(.nuna(size: NunaTypeSize.h3, weight: .bold))
+                    Spacer(minLength: 8)
+                    Text(verbatim: clock(elapsed)).font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).monospacedDigit()
+                        .foregroundStyle(w.isPaused ? NunaPalette.warning : NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.75)
                 }
-                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 60)
+                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 22).frame(maxWidth: .infinity).frame(height: 60)
                 .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
             }.buttonStyle(.plain)
+            .accessibilityValue(Text("Session time \(clock(elapsed))"))
             // End is offered only while the session is paused: a running one cannot be ended by a stray tap, and pausing first is the way out.
             if w.isPaused {
                 Button { confirmEnd = true } label: {
