@@ -36,19 +36,19 @@ enum PHMNButterflyGeometry {
     /// The antenna diamond alone (the last piece of `mono`).
     static let antenna: [Cmd] = [.m(50, 8.464), .l(51.953, 12.109), .l(50, 15.755), .l(48.047, 12.109), .z]
     /// The letters P H M N as polygons, 24 units high (the capital height), flat ended.
-    static let wordmarkWidth: CGFloat = 110.718
+    static let wordmarkWidth: CGFloat = 117.018
     static let wordmarkCap: CGFloat = 24
     static let wordmark: [[CGPoint]] = [
         [CGPoint(x: 0.000, y: 0.000), CGPoint(x: 3.024, y: 0.000), CGPoint(x: 3.024, y: 24.000), CGPoint(x: 0.000, y: 24.000)],
         [CGPoint(x: 6.069, y: 0.000), CGPoint(x: 10.137, y: 0.000), CGPoint(x: 11.089, y: 0.051), CGPoint(x: 12.029, y: 0.205), CGPoint(x: 12.945, y: 0.459), CGPoint(x: 13.826, y: 0.810), CGPoint(x: 14.660, y: 1.254), CGPoint(x: 15.438, y: 1.785), CGPoint(x: 16.148, y: 2.397), CGPoint(x: 16.784, y: 3.081), CGPoint(x: 17.335, y: 3.829), CGPoint(x: 17.796, y: 4.632), CGPoint(x: 18.161, y: 5.480), CGPoint(x: 18.425, y: 6.362), CGPoint(x: 18.585, y: 7.267), CGPoint(x: 18.638, y: 8.183), CGPoint(x: 18.585, y: 9.099), CGPoint(x: 18.425, y: 10.004), CGPoint(x: 18.161, y: 10.886), CGPoint(x: 17.796, y: 11.733), CGPoint(x: 17.335, y: 12.536), CGPoint(x: 16.784, y: 13.285), CGPoint(x: 16.148, y: 13.969), CGPoint(x: 15.438, y: 14.581), CGPoint(x: 14.660, y: 15.112), CGPoint(x: 13.826, y: 15.555), CGPoint(x: 12.945, y: 15.907), CGPoint(x: 12.029, y: 16.161), CGPoint(x: 11.089, y: 16.314), CGPoint(x: 10.137, y: 16.366), CGPoint(x: 6.069, y: 16.366), CGPoint(x: 6.069, y: 13.513), CGPoint(x: 10.137, y: 13.513), CGPoint(x: 10.770, y: 13.479), CGPoint(x: 11.394, y: 13.379), CGPoint(x: 12.003, y: 13.214), CGPoint(x: 12.588, y: 12.985), CGPoint(x: 13.142, y: 12.696), CGPoint(x: 13.659, y: 12.350), CGPoint(x: 14.131, y: 11.952), CGPoint(x: 14.553, y: 11.506), CGPoint(x: 14.920, y: 11.019), CGPoint(x: 15.226, y: 10.495), CGPoint(x: 15.468, y: 9.943), CGPoint(x: 15.644, y: 9.369), CGPoint(x: 15.750, y: 8.780), CGPoint(x: 15.785, y: 8.183), CGPoint(x: 15.750, y: 7.586), CGPoint(x: 15.644, y: 6.997), CGPoint(x: 15.468, y: 6.422), CGPoint(x: 15.226, y: 5.870), CGPoint(x: 14.920, y: 5.347), CGPoint(x: 14.553, y: 4.860), CGPoint(x: 14.131, y: 4.414), CGPoint(x: 13.659, y: 4.016), CGPoint(x: 13.142, y: 3.670), CGPoint(x: 12.588, y: 3.381), CGPoint(x: 12.003, y: 3.152), CGPoint(x: 11.394, y: 2.987), CGPoint(x: 10.770, y: 2.886), CGPoint(x: 10.137, y: 2.853), CGPoint(x: 6.069, y: 2.853)],
-        [CGPoint(x: 21.438, y: 0.000), CGPoint(x: 24.462, y: 0.000), CGPoint(x: 24.462, y: 24.000), CGPoint(x: 21.438, y: 24.000)],
-        [CGPoint(x: 39.266, y: 0.000), CGPoint(x: 42.290, y: 0.000), CGPoint(x: 42.290, y: 24.000), CGPoint(x: 39.266, y: 24.000)],
-        [CGPoint(x: 27.507, y: 10.843), CGPoint(x: 36.219, y: 10.843), CGPoint(x: 36.219, y: 13.770), CGPoint(x: 27.507, y: 13.770)],
-        [CGPoint(x: 66.001, y: 14.928), CGPoint(x: 70.703, y: 0.004), CGPoint(x: 73.640, y: 0.004), CGPoint(x: 81.194, y: 24.000), CGPoint(x: 78.257, y: 24.000), CGPoint(x: 72.183, y: 4.682), CGPoint(x: 68.939, y: 14.928)],
-        [CGPoint(x: 48.040, y: 24.000), CGPoint(x: 52.734, y: 9.076), CGPoint(x: 55.679, y: 9.076), CGPoint(x: 50.978, y: 24.000)],
-        [CGPoint(x: 55.595, y: 0.004), CGPoint(x: 63.149, y: 24.000), CGPoint(x: 66.086, y: 24.000), CGPoint(x: 58.532, y: 0.004)],
-        [CGPoint(x: 86.944, y: 0.000), CGPoint(x: 89.968, y: 0.000), CGPoint(x: 89.968, y: 24.000), CGPoint(x: 86.944, y: 24.000)],
-        [CGPoint(x: 107.694, y: 0.000), CGPoint(x: 110.718, y: 0.000), CGPoint(x: 110.718, y: 24.000), CGPoint(x: 107.694, y: 24.000)],
-        [CGPoint(x: 93.013, y: 0.000), CGPoint(x: 96.211, y: 0.000), CGPoint(x: 104.649, y: 24.000), CGPoint(x: 101.451, y: 24.000)],
+        [CGPoint(x: 23.238, y: 0.000), CGPoint(x: 26.262, y: 0.000), CGPoint(x: 26.262, y: 24.000), CGPoint(x: 23.238, y: 24.000)],
+        [CGPoint(x: 41.066, y: 0.000), CGPoint(x: 44.090, y: 0.000), CGPoint(x: 44.090, y: 24.000), CGPoint(x: 41.066, y: 24.000)],
+        [CGPoint(x: 29.307, y: 10.843), CGPoint(x: 38.019, y: 10.843), CGPoint(x: 38.019, y: 13.770), CGPoint(x: 29.307, y: 13.770)],
+        [CGPoint(x: 70.051, y: 14.928), CGPoint(x: 74.753, y: 0.004), CGPoint(x: 77.690, y: 0.004), CGPoint(x: 85.244, y: 24.000), CGPoint(x: 82.307, y: 24.000), CGPoint(x: 76.233, y: 4.682), CGPoint(x: 72.989, y: 14.928)],
+        [CGPoint(x: 52.090, y: 24.000), CGPoint(x: 56.784, y: 9.076), CGPoint(x: 59.729, y: 9.076), CGPoint(x: 55.028, y: 24.000)],
+        [CGPoint(x: 59.645, y: 0.004), CGPoint(x: 67.199, y: 24.000), CGPoint(x: 70.136, y: 24.000), CGPoint(x: 62.582, y: 0.004)],
+        [CGPoint(x: 93.244, y: 0.000), CGPoint(x: 96.268, y: 0.000), CGPoint(x: 96.268, y: 24.000), CGPoint(x: 93.244, y: 24.000)],
+        [CGPoint(x: 113.994, y: 0.000), CGPoint(x: 117.018, y: 0.000), CGPoint(x: 117.018, y: 24.000), CGPoint(x: 113.994, y: 24.000)],
+        [CGPoint(x: 99.313, y: 0.000), CGPoint(x: 102.511, y: 0.000), CGPoint(x: 110.949, y: 24.000), CGPoint(x: 107.751, y: 24.000)],
     ]
 }
