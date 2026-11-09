@@ -8,18 +8,24 @@ import UIKit
 import ActivityKit
 #endif
 
-// The "Banner" design of the workout Live Activity: a dark card in two bands. In the upper band the session clock at the left, the PHMN mark in the
-// middle and the heart rate at the right; in the lower, darker one the five heart-rate zones as a bar with a marker, each zone named under its
-// segment, and the session's two main figures beneath. Every colour is fixed, so it reads the same on any wallpaper and in either appearance.
+// The "Banner" design of the workout Live Activity: one dark card. At the top the heart (a muted heart, the heart rate large, "bpm" small) on the left
+// and the session clock in a blue pill on the right; under them the heart-rate bar, six segments from Zone 0 to Zone 5, filled in white as far as the
+// heart rate has climbed with a white marker at it, and the name of the zone under its segment; at the foot three columns split by hairlines: a figure
+// with its name, the PHMN wordmark, and a second figure. Every colour is fixed, so it reads the same on any wallpaper and in either appearance.
 
 enum NOOPBannerPalette {
-    static let top = Color(hex: "#212C37")
-    static let bottom = Color(hex: "#151E27")
+    static let top = Color(hex: "#1B242B")
+    static let bottom = Color(hex: "#11181D")
     static let ink = Color.white
     static let paused = Color(hex: "#F5B02E")
-    static let muted = Color(hex: "#8794A1")
-    static let track = Color(hex: "#3A4652")
+    static let pausedPill = Color(hex: "#3A2B0A")
+    static let muted = Color(hex: "#9AA3AB")
+    static let track = Color(hex: "#5A6168")
+    static let divider = Color(hex: "#3A4249")
     static let soft = Color(hex: "#DDE3E8")
+    /// The clock's pill: a deep blue with a brighter blue stopwatch.
+    static let pill = Color(hex: "#0B2F47")
+    static let pillInk = Color(hex: "#1D8FEA")
 
     /// D-DIN-PRO, the typeface of the reference design (the app and the extension both carry it). The system's condensed bold stands in if it is missing.
     static func din(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font {
@@ -46,38 +52,50 @@ struct NOOPBannerLockScreen: View {
     let state: NOOPActivityAttributes.ContentState
 
     private var paused: Bool { state.pausedAt != nil }
-    private var zone: Int? { state.heartRateZone }
+    /// The segment the heart rate is in: 0 (below Zone 1) to 5.
+    private var zone: Int { min(max(state.heartRateZone ?? 0, 0), 5) }
 
-    /// Laid out as the reference: a lighter upper band (clock at the left, the mark in the middle, heart and heart rate at the right) over a
-    /// darker lower one (the five zones with their names, then two figures under the zones, each with its name below). A Lock Screen
-    /// Live Activity has about 160 pt; the two bands add up to about 156.
+    /// A Lock Screen Live Activity has about 160 pt; this card takes about 148.
     var body: some View {
         VStack(spacing: 0) {
-            topBand
-            bottomBand
+            topRow
+            zoneBar.padding(.top, 7)
+            columns.padding(.top, 8)
         }
+        .padding(.horizontal, 20).padding(.top, 13).padding(.bottom, 9)
+        .frame(maxWidth: .infinity)
+        .background(LinearGradient(colors: [NOOPBannerPalette.top, NOOPBannerPalette.bottom], startPoint: .top, endPoint: .bottom))
     }
 
-    // MARK: Upper band
+    // MARK: Top row
 
-    private var topBand: some View {
-        ZStack {
-            HStack(alignment: .center, spacing: 0) {
-                clockText
-                Spacer(minLength: 0)
-                heartRate
-            }
-            mark
+    private var topRow: some View {
+        HStack(alignment: .center, spacing: 0) {
+            heartRate
+            Spacer(minLength: 8)
+            clockPill
         }
-        .padding(.horizontal, 22)
-        .frame(height: 64)
-        .background(NOOPBannerPalette.top)
+        .frame(height: 44)
     }
 
-    /// The session clock; it stands still, amber, with a pause mark while the session is paused.
-    private var clockText: some View {
-        HStack(spacing: 5) {
-            if paused { Image(systemName: "pause.fill").font(.system(size: 16, weight: .bold)).foregroundStyle(NOOPBannerPalette.paused) }
+    /// A muted heart before the number, the number large, "bpm" small beside it, all on one baseline.
+    private var heartRate: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+            Image(systemName: "heart.fill").font(.system(size: 21, weight: .bold)).foregroundStyle(NOOPBannerPalette.muted)
+                .alignmentGuide(.firstTextBaseline) { d in d[.bottom] - 4 }
+            Text(verbatim: state.bpm.map(String.init) ?? "–").font(NOOPBannerPalette.din(44)).monospacedDigit()
+                .foregroundStyle(NOOPBannerPalette.ink).lineLimit(1).minimumScaleFactor(0.6)
+            Text("bpm").font(NOOPBannerPalette.din(19, .medium)).foregroundStyle(NOOPBannerPalette.muted).textCase(nil)
+        }
+        .fixedSize()
+    }
+
+    /// The session clock in a pill: a stopwatch and the time, m:ss until the first hour and h:mm:ss after it. Paused, the pill turns amber, shows a
+    /// pause mark and the clock stands still.
+    private var clockPill: some View {
+        let tint = paused ? NOOPBannerPalette.paused : NOOPBannerPalette.pillInk
+        return HStack(spacing: 7) {
+            Image(systemName: paused ? "pause.fill" : "stopwatch").font(.system(size: 19, weight: .semibold)).foregroundStyle(tint)
             Group {
                 if let start = state.activityStartedAt {
                     Text(timerInterval: start...start.addingTimeInterval(86_400), pauseTime: state.pausedAt, countsDown: false)
@@ -85,71 +103,57 @@ struct NOOPBannerLockScreen: View {
                     Text(verbatim: "–")
                 }
             }
-            .font(NOOPBannerPalette.din(38)).monospacedDigit()
+            .font(NOOPBannerPalette.din(32)).monospacedDigit()
             .foregroundStyle(paused ? NOOPBannerPalette.paused : NOOPBannerPalette.ink)
             .lineLimit(1)
-            // A timer text takes all the width it is offered; give it its own: m:ss until the first hour, h:mm:ss after it.
-            .frame(width: (state.activityStartedAt.map { Date().timeIntervalSince($0) } ?? 0) >= 3600 ? 170 : 140, alignment: .leading)
+            // A timer text takes all the width it is offered; give it its own.
+            .frame(width: (state.activityStartedAt.map { Date().timeIntervalSince($0) } ?? 0) >= 3600 ? 112 : 70, alignment: .leading)
         }
+        .padding(.horizontal, 15).frame(height: 40)
+        .background(paused ? NOOPBannerPalette.pausedPill : NOOPBannerPalette.pill, in: Capsule())
     }
 
-    /// The PHMN mark in the middle, in grey and not in its colours: it carries its own thin ring.
-    private var mark: some View {
-        PHMNMark(.circle, size: 46, color: NOOPBannerPalette.muted)
-    }
+    // MARK: Zone bar
 
-    /// A muted heart before the number, the number large, "bpm" small beside it, all on one baseline.
-    private var heartRate: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 3) {
-            Image(systemName: "heart.fill").font(.system(size: 14, weight: .bold)).foregroundStyle(NOOPBannerPalette.muted)
-                .alignmentGuide(.firstTextBaseline) { d in d[.top] + 27 }
-            Text(verbatim: state.bpm.map(String.init) ?? "–").font(NOOPBannerPalette.din(38)).monospacedDigit()
-                .foregroundStyle(NOOPBannerPalette.ink).lineLimit(1).minimumScaleFactor(0.6)
-            Text("bpm").font(NOOPBannerPalette.din(17, .medium)).foregroundStyle(NOOPBannerPalette.muted)
-        }
-        .fixedSize()
-    }
-
-    // MARK: Lower band
-
-    private var bottomBand: some View {
-        VStack(spacing: 5) {
-            zoneBar
-            zoneNames
-            figures
-        }
-        .padding(.horizontal, 17).padding(.top, 7).padding(.bottom, 6)
-        .frame(maxWidth: .infinity)
-        .background(NOOPBannerPalette.bottom)
-    }
-
+    /// Six segments with the name of the zone the heart rate is in under its segment.
     private var zoneBar: some View {
         GeometryReader { geo in
-            let w = geo.size.width
-            ZStack(alignment: .leading) {
-                HStack(spacing: 2) {
-                    ForEach(1...5, id: \.self) { n in
-                        Capsule().fill(NOOPBannerPalette.zone(n).opacity(zone == n ? 1 : 0.4)).frame(height: 4)
+            let gap: CGFloat = 2
+            let seg = (geo.size.width - gap * 5) / 6
+            let level = min(max(state.zoneLevel ?? 0, 0), 1) * 6
+            let index = min(Int(level), 5)
+            let knobX = CGFloat(index) * (seg + gap) + CGFloat(level - Double(index)) * seg
+            VStack(spacing: 4) {
+                ZStack(alignment: .leading) {
+                    HStack(spacing: gap) {
+                        ForEach(0..<6, id: \.self) { i in
+                            let fill = state.bpm == nil ? 0 : min(max(level - Double(i), 0), 1)
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(NOOPBannerPalette.track)
+                                Capsule().fill(Color.white).frame(width: seg * CGFloat(fill))
+                            }
+                            .frame(width: seg, height: 5)
+                        }
+                    }
+                    if state.bpm != nil {
+                        Circle().fill(Color.white).frame(width: 13, height: 13)
+                            .overlay(Circle().strokeBorder(NOOPBannerPalette.bottom, lineWidth: 1.5))
+                            .offset(x: min(max(knobX - 6.5, 0), geo.size.width - 13))
                     }
                 }
-                if let p = state.zonePosition {
-                    Circle().fill(Color.white).frame(width: 9, height: 9)
-                        .offset(x: min(max(CGFloat(p) * w - 4.5, 0), w - 9))
+                .frame(height: 13)
+                // The name of the zone sits under its own segment.
+                HStack(spacing: gap) {
+                    ForEach(0..<6, id: \.self) { i in
+                        Text(verbatim: i == (state.bpm == nil ? 0 : zone) ? (state.bpm == nil ? "ZONE –" : "ZONE \(zone)") : " ")
+                            .font(NOOPBannerPalette.din(13, .semibold)).tracking(1.4)
+                            .foregroundStyle(NOOPBannerPalette.ink).lineLimit(1).minimumScaleFactor(0.7)
+                            .frame(width: seg)
+                    }
                 }
             }
-            .frame(height: 9)
         }
-        .frame(height: 9)
-    }
-
-    private var zoneNames: some View {
-        HStack(spacing: 0) {
-            ForEach(1...5, id: \.self) { n in
-                Text("Zone \(n)").font(NOOPBannerPalette.din(16))
-                    .foregroundStyle(zone == n ? NOOPBannerPalette.zone(n) : NOOPBannerPalette.zone(n).opacity(0.5))
-                    .lineLimit(1).minimumScaleFactor(0.6).frame(maxWidth: .infinity)
-            }
-        }
+        .frame(height: 33)
     }
 
     // MARK: Figures
@@ -186,24 +190,31 @@ struct NOOPBannerLockScreen: View {
         return [calories, effort]
     }
 
-    /// The figures sit exactly under the middle of Zone 2 and of Zone 4 (3/10 and 7/10 of the bar), so the pair is symmetric about the centre mark.
-    private var figures: some View {
+    /// Three equal columns split by hairlines: the first figure, the wordmark, the second figure.
+    private var columns: some View {
         let items = figureList
-        return GeometryReader { geo in
-            ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
-                VStack(spacing: 1) {
-                    HStack(alignment: .firstTextBaseline, spacing: 3) {
-                        Text(verbatim: item.value).font(NOOPBannerPalette.din(28)).monospacedDigit()
-                            .foregroundStyle(NOOPBannerPalette.ink).lineLimit(1).minimumScaleFactor(0.6)
-                        if !item.unit.isEmpty { Text(verbatim: item.unit).font(NOOPBannerPalette.din(15, .medium)).foregroundStyle(NOOPBannerPalette.muted) }
-                    }
-                    Text(item.label).font(NOOPBannerPalette.din(11, .medium)).tracking(1).foregroundStyle(NOOPBannerPalette.muted)
-                }
-                .fixedSize()
-                .position(x: geo.size.width * (i == 0 ? 0.3 : 0.7), y: geo.size.height / 2)
-            }
+        return HStack(spacing: 0) {
+            figure(items[0])
+            divider
+            PHMNWordmark(height: 11, color: NOOPBannerPalette.muted).frame(maxWidth: .infinity)
+            divider
+            figure(items.count > 1 ? items[1] : items[0])
         }
-        .frame(height: 44)
+        .frame(height: 46)
+    }
+
+    private var divider: some View { Rectangle().fill(NOOPBannerPalette.divider).frame(width: 1, height: 38) }
+
+    private func figure(_ item: Figure) -> some View {
+        VStack(spacing: 1) {
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: item.value).font(NOOPBannerPalette.din(27)).monospacedDigit()
+                    .foregroundStyle(NOOPBannerPalette.ink).lineLimit(1).minimumScaleFactor(0.6)
+                if !item.unit.isEmpty { Text(verbatim: item.unit).font(NOOPBannerPalette.din(15, .medium)).foregroundStyle(NOOPBannerPalette.muted).textCase(nil) }
+            }
+            Text(item.label).font(NOOPBannerPalette.din(12, .semibold)).tracking(1.5).foregroundStyle(NOOPBannerPalette.muted)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -214,6 +225,6 @@ extension NOOPActivityAttributes.ContentState {
             bpm: 138, recovery: nil, bonded: true, batteryPct: 68, effort: 4,
             heartRateZone: 3, activityName: "Running", activityStartedAt: now.addingTimeInterval(-(14 * 60 + 27)),
             averageBPM: 131, peakBPM: 152, distance: "2.31 km", pace: "6:12 /km", calories: 186,
-            zonePosition: 0.56, effortLabel: "4.1", design: "banner")
+            zonePosition: 0.56, effortLabel: "4.1", design: "banner", zoneLevel: 0.56)
     }
 }

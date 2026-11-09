@@ -576,6 +576,7 @@ struct StrandiOSApp: App {
             pausedAt: workout?.pausedAt,
             effortLabel: workout.map { UnitFormatter.effortDisplay($0.liveStrain, scale: UnitPrefs.resolveEffortScale(UserDefaults.standard.string(forKey: UnitPrefs.effortScaleKey) ?? "")) },
             steps: workout == nil ? nil : liveActivitySteps,
+            zoneLevel: bpm.map { NunaLiveMetrics.segmentPosition(bpm: $0, zoneSet: zoneSet) },
             workoutActive: workoutActive)
     }
 

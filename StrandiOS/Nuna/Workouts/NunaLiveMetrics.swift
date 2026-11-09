@@ -83,6 +83,18 @@ enum NunaLiveMetrics {
         return out.map { Int($0.rounded()) }
     }
 
+    /// Where a heart rate sits across six segments, Zone 0 (everything below Zone 1) to Zone 5, 0 to 1.
+    static func segmentPosition(bpm: Int, zoneSet: HRZoneSet) -> Double {
+        let zone = zoneSet.zoneNumber(forBPM: Double(bpm))
+        if zone == 0 {
+            let lower = zoneSet.zones.first(where: { $0.number == 1 })?.lower ?? 1
+            return min(max(Double(bpm) / max(lower, 1), 0), 1) / 6
+        }
+        guard let z = zoneSet.zones.first(where: { $0.number == min(zone, 5) }), z.upper > z.lower else { return Double(min(zone, 5)) / 6 }
+        let frac = min(max((Double(bpm) - z.lower) / (z.upper - z.lower), 0), 1)
+        return (Double(min(zone, 5)) + frac) / 6
+    }
+
     /// Where a heart rate sits across the five-zone bar, 0 to 1: the zone's own segment, and how far through that zone's range.
     static func barPosition(bpm: Int, zoneSet: HRZoneSet) -> Double {
         let zone = zoneSet.zoneNumber(forBPM: Double(bpm))
