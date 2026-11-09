@@ -64,6 +64,32 @@ enum NunaBreathLog {
     }
 }
 
+/// The three kinds of breathing the history tells apart: a guided exercise, a Resonance session, a Calm me session.
+enum NunaBreathKind: String, CaseIterable {
+    case guided, resonance, calmMe
+    var name: String {
+        switch self { case .guided: return String(localized: "Breathing"); case .resonance: return String(localized: "Resonance"); case .calmMe: return String(localized: "Calm me") }
+    }
+    var color: Color {
+        switch self { case .guided: return NunaPalette.rest; case .resonance: return NunaPalette.charge; case .calmMe: return NunaPalette.recoveryBlue }
+    }
+    static let resonanceId = "resonance", calmMeId = "calm_me"
+}
+
+extension NunaBreathRecord {
+    var kind: NunaBreathKind {
+        switch protocolId { case NunaBreathKind.resonanceId: return .resonance; case NunaBreathKind.calmMeId: return .calmMe; default: return .guided }
+    }
+    /// What the session is called: the ready exercise, Resonance, Calm me, or the catalogue exercise.
+    var displayTitle: String {
+        if let t = templateId.flatMap({ BreathTemplates.template(id: $0)?.title }) { return t }
+        switch kind {
+        case .resonance, .calmMe: return kind.name
+        case .guided: return BreathProtocolCatalog.protocolById(protocolId).map { String(localized: String.LocalizationValue($0.title)) } ?? protocolId
+        }
+    }
+}
+
 /// Every breathing session, wherever it was done, is also kept as a recovery activity ("Breathwork"), so it shows in Today's activities,
 /// counts toward a plan's recovery days and is read like any other activity.
 enum NunaBreathRecovery {
@@ -74,6 +100,17 @@ enum NunaBreathRecovery {
         let row = WorkoutRow(startTs: startTs, endTs: startTs + seconds, sport: sport, source: "manual", durationS: Double(seconds),
                              energyKcal: nil, avgHr: nil, maxHr: nil, strain: nil, distanceM: nil, zonesJSON: nil, notes: title, steps: nil)
         Task { await repo.saveManualWorkout(row) }
+    }
+
+    /// A session from the Resonance / Calm me / paced screen, which has no strap series of its own: it goes into the history (so the
+    /// Progress chart and list show it) and, like every session, into the recovery activities.
+    @MainActor static func logExternal(repo: Repository, startTs: Int, seconds: Int, kind: String) {
+        guard seconds >= 20 else { return }
+        let record = NunaBreathRecord(startTs: startTs, seconds: seconds, goal: BreathGoal.calm.rawValue, templateId: nil, protocolId: kind, breaths: 0,
+                                      hrStart: nil, hrEnd: nil, hrAvg: nil, rmssdStart: nil, rmssdAvg: nil, rmssdPeak: nil,
+                                      hrSeries: [], rmssdSeries: [], haptics: false)
+        NunaBreathLog.append(record)
+        log(repo: repo, startTs: startTs, seconds: seconds, title: record.displayTitle)
     }
 }
 
