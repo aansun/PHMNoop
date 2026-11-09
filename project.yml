@@ -410,13 +410,18 @@ targets:
     resources:
       - path: StrandiOSWidgets/Resources/id.lproj
       - path: StrandiOSWidgets/Resources/Assets.xcassets
-      # D-DIN-PRO for the Banner design of the workout Live Activity (SIL Open Font License; its text is beside the files). A copy of the app's fonts: a file shared between two targets was dropped from this one.
+      # DINPro and Proxima Nova for the Banner design of the workout Live Activity (the app's WHP fonts), D-DIN-PRO (SIL Open Font License; its text is beside the files) as the fallback. A copy of the app's fonts: a file shared between two targets was dropped from this one.
       - path: StrandiOSWidgets/Resources/Fonts
     info:
       path: StrandiOSWidgets/Info.plist
       properties:
         CFBundleDisplayName: PHMN
         UIAppFonts:
+          - DINPro-Medium.otf
+          - DINPro-Bold.otf
+          - ProximaNova-Regular.ttf
+          - ProximaNova-Semibold.ttf
+          - ProximaNova-Extrabold.ttf
           - D-DIN-PRO-400-Regular.otf
           - D-DIN-PRO-500-Medium.otf
           - D-DIN-PRO-600-SemiBold.otf
