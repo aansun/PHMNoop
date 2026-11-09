@@ -13,7 +13,7 @@ struct NunaBreathReportView: View {
 
     private var template: BreathTemplate? { record.templateId.flatMap(BreathTemplates.template(id:)) }
     private var title: String {
-        template?.title ?? BreathProtocolCatalog.protocolById(record.protocolId).map { String(localized: String.LocalizationValue($0.title)) } ?? record.protocolId
+        record.displayTitle
     }
     private var goal: BreathGoal { BreathGoal(rawValue: record.goal) ?? .calm }
 
@@ -212,7 +212,7 @@ struct NunaBreathHistoryView: View {
 
     private func row(_ r: NunaBreathRecord) -> some View {
         let goal = BreathGoal(rawValue: r.goal) ?? .calm
-        let name = r.templateId.flatMap { BreathTemplates.template(id: $0)?.title } ?? r.protocolId
+        let name = r.displayTitle
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.dateStyle = .medium; f.timeStyle = .short
         return HStack(spacing: 12) {
             NunaActivityGlyph(name: goal.activity, size: 24).foregroundStyle(goal.tint).frame(width: 30)

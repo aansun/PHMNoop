@@ -68,7 +68,7 @@ struct NunaBreathView: View {
             .nunaSheetChrome(detents: [.large])
         }
         .sheet(isPresented: $showAdvanced) {
-            NavigationStack { BreathingView(onSessionEnd: { start, secs in NunaBreathRecovery.log(repo: repo, startTs: start, seconds: secs, title: nil); history = NunaBreathLog.all() }).toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { showAdvanced = false } } } }
+            NavigationStack { BreathingView(onSessionEnd: { start, secs, kind in NunaBreathRecovery.logExternal(repo: repo, startTs: start, seconds: secs, kind: kind); history = NunaBreathLog.all() }).toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { showAdvanced = false } } } }
                 .preferredColorScheme(NunaTheme.colorScheme)
         }
     }
@@ -274,11 +274,11 @@ struct NunaBreathView: View {
 
     // MARK: Progress
 
-    /// Minutes breathed on each calendar day that has a session.
-    private var minutesByDay: [Date: Double] {
+    /// Minutes breathed on each calendar day that has a session, split by kind (guided, Resonance, Calm me).
+    private var minutesByDay: [Date: [NunaBreathKind: Double]] {
         let cal = Calendar.current
-        var out: [Date: Double] = [:]
-        for r in history { out[cal.startOfDay(for: r.date), default: 0] += Double(r.seconds) / 60 }
+        var out: [Date: [NunaBreathKind: Double]] = [:]
+        for r in history { out[cal.startOfDay(for: r.date), default: [:]][r.kind, default: 0] += Double(r.seconds) / 60 }
         return out
     }
 
@@ -301,13 +301,24 @@ struct NunaBreathView: View {
         let w = chartWindow, cal = Calendar.current
         let byDay = minutesByDay
         let days: [(date: Date, minutes: Double)] = (0..<chartRange).compactMap { i in
-            guard let d = cal.date(byAdding: .day, value: i, to: w.start), let m = byDay[cal.startOfDay(for: d)], m > 0 else { return nil }
+            guard let d = cal.date(byAdding: .day, value: i, to: w.start), let m = byDay[cal.startOfDay(for: d)]?.values.reduce(0, +), m > 0 else { return nil }
             return (w.noon(d), m)
         }
         let average: Double? = days.isEmpty ? nil : days.map(\.minutes).reduce(0, +) / Double(days.count)
         // A fixed scale, 0 to 15 minutes in steps of 5; a day with more than that fills the bar and its real figure shows when touched.
         let top = 15.0
         let ticks = [0.0, 5, 10, 15]
+        // One stacked bar per day, a slice for each kind, cut off at the top of the scale.
+        var slices: [(date: Date, kind: NunaBreathKind, minutes: Double)] = []
+        for i in 0..<chartRange {
+            guard let d = cal.date(byAdding: .day, value: i, to: w.start), let parts = byDay[cal.startOfDay(for: d)] else { continue }
+            var room = top
+            for k in NunaBreathKind.allCases {
+                guard let m = parts[k], m > 0, room > 0 else { continue }
+                slices.append((w.noon(d), k, min(m, room))); room -= min(m, room)
+            }
+        }
+        let kindsShown = NunaBreathKind.allCases.filter { k in slices.contains { $0.kind == k } }
         let oldest = byDay.keys.min()
         let pickedMin: Double? = chartPicked.flatMap { p in days.first { cal.isDate($0.date, inSameDayAs: p) }?.minutes }
         let shown = pickedMin ?? average
@@ -341,14 +352,16 @@ struct NunaBreathView: View {
                 }
             }
             Chart {
-                ForEach(days, id: \.date) { d in
-                    BarMark(x: .value("Day", d.date, unit: .day), y: .value("min", min(d.minutes, top)), width: .fixed(chartRange == 30 ? 8 : 3))
-                        .foregroundStyle(NunaPalette.rest).cornerRadius(1.5).opacity(lit(d.date) ? 1 : 0.3)
+                ForEach(Array(slices.enumerated()), id: \.offset) { _, d in
+                    BarMark(x: .value("Day", d.date, unit: .day), y: .value("min", d.minutes), width: .fixed(chartRange == 30 ? 8 : 3))
+                        .foregroundStyle(by: .value("Kind", d.kind.name)).cornerRadius(1.5).opacity(lit(d.date) ? 1 : 0.3)
                 }
                 if let p = chartPicked, days.contains(where: { cal.isDate($0.date, inSameDayAs: p) }) {
                     RuleMark(x: .value("Picked", w.noon(p))).foregroundStyle(Color.white.opacity(0.85)).lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
                 }
             }
+            .chartForegroundStyleScale(domain: NunaBreathKind.allCases.map(\.name), range: NunaBreathKind.allCases.map(\.color))
+            .chartLegend(.hidden)
             .chartYScale(domain: 0...top)
             .chartXScale(domain: w.domain)
             .chartYAxis {
@@ -384,6 +397,17 @@ struct NunaBreathView: View {
             }
             .frame(height: 260)
             .accessibilityLabel(Text("Time breathed"))
+            if kindsShown.count > 1 {
+                HStack(spacing: 16) {
+                    ForEach(kindsShown, id: \.self) { k in
+                        HStack(spacing: 6) {
+                            Circle().fill(k.color).frame(width: 8, height: 8)
+                            Text(verbatim: k.name).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        }
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
         }
     }
 
@@ -402,7 +426,7 @@ struct NunaBreathView: View {
     /// at the right. A touch opens its report.
     private func sessionRow(_ r: NunaBreathRecord) -> some View {
         let g = BreathGoal(rawValue: r.goal) ?? .calm
-        let name = r.templateId.flatMap { BreathTemplates.template(id: $0)?.title } ?? BreathProtocolCatalog.protocolById(r.protocolId).map { String(localized: String.LocalizationValue($0.title)) } ?? r.protocolId
+        let name = r.displayTitle
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM HH:mm")
         let when = f.string(from: r.date)
         let hrv = r.rmssdChangePct.map { String(format: "%+.0f%% HRV", locale: AppLanguage.activeLocale, $0) }

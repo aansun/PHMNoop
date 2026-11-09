@@ -24,18 +24,20 @@ import StrandAnalytics
 /// them. The L3 `StressNudgeCenter` is OPTIONAL via the environment: Wave 3 injects a shared instance;
 /// absent that we fall back to a local one, so the view always compiles + the card surface always exists.
 struct BreathingView: View {
-    /// Called when a session the wearer actually breathed through ends: when it began (unix seconds) and how many seconds it lasted.
-    /// The Nuna shell uses it to log the session as a recovery activity; the macOS shell leaves it nil.
-    var onSessionEnd: ((_ startTs: Int, _ seconds: Int) -> Void)? = nil
+    /// Called when a session the wearer actually breathed through ends: when it began (unix seconds), how many seconds it lasted and what it was
+    /// ("resonance", "calm_me", or the id of the paced catalogue exercise). The Nuna shell keeps it in its history and as a recovery activity; the
+    /// macOS shell leaves it nil.
+    var onSessionEnd: ((_ startTs: Int, _ seconds: Int, _ kind: String) -> Void)? = nil
     var body: some View { BreathingContent(onSessionEnd: onSessionEnd) }
 }
 
 private struct BreathingContent: View {
-    var onSessionEnd: ((_ startTs: Int, _ seconds: Int) -> Void)?
-    /// When a resonance sweep or a Calm me session began, so its end can be reported with its length.
+    var onSessionEnd: ((_ startTs: Int, _ seconds: Int, _ kind: String) -> Void)?
+    /// When a resonance sweep or a Calm me session began, and which, so its end can be reported with its length.
     @State private var controllerStartedAt: Date?
+    @State private var controllerKind = "resonance"
 
-    init(onSessionEnd: ((_ startTs: Int, _ seconds: Int) -> Void)? = nil) { self.onSessionEnd = onSessionEnd }
+    init(onSessionEnd: ((_ startTs: Int, _ seconds: Int, _ kind: String) -> Void)? = nil) { self.onSessionEnd = onSessionEnd }
 
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var live: LiveState
@@ -234,11 +236,15 @@ private struct BreathingContent: View {
         }
         .onChangeCompat(of: controller.running) { isRunning in
             // Resonance sweeps and Calm me run on the controller, not on the paced timer: report them when they end, too.
-            if isRunning { controllerStartedAt = Date(); return }
+            if isRunning {
+                controllerStartedAt = Date()
+                if case .calmMe = controller.session { controllerKind = "calm_me" } else { controllerKind = "resonance" }
+                return
+            }
             guard let began = controllerStartedAt else { return }
             controllerStartedAt = nil
             let secs = Int(Date().timeIntervalSince(began))
-            if secs >= 20 { onSessionEnd?(Int(began.timeIntervalSince1970), secs) }
+            if secs >= 20 { onSessionEnd?(Int(began.timeIntervalSince1970), secs, controllerKind) }
         }
         .onChangeCompat(of: audioCues) { on in
             // Spin the audio engine up the moment the user opts in (so the first phase tone isn't
@@ -802,7 +808,9 @@ private struct BreathingContent: View {
         if wasRunning { model.stopHaptics() }
         if wasRunning { captureOutcome() }
         if wasRunning, sessionSeconds >= 20 {
-            onSessionEnd?(Int(Date().timeIntervalSince1970) - sessionSeconds, sessionSeconds)
+            var kind = "resonance"
+            if case .catalog(let id) = pace { kind = id }
+            onSessionEnd?(Int(Date().timeIntervalSince1970) - sessionSeconds, sessionSeconds, kind)
         }
         if reduceMotion {
             orbProgress = 0

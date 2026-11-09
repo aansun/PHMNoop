@@ -16,6 +16,7 @@ enum NunaDemoYear {
     private static let days = 365
 
     static func seedIfRequested(repo: Repository, store: WhoopStore) async {
+        if AppleDemoSeeder.requested { busyDays(now: Int(Date().timeIntervalSince1970)) }
         guard AppleDemoSeeder.requested, !UserDefaults.standard.bool(forKey: markerKey) else { return }
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
@@ -120,6 +121,30 @@ enum NunaDemoYear {
                 rmssdStart: rmssdSeries.first, rmssdAvg: rmssdSeries.reduce(0, +) / Double(points), rmssdPeak: rmssdSeries.max(),
                 hrSeries: hrSeries, rmssdSeries: rmssdSeries, haptics: rng.nextDouble() < 0.5))
         }
+    }
+
+    private static let busyKey = "demo.breath.busy.ids"
+
+    /// Two days with three breathing sessions each, one of every kind: yesterday 15 minutes in all, the day before 19 (past the top of the chart).
+    private static func busyDays(now: Int) {
+        // They sit at fixed days before today, so each launch takes the previous copies out and writes them again where "yesterday" now is.
+        for id in (UserDefaults.standard.stringArray(forKey: busyKey) ?? []).compactMap(UUID.init(uuidString:)) { NunaBreathLog.delete(id) }
+        var ids: [String] = []
+        defer { UserDefaults.standard.set(ids, forKey: busyKey) }
+        let cal = Calendar.current
+        func add(_ daysAgo: Int, _ hour: Int, _ minutes: Int, _ protocolId: String, template: BreathTemplate? = nil) {
+            guard let base = cal.date(byAdding: .day, value: -daysAgo, to: Date()), let at = cal.date(bySettingHour: hour, minute: 10, second: 0, of: base) else { return }
+            let start = Int(at.timeIntervalSince1970)
+            guard start < now - minutes * 60 else { return }
+            let record = NunaBreathRecord(
+                startTs: start, seconds: minutes * 60, goal: BreathGoal.calm.rawValue, templateId: template?.id, protocolId: template?.protocolId ?? protocolId,
+                breaths: template == nil ? 0 : minutes * 6, hrStart: nil, hrEnd: nil, hrAvg: nil, rmssdStart: nil, rmssdAvg: nil, rmssdPeak: nil,
+                hrSeries: [], rmssdSeries: [], haptics: false)
+            NunaBreathLog.append(record); ids.append(record.id.uuidString)
+        }
+        let box = BreathTemplates.template(id: "focus_box"), slow = BreathTemplates.template(id: "calm_slow")
+        add(1, 7, 5, "", template: box); add(1, 13, 6, NunaBreathKind.resonanceId); add(1, 21, 4, NunaBreathKind.calmMeId)
+        add(2, 7, 5, "", template: slow); add(2, 12, 8, NunaBreathKind.resonanceId); add(2, 20, 6, NunaBreathKind.calmMeId)
     }
 
     // MARK: Cycle
