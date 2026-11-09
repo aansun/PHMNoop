@@ -11,7 +11,7 @@ struct NunaBreathReportView: View {
     var onAgain: (() -> Void)?
     @State private var showAnya = false
 
-    private var template: BreathTemplate? { record.templateId.flatMap(BreathTemplates.template(id:)) }
+    private var template: BreathTemplate? { record.templateId.flatMap(NunaBreathLibrary.template(id:)) }
     private var title: String {
         record.displayTitle
     }

@@ -55,6 +55,7 @@ enum NunaCustomBreath {
 
     /// Makes every kept exercise playable again after a launch.
     static func registerAll() {
+        NunaBreathLibrary.registerExtras()
         for s in all() { BreathProtocolCatalog.registerCustom(proto(for: s)) }
     }
 

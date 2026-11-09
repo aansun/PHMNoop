@@ -19,6 +19,10 @@ public struct BreathTemplate: Equatable, Sendable, Identifiable {
     public let minutes: Int
     /// Offered by the advisor on its own. Forceful techniques are listed for the wearer to choose but never suggested.
     public let advisable: Bool
+
+    public init(id: String, goal: BreathGoal, protocolId: String, minutes: Int, advisable: Bool) {
+        self.id = id; self.goal = goal; self.protocolId = protocolId; self.minutes = minutes; self.advisable = advisable
+    }
 }
 
 public enum BreathTemplates {

@@ -6,6 +6,12 @@ import Charts
 
 /// Breathing, first screen: say what the breath is for, take Anya's pick or a ready template, and go. After the session comes the
 /// report, which is kept in the history. The settings button at the top right holds the module's options.
+/// The older Breathing screen as a sheet, opened on a tab ("resonance", "calm") or on its default one.
+struct NunaAdvancedRoute: Identifiable {
+    let id = UUID()
+    let mode: String?
+}
+
 struct NunaBreathView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
@@ -22,7 +28,7 @@ struct NunaBreathView: View {
     @State private var showHistory = false
     @State private var opened: NunaBreathRecord?
     @State private var route: NunaBreathRoute?
-    @State private var showAdvanced = false
+    @State private var advanced: NunaAdvancedRoute?
     @State private var showMake = false
     @State private var tab = 1
     @State private var mine = NunaCustomBreath.all()
@@ -41,6 +47,22 @@ struct NunaBreathView: View {
             tabContent
         }
         .onAppear { model.startRealtimeHR(); mirrorLive(); mine = NunaCustomBreath.all() }
+#if DEBUG
+        // `--open-breath-detail tool:resonance | tool:calmMe | goal:calm | template:<id>` opens that page, to look at it.
+        .task {
+            let args = CommandLine.arguments
+            guard let i = args.firstIndex(of: "--open-breath-detail"), i + 1 < args.count else { return }
+            let parts = args[i + 1].split(separator: ":", maxSplits: 1).map(String.init)
+            guard parts.count == 2 else { return }
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            switch parts[0] {
+            case "tool": if let t = NunaBreathTool(rawValue: parts[1]) { route = .tool(t) }
+            case "goal": if let g = BreathGoal(rawValue: parts[1]) { route = .goal(g) }
+            case "template": if let t = NunaBreathLibrary.template(id: parts[1]) { route = .template(t) }
+            default: break
+            }
+        }
+#endif
         .onDisappear { model.stopRealtimeHR() }
         .onRRPackets(live) { ingest($0) }
         .onChange(of: model.bpm) { _, _ in mirrorLive() }
@@ -50,7 +72,7 @@ struct NunaBreathView: View {
             NunaBreathFlow(first: req) { request = nil }
         }
         .sheet(isPresented: $showSettings, onDismiss: { history = NunaBreathLog.all() }) {
-            NunaBreathSettingsView { showSettings = false; showAdvanced = true } onClose: { showSettings = false }.nunaSheetChrome(detents: [.large])
+            NunaBreathSettingsView { showSettings = false; advanced = NunaAdvancedRoute(mode: nil) } onClose: { showSettings = false }.nunaSheetChrome(detents: [.large])
         }
         .sheet(item: $route) { r in detailSheet(r) }
         .sheet(item: $opened) { r in
@@ -67,8 +89,8 @@ struct NunaBreathView: View {
             .preferredColorScheme(NunaTheme.colorScheme)
             .nunaSheetChrome(detents: [.large])
         }
-        .sheet(isPresented: $showAdvanced) {
-            NavigationStack { BreathingView(onSessionEnd: { start, secs, kind in NunaBreathRecovery.logExternal(repo: repo, startTs: start, seconds: secs, kind: kind); history = NunaBreathLog.all() }).toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { showAdvanced = false } } } }
+        .sheet(item: $advanced) { route in
+            NavigationStack { BreathingView(initialMode: route.mode, onSessionEnd: { start, secs, kind in NunaBreathRecovery.logExternal(repo: repo, startTs: start, seconds: secs, kind: kind); history = NunaBreathLog.all() }).toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { advanced = nil } } } }
                 .preferredColorScheme(NunaTheme.colorScheme)
         }
     }
@@ -94,7 +116,7 @@ struct NunaBreathView: View {
     }
 
     private var quickStartTemplate: BreathTemplate? {
-        anyaOn ? suggestion?.advice.template : BreathTemplates.templates(for: goal).first
+        anyaOn ? suggestion?.advice.template : NunaBreathLibrary.templates(for: goal).first
     }
 
     /// One white button, as Quick start on the Strength Trainer: Anya's pick (or the first ready exercise when she is off) and go.
@@ -123,20 +145,17 @@ struct NunaBreathView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Heart rate and HRV right now, small, under the button; without the strap it says so.
-    private var liveStrip: some View {
-        HStack(spacing: 18) {
-            Circle().fill(live.worn && liveBpm != nil ? NunaPalette.charge : NunaPalette.textMuted).frame(width: 8, height: 8)
-            if let bpm = liveBpm {
+    /// Heart rate and HRV right now, small, under the button; without the strap there is nothing to show, so it takes no room.
+    @ViewBuilder private var liveStrip: some View {
+        if let bpm = liveBpm, live.worn {
+            HStack(spacing: 18) {
+                Circle().fill(NunaPalette.charge).frame(width: 8, height: 8)
                 metric("Heart rate", "\(bpm)", "bpm")
                 metric("HRV", NunaBreathLive.shared.rmssd.map { String(format: "%.0f", $0) } ?? "–", "ms")
                 Spacer(minLength: 0)
-            } else {
-                Text("Wear the strap for live guidance. You can still breathe without it.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                Spacer(minLength: 0)
             }
+            .padding(.top, 4)
         }
-        .padding(.top, 4)
     }
 
     private func metric(_ label: LocalizedStringKey, _ value: String, _ unit: String) -> some View {
@@ -233,17 +252,18 @@ struct NunaBreathView: View {
     private var templates: some View {
         VStack(alignment: .leading, spacing: 10) {
             NunaTitleRow(title: "Ready to start") { EmptyView() }
-            ForEach(BreathTemplates.templates(for: goal)) { t in
+            ForEach(NunaBreathLibrary.templates(for: goal)) { t in
                 let picked = suggestion?.advice.template.id == t.id && anyaOn
                 Button { route = .template(t) } label: {
                     NunaBreathPickRow(glyph: t.goal.activity, tint: t.goal.tint, title: t.title, line: t.blurb,
                                       figure: "\(lengthPref > 0 ? lengthPref : t.minutes)", chip: picked ? "Anya's pick" : nil)
                 }.buttonStyle(.plain)
             }
-            Button { showAdvanced = true } label: {
-                NunaBreathPickRow(glyph: "Breathwork", tint: NunaPalette.recoveryBlue, title: String(localized: "Resonance and Calm me"),
-                                  line: String(localized: "Find your own pace, or settle your heart rate with the strap."))
-            }.buttonStyle(.plain)
+            ForEach([NunaBreathTool.resonance, .calmMe]) { tool in
+                Button { route = .tool(tool) } label: {
+                    NunaBreathPickRow(glyph: tool.glyph, tint: tool.tint, title: tool.title, line: tool.subtitle)
+                }.buttonStyle(.plain)
+            }
         }
     }
 
@@ -253,6 +273,9 @@ struct NunaBreathView: View {
         case .goal(let g):
             NunaBreathGoalDetail(goal: g, recommended: recommended(for: g), lengthPref: lengthPref,
                                  onStart: { startFromDetail($0) }, onOpen: { route = .template($0) }, onClose: { route = nil })
+                .nunaSheetChrome(detents: [.large])
+        case .tool(let tool):
+            NunaBreathToolDetail(tool: tool, onStart: { openTool(tool) }, onClose: { route = nil })
                 .nunaSheetChrome(detents: [.large])
         case .template(let t):
             NunaBreathTemplateDetail(template: t, minutes: lengthPref > 0 ? lengthPref : t.minutes,
@@ -264,7 +287,13 @@ struct NunaBreathView: View {
     /// Anya's pick when it belongs to the goal, otherwise the goal's first exercise.
     private func recommended(for g: BreathGoal) -> BreathTemplate {
         if anyaOn, let t = suggestion?.advice.template, t.goal == g { return t }
-        return BreathTemplates.templates(for: g).first ?? BreathTemplates.all[0]
+        return NunaBreathLibrary.templates(for: g).first ?? BreathTemplates.all[0]
+    }
+
+    /// Resonance and Calm me run on the older screen, opened on the tab the page was for.
+    private func openTool(_ tool: NunaBreathTool) {
+        route = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { advanced = NunaAdvancedRoute(mode: tool.mode) }
     }
 
     private func startFromDetail(_ t: BreathTemplate) {
