@@ -34,7 +34,8 @@ private struct NunaToolSessionBody: View {
     @State private var startedAt = Date()
     @State private var hasRun = false
     @State private var logged = false
-    @State private var orb: CGFloat = 0.2
+    @State private var phaseStart = Date()
+    @State private var waveClock = NunaWaveClock()
     @State private var confirmEnd = false
     @State private var tab = 0
     @State private var notStarted: String?
@@ -103,7 +104,7 @@ private struct NunaToolSessionBody: View {
         }
         .overlay {
             if full && c.running {
-                NunaBreathFullLayer(orb: visual(size: 360, big: true), bpm: model.bpm, timeText: clock(c.elapsedSeconds), timeLabel: "Time") {
+                NunaBreathFullLayer(content: visual(size: 360, big: true), bpm: model.bpm, timeText: clock(c.elapsedSeconds), timeLabel: "Time") {
                     withAnimation(.easeInOut(duration: 0.25)) { full = false }
                 }
             }
@@ -137,11 +138,8 @@ private struct NunaToolSessionBody: View {
 
     /// The glow follows the cue the controller is on: it swells on the in-breath and settles on the out-breath, over the length of that part of the breath.
     private func movePhase() {
-        guard let bpm = runningBpm, c.running else { return }
-        let cycle = 60 / bpm
-        let inhale = cycle * BreathPacer.defaultInhaleFraction
-        if c.phase == .inhale { withAnimation(.easeInOut(duration: inhale)) { orb = 1 } }
-        else { withAnimation(.easeInOut(duration: cycle - inhale)) { orb = 0.2 } }
+        guard c.running else { return }
+        phaseStart = Date()
     }
 
     /// A session that lasted long enough goes into the history and the recovery activities, once.
@@ -197,27 +195,36 @@ private struct NunaToolSessionBody: View {
     }
 
     /// The dust: Resonance breathes with the cue; Calm me beats at the tempo it is buzzing.
+    /// The breath as a line under its name. Resonance follows the pace it is breathing at, in step with the controller's phase; Calm me draws the
+    /// slow wave of the pace it is easing the heart towards, so the line and the strap's buzz agree.
     @ViewBuilder private func visual(size: CGFloat, big: Bool = false) -> some View {
-        ZStack {
-            if tool == .calmMe {
-                TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { ctx in
-                    let bpm = max(40, c.calmTargetBpm ?? Double(model.bpm ?? 70))
-                    let p = 0.5 + 0.5 * sin(ctx.date.timeIntervalSinceReferenceDate * bpm / 60 * 2 * .pi)
-                    NunaDustOrb(progress: CGFloat(0.3 + 0.4 * p), tint: tool.tintColor)
-                }
-            } else {
-                NunaDustOrb(progress: orb, tint: tool.tintColor)
-            }
+        let calm = tool == .calmMe
+        let bpm = calm ? max(40, c.calmTargetBpm ?? Double(model.bpm ?? 70)) : runningBpm
+        let track = bpm.map { NunaBreathTrack(bpm: $0, inhaleFraction: BreathPacer.defaultInhaleFraction) } ?? .free
+        let index = c.phase == .inhale ? 0 : 1
+        let start = phaseStart
+        let clock = waveClock
+        VStack(spacing: big ? 20 : 10) {
             VStack(spacing: 4) {
-                Text(verbatim: centerWord).font(.nuna(size: big ? 21 : 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    .multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
                 if tool == .calmMe, let t = c.calmTargetBpm {
-                    Text(verbatim: "\(Int(t.rounded())) bpm").font(.nuna(size: big ? 18 : 15, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(verbatim: "\(Int(t.rounded()))").font(.nuna(size: big ? 110 : 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
+                        Text("bpm").font(.nuna(size: NunaTypeSize.caption, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                    Text(verbatim: centerWord).font(.nuna(size: big ? 22 : 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
+                } else {
+                    Text(verbatim: centerWord).font(.nuna(size: big ? 34 : 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        .multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
                 }
             }
-            .frame(width: size * 0.34)
+            .frame(maxWidth: .infinity, minHeight: big ? 150 : 70)
+            NunaBreathWave(track: track, tint: tool.tintColor, height: big ? 320 : max(110, size * 0.48)) { now in
+                if track.length <= 0 { return now.timeIntervalSinceReferenceDate }
+                if calm { return clock.position(at: now, length: track.length) }
+                guard c.running else { return track.start(of: 0) }
+                return track.start(of: index) + max(0, now.timeIntervalSince(start))
+            }
         }
-        .frame(width: size, height: size).frame(maxWidth: .infinity)
     }
 
     private var centerWord: String {

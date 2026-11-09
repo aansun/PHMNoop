@@ -12,30 +12,6 @@ struct NunaBreathRequest: Identifiable, Equatable {
     var seconds: Int
 }
 
-/// The pacer: a ring the breath fills and drains, a soft disc inside it and the phase in the middle.
-struct NunaBreathPacer: View {
-    let progress: CGFloat
-    let animated: Bool
-    var tint: Color = NunaPalette.rest
-    var body: some View {
-        GeometryReader { geo in
-            let d = min(geo.size.width, geo.size.height)
-            let p = min(max(progress, 0), 1)
-            let inner = d * (0.40 + 0.60 * p)
-            ZStack {
-                Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1).frame(width: d, height: d)
-                Circle().strokeBorder(tint.opacity(0.22), lineWidth: 1).frame(width: d * 0.7, height: d * 0.7)
-                // The aura: a soft glow that swells with the breath.
-                Circle().fill(RadialGradient(colors: [tint.opacity(0.45), tint.opacity(0)], center: .center, startRadius: inner * 0.3, endRadius: inner * 0.95))
-                    .frame(width: inner * 1.5, height: inner * 1.5).blur(radius: 14)
-                Circle().fill(tint.opacity(0.16)).frame(width: inner, height: inner)
-                Circle().strokeBorder(tint, lineWidth: 3).frame(width: inner, height: inner)
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
-        }
-    }
-}
-
 /// The breathing itself: an optional countdown, then the protocol's stages paced by a ring, the strap's buzz and (if chosen) a soft
 /// tone, with heart rate and HRV beside it. It ends when the time is up or the wearer ends it, and hands the record to the caller.
 struct NunaBreathSessionView: View {
@@ -46,7 +22,6 @@ struct NunaBreathSessionView: View {
     @EnvironmentObject private var live: LiveState
     @EnvironmentObject private var repo: Repository
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @ObservedObject private var motion = NoopMotionState.shared
     @AppStorage(NunaBreathPrefs.hapticsKey) private var haptics = true
     @AppStorage(NunaBreathAudioMode.key) private var audioModeRaw = ""
     @AppStorage(NunaBreathPrefs.countdownKey) private var useCountdown = true
@@ -55,13 +30,15 @@ struct NunaBreathSessionView: View {
     @State private var countdown: Int?
     @State private var running = false
     @State private var paused = false
-    @State private var orb: CGFloat = 0
     @State private var phase: BreathPhase = .inhale
     @State private var phaseLabel: String?
     @State private var stageIndex = 0
     @State private var phaseDeadline = Date.distantFuture
     @State private var pausedLeft: TimeInterval = 0
     @State private var phaseLeft = 0
+    /// When the step now running began (moved back when a paused step resumes), and how far into it the wearer was when pausing.
+    @State private var phaseStart = Date()
+    @State private var pausedOffset: TimeInterval = 0
     @State private var seconds = 0
     @State private var breaths = 0
     @State private var startedAt = Date()
@@ -89,7 +66,7 @@ struct NunaBreathSessionView: View {
     private var proto: BreathProtocol? { BreathProtocolCatalog.protocolById(request.protocolId) }
     private var stages: [BreathStage] { proto?.stages.filter { $0.durationMs > 0 } ?? [] }
     private var guided: Bool { proto?.mode == .guided }
-    private var still: Bool { motion.poseStill(reduceMotion) }
+    private var track: NunaBreathTrack { guided || stages.isEmpty ? .free : NunaBreathTrack(stages: stages) }
     private var title: String { request.templateId.flatMap { NunaBreathLibrary.template(id: $0)?.title } ?? proto.map { String(localized: String.LocalizationValue($0.title)) } ?? "" }
 
     @State private var tab = 0
@@ -136,7 +113,7 @@ struct NunaBreathSessionView: View {
         }
         .overlay {
             if full {
-                NunaBreathFullLayer(orb: pacer(size: 360, big: true), bpm: model.bpm, timeText: clock(max(0, request.seconds - seconds))) {
+                NunaBreathFullLayer(content: pacer(size: 360, big: true), bpm: model.bpm, timeText: clock(max(0, request.seconds - seconds))) {
                     withAnimation(.easeInOut(duration: 0.25)) { full = false }
                 }
             }
@@ -199,23 +176,27 @@ struct NunaBreathSessionView: View {
         .padding(.vertical, 4)
     }
 
+    /// The breath as a line under the step's count and name. The count is the big figure, as on the breathing pacers it follows.
     private func pacer(size: CGFloat, big: Bool = false) -> some View {
-        ZStack {
-            NunaDustOrb(progress: orb, tint: request.goal.tint)
-            if let c = countdown {
-                Text(verbatim: "\(c)").font(.nuna(size: big ? 76 : 60, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-            } else {
-                VStack(spacing: 4) {
-                    Text(verbatim: phaseWord).font(.nuna(size: big ? 22 : 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+        let t = track, idx = stageIndex, follows = running && !guided
+        return VStack(spacing: big ? 20 : 10) {
+            VStack(spacing: 4) {
+                if let c = countdown {
+                    Text(verbatim: "\(c)").font(.nuna(size: big ? 110 : 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
+                    Text("Get ready").font(.nuna(size: big ? 22 : 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                } else {
+                    Text(verbatim: follows && phaseLeft > 0 ? "\(phaseLeft)" : " ").font(.nuna(size: big ? 110 : 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
+                    Text(verbatim: phaseWord).font(.nuna(size: big ? 22 : 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         .multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
-                    if running, !guided, phaseLeft > 0 {
-                        Text(verbatim: "\(phaseLeft)").font(.nuna(size: big ? 22 : 17, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
-                    }
                 }
-                .frame(width: size * 0.34)
+            }
+            .frame(maxWidth: .infinity)
+            NunaBreathWave(track: t, tint: request.goal.tint, height: big ? 320 : max(110, size * 0.48)) { now in
+                guard t.length > 0 else { return now.timeIntervalSinceReferenceDate }
+                guard follows else { return t.start(of: 0) }
+                return t.start(of: idx) + max(0, paused ? pausedOffset : now.timeIntervalSince(phaseStart))
             }
         }
-        .frame(width: size, height: size).frame(maxWidth: .infinity)
     }
 
     /// The heart rate under the glow, at the left: the heart, its name and the reading.
@@ -312,7 +293,6 @@ struct NunaBreathSessionView: View {
         startedAt = Date()
         if guided {
             phase = .textOnly; phaseDeadline = .distantFuture
-            orb = 0.5
         } else {
             arm(from: Date(), buzz: true)
         }
@@ -357,15 +337,8 @@ struct NunaBreathSessionView: View {
         let duration = remaining ?? Double(stage.durationMs) / 1000
         phaseDeadline = now.addingTimeInterval(duration)
         phaseLeft = Int(ceil(duration))
-        if still { orb = 0.5 } else {
-            withAnimation(.easeInOut(duration: max(duration, 0.05))) {
-                switch stage.type {
-                case .inhale: orb = 1
-                case .exhale: orb = 0
-                case .hold, .textOnly: break
-                }
-            }
-        }
+        // The line is read off this: a step resumed after a pause carries on from where it stopped.
+        phaseStart = now.addingTimeInterval(-max(0, Double(stage.durationMs) / 1000 - duration))
         if buzz {
             let loops = BreathProtocolPlayer.loops(for: stage.type)
             if loops > 0, haptics { model.buzz(loops: UInt8(clamping: loops), gate: HapticPrefs.breathing) }
@@ -384,6 +357,7 @@ struct NunaBreathSessionView: View {
             if !guided { arm(from: Date(), buzz: false, remaining: max(pausedLeft, 0.3)) }
         } else {
             pausedLeft = max(0, phaseDeadline.timeIntervalSinceNow)
+            pausedOffset = max(0, Date().timeIntervalSince(phaseStart))
             paused = true
             pausedAt = Date()
             phaseDeadline = .distantFuture
