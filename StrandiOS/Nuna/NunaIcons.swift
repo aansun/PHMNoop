@@ -38,6 +38,7 @@ enum NunaIcons {
     /// The "adjust this feature" button and row: Breathing, Workout and Anya settings all carry it.
     static let featureSettings = "slider.horizontal.3"
     static let units = "ruler"
+    static let filter = "line.3.horizontal.decrease"
     static let ai = NunaGlyph.anya
     static let data = "link"
     static let features = "square.and.pencil"

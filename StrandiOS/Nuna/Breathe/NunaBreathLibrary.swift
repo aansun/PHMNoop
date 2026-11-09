@@ -114,7 +114,7 @@ enum NunaBreathLibrary {
 // MARK: Level
 
 /// How demanding a technique is. Shown on its page so nobody starts an intense one by accident.
-enum NunaBreathLevel {
+enum NunaBreathLevel: CaseIterable {
     case gentle, moderate, intense
     var title: String {
         switch self { case .gentle: return String(localized: "Gentle"); case .moderate: return String(localized: "Moderate"); case .intense: return String(localized: "Intense") }

@@ -63,44 +63,7 @@ enum NunaBreathIcon {
     static func name(for t: BreathTemplate) -> String { name(for: t.protocolId, goal: t.goal) }
 }
 
-// MARK: Explore grid
-
-/// One technique in the Explore grid, laid out like a WHOOP workout card: a picture area with the level on it, the name, the minutes.
-struct NunaBreathExploreCard: View {
-    let icon: String
-    let title: String
-    let level: String
-    let minutes: String
-    var badge: String?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ZStack {
-                LinearGradient(colors: [NunaPalette.glassStrong, NunaPalette.cardSurface], startPoint: .top, endPoint: .bottom)
-                NunaActivityGlyph(name: icon, size: 64).foregroundStyle(NunaPalette.textPrimary)
-            }
-            .frame(height: 122)
-            .overlay(alignment: .topTrailing) { levelTag(level).padding(8) }
-            .overlay(alignment: .topLeading) { if let badge { levelTag(badge, color: NunaPalette.charge).padding(8) } }
-            VStack(alignment: .leading, spacing: 6) {
-                Text(verbatim: title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading).minimumScaleFactor(0.85)
-                    .frame(maxWidth: .infinity, minHeight: 34, alignment: .topLeading)
-                Text(verbatim: minutes).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-            .padding(.horizontal, 14).padding(.top, 12).padding(.bottom, 14)
-        }
-        .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .contentShape(Rectangle())
-    }
-
-    private func levelTag(_ text: String, color: Color = NunaPalette.textPrimary) -> some View {
-        Text(verbatim: text).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(color)
-            .padding(.horizontal, 7).frame(height: 22)
-            .background(Color.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-    }
-}
+// MARK: Rows of a goal page
 
 /// A flat card for one exercise inside a goal page: the picture, the name and a line under it, the minutes at the right.
 struct NunaBreathPickRow: View {
