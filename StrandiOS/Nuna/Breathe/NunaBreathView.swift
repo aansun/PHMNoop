@@ -29,6 +29,7 @@ struct NunaBreathView: View {
     @State private var opened: NunaBreathRecord?
     @State private var route: NunaBreathRoute?
     @State private var advanced: NunaAdvancedRoute?
+    @State private var toolRun: NunaBreathTool?
     @State private var showMake = false
     @State private var tab = 1
     @State private var mine = NunaCustomBreath.all()
@@ -88,6 +89,9 @@ struct NunaBreathView: View {
             .background(NunaBackdrop())
             .preferredColorScheme(NunaTheme.colorScheme)
             .nunaSheetChrome(detents: [.large])
+        }
+        .fullScreenCover(item: $toolRun, onDismiss: { history = NunaBreathLog.all() }) { t in
+            NunaBreathToolSessionView(tool: t, onEnd: { toolRun = nil })
         }
         .sheet(item: $advanced) { route in
             NavigationStack { BreathingView(initialMode: route.mode, onSessionEnd: { start, secs, kind in NunaBreathRecovery.logExternal(repo: repo, startTs: start, seconds: secs, kind: kind); history = NunaBreathLog.all() }).toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { advanced = nil } } } }
@@ -294,10 +298,10 @@ struct NunaBreathView: View {
         return NunaBreathLibrary.templates(for: g).first ?? BreathTemplates.all[0]
     }
 
-    /// Resonance and Calm me run on the older screen, opened on the tab the page was for.
+    /// Resonance and Calm me run on their own session screen.
     private func openTool(_ tool: NunaBreathTool) {
         route = nil
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { advanced = NunaAdvancedRoute(mode: tool.mode) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { toolRun = tool }
     }
 
     private func startFromDetail(_ t: BreathTemplate) {

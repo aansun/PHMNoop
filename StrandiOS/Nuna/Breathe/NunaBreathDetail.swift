@@ -86,7 +86,7 @@ struct NunaBreathExploreCard: View {
                 Text(verbatim: title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading).minimumScaleFactor(0.85)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .topLeading)
-                Text(verbatim: minutes).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Text(verbatim: minutes).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             .padding(.horizontal, 14).padding(.top, 12).padding(.bottom, 14)
         }
@@ -116,9 +116,9 @@ struct NunaBreathPickRow: View {
                 RoundedRectangle(cornerRadius: 10, style: .continuous).fill(NunaPalette.glassStrong).frame(width: 64, height: 50)
                     .overlay(NunaActivityGlyph(name: glyph, size: 28).foregroundStyle(NunaPalette.textPrimary))
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(verbatim: title).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: title).font(.nunaWords(size: 14.5, semibold: true)).tracking(0).foregroundStyle(NunaPalette.textPrimary)
                         .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading).textCase(nil)
-                    Text(verbatim: line).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: line).font(.nunaWords(size: 12.5)).tracking(0).foregroundStyle(NunaPalette.textSecondary)
                         .lineLimit(2).multilineTextAlignment(.leading).textCase(nil)
                 }
                 Spacer(minLength: 8)
@@ -194,19 +194,18 @@ private struct NunaBreathDetailShell<Content: View>: View {
         .preferredColorScheme(NunaTheme.colorScheme)
     }
 
-    /// The picture area: the technique's picture, large and pale, with its name over the lower left.
+    /// The picture area: the technique's picture, large and pale, and under it the name and one line. The picture and the name never share a row.
     private var hero: some View {
-        ZStack(alignment: .bottomLeading) {
-            LinearGradient(colors: [NunaPalette.glassStrong, NunaPalette.cardSurface.opacity(0.4)], startPoint: .topTrailing, endPoint: .bottomLeading)
-            NunaActivityGlyph(name: icon, size: 120).foregroundStyle(NunaPalette.textPrimary.opacity(0.9))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing).padding(.top, 14).padding(.trailing, 20)
-            VStack(alignment: .leading, spacing: 6) {
-                Text(verbatim: title).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(3).minimumScaleFactor(0.7)
-                Text(verbatim: subtitle).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(2)
-            }
-            .padding(18)
+        VStack(alignment: .leading, spacing: 12) {
+            NunaActivityGlyph(name: icon, size: 92).foregroundStyle(NunaPalette.textPrimary.opacity(0.92))
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            Text(verbatim: title).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                .lineLimit(3).minimumScaleFactor(0.7).fixedSize(horizontal: false, vertical: true)
+            Text(verbatim: subtitle).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(height: 176).frame(maxWidth: .infinity)
+        .padding(18).frame(maxWidth: .infinity, alignment: .leading)
+        .background(LinearGradient(colors: [NunaPalette.glassStrong, NunaPalette.cardSurface.opacity(0.4)], startPoint: .topTrailing, endPoint: .bottomLeading))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }
@@ -229,9 +228,9 @@ private func nunaBreathRuled(_ title: LocalizedStringKey) -> some View {
 private func nunaBreathBenefits(_ items: [String]) -> some View {
     VStack(alignment: .leading, spacing: 8) {
         ForEach(Array(items.enumerated()), id: \.offset) { _, line in
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "checkmark").font(.nuna(size: 11, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 4)
-                Text(verbatim: line).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Image(systemName: "checkmark.circle.fill").font(.system(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.charge)
+                Text(verbatim: line).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil).fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -250,7 +249,7 @@ private struct NunaBreathSteps: View {
                         Text(verbatim: "\(st.id + 1)").font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             .frame(width: 24, height: 24).background(NunaPalette.glassStrong, in: Circle())
                         Image(systemName: st.icon).font(.system(size: 18, weight: .light)).foregroundStyle(NunaPalette.textPrimary).frame(width: 26)
-                        Text(verbatim: st.text).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        Text(verbatim: st.text).font(.nunaWords(size: 14)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
                     }
@@ -296,7 +295,7 @@ enum NunaBreathTool: String, Identifiable {
             : [sit,
                ("applewatch.watchface", String(localized: "Wear the strap snugly. It buzzes a beat just under your heart rate.")),
                ("waveform", String(localized: "Breathe slowly in time with the buzz.")),
-               ("tortoise", String(localized: "As you settle, the buzz slows down. Stop whenever you want."))]
+               ("arrow.down.right", String(localized: "As you settle, the buzz slows down. Stop whenever you want."))]
         return list.enumerated().map { NunaBreathStep(id: $0.offset, icon: $0.element.0, text: $0.element.1) }
     }
     var duration: String { self == .resonance ? "5–15" : "3–10" }
@@ -327,19 +326,19 @@ struct NunaBreathTemplateDetail: View {
             startNote: nil, onStart: onStart, onClose: onClose) {
             if let p { NunaBreathSteps(steps: NunaBreathGuide.steps(for: p)) }
             Text(verbatim: p.map { String(localized: String.LocalizationValue($0.edu)) } ?? template.goal.about)
-                .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                .font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil).fixedSize(horizontal: false, vertical: true)
             NunaDivider()
             nunaBreathBlock("Best for") {
-                Text(verbatim: template.goal.shortTitle).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Text(verbatim: template.goal.shortTitle).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             if let hint = p?.sessionHint {
                 nunaBreathBlock("Suggested length") {
-                    Text(verbatim: String(localized: String.LocalizationValue(hint))).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    Text(verbatim: String(localized: String.LocalizationValue(hint))).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             nunaBreathBlock("What it does for you") { nunaBreathBenefits(template.goal.benefits) }
             if let caution = p?.caution {
-                Text(verbatim: String(localized: String.LocalizationValue(caution))).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.warning).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: String(localized: String.LocalizationValue(caution))).font(.nunaWords(size: 14)).tracking(0).foregroundStyle(NunaPalette.warning).lineSpacing(3).textCase(nil).fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -358,10 +357,10 @@ struct NunaBreathToolDetail: View {
                     (NunaBreathLevel.gentle.title, "", "Level")],
             startNote: nil, onStart: onStart, onClose: onClose) {
             NunaBreathSteps(steps: tool.steps)
-            Text(verbatim: tool.about).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+            Text(verbatim: tool.about).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil).fixedSize(horizontal: false, vertical: true)
             NunaDivider()
             nunaBreathBlock("What it does for you") { nunaBreathBenefits(tool.benefits) }
-            Text(verbatim: String(localized: "Wear the strap for the best result. Without it you still get the visual cue.")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.warning).textCase(nil)
+            Text(verbatim: String(localized: "Wear the strap for the best result. Without it you still get the visual cue.")).font(.nunaWords(size: 14)).tracking(0).foregroundStyle(NunaPalette.warning).lineSpacing(3).textCase(nil)
         }
     }
 }
@@ -388,7 +387,7 @@ struct NunaBreathGoalDetail: View {
             icon: goal.activity, title: goal.shortTitle, subtitle: goal.blurbText,
             stats: [(range, String(localized: "min"), "Duration"), ("\(templates.count)", "", "Exercises"), (goal.shortTitle, "", "For")],
             startNote: "\(recommended.title) · \(mins(recommended)) \(String(localized: "min"))", onStart: { onStart(recommended) }, onClose: onClose) {
-            Text(verbatim: goal.about).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+            Text(verbatim: goal.about).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil).fixedSize(horizontal: false, vertical: true)
             NunaDivider()
             nunaBreathBlock("What it does for you") { nunaBreathBenefits(goal.benefits) }
             nunaBreathRuled("Exercises")
