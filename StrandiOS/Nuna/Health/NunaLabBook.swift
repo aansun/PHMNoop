@@ -44,9 +44,10 @@ struct NunaMarkerDetailView: View {
     }
 
     var body: some View {
-        NunaDetailScreen(LocalizedStringKey(title)) {
+        NunaDetailScreen("Biomarker details", centersTitle: true) {
             if let m = marker {
-                intro(m)
+                heading(m)
+                insightCard(m)
                 latest(m)
                 trendCard(m)
                 recordingsLink(m)
@@ -77,24 +78,40 @@ struct NunaMarkerDetailView: View {
 
     // MARK: Top of the page
 
-    /// The marker's kind as tags, and one plain sentence about the latest reading in an outlined card.
-    private func intro(_ m: NunaLabMarker) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
+    /// The marker's name, large, with its kind as tags.
+    private func heading(_ m: NunaLabMarker) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(verbatim: m.name).font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 10) {
                 tag(m.category.displayName)
                 if m.range != nil { tag(m.rangeIsWho ? String(localized: "WHO range") : String(localized: "Your range")) }
             }
-            if let line = insightLine(m) {
-                Text(verbatim: line).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder((m.latestStatus.map(NunaLabRange.tint) ?? NunaPalette.effortModerate).opacity(0.6), lineWidth: 1.5))
-            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func tag(_ text: String) -> some View {
-        Text(verbatim: text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            .padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: Capsule())
+        Text(verbatim: text).font(.nuna(size: 14, weight: .medium)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            .padding(.horizontal, 13).frame(height: 33).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    /// One plain sentence about the latest reading in a card with a violet-to-teal frame, and the way to add the next reading.
+    @ViewBuilder private func insightCard(_ m: NunaLabMarker) -> some View {
+        if let line = insightLine(m) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(verbatim: line).font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).lineSpacing(3).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                Button { adding = true } label: {
+                    HStack(spacing: 8) {
+                        Text("Add a reading").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        Image(systemName: "arrow.right").font(.nuna(size: 13, weight: .bold))
+                    }
+                    .foregroundStyle(LinearGradient(colors: [NunaPalette.insightFrom, NunaPalette.insightBlue], startPoint: .leading, endPoint: .trailing))
+                }.buttonStyle(.plain)
+            }
+            .padding(.horizontal, 17).padding(.vertical, 18).frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous)
+                .strokeBorder(LinearGradient(colors: [NunaPalette.insightFrom.opacity(0.6), NunaPalette.insightTo.opacity(0.6)], startPoint: .leading, endPoint: .trailing), lineWidth: 1.5))
+        }
     }
 
     private func insightLine(_ m: NunaLabMarker) -> String? {
@@ -107,18 +124,14 @@ struct NunaMarkerDetailView: View {
         }
     }
 
-    /// The latest reading, large, with where it sits and when it was taken.
+    /// The latest reading, large.
     private func latest(_ m: NunaLabMarker) -> some View {
         let l = m.latest
-        return VStack(alignment: .leading, spacing: 10) {
-            nunaTrendsCap("Latest")
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(verbatim: l.map(m.text) ?? "—").font(.nuna(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                Text(verbatim: m.unit).font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-            HStack(spacing: 10) {
-                NunaLabStatusChip(status: m.status)
-                Text(verbatim: l.map { LabBookFormat.dayFromKey($0.day) } ?? "").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("Latest").font(.nuna(size: 10, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            HStack(alignment: .firstTextBaseline, spacing: 7) {
+                Text(verbatim: l.map(m.text) ?? "—").font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                Text(verbatim: m.unit).font(.nuna(size: 15, weight: .medium)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -126,13 +139,13 @@ struct NunaMarkerDetailView: View {
     private func recordingsLink(_ m: NunaLabMarker) -> some View {
         NavigationLink { NunaLabRecordingsView(markerKey: m.key) } label: {
             HStack(spacing: 16) {
-                Image(systemName: "list.bullet").font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34)
-                Text("See all recordings").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Image(systemName: "list.bullet").font(.nuna(size: 20, weight: .ultraLight)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34)
+                Text("See all recordings").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             }
-            .padding(.horizontal, 18).frame(height: 64).contentShape(Rectangle())
-            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+            .padding(.horizontal, 16).frame(height: 56).contentShape(Rectangle())
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }.buttonStyle(.plain)
     }
 
@@ -159,54 +172,63 @@ struct NunaMarkerDetailView: View {
         let values = inside.compactMap(\.value)
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM yy")
         let earliest = m.numeric.first?.takenAt ?? 0
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .center) {
-                    NunaRangeSwitch(choices: [(90, "3M"), (365, "1Y"), (0, "All")], range: $span, onSelect: { page = 0 })
-                    Spacer(minLength: 6)
-                    if span != 0 {
-                        NunaDateStepper(label: f.string(from: w.from) + " – " + f.string(from: w.to), canGoBack: Int(w.from.timeIntervalSince1970) > earliest, canGoForward: page > 0,
-                                        back: { page += 1 }, forward: { page = max(0, page - 1) })
-                    }
+        return VStack(alignment: .leading, spacing: 14) {
+            if !(span == 0 && !m.isPressure && inside.count >= 2) { legendPill(m) }
+            if inside.isEmpty {
+                Text("No readings in this period. Use the arrows to look at an earlier one.")
+                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).textCase(nil)
+                    .frame(maxWidth: .infinity, minHeight: 160)
+            } else if span == 0, !m.isPressure, inside.count >= 2 {
+                // The long view reads like the HRV page: one stretch per month with its average, over the range band.
+                NunaCard {
+                    NunaSegmentedChart(points: inside.compactMap { r in r.value.map { (Date(timeIntervalSince1970: TimeInterval(r.takenAt)), $0) } },
+                                       color: NunaPalette.charge, decimals: MarkerCatalog.definition(for: m.key)?.decimals ?? 1,
+                                       band: m.range.map { $0.low...$0.high }, directional: false, height: 240)
                 }
-                if !(span == 0 && !m.isPressure && inside.count >= 2) {
-                    HStack(spacing: 14) {
-                        legend(NunaPalette.charge, "Within your range")
-                        legend(NunaPalette.caution, "Outside your range")
-                        Spacer(minLength: 0)
-                    }
+            } else {
+                NunaLabChart(points: inside.map { r in
+                    NunaLabChart.Point(id: r.id, date: Date(timeIntervalSince1970: TimeInterval(r.takenAt)), value: r.value ?? 0,
+                                       second: m.isPressure ? m.diastolic[r.takenAt]?.value : nil, status: m.status(r))
+                }, range: m.range, from: w.from, to: w.to, format: { LabBookFormat.value($0, key: m.key) })
+            }
+            HStack(alignment: .center) {
+                NunaRangeSwitch(choices: [(90, "3M"), (365, "1Y"), (0, "All")], range: $span, onSelect: { page = 0 })
+                Spacer(minLength: 6)
+                if span != 0 {
+                    NunaDateStepper(label: f.string(from: w.from) + " – " + f.string(from: w.to), canGoBack: Int(w.from.timeIntervalSince1970) > earliest, canGoForward: page > 0,
+                                    back: { page += 1 }, forward: { page = max(0, page - 1) })
                 }
-                if inside.isEmpty {
-                    Text("No readings in this period. Use the arrows to look at an earlier one.")
-                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).textCase(nil)
-                        .frame(maxWidth: .infinity, minHeight: 160)
-                } else {
-                    if span == 0, !m.isPressure, inside.count >= 2 {
-                        // The long view reads like the HRV page: one stretch per month with its average, over the range band.
-                        NunaSegmentedChart(points: inside.compactMap { r in r.value.map { (Date(timeIntervalSince1970: TimeInterval(r.takenAt)), $0) } },
-                                           color: NunaPalette.charge, decimals: MarkerCatalog.definition(for: m.key)?.decimals ?? 1,
-                                           band: m.range.map { $0.low...$0.high }, directional: false, height: 240)
-                    } else {
-                    NunaLabChart(points: inside.map { r in
-                        NunaLabChart.Point(id: r.id, date: Date(timeIntervalSince1970: TimeInterval(r.takenAt)), value: r.value ?? 0,
-                                           second: m.isPressure ? m.diastolic[r.takenAt]?.value : nil, status: m.status(r))
-                    }, range: m.range, from: w.from, to: w.to, format: { LabBookFormat.value($0, key: m.key) })
-                    }
-                    NunaDivider()
-                    HStack(alignment: .top, spacing: 0) {
-                        summaryFigure("Lowest", values.min(), m)
-                        summaryFigure("Average", values.isEmpty ? nil : values.reduce(0, +) / Double(values.count), m)
-                        summaryFigure("Highest", values.max(), m)
-                    }
+            }
+            if !inside.isEmpty {
+                NunaDivider()
+                HStack(alignment: .top, spacing: 0) {
+                    summaryFigure("Lowest", values.min(), m)
+                    summaryFigure("Average", values.isEmpty ? nil : values.reduce(0, +) / Double(values.count), m)
+                    summaryFigure("Highest", values.max(), m)
                 }
             }
         }
     }
 
+    /// The key of the chart on a dark bar: a short dash of each colour in use and its name.
+    private func legendPill(_ m: NunaLabMarker) -> some View {
+        HStack(spacing: 18) {
+            if m.range != nil {
+                legend(NunaPalette.caution, "Out of range")
+                legend(NunaPalette.charge, "Within range")
+            } else {
+                legend(NunaPalette.rangeSteel, "No range")
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.leading, 24).frame(maxWidth: .infinity).frame(height: 28.5)
+        .background(NunaPalette.canvas.opacity(0.85), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
     private func legend(_ tint: Color, _ text: LocalizedStringKey) -> some View {
-        HStack(spacing: 6) {
-            Circle().fill(tint).frame(width: 9, height: 9)
-            Text(text).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
+        HStack(spacing: 8) {
+            Capsule().fill(tint).frame(width: 11, height: 2.4)
+            Text(text).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
         }
     }
 

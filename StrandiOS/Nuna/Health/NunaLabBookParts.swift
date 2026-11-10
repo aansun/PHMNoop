@@ -233,8 +233,9 @@ enum NunaLabStore {
 
 // MARK: - The chart
 
-/// The readings of a window as dots over time, joined by a thin line, on a green band where the range from the report sits. A dot is green inside the
-/// range and amber outside it. Blood pressure draws the diastolic value too, joined to the systolic one by a bar.
+/// The readings of a window over time, on bands stacked like the range from the report: orange above it, green inside it, orange below it, each with a
+/// bar down its left edge and its edge values in its colour, and fading out to the right. A reading is a ring in the colour of its band with its number
+/// above; with several, a thin line joins them. Blood pressure draws the diastolic value too, joined to the systolic one by a bar.
 struct NunaLabChart: View {
     struct Point: Identifiable { let id: String; let date: Date; let value: Double; let second: Double?; let status: NunaLabRange.Status? }
 
@@ -245,45 +246,52 @@ struct NunaLabChart: View {
     let format: (Double) -> String
 
     private static let dayFormat: DateFormatter = {
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM"); return f
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("MMM d"); return f
+    }()
+    private static let yearFormat: DateFormatter = {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("yyyy"); return f
     }()
 
     var body: some View {
         Canvas { ctx, size in
-            let left: CGFloat = 8, right: CGFloat = 8, top: CGFloat = 26, bottom: CGFloat = 50
-            let w = size.width - left - right, h = size.height - top - bottom
+            let left: CGFloat = 46, top: CGFloat = 4, bottom: CGFloat = 48, gap: CGFloat = 2
+            let w = size.width - left, h = size.height - top - bottom
             var lo = points.flatMap { [$0.value, $0.second ?? $0.value] }.min() ?? 0
             var hi = points.flatMap { [$0.value, $0.second ?? $0.value] }.max() ?? 1
             if let range { lo = min(lo, range.low); hi = max(hi, range.high) }
-            let pad = max((hi - lo) * 0.14, abs(hi) * 0.02, 0.000_1)
+            let pad = max((hi - lo) * 0.3, abs(hi) * 0.04, 0.000_1)
+            let nonNegative = lo >= 0 && (range?.low ?? 0) >= 0
             lo -= pad; hi += pad
+            if nonNegative { lo = max(lo, 0) }   // a figure that cannot go below zero does not get a stretch of axis below it
             let t0 = from.timeIntervalSince1970, t1 = max(to.timeIntervalSince1970, t0 + 1)
-            let x: (Date) -> CGFloat = { left + CGFloat(($0.timeIntervalSince1970 - t0) / (t1 - t0)) * w }
+            let sorted = points.sorted { $0.date < $1.date }
+            let x: (Date) -> CGFloat = { d in
+                sorted.count == 1 ? left + w * 0.5 : left + 16 + CGFloat((d.timeIntervalSince1970 - t0) / (t1 - t0)) * (w - 32)
+            }
             let y: (Double) -> CGFloat = { top + h - CGFloat(($0 - lo) / (hi - lo)) * h }
 
-            // Faint lines at the top, the middle and the bottom, as in the figure it follows.
-            for k in 0...2 {
-                var p = Path(); let yy = top + h * CGFloat(k) / 2
-                p.move(to: CGPoint(x: left, y: yy)); p.addLine(to: CGPoint(x: left + w, y: yy))
-                ctx.stroke(p, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
-            }
-            if let range {
-                let band = CGRect(x: left, y: y(range.high), width: w, height: max(2, y(range.low) - y(range.high)))
-                ctx.fill(Path(roundedRect: band, cornerRadius: 6), with: .color(NunaPalette.charge.opacity(0.14)))
-                for edge in [range.low, range.high] {
-                    var p = Path(); p.move(to: CGPoint(x: left, y: y(edge))); p.addLine(to: CGPoint(x: left + w, y: y(edge)))
-                    ctx.stroke(p, with: .color(NunaPalette.charge.opacity(0.45)), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+            // The bands, top to bottom, as (upper edge, lower edge, colour).
+            let bands: [(Double, Double, Color)] = range.map { r in
+                [(hi, r.high, NunaPalette.caution), (r.high, r.low, NunaPalette.charge), (r.low, lo, NunaPalette.caution)]
+            } ?? [(hi, lo, NunaPalette.rangeSteel)]
+            for (i, band) in bands.enumerated() {
+                let y0 = y(band.0) + (i == 0 ? 0 : gap / 2), y1 = y(band.1) - (i == bands.count - 1 ? 0 : gap / 2)
+                guard y1 - y0 > 1 else { continue }
+                let rect = CGRect(x: left, y: y0, width: w, height: y1 - y0)
+                ctx.fill(Path(rect), with: .linearGradient(Gradient(colors: [band.2.opacity(0.14), band.2.opacity(0)]),
+                                                           startPoint: CGPoint(x: left, y: 0), endPoint: CGPoint(x: left + w * 0.92, y: 0)))
+                ctx.fill(Path(CGRect(x: left, y: y0, width: 2, height: y1 - y0)), with: .color(band.2))
+                // The value at the lower edge of the band (and at the top of the first one), in the band's colour.
+                if i == 0 {
+                    ctx.draw(Text(verbatim: format(band.0)).font(.nuna(size: 10, weight: .bold, design: NunaType.design)).foregroundColor(band.2), at: CGPoint(x: left - 12, y: y0 + 1), anchor: .topTrailing)
                 }
+                ctx.draw(Text(verbatim: format(band.1)).font(.nuna(size: 10, weight: .bold, design: NunaType.design)).foregroundColor(band.2), at: CGPoint(x: left - 12, y: y1 - 1), anchor: .bottomTrailing)
             }
-            // The top and bottom values, named like the lines of the figure.
-            ctx.draw(Text(verbatim: format(hi - pad)).font(.nuna(size: 11, weight: .bold)).foregroundColor(NunaPalette.caution), at: CGPoint(x: left + 2, y: top - 12), anchor: .leading)
-            ctx.draw(Text(verbatim: format(lo + pad)).font(.nuna(size: 11, weight: .bold)).foregroundColor(NunaPalette.charge), at: CGPoint(x: left + 2, y: top + h + 12), anchor: .leading)
 
-            let sorted = points.sorted { $0.date < $1.date }
             if sorted.count > 1 {
                 var line = Path()
                 for (i, p) in sorted.enumerated() { let pt = CGPoint(x: x(p.date), y: y(p.value)); i == 0 ? line.move(to: pt) : line.addLine(to: pt) }
-                ctx.stroke(line, with: .color(NunaPalette.textSecondary.opacity(0.55)), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                ctx.stroke(line, with: .color(NunaPalette.textSecondary.opacity(0.45)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
             }
             var lastLabel: CGFloat = -1000
             // Every reading carries its number, so a rise or a fall reads at a glance. With many readings only the lowest, the highest and the latest do.
@@ -294,30 +302,33 @@ struct NunaLabChart: View {
                 let px = x(p.date)
                 let tint = p.status.map(NunaLabRange.tint) ?? NunaPalette.textPrimary
                 if let s = p.second {
-                    let bar = CGRect(x: px - 6, y: min(y(p.value), y(s)) - 2, width: 12, height: abs(y(p.value) - y(s)) + 4)
-                    ctx.fill(Path(roundedRect: bar, cornerRadius: 6), with: .color(NunaPalette.ink.opacity(0.13)))
-                    ctx.stroke(Path(ellipseIn: CGRect(x: px - 4, y: y(s) - 4, width: 8, height: 8)), with: .color(tint), lineWidth: 2)
+                    let bar = CGRect(x: px - 5, y: min(y(p.value), y(s)) - 2, width: 10, height: abs(y(p.value) - y(s)) + 4)
+                    ctx.fill(Path(roundedRect: bar, cornerRadius: 5), with: .color(NunaPalette.ink.opacity(0.13)))
+                    ctx.stroke(Path(ellipseIn: CGRect(x: px - 5, y: y(s) - 5, width: 10, height: 10)), with: .color(tint), lineWidth: 2)
                 }
-                ctx.fill(Path(ellipseIn: CGRect(x: px - 7, y: y(p.value) - 7, width: 14, height: 14)), with: .color(tint))
-                ctx.stroke(Path(ellipseIn: CGRect(x: px - 7, y: y(p.value) - 7, width: 14, height: 14)), with: .color(NunaPalette.card), lineWidth: 2)
+                ctx.stroke(Path(ellipseIn: CGRect(x: px - 5, y: y(p.value) - 5, width: 10, height: 10)), with: .color(tint), lineWidth: 2)
                 if mark(p) {
                     let lx = min(max(px, left + 18), left + w - 18)
                     let up = y(p.value) - 20 >= top - 6
-                    ctx.draw(Text(verbatim: format(p.value)).font(.nuna(size: 12, weight: .heavy)).foregroundColor(NunaPalette.textPrimary),
-                             at: CGPoint(x: lx, y: y(p.value) + (up ? -13 : 13)), anchor: up ? .bottom : .top)
+                    ctx.draw(Text(verbatim: format(p.value)).font(.nuna(size: 11, weight: .bold, design: NunaType.design)).foregroundColor(tint),
+                             at: CGPoint(x: lx, y: y(p.value) + (up ? -9 : 9)), anchor: up ? .bottom : .top)
                     if let s = p.second {
-                        ctx.draw(Text(verbatim: format(s)).font(.nuna(size: 12, weight: .heavy)).foregroundColor(NunaPalette.textSecondary),
-                                 at: CGPoint(x: lx, y: y(s) + 12), anchor: .top)
+                        ctx.draw(Text(verbatim: format(s)).font(.nuna(size: 11, weight: .bold, design: NunaType.design)).foregroundColor(NunaPalette.textSecondary),
+                                 at: CGPoint(x: lx, y: y(s) + 10), anchor: .top)
                     }
                 }
                 if px - lastLabel > 62 {
                     lastLabel = px
-                    ctx.draw(Text(verbatim: Self.dayFormat.string(from: p.date)).font(.nuna(size: 11, weight: .semibold)).foregroundColor(NunaPalette.textSecondary),
-                             at: CGPoint(x: min(max(px, left + 24), left + w - 24), y: top + h + 36), anchor: .center)
+                    let lx = min(max(px, left + 24), left + w - 24)
+                    ctx.draw(Text(verbatim: Self.dayFormat.string(from: p.date)).font(.nuna(size: 12, weight: .medium)).foregroundColor(NunaPalette.textSecondary),
+                             at: CGPoint(x: lx, y: top + h + 22), anchor: .center)
+                    ctx.draw(Text(verbatim: Self.yearFormat.string(from: p.date)).font(.nuna(size: 12, weight: .medium)).foregroundColor(NunaPalette.textSecondary),
+                             at: CGPoint(x: lx, y: top + h + 38), anchor: .center)
                 }
             }
         }
-        .frame(height: 240)
+        .textCase(nil)
+        .frame(height: 282)
         .accessibilityHidden(true)
     }
 }

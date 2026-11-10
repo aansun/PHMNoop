@@ -80,6 +80,14 @@ public enum NunaPalette {
     }
     /// A reading outside its range, drawn as caution rather than alarm: the orange of the WHOOP labs figures. The other skins use their own warning.
     public static var caution: Color { NunaThemePrefs.skin == .whp ? Color(hex: "#FFA629") : warning }
+    /// The softer mint of a reading inside its range on the small range bar of a lab card (the ring and the chart use the brighter `charge`).
+    public static var rangeMint: Color { NunaThemePrefs.skin == .whp ? Color(hex: "#6EEDA5") : charge }
+    /// The violet, the light blue and the teal of the sentence card on a lab page: its frame runs from `insightFrom` to `insightTo`, and its link from `insightFrom` to `insightBlue`.
+    public static var insightFrom: Color { NunaThemePrefs.skin == .whp ? Color(hex: "#8A68F3") : accent }
+    public static var insightBlue: Color { NunaThemePrefs.skin == .whp ? Color(hex: "#76B2F4") : accent }
+    public static var insightTo: Color { NunaThemePrefs.skin == .whp ? Color(hex: "#6FD3D8") : accent }
+    /// The range bar's own steel blue for a bar with no range, as it sits on the lab cards.
+    public static var rangeSteel: Color { NunaThemePrefs.skin == .whp ? Color(hex: "#7EBABF") : rest }
     public static var alert: Color {
         if NunaThemePrefs.skin == .whp { return Color(hex: "#FF0026") }
         return NunaThemePrefs.skin == .flow ? Color(light: "#C4182B", dark: "#FF7A8A") : Color(light: "#E0003C", dark: "#FF3366")
