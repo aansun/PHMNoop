@@ -237,13 +237,13 @@ struct NunaBreathView: View {
                 Text("No technique matches").font(.nunaWords(size: 15)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     .frame(maxWidth: .infinity).padding(.vertical, 28)
             } else {
-                LazyVStack(spacing: 10) {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                     ForEach(items) { item in
                         let picked: Bool = { if case .template(let t) = item { return suggestion?.advice.template.id == t.id && anyaOn }; return false }()
                         Button { open(item) } label: {
-                            NunaBreathListRow(icon: item.icon, title: item.title, level: item.levelTitle,
-                                              minutes: "\(item.minutesText(lengthPref: lengthPref)) \(String(localized: "min"))",
-                                              badge: picked ? String(localized: "Anya's pick") : nil)
+                            // Anya's pick takes the place of the level on the tag, so a suggestion still shows in the grid.
+                            NunaPhotoCard(image: item.photo, badge: Text(verbatim: picked ? String(localized: "Anya's pick") : item.levelTitle), title: item.title,
+                                          caption: Text(verbatim: "\(item.minutesText(lengthPref: lengthPref)) \(String(localized: "min"))"), lines: 2)
                         }.buttonStyle(.plain)
                     }
                 }

@@ -286,6 +286,16 @@ enum NunaBreathItem: Identifiable, Equatable {
         switch self { case .template(let t): return NunaBreathLevel.of(t.protocolId); case .tool: return .gentle }
     }
     var blurb: String { switch self { case .template(let t): return t.blurb; case .tool(let t): return t.subtitle } }
+    /// The photograph of the activity, one of its own (`breath-photo-<template id>` or `<tool>`); a background of its group when it has none.
+    var photo: String {
+        let key: String, fallback: String
+        switch self {
+        case .template(let t): key = t.id; fallback = NunaBreathGroup.containing(templateId: t.id).background
+        case .tool(let k): key = k.rawValue; fallback = NunaBreathGroup.biofeedback.background
+        }
+        let name = "breath-photo-" + key
+        return UIImage(named: name) != nil ? name : fallback
+    }
     func minutesText(lengthPref: Int) -> String {
         switch self {
         case .template(let t): return "\(lengthPref > 0 ? lengthPref : t.minutes)"

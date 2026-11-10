@@ -31,3 +31,53 @@ Downloaded 2026-11-10, re-encoded as JPEG.
 | ExplorePlank | https://www.pexels.com/photo/woman-planking-on-a-yoga-mat-6303467/ | Pexels contributor (see page) |
 
 Each starter workout uses one photo of its own (table `photos` in `NunaGymExploreCards.swift`); keep it that way when adding a program.
+
+
+# Breathe card photos
+
+Photos from Pexels (https://www.pexels.com), Pexels License, downloaded 2026-11-10 and re-encoded. One photo for every breathing activity, asset `breath-photo-<template id or tool>` (the
+card and the top of its details page); no two share one. A photographer left blank was not read from the listing: see the photo page.
+
+| Asset | Pexels photo | Photographer |
+|---|---|---|
+| breath-photo-calm_slow | https://www.pexels.com/photo/35091112/ | Jakob Andersson |
+| breath-photo-calm_coherence | https://www.pexels.com/photo/19987955/ | Josh Hild |
+| breath-photo-calm_deep | https://www.pexels.com/photo/635279/ | Bella White |
+| breath-photo-calm_pursed | https://www.pexels.com/photo/28942522/ | Toàn Văn |
+| breath-photo-calm_bhramari | https://www.pexels.com/photo/12533766/ | Skyler Ewing |
+| breath-photo-calm_qigong | https://www.pexels.com/photo/10868847/ | Pexels contributor (see page) |
+| breath-photo-calm_presence | https://www.pexels.com/photo/4426929/ | Timo A. |
+| breath-photo-sleep_478 | https://www.pexels.com/photo/12480074/ | Daniel Torobekov |
+| breath-photo-sleep_exhale | https://www.pexels.com/photo/10061449/ | Pexels contributor (see page) |
+| breath-photo-sleep_belly | https://www.pexels.com/photo/6958068/ | Pexels contributor (see page) |
+| breath-photo-sleep_48 | https://www.pexels.com/photo/13592310/ | Pexels contributor (see page) |
+| breath-photo-sleep_buteyko | https://www.pexels.com/photo/35410294/ | NoirPhoenix |
+| breath-photo-focus_box | https://www.pexels.com/photo/12953722/ | Pexels contributor (see page) |
+| breath-photo-focus_alternate | https://www.pexels.com/photo/6648558/ | Pexels contributor (see page) |
+| breath-photo-focus_66 | https://www.pexels.com/photo/3758127/ | Alexy Almond |
+| breath-photo-focus_soma | https://www.pexels.com/photo/10471895/ | Daniel Torobekov |
+| breath-photo-focus_buteyko | https://www.pexels.com/photo/15549131/ | Tom Van Dyck |
+| breath-photo-focus_presence | https://www.pexels.com/photo/6648542/ | Pexels contributor (see page) |
+| breath-photo-focus_okinaga | https://www.pexels.com/photo/18849001/ | Pexels contributor (see page) |
+| breath-photo-focus_kokyuho | https://www.pexels.com/photo/6253347/ | Artem Podrez |
+| breath-photo-energize_ocean | https://www.pexels.com/photo/4321879/ | Pexels contributor (see page) |
+| breath-photo-energize_box | https://www.pexels.com/photo/16980804/ | Adrià Masi |
+| breath-photo-energize_bhastrika | https://www.pexels.com/photo/9151829/ | Pexels contributor (see page) |
+| breath-photo-energize_tummo | https://www.pexels.com/photo/19921753/ | Luan Rodrigues |
+| breath-photo-energize_punching | https://www.pexels.com/photo/7991687/ | Annushka Ahuja |
+| breath-photo-energize_kapala | https://www.pexels.com/photo/4498220/ | kaboompics |
+| breath-photo-energize_wimhof | https://www.pexels.com/photo/14815629/ | Olavi Anttila |
+| breath-photo-energize_holotropic | https://www.pexels.com/photo/9488165/ | Nothing Ahead |
+| breath-photo-energize_shamanic | https://www.pexels.com/photo/4444631/ | Amey |
+| breath-photo-energize_misogi | https://www.pexels.com/photo/5828126/ | Andrea Rodríguez M |
+| breath-photo-energize_torifune | https://www.pexels.com/photo/8389374/ | Pexels contributor (see page) |
+| breath-photo-energize_ibuki | https://www.pexels.com/photo/7045483/ | Pexels contributor (see page) |
+| breath-photo-energize_kiai | https://www.pexels.com/photo/7353206/ | Pexels contributor (see page) |
+| breath-photo-recover_66 | https://www.pexels.com/photo/1229753/ | Max Andrey |
+| breath-photo-recover_belly | https://www.pexels.com/photo/8456101/ | Pexels contributor (see page) |
+| breath-photo-recover_coherence | https://www.pexels.com/photo/10685969/ | HONG SON |
+| breath-photo-recover_kiko | https://www.pexels.com/photo/24461668/ | Илья Бирюк |
+| breath-photo-recover_nogare | https://www.pexels.com/photo/5525508/ | Jessica Lewis |
+| breath-photo-recover_sitali | https://www.pexels.com/photo/7584210/ | Mohan Nannapaneni |
+| breath-photo-resonance | https://www.pexels.com/photo/6203473/ | cottonbro studio |
+| breath-photo-calmMe | https://www.pexels.com/photo/7672094/ | cottonbro studio |
