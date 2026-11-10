@@ -356,7 +356,7 @@ struct NunaLabBookCard: View {
                                 VStack(alignment: .leading, spacing: 18) {
                                     ForEach(NunaLabStatus.readable, id: \.self) { s in
                                         HStack(spacing: 0) {
-                                            NunaLabStatusChip(status: s)
+                                            NunaLabStatusChip(status: s, card: true)
                                             Spacer(minLength: 6)
                                             Text(verbatim: "\(counts[s] ?? 0)").font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                                                 .frame(width: 16, height: 18, alignment: .leading)
@@ -364,6 +364,7 @@ struct NunaLabBookCard: View {
                                         .frame(height: 18)
                                     }
                                 }
+                                .padding(.top, 23)
                                 Spacer(minLength: 0)
                                 Group {
                                     if let last {
