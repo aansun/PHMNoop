@@ -299,7 +299,7 @@ struct NunaBreathTemplateDetail: View {
     var body: some View {
         let p = proto
         NunaBreathDetailShell(
-            icon: NunaBreathIcon.name(for: template), background: NunaBreathGroup.containing(templateId: template.id).background,
+            icon: NunaBreathIcon.name(for: template), background: NunaBreathItem.template(template).photo,
             title: template.title, subtitle: template.blurb,
             stats: [("\(minutes)", String(localized: "min"), "Duration"), (pattern.value, pattern.unit, "Pace"), (NunaBreathLevel.of(template.protocolId).title, "", "Level")],
             startNote: nil, onStart: onStart, onClose: onClose) {
@@ -330,7 +330,7 @@ struct NunaBreathToolDetail: View {
     let onClose: () -> Void
     var body: some View {
         NunaBreathDetailShell(
-            icon: tool.glyph, background: NunaBreathGroup.biofeedback.background, title: tool.title, subtitle: tool.subtitle,
+            icon: tool.glyph, background: NunaBreathItem.tool(tool).photo, title: tool.title, subtitle: tool.subtitle,
             stats: [(tool.duration, String(localized: "min"), "Duration"),
                     (tool == .resonance ? "5.5" : String(localized: "Below HR"), tool == .resonance ? String(localized: "br/min") : "", "Pace"),
                     (NunaBreathLevel.gentle.title, "", "Level")],

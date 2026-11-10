@@ -144,44 +144,11 @@ struct NunaExploreWorkout: Identifiable {
 
 // MARK: - Card
 
-/// A tile of the Explore grid: the photo fills the top of the card and fades into it, with the level in its corner; the name in capitals and the
-/// length sit on the fade, so photo and text read as one piece.
+/// A tile of the Explore grid, drawn by the shared photo card.
 struct NunaExploreCard: View {
     let workout: NunaExploreWorkout
-    private let photoHeight: CGFloat = 176
-    private let textTop: CGFloat = 112
-
     var body: some View {
-        ZStack(alignment: .top) {
-            Color.clear.frame(height: photoHeight)
-                .overlay { Image(workout.image).resizable().scaledToFill() }
-                .clipped()
-                // Faded by its own opacity, not painted over with the card colour, so no seam shows whatever the card sits on.
-                .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.30), .init(color: .black.opacity(0.35), location: 0.52), .init(color: .clear, location: 0.68)],
-                                     startPoint: .top, endPoint: .bottom))
-            VStack(alignment: .leading, spacing: 0) {
-                Color.clear.frame(height: textTop)
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(verbatim: workout.title).font(.nuna(size: 15.5, weight: .bold)).tracking(1.0).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.leading).lineLimit(3).minimumScaleFactor(0.85)
-                    Text("\(workout.minutes) min").font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                .frame(maxWidth: .infinity, minHeight: 88, maxHeight: 88, alignment: .topLeading)
-                .padding(.horizontal, 16).padding(.bottom, 16)
-            }
-        }
-        .overlay(alignment: .topTrailing) { badge.padding(10) }
-        .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-        .accessibilityElement(children: .combine)
-    }
-
-    /// A small square-cornered label over the photo, like a tag.
-    private var badge: some View {
-        Text(workout.level.title).font(.nuna(size: 12.5, weight: .semibold)).tracking(0.9).textCase(.uppercase)
-            .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 10).frame(height: 27)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+        NunaPhotoCard(image: workout.image, badge: Text(workout.level.title), title: workout.title, caption: Text("\(workout.minutes) min"))
     }
 }
 
