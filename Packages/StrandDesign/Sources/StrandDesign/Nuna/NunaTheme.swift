@@ -78,6 +78,8 @@ public enum NunaPalette {
         if NunaThemePrefs.skin == .whp { return Color(hex: "#FFDE00") }
         return NunaThemePrefs.skin == .flow ? Color(light: "#C2410C", dark: "#FFB27A") : Color(light: "#C98A00", dark: "#FFB020")
     }
+    /// A reading outside its range, drawn as caution rather than alarm: the orange of the WHOOP labs figures. The other skins use their own warning.
+    public static var caution: Color { NunaThemePrefs.skin == .whp ? Color(hex: "#FFA629") : warning }
     public static var alert: Color {
         if NunaThemePrefs.skin == .whp { return Color(hex: "#FF0026") }
         return NunaThemePrefs.skin == .flow ? Color(light: "#C4182B", dark: "#FF7A8A") : Color(light: "#E0003C", dark: "#FF3366")

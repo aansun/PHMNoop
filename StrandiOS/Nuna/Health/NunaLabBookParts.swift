@@ -35,7 +35,7 @@ struct NunaLabRange: Equatable {
 
     func status(_ v: Double) -> Status { v < low ? .below : (v > high ? .above : .within) }
 
-    static func tint(_ s: Status) -> Color { s == .within ? NunaPalette.charge : NunaPalette.warning }
+    static func tint(_ s: Status) -> Color { s == .within ? NunaPalette.charge : NunaPalette.caution }
 
     static func word(_ s: Status, who: Bool = false) -> LocalizedStringKey {
         if who { switch s { case .within: return "Within WHO range"; case .above: return "Above WHO range"; case .below: return "Below WHO range" } }
@@ -106,7 +106,7 @@ struct NunaLabMarker: Identifiable {
         let distNow = last < r.low ? r.low - last : (last > r.high ? last - r.high : 0)
         let distBefore = before < r.low ? r.low - before : (before > r.high ? before - r.high : 0)
         if distNow == distBefore { return NunaPalette.textSecondary }
-        return distNow < distBefore ? NunaPalette.charge : NunaPalette.warning
+        return distNow < distBefore ? NunaPalette.charge : NunaPalette.caution
     }
 }
 
@@ -276,7 +276,7 @@ struct NunaLabChart: View {
                 }
             }
             // The top and bottom values, named like the lines of the figure.
-            ctx.draw(Text(verbatim: format(hi - pad)).font(.nuna(size: 11, weight: .bold)).foregroundColor(NunaPalette.warning), at: CGPoint(x: left + 2, y: top - 12), anchor: .leading)
+            ctx.draw(Text(verbatim: format(hi - pad)).font(.nuna(size: 11, weight: .bold)).foregroundColor(NunaPalette.caution), at: CGPoint(x: left + 2, y: top - 12), anchor: .leading)
             ctx.draw(Text(verbatim: format(lo + pad)).font(.nuna(size: 11, weight: .bold)).foregroundColor(NunaPalette.charge), at: CGPoint(x: left + 2, y: top + h + 12), anchor: .leading)
 
             let sorted = points.sorted { $0.date < $1.date }
