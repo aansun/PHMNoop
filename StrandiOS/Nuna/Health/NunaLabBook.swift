@@ -8,189 +8,10 @@ import WhoopStore
 
 // MARK: - Lab Book
 
-/// Your own numbers from a doctor or a pharmacy, next to the signals of the wearable. The page says what is there at a glance (when the last test was,
-/// how many markers sit inside the range from the person's own report), then lists every marker with its latest reading, how it moved and where it sits.
-/// Adding a result, by hand or from a file, is one sheet.
+/// The Lab Book: your own numbers from a doctor or a pharmacy, next to the signals of the wearable. The page is the summary (`NunaLabSummaryPage`): how
+/// many markers sit inside their range, outside it or have none, then every marker as a card under its status, the latest tests and the way to add one.
 struct NunaLabBookView: View {
-    @EnvironmentObject private var repo: Repository
-    @EnvironmentObject private var profile: ProfileStore
-    @ObservedObject private var changes = NunaDataChanges.shared
-    @State private var rows: [LabMarkerRow] = []
-    @State private var loaded = false
-    @State private var adding = false
-
-    private var markers: [NunaLabMarker] { NunaLabGrouping.markers(rows, reference: .init(heightCm: profile.heightCm, sex: profile.sex)) }
-
-    var body: some View {
-        let ms = markers
-        NunaDetailScreen("Lab Book") {
-            if !loaded {
-                ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
-            } else if ms.isEmpty {
-                emptyCard
-            } else {
-                summary(ms)
-                ForEach(NunaLabGrouping.categoryOrder, id: \.self) { category in
-                    let inCategory = ms.filter { $0.category == category }
-                    if !inCategory.isEmpty {
-                        NunaTitleRow(title: LocalizedStringKey(category.displayName)) {
-                            Text(verbatim: "\(inCategory.count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                        ForEach(inCategory) { markerRow($0) }
-                    }
-                }
-            }
-            if loaded { addButton }
-            NunaExpandRow(title: "About the Lab Book", subtitle: "", systemImage: "lock",
-                          text: "Lab Book keeps your own numbers. It doesn't test, read, or judge them, and it's not medical advice. A range shows where a reading sits against the one you copied from your own report or, for weight and waist, against the WHO reference. Everything stays on this iPhone.")
-        }
-        .task(id: "\(repo.refreshSeq)-\(changes.seq)") { rows = await NunaLabStore.load(repo); loaded = true }
-        .sheet(isPresented: $adding) {
-            NunaLabAddSheet { drafts in await NunaLabStore.save(drafts, repo: repo); rows = await NunaLabStore.load(repo) }
-                .nunaSheetChrome(detents: [.large])
-        }
-    }
-
-    // MARK: Parts
-
-    private var addButton: some View {
-        Button { adding = true } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "plus").font(.nuna(size: 14, weight: .bold))
-                Text("Add a result").font(.nuna(size: 17, weight: .bold))
-            }
-            .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
-            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-        }.buttonStyle(.plain)
-    }
-
-    private var emptyCard: some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 10) {
-                Image(systemName: "testtube.2").font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                Text("Your own logbook").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Keep the numbers you get from your doctor or pharmacy, next to your wearable signals. Add a result by hand or bring in a file. Everything stays on this phone.")
-                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-            }.frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private func summary(_ ms: [NunaLabMarker]) -> some View {
-        let last = rows.map(\.takenAt).max()
-        let judged = ms.filter { $0.latestStatus != nil }
-        let outside = judged.filter { $0.latestStatus != .within }
-        let within = judged.count - outside.count
-        let unranged = ms.count - judged.count
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 18) {
-                    if !judged.isEmpty {
-                        ZStack {
-                            NunaLabShareRing(within: within, outside: outside.count).frame(width: 104, height: 104)
-                            VStack(spacing: 0) {
-                                Text(verbatim: "\(within)/\(judged.count)").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                Text("Within").font(.nuna(size: 9.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                            }
-                        }
-                    }
-                    VStack(alignment: .leading, spacing: 5) {
-                        nunaTrendsCap("Last test")
-                        Text(verbatim: last.map(LabBookFormat.day) ?? "–").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        if let last { Text(verbatim: Self.ago(last)).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                        Text(verbatim: String(localized: "\(ms.count) markers · \(rows.count) readings"))
-                            .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                    }
-                    Spacer(minLength: 0)
-                }
-                if judged.isEmpty {
-                    Text("Add the range from your own report with a result, and this page shows which markers sit inside it.")
-                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                } else if outside.isEmpty {
-                    HStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill").foregroundStyle(NunaPalette.charge)
-                        Text("Every marker with a range sits inside it.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                    }
-                } else {
-                    VStack(alignment: .leading, spacing: 0) {
-                        nunaTrendsCap("Outside your range").padding(.bottom, 4)
-                        ForEach(outside) { m in
-                            NunaDivider()
-                            NavigationLink { NunaLabMarkerHost(markerKey: m.key, isBody: m.category == .bodyMeasurement) } label: {
-                                HStack(spacing: 10) {
-                                    Image(systemName: m.latestStatus == .above ? "arrow.up.circle.fill" : "arrow.down.circle.fill").font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.warning)
-                                    Text(verbatim: m.name).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
-                                    Spacer(minLength: 6)
-                                    Text(verbatim: (m.latest.map(m.text) ?? "") + " " + m.unit).font(.nuna(size: 14, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
-                                    Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                                }.padding(.vertical, 11).contentShape(Rectangle())
-                            }.buttonStyle(.plain)
-                        }
-                    }
-                }
-                if unranged > 0 && !judged.isEmpty {
-                    Text(verbatim: String(localized: "\(unranged) without a range"))
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                }
-            }
-        }
-    }
-
-    private static func ago(_ epoch: Int) -> String {
-        let date = Date(timeIntervalSince1970: TimeInterval(epoch))
-        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: date), to: Calendar.current.startOfDay(for: Date())).day ?? 0
-        switch days {
-        case ..<1: return String(localized: "Today")
-        case 1: return String(localized: "Yesterday")
-        default: return String(localized: "\(days) days ago")
-        }
-    }
-
-    private func markerRow(_ m: NunaLabMarker) -> some View {
-        let latest = m.latest
-        let value = latest?.value
-        return NavigationLink { NunaLabMarkerHost(markerKey: m.key, isBody: m.category == .bodyMeasurement) } label: {
-            NunaCard(small: true) {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(alignment: .top, spacing: 8) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(verbatim: m.name).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
-                            Text(verbatim: latest.map { LabBookFormat.day($0.takenAt) + " · " + (m.readings.count == 1 ? String(localized: "1 reading") : String(localized: "\(m.readings.count) readings")) } ?? "")
-                                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
-                        }
-                        Spacer(minLength: 4)
-                        if let s = m.latestStatus { NunaChip(NunaLabRange.word(s, who: m.rangeIsWho), color: NunaLabRange.tint(s)).fixedSize() }
-                        if let c = m.change, abs(c.delta) > 0.000_001 {
-                            Text(verbatim: (c.delta > 0 ? "▲ " : "▼ ") + LabBookFormat.value(abs(c.delta), key: m.key))
-                                .font(.nuna(size: 13, weight: .heavy)).foregroundStyle(m.changeTone(c.delta)).fixedSize().padding(.top, 6)
-                        }
-                        Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted).padding(.top, 8)
-                    }
-                    if let r = m.range, let v = value {
-                        NunaLabValueBar(position: Self.position(v, r), valueText: latest.map(m.text) ?? "", tint: m.latestStatus.map(NunaLabRange.tint) ?? NunaPalette.textSecondary,
-                                        rangeText: r.label(key: m.key) + " " + m.unit, caption: m.rangeIsWho ? "WHO range" : "Your range")
-                    } else if let v = value {
-                        // No range from a report: the bar spans the person's own lowest and highest reading, so the pill still says where this one sits.
-                        let values = m.numeric.compactMap(\.value)
-                        let lo = values.min() ?? v, hi = values.max() ?? v
-                        if hi > lo {
-                            NunaLabValueBar(position: 0.2 + 0.6 * (v - lo) / (hi - lo), valueText: latest.map(m.text) ?? "", tint: NunaPalette.textSecondary,
-                                            rangeText: LabBookFormat.value(lo, key: m.key) + "–" + LabBookFormat.value(hi, key: m.key) + " " + m.unit, caption: "Your readings")
-                        } else {
-                            NunaLabValueBar(position: 0.5, valueText: (latest.map(m.text) ?? "") + " " + m.unit, tint: NunaPalette.textSecondary)
-                        }
-                    }
-                }
-            }
-        }.buttonStyle(.plain)
-    }
-
-    /// Where a value sits on the bar: the middle 60% is the range, the sides are what is below and above it.
-    static func position(_ v: Double, _ r: NunaLabRange) -> Double {
-        let span = max(r.high - r.low, 0.000_1)
-        if v < r.low { return max(0.02, 0.2 - 0.18 * min((r.low - v) / (span * 0.5), 1)) }
-        if v > r.high { return min(0.98, 0.8 + 0.18 * min((v - r.high) / (span * 0.5), 1)) }
-        return 0.2 + 0.6 * (v - r.low) / span
-    }
+    var body: some View { NunaLabSummaryPage(title: "Lab Book") }
 }
 
 // MARK: - One marker
@@ -225,8 +46,10 @@ struct NunaMarkerDetailView: View {
     var body: some View {
         NunaDetailScreen(LocalizedStringKey(title)) {
             if let m = marker {
-                hero(m)
+                intro(m)
+                latest(m)
                 trendCard(m)
+                recordingsLink(m)
                 meaningCard(m)
                 if !m.numeric.isEmpty { compareCard(m) }
                 Button { adding = true } label: {
@@ -252,81 +75,65 @@ struct NunaMarkerDetailView: View {
         }
     }
 
-    // MARK: Hero
+    // MARK: Top of the page
 
-    private func hero(_ m: NunaLabMarker) -> some View {
-        let latest = m.latest
-        let status = m.latestStatus
-        return VStack(spacing: 14) {
-            if let r = m.range, let v = latest?.value {
-                NunaRangeGauge(value: v, range: r) {
-                    VStack(spacing: 4) {
-                        nunaTrendsCap("Latest reading")
-                        Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 46, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                        Text(verbatim: m.unit).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        HStack(alignment: .top, spacing: 0) {
-                            if m.isPressure {
-                                stat("Systolic", rangeText(m.range, key: m.key), unit: m.unit)
-                                stat("Diastolic", rangeText(m.diastolicRange, key: LabBookProjection.bpDiastolicKey), unit: m.unit)
-                            } else {
-                                stat(m.rangeIsWho ? "WHO range" : "Your range", rangeText(r, key: m.key), unit: m.unit)
-                                changeStat(m)
-                            }
-                        }.padding(.top, 10)
-                    }
-                }
-                .frame(height: 300)
-                HStack(spacing: 10) {
-                    if let s = status { NunaChip(NunaLabRange.word(s, who: m.rangeIsWho), color: NunaLabRange.tint(s)) }
-                    Text(verbatim: latest.map { LabBookFormat.dayFromKey($0.day) } ?? "").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-            } else {
-                VStack(spacing: 8) {
-                    nunaTrendsCap("Latest reading")
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                        Text(verbatim: m.unit).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                    Text(verbatim: latest.map { LabBookFormat.dayFromKey($0.day) } ?? "").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    if let c = m.change, abs(c.delta) > 0.000_001 { changeLine(m, c) }
-                }.frame(maxWidth: .infinity).padding(.top, 8)
-                Text("Add the range from your own report with a reading, and a gauge here shows where it sits.")
-                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true).textCase(nil)
+    /// The marker's kind as tags, and one plain sentence about the latest reading in an outlined card.
+    private func intro(_ m: NunaLabMarker) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 10) {
+                tag(m.category.displayName)
+                if m.range != nil { tag(m.rangeIsWho ? String(localized: "WHO range") : String(localized: "Your range")) }
+            }
+            if let line = insightLine(m) {
+                Text(verbatim: line).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    .padding(18).frame(maxWidth: .infinity, alignment: .leading)
+                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder((m.latestStatus.map(NunaLabRange.tint) ?? NunaPalette.effortModerate).opacity(0.6), lineWidth: 1.5))
             }
         }
     }
 
-    private func rangeText(_ r: NunaLabRange?, key: String) -> String {
-        guard let r else { return "–" }
-        return r.label(key: key)
+    private func tag(_ text: String) -> some View {
+        Text(verbatim: text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            .padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: Capsule())
     }
 
-    private func stat(_ label: LocalizedStringKey, _ value: String, unit: String) -> some View {
-        VStack(spacing: 3) {
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: value).font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-            Text(verbatim: unit).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-        }.frame(maxWidth: .infinity)
+    private func insightLine(_ m: NunaLabMarker) -> String? {
+        let ref = m.readings.last(where: { $0.referenceText?.isEmpty == false })?.referenceText ?? ""
+        switch m.latestStatus {
+        case .some(.within): return String(localized: "Your latest reading is within the range from your report (\(ref)).")
+        case .some(.above): return String(localized: "Your latest reading is above the range from your report (\(ref)).")
+        case .some(.below): return String(localized: "Your latest reading is below the range from your report (\(ref)).")
+        case .none: return String(localized: "Add the range from your own report with a reading, and this page says where each one sits.")
+        }
     }
 
-    private func changeStat(_ m: NunaLabMarker) -> some View {
-        VStack(spacing: 3) {
-            Text("Since last time").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            if let c = m.change {
-                Text(verbatim: (c.delta > 0 ? "▲ " : (c.delta < 0 ? "▼ " : "")) + LabBookFormat.value(abs(c.delta), key: m.key))
-                    .font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(m.changeTone(c.delta))
-                Text(verbatim: c.percent.map { String(format: "%+.0f%%", locale: AppLanguage.activeLocale, $0) } ?? m.unit)
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-            } else {
-                Text(verbatim: "–").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                Text("One reading").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+    /// The latest reading, large, with where it sits and when it was taken.
+    private func latest(_ m: NunaLabMarker) -> some View {
+        let l = m.latest
+        return VStack(alignment: .leading, spacing: 10) {
+            nunaTrendsCap("Latest")
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(verbatim: l.map(m.text) ?? "—").font(.nuna(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                Text(verbatim: m.unit).font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
-        }.frame(maxWidth: .infinity)
+            HStack(spacing: 10) {
+                NunaLabStatusChip(status: m.status)
+                Text(verbatim: l.map { LabBookFormat.dayFromKey($0.day) } ?? "").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+        }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func changeLine(_ m: NunaLabMarker, _ c: (delta: Double, percent: Double?, since: Int)) -> some View {
-        Text(verbatim: (c.delta > 0 ? "▲ " : "▼ ") + LabBookFormat.value(abs(c.delta), key: m.key) + " " + m.unit + (c.percent.map { " (" + String(format: "%+.0f%%", locale: AppLanguage.activeLocale, $0) + ")" } ?? ""))
-            .font(.nuna(size: 14, weight: .bold)).foregroundStyle(m.changeTone(c.delta))
+    private func recordingsLink(_ m: NunaLabMarker) -> some View {
+        NavigationLink { NunaLabRecordingsView(markerKey: m.key) } label: {
+            HStack(spacing: 16) {
+                Image(systemName: "list.bullet").font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34)
+                Text("See all recordings").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            }
+            .padding(.horizontal, 18).frame(height: 64).contentShape(Rectangle())
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+        }.buttonStyle(.plain)
     }
 
     // MARK: Trend
@@ -414,19 +221,10 @@ struct NunaMarkerDetailView: View {
 
     private func meaningCard(_ m: NunaLabMarker) -> some View {
         var lines: [(icon: String, tint: Color, text: String)] = []
-        let ref = m.readings.last(where: { $0.referenceText?.isEmpty == false })?.referenceText ?? ""
-        if let s = m.latestStatus, let r = m.range {
-            switch s {
-            case .within: lines.append(("checkmark.circle.fill", NunaPalette.charge, String(localized: "Your latest reading is within the range from your report (\(ref)).")))
-            case .above: lines.append(("arrow.up.circle.fill", NunaPalette.warning, String(localized: "Your latest reading is above the range from your report (\(ref)).")))
-            case .below: lines.append(("arrow.down.circle.fill", NunaPalette.warning, String(localized: "Your latest reading is below the range from your report (\(ref)).")))
-            }
-            if !m.isPressure, let v = m.latest?.value, s != .within {
-                let d = LabBookFormat.value(s == .above ? v - r.high : r.low - v, key: m.key)
-                lines.append(("ruler", NunaPalette.textSecondary, s == .above ? String(localized: "That is \(d) \(m.unit) over the top of your range.") : String(localized: "That is \(d) \(m.unit) under the bottom of your range.")))
-            }
-        } else {
-            lines.append(("slider.horizontal.3", NunaPalette.textSecondary, String(localized: "Add the range from your own report with a reading, and this page says where each one sits.")))
+        // Where the latest reading sits is said once, in the sentence at the top of the page; here only how far outside the range it is.
+        if let s = m.latestStatus, let r = m.range, !m.isPressure, let v = m.latest?.value, s != .within {
+            let d = LabBookFormat.value(s == .above ? v - r.high : r.low - v, key: m.key)
+            lines.append(("ruler", NunaPalette.textSecondary, s == .above ? String(localized: "That is \(d) \(m.unit) over the top of your range.") : String(localized: "That is \(d) \(m.unit) under the bottom of your range.")))
         }
         if let c = m.change {
             let since = LabBookFormat.day(c.since)
@@ -537,101 +335,6 @@ struct NunaMarkerDetailView: View {
         let built = LabBookProjection.pairMarkerToWearable(marker: markerSeries, wearable: wearable, windowDays: window.days)
         pairs = built
         correlation = built.count >= LabBookSignals.floor ? CorrelationEngine.pearson(LabBookProjection.correlationInput(built)) : nil
-    }
-}
-
-// MARK: - Value on a hatched bar
-
-/// The latest reading on a bar: a blue hatched run up to a pill with the value, and a white tick at each end of the range from the report, with the
-/// range itself written between two small marks underneath. The middle of the bar is the range, the sides what is below and above it.
-struct NunaLabValueBar: View {
-    let position: Double
-    let valueText: String
-    let tint: Color
-    /// The span written under the bar between two marks; nil draws the bar and its pill alone (one reading, nothing to span).
-    var rangeText: String?
-    var caption: LocalizedStringKey = "Your range"
-
-    private let barHeight: CGFloat = 32
-    private var rowY: CGFloat { barHeight + 38 }
-
-    var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let pillW = max(58, CGFloat(valueText.count) * 10 + 32)
-            let x = min(max(CGFloat(position) * w, pillW / 2), w - pillW / 2)
-            ZStack(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(NunaPalette.field).frame(width: w, height: barHeight)
-                Canvas { ctx, size in
-                    ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(NunaPalette.effortModerate.opacity(0.2)))
-                    var lines = Path()
-                    var startX: CGFloat = -size.height
-                    while startX < size.width {
-                        lines.move(to: CGPoint(x: startX, y: size.height)); lines.addLine(to: CGPoint(x: startX + size.height, y: 0))
-                        startX += 7
-                    }
-                    ctx.stroke(lines, with: .color(NunaPalette.effortModerate), lineWidth: 2.2)
-                }
-                .frame(width: x, height: barHeight)
-                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 8, bottomLeadingRadius: 8, bottomTrailingRadius: 0, topTrailingRadius: 0, style: .continuous))
-                if rangeText != nil {
-                    ForEach([0.2, 0.8], id: \.self) { t in
-                        Capsule().fill(NunaPalette.ink).frame(width: 3, height: barHeight + 6).offset(x: w * t - 1.5, y: -3)
-                    }
-                }
-                Text(verbatim: valueText).font(.nuna(size: 15, weight: .heavy, design: NunaType.design)).foregroundStyle(tint).lineLimit(1)
-                    .frame(width: pillW, height: barHeight - 2)
-                    .background(NunaPalette.card, in: Capsule())
-                    .overlay(Capsule().stroke(tint, lineWidth: 2))
-                    .offset(x: x - pillW / 2, y: 1)
-                if let rangeText {
-                    Canvas { ctx, _ in
-                        var bracket = Path()
-                        for t in [0.2, 0.8] { bracket.move(to: CGPoint(x: w * t, y: barHeight + 4)); bracket.addLine(to: CGPoint(x: w * t, y: rowY)) }
-                        let half = CGFloat(rangeText.count) * 3.6 + 10
-                        bracket.move(to: CGPoint(x: w * 0.2, y: rowY)); bracket.addLine(to: CGPoint(x: w * 0.5 - half, y: rowY))
-                        bracket.move(to: CGPoint(x: w * 0.5 + half, y: rowY)); bracket.addLine(to: CGPoint(x: w * 0.8, y: rowY))
-                        ctx.stroke(bracket, with: .color(NunaPalette.textMuted), style: StrokeStyle(lineWidth: 1.2, lineCap: .round, dash: [3, 3]))
-                    }
-                    .frame(width: w, height: rowY + 2)
-                    Text(caption).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted)
-                        .position(x: w * 0.5, y: barHeight + 14)
-                    Text(verbatim: rangeText)
-                        .position(x: w * 0.5, y: rowY)
-                }
-            }
-            .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-        }
-        .frame(height: rangeText == nil ? barHeight + 4 : barHeight + 50)
-        .accessibilityHidden(true)
-    }
-}
-
-// MARK: - Share of markers inside the range
-
-/// A ring split into the markers inside their range (green) and outside it (amber), with a small gap between the two.
-struct NunaLabShareRing: View {
-    let within: Int
-    let outside: Int
-
-    var body: some View {
-        let total = Double(max(within + outside, 1))
-        let lw: CGFloat = 12
-        let gap = within > 0 && outside > 0 ? 0.035 : 0
-        let w = Double(within) / total
-        return ZStack {
-            Circle().stroke(NunaPalette.ringTrack, lineWidth: lw)
-            if within > 0 {
-                Circle().trim(from: 0, to: max(0.001, w - gap / 2)).stroke(NunaPalette.charge, style: StrokeStyle(lineWidth: lw, lineCap: .round))
-                    .shadow(color: NunaPalette.charge.opacity(0.45), radius: 6)
-            }
-            if outside > 0 {
-                Circle().trim(from: w + gap / 2, to: 1 - (within > 0 ? gap / 2 : 0)).stroke(NunaPalette.warning, style: StrokeStyle(lineWidth: lw, lineCap: .round))
-                    .shadow(color: NunaPalette.warning.opacity(0.45), radius: 6)
-            }
-        }
-        .rotationEffect(.degrees(-90)).padding(lw / 2)
-        .accessibilityHidden(true)
     }
 }
 
