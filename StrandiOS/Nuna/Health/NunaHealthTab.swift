@@ -263,6 +263,7 @@ struct NunaHealthMonitorCard: View {
     @StateObject private var hrvS = NunaSeriesModel()
     @StateObject private var rhrS = NunaSeriesModel()
     @StateObject private var respS = NunaSeriesModel()
+    @StateObject private var skinS = NunaSeriesModel()
 
     private struct Vital: Identifiable {
         let id: String
@@ -283,7 +284,7 @@ struct NunaHealthMonitorCard: View {
             Vital(id: "spo2", icon: "vital:spo2", label: "SpO₂", ok: hasRange ? spo2.map { $0 >= 95 } : nil),
             Vital(id: "rhr", icon: "met:resting-heart-rate", label: "RHR", ok: restingHr.flatMap { v in rhrS.verdict(v, floor: 1).map { $0 == .inRange } }),
             Vital(id: "hrv", icon: "met:heart-rate-variability", label: "HRV", ok: hrv.flatMap { v in hrvS.verdict(v, floor: 1).map { $0 == .inRange } }),
-            Vital(id: "temp", icon: "vital:temp", label: "TEMP", ok: hasRange ? skinTemp.map { abs($0) < 0.5 } : nil),
+            Vital(id: "temp", icon: "vital:temp", label: "TEMP", ok: skinTemp.flatMap { v in skinS.skinVerdict(v).map { $0 == .inRange } }),
         ]
     }
 
@@ -323,6 +324,7 @@ struct NunaHealthMonitorCard: View {
             await hrvS.load(repo: repo, key: "hrv", source: "my-whoop", days: 400)
             await rhrS.load(repo: repo, key: "rhr", source: "my-whoop", days: 400)
             await respS.load(repo: repo, key: "resp_rate", source: "my-whoop")
+            await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop")
         }
     }
 

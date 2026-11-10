@@ -53,9 +53,20 @@ public enum WhoopStress {
         public var sleepHROffsetBPM = 3.0
         /// Daytime RMSSD as a fraction of the nightly one when calm and sedentary.
         public var wakeHRVRatio = 0.6
+        /// Fitted (spreadScale 1.6, wakeShiftBPM 10, sleepRawShift -1.8) so that a person's day reads like the one WHOOP's own Stress Monitor
+        /// showed for Mon 9 Nov 2026: Total day 14:06 Low, 8:57 Medium, 0:29 High (60% / 38% / 2%). Searched on 17 days of a real backup with
+        /// `Tools/StressSim --real PATH --fit`: it lands at Total 58 / 38 / 4, Non-activity 55 / 44 / 2, Sleep 89 / 9 / 2. One reference day
+        /// fixes the overall level but not how it moves, so the tracking figures of the simulation, not this fit, are what show it follows.
         /// Added to the z-sum while asleep. WHOOP calls Low "calm, relaxed or sleepy" and Medium "neutral, alert", so a typical night
         /// (z = 0) must land in Low and a typical waking minute in Medium; without the shift both would sit at 1.5.
-        public var sleepRawShift = -1.0
+        public var sleepRawShift = -1.8
+        /// Multiplies the spreads both z-scores divide by (1 = the raw spread). Above 1 the score moves less for the same departure from the
+        /// baseline, so fewer moments reach High.
+        public var spreadScale = 1.6
+        /// Added to the waking reference heart rate (bpm), on top of `wakeHROffsetBPM`: where a person's usual waking state sits on the
+        /// scale. `calibrated` puts their median waking moment at neutral; WHOOP's day, as far as is known, is mostly Low (asleep) and Medium,
+        /// with little High, so the usual waking state belongs a little below neutral.
+        public var wakeShiftBPM = 10.0
         /// Floors on the spreads the z-scores divide by, so a very steady baseline does not make everything extreme.
         public var hrSpreadFloorBPM = 6.0
         public var hrvLnSpreadFloor = 0.25
@@ -206,16 +217,16 @@ public enum WhoopStress {
             }
 
             // z-scores against the baseline, shifted for waking or asleep.
-            let hrOffset = asleep ? t.sleepHROffsetBPM : t.wakeHROffsetBPM
+            let hrOffset = asleep ? t.sleepHROffsetBPM : t.wakeHROffsetBPM + t.wakeShiftBPM
             let hrRef = baseline.restingHR + hrOffset
-            let hrSD = max(baseline.restingHRSD * 1.5, t.hrSpreadFloorBPM)
+            let hrSD = max(baseline.restingHRSD * 1.5, t.hrSpreadFloorBPM) * t.spreadScale
             let zHR = clamp((meanHR - hrRef) / hrSD, t.zClamp)
             var raw = 0.0
             var usedHRV = false
             if let rmssd {
                 let ratio = asleep ? 1.0 : t.wakeHRVRatio
                 let ref = baseline.hrvLnMean + log(ratio)
-                let sd = max(baseline.hrvLnSD, t.hrvLnSpreadFloor)
+                let sd = max(baseline.hrvLnSD, t.hrvLnSpreadFloor) * t.spreadScale
                 let zHRV = clamp((ref - log(rmssd)) / sd, t.zClamp)
                 raw = zHR * t.hrWeight + zHRV * t.hrvWeight
                 usedHRV = true
@@ -261,24 +272,27 @@ public enum WhoopStress {
     /// Returns `base` unchanged when there are fewer than `minEpochs` waking epochs to take a median from.
     public static func calibrated(_ base: Tuning, from epochs: [Epoch], baseline: Baseline, minEpochs: Int = 100) -> Tuning {
         let w = wakingReadings(epochs)
-        return calibrated(base, wakingHR: w.hr, wakingRMSSD: w.rmssd, baseline: baseline, minEpochs: minEpochs)
+        return calibrated(base, wakingHR: w.hr, wakingRMSSD: w.rmssd, sleepHR: w.sleepHR, baseline: baseline, minEpochs: minEpochs)
     }
 
     /// The heart rates and the trusted RMSSDs of the waking, sedentary epochs that were scored: what the two waking constants are read from.
     /// Kept apart so a day's readings can be stored and a long window put together without reading its raw samples again.
-    public static func wakingReadings(_ epochs: [Epoch]) -> (hr: [Double], rmssd: [Double]) {
+    public static func wakingReadings(_ epochs: [Epoch]) -> (hr: [Double], rmssd: [Double], sleepHR: [Double]) {
         let waking = epochs.filter { $0.kind == .waking && $0.level != nil }
-        return (waking.compactMap(\.meanHR), waking.compactMap(\.rmssd))
+        let asleep = epochs.filter { $0.kind == .sleep && $0.level != nil }
+        return (waking.compactMap(\.meanHR), waking.compactMap(\.rmssd), asleep.compactMap(\.meanHR))
     }
 
     /// The same calibration from the readings themselves (`wakingReadings`), pooled over as many days as the caller keeps.
-    public static func calibrated(_ base: Tuning, wakingHR: [Double], wakingRMSSD: [Double], baseline: Baseline, minEpochs: Int = 100) -> Tuning {
+    public static func calibrated(_ base: Tuning, wakingHR: [Double], wakingRMSSD: [Double], sleepHR: [Double] = [], baseline: Baseline, minEpochs: Int = 100) -> Tuning {
         guard wakingHR.count >= minEpochs else { return base }
         func median(_ x: [Double]) -> Double? {
             guard !x.isEmpty else { return nil }
             let s = x.sorted(); return s[s.count / 2]
         }
         var t = base
+        // A night's mean sits this far above the resting heart rate for this person (a mean of the lowest tenth against a median of the night).
+        if sleepHR.count >= minEpochs, let s = median(sleepHR) { t.sleepHROffsetBPM = min(max(s - baseline.restingHR, 0), 20) }
         if let hr = median(wakingHR) { t.wakeHROffsetBPM = min(max(hr - baseline.restingHR, 5), 40) }
         if wakingRMSSD.count >= minEpochs / 2, let r = median(wakingRMSSD) { t.wakeHRVRatio = min(max(r / exp(baseline.hrvLnMean), 0.25), 1.2) }
         return t
@@ -290,7 +304,7 @@ public enum WhoopStress {
     /// the last `wakeDays` days. It exists only once `requiredNights` nights are in; before that the reading is calibrating and shows nothing.
     public struct Calibration: Equatable, Sendable, Codable {
         /// Bumped when the method changes, so an older record is rebuilt rather than trusted.
-        public static let version = 2
+        public static let version = 3
         public static let requiredNights = 14
         /// Days the two waking constants are read from: the newest 60 that have data, not the 14 of the baseline. With 14 the constants
         /// followed the person so closely that a hard fortnight became the new normal: three hard weeks read as ordinary by the second week,
@@ -302,6 +316,7 @@ public enum WhoopStress {
         public var baseline: Baseline
         public var wakeHROffsetBPM: Double
         public var wakeHRVRatio: Double
+        public var sleepHROffsetBPM: Double
         /// Day key (yyyy-MM-dd) of the newest night in the baseline, so a new night triggers a rebuild.
         public var newestNight: String
 
@@ -310,6 +325,7 @@ public enum WhoopStress {
             self.baseline = baseline
             self.wakeHROffsetBPM = tuning.wakeHROffsetBPM
             self.wakeHRVRatio = tuning.wakeHRVRatio
+            self.sleepHROffsetBPM = tuning.sleepHROffsetBPM
             self.newestNight = newestNight
         }
 
@@ -318,6 +334,7 @@ public enum WhoopStress {
             var t = Tuning()
             t.wakeHROffsetBPM = wakeHROffsetBPM
             t.wakeHRVRatio = wakeHRVRatio
+            t.sleepHROffsetBPM = sleepHROffsetBPM
             return t
         }
     }

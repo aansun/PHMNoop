@@ -43,6 +43,7 @@ final class StressEngine {
         var maxTs: Int
         var hr: [Int]
         var rmssd: [Int]
+        var sleepHR: [Int] = []
     }
 
     private struct NightRecord: Codable, Equatable {
@@ -155,7 +156,7 @@ final class StressEngine {
             let key = Repository.localDayKey(day)
             day = next
             guard let fp = await repo.hrFingerprint(from: from, to: to), fp.count > 3_600 else { continue }
-            if let k = kept[key], k.count == fp.count, k.maxTs == fp.maxTs { used[key] = k; continue }
+            if let k = kept[key], k.count == fp.count, k.maxTs == fp.maxTs, !k.sleepHR.isEmpty || k.hr.isEmpty { used[key] = k; continue }
             let hr = await repo.hrSamples(from: from - 600, to: to, limit: 200_000)
             let rr = await repo.rrIntervals(from: from - 600, to: to, limit: 200_000)
             let g = await repo.gravitySamplesUnion(from: from - 600, to: to, limit: 200_000)
@@ -163,14 +164,15 @@ final class StressEngine {
                 WhoopStress.wakingReadings(WhoopStress.analyze(hr: hr, rr: rr, gravity: g, sleep: sleeps, activities: works,
                                                                baseline: baseline, from: from, to: to).epochs)
             }.value
-            let rec = WakingDay(count: fp.count, maxTs: fp.maxTs, hr: w.hr.map { Int(($0 * 10).rounded()) }, rmssd: w.rmssd.map { Int($0.rounded()) })
+            let rec = WakingDay(count: fp.count, maxTs: fp.maxTs, hr: w.hr.map { Int(($0 * 10).rounded()) }, rmssd: w.rmssd.map { Int($0.rounded()) }, sleepHR: w.sleepHR.map { Int(($0 * 10).rounded()) })
             kept[key] = rec
             used[key] = rec
         }
         Self.saveWakingDays(kept)
         let hr = used.values.flatMap { $0.hr.map { Double($0) / 10 } }
         let rmssd = used.values.flatMap { $0.rmssd.map(Double.init) }
-        return WhoopStress.calibrated(WhoopStress.Tuning(), wakingHR: hr, wakingRMSSD: rmssd, baseline: baseline)
+        let asleep = used.values.flatMap { $0.sleepHR.map { Double($0) / 10 } }
+        return WhoopStress.calibrated(WhoopStress.Tuning(), wakingHR: hr, wakingRMSSD: rmssd, sleepHR: asleep, baseline: baseline)
     }
 
     // MARK: A day of stress

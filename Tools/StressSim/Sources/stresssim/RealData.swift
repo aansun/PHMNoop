@@ -334,6 +334,54 @@ func runReal(path: String, outDir: String?) throws {
         print("   Total day     Low / Medium / High: \(share(total))   a day \(perDay(total))")
     }
 
+    // 8. Fit to WHOOP's own day: Mon 9 Nov, Total day Low 14:06 / Medium 8:57 / High 0:29 (60% / 38% / 2%). Awake and still is read as
+    // what is left when a night of about 7 hours, nearly all Low, is taken out. Two constants are searched: the spread scale and the shift
+    // of the waking reference; the sleep reference is the person's own (median sleeping heart rate over the same 60 days).
+    if args.contains("--fit") {
+        print("\n== 8. Fit to WHOOP's Mon 9 Nov: Total day 60% Low / 38% Medium / 2% High ==")
+        struct Cand { var scale: Double; var shift: Double; var sleepShift: Double; var total: [Double]; var non: [Double]; var slp: [Double]; var err: Double }
+        var cands: [Cand] = []
+        // Preload each test day's calibration once.
+        struct DayCal { let d: Int; let b: WhoopStress.Baseline; let t: WhoopStress.Tuning }
+        var cals: [DayCal] = []
+        for d in testDays {
+            let known = nights.filter { $0.day <= d }.suffix(14)
+            guard known.count >= 14, let b = WhoopStress.Baseline.from(nightlyRMSSD: known.map(\.rmssd), nightlyRestingHR: known.map(\.rhr)) else { continue }
+            var eps: [WhoopStress.Epoch] = []
+            for k in (d - 59)..<d { eps.append(contentsOf: stockByDay[k] ?? []) }
+            var t = WhoopStress.calibrated(tuningStock, from: eps, baseline: b)
+            let sl = eps.filter { $0.kind == .sleep }.compactMap(\.meanHR).sorted()
+            if sl.count >= 100 { t.sleepHROffsetBPM = min(max(sl[sl.count / 2] - b.restingHR, 0), 20) }
+            cals.append(DayCal(d: d, b: b, t: t))
+        }
+        for scale in [1.4, 1.5, 1.6, 1.75] {
+            for shift in [10.0, 12, 14, 16] {
+                for sleepShift in [-1.75, -2.0, -2.25] {
+                    var tot = [0.0, 0.0, 0.0], non = [0.0, 0.0, 0.0], slp = [0.0, 0.0, 0.0]
+                    for c in cals {
+                        var t = c.t; t.spreadScale = scale; t.wakeShiftBPM = shift; t.sleepRawShift = sleepShift
+                        let a = c.d * 86_400 - tz
+                        let r = WhoopStress.analyze(hr: real.hr, rr: real.rr, gravity: real.gravity, sleep: sleepRanges, activities: workoutRanges,
+                                                    baseline: c.b, from: a, to: min(a + 86_399, lastTs), tuning: t)
+                        tot[0] += r.total.low; tot[1] += r.total.medium; tot[2] += r.total.high
+                        non[0] += r.nonActivity.low; non[1] += r.nonActivity.medium; non[2] += r.nonActivity.high
+                        slp[0] += r.sleep.low; slp[1] += r.sleep.medium; slp[2] += r.sleep.high
+                    }
+                    func norm(_ z: [Double]) -> [Double] { let s = max(z.reduce(0, +), 1); return z.map { $0 / s } }
+                    let T = norm(tot), N = norm(non), S = norm(slp)
+                    let err = abs(T[0] - 0.60) + abs(T[1] - 0.38) + 2 * abs(T[2] - 0.02) + 0.5 * abs(S[0] - 0.85)
+                    cands.append(Cand(scale: scale, shift: shift, sleepShift: sleepShift, total: T, non: N, slp: S, err: err))
+                }
+            }
+        }
+        cands.sort { $0.err < $1.err }
+        print("scale shift sleepShift | Total L/M/H | Non-activity L/M/H | Sleep L/M/H | error")
+        for c in cands.prefix(12) {
+            func f(_ z: [Double]) -> String { String(format: "%2.0f/%2.0f/%2.0f", z[0] * 100, z[1] * 100, z[2] * 100) }
+            print(String(format: "%4.2f  %4.0f  %5.1f      | %@ | %@ | %@ | %.3f", c.scale, c.shift, c.sleepShift, f(c.total), f(c.non), f(c.slp), c.err))
+        }
+    }
+
     if let outDir {
         var json: [String: Any] = [:]
         json["days"] = dailyRows
