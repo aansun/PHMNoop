@@ -157,9 +157,7 @@ struct NunaGymExploreView: View {
                 NavigationLink(value: NunaWorkoutRoute.exploreWorkout(w.id)) { NunaExploreCard(workout: w) }.buttonStyle(.plain)
             }
         }
-        NunaTitleRow(title: "Routines") { EmptyView() }
-        categories
-        NavigationLink { NunaProgramImportView() } label: {
+        NavigationLink(value: NunaWorkoutRoute.programImport) {
             NunaCard(small: true) { NunaListRow("Import a program", description: "Bring a routine in from a spreadsheet", systemImage: "tablecells", showsChevron: true) }
         }.buttonStyle(.plain)
         nunaFootnote("General templates written for PHMN, with exercises from the library. They are a place to start: add one, then change anything in it. Not personal advice.")
@@ -253,75 +251,6 @@ struct NunaGymExploreView: View {
                         .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading).padding(12)
                         .background(selection == o.0 ? NunaPalette.accent : NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }.buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
-    // MARK: Categories
-
-    private var categories: some View {
-        let cats: [(LocalizedStringKey, String, [NunaStarterProgram.Equipment])] = [
-            ("At home", "house", [.dumbbells, .bands, .none]), ("Dumbbells only", "dumbbell.fill", [.dumbbells]),
-            ("Bands", "lines.measurement.horizontal", [.bands]), ("Gym", "building.2", [.gym]), ("Bodyweight", "figure.stand", [.none]),
-        ]
-        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-            ForEach(Array(cats.enumerated()), id: \.offset) { _, c in
-                NavigationLink { NunaStarterCategoryView(title: c.0, equipment: c.2) } label: {
-                    HStack {
-                        Text(c.0).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.leading)
-                        Spacer(minLength: 4)
-                        Image(systemName: c.1).font(.nuna(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                    .padding(.horizontal, 16).frame(maxWidth: .infinity, minHeight: 74).background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }.buttonStyle(.plain)
-            }
-        }
-    }
-}
-
-// MARK: - Routines by place
-
-/// The routines of every starter program that suits a place to train, each with its exercises, to add one at a time.
-struct NunaStarterCategoryView: View {
-    let title: LocalizedStringKey
-    let equipment: [NunaStarterProgram.Equipment]
-    @EnvironmentObject private var repo: Repository
-    @State private var addedIds: Set<String> = []
-
-    private var entries: [(program: NunaStarterProgram, routine: NunaStarterProgram.Routine)] {
-        NunaStarterPrograms.all.filter { equipment.contains($0.equipment) }.flatMap { p in p.routines.map { (program: p, routine: $0) } }
-    }
-
-    var body: some View {
-        NunaDetailScreen(title) {
-            ForEach(entries, id: \.routine.id) { entry in
-                let key = entry.program.id + "·" + entry.routine.id
-                NunaCard(small: true) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(alignment: .top) {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(verbatim: entry.program.routines.count > 1 ? entry.routine.name : entry.program.name).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: entry.program.name).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            }
-                            Spacer(minLength: 8)
-                            Button {
-                                Task {
-                                    var single = entry.program
-                                    single = NunaStarterProgram(id: entry.program.id, name: entry.program.routines.count > 1 ? entry.routine.name : entry.program.name,
-                                                                level: entry.program.level, goal: entry.program.goal, equipment: entry.program.equipment, routines: [entry.routine])
-                                    _ = await NunaStarterPrograms.add(single, repo: repo)
-                                    addedIds.insert(key)
-                                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                                }
-                            } label: {
-                                Text(addedIds.contains(key) ? "Added" : "Add").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                                    .padding(.horizontal, 18).frame(height: 38).background(NunaPalette.accent.opacity(addedIds.contains(key) ? 0.5 : 1), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                            }.buttonStyle(.plain).disabled(addedIds.contains(key))
-                        }
-                        Text(verbatim: entry.routine.moves.map(\.name).joined(separator: ", ")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
                 }
             }
         }

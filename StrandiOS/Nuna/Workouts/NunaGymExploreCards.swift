@@ -70,7 +70,7 @@ struct NunaExploreWorkout: Identifiable {
         "ppl-beginner-gym·Push": "ExploreBench",
         "ppl-beginner-gym·Pull": "ExplorePullup",
         "ppl-beginner-gym·Legs": "ExploreLegMachine",
-        "fat-loss-gym·Circuit": "ExploreConditioning",
+        "fat-loss-gym·Circuit": "ExploreKettlebell",
         "upper-lower-medium-gym·Upper": "ExploreIncline",
         "upper-lower-medium-gym·Lower": "ExploreBarbellSquat",
         "ppl-medium-gym·Push": "ExploreHeavyBench",
@@ -97,11 +97,11 @@ struct NunaExploreWorkout: Identifiable {
     private var fallbackImage: String {
         let group = groups.first
         switch program.equipment {
-        case .none: return Self.stable(id) % 2 == 0 ? "ExploreMat" : "ExploreConditioning"
+        case .none: return Self.stable(id) % 2 == 0 ? "ExploreMat" : "ExploreKettlebell"
         case .bands: return "ExploreBand"
         case .dumbbells: return "ExploreDumbbell"
         case .gym:
-            if program.goal == .loseWeight { return "ExploreConditioning" }
+            if program.goal == .loseWeight { return "ExploreKettlebell" }
             // The second routine of a program gets another photo of the same kind, so two neighbours never show the same picture.
             let second = (program.routines.firstIndex { $0.name == routine.name } ?? 0) % 2 == 1
             switch group {
@@ -109,7 +109,7 @@ struct NunaExploreWorkout: Identifiable {
             case .back: return program.goal == .strength || second ? "ExplorePlates" : "ExplorePullup"
             case .chest: return second ? "ExploreIncline" : "ExploreBench"
             case .shoulders, .arms: return second ? "ExploreBench" : "ExploreIncline"
-            case .core: return "ExploreConditioning"
+            case .core: return "ExploreKettlebell"
             case nil: return "ExplorePlates"
             }
         }
@@ -163,10 +163,10 @@ struct NunaExploreCard: View {
                 Color.clear.frame(height: textTop)
                 VStack(alignment: .leading, spacing: 8) {
                     Text(verbatim: workout.title).font(.nuna(size: 15.5, weight: .bold)).tracking(1.0).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.leading).lineLimit(2).minimumScaleFactor(0.85)
+                        .foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.leading).lineLimit(3).minimumScaleFactor(0.85)
                     Text("\(workout.minutes) min").font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
-                .frame(maxWidth: .infinity, minHeight: 70, maxHeight: 70, alignment: .topLeading)
+                .frame(maxWidth: .infinity, minHeight: 88, maxHeight: 88, alignment: .topLeading)
                 .padding(.horizontal, 16).padding(.bottom, 16)
             }
         }
