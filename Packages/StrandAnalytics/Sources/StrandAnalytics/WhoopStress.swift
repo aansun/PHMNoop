@@ -253,34 +253,50 @@ public enum WhoopStress {
 
     // MARK: - Personal calibration
 
-    /// Sets the two waking constants from the person's own baseline days instead of fixed numbers: `wakeHROffsetBPM` becomes how far their
+    /// Sets the two waking constants from the person's own days instead of fixed numbers: `wakeHROffsetBPM` becomes how far their
     /// typical (median) waking, sedentary heart rate sits above their resting heart rate, and `wakeHRVRatio` how their typical waking RMSSD
     /// compares with their nightly one. Their usual waking state then scores as neutral (Medium), which is what "neutral, alert" means.
     ///
     /// `epochs` are those of an `analyze` over the baseline days (any tuning: the heart rate and the RMSSD they carry do not depend on it).
     /// Returns `base` unchanged when there are fewer than `minEpochs` waking epochs to take a median from.
     public static func calibrated(_ base: Tuning, from epochs: [Epoch], baseline: Baseline, minEpochs: Int = 100) -> Tuning {
+        let w = wakingReadings(epochs)
+        return calibrated(base, wakingHR: w.hr, wakingRMSSD: w.rmssd, baseline: baseline, minEpochs: minEpochs)
+    }
+
+    /// The heart rates and the trusted RMSSDs of the waking, sedentary epochs that were scored: what the two waking constants are read from.
+    /// Kept apart so a day's readings can be stored and a long window put together without reading its raw samples again.
+    public static func wakingReadings(_ epochs: [Epoch]) -> (hr: [Double], rmssd: [Double]) {
         let waking = epochs.filter { $0.kind == .waking && $0.level != nil }
-        guard waking.count >= minEpochs else { return base }
+        return (waking.compactMap(\.meanHR), waking.compactMap(\.rmssd))
+    }
+
+    /// The same calibration from the readings themselves (`wakingReadings`), pooled over as many days as the caller keeps.
+    public static func calibrated(_ base: Tuning, wakingHR: [Double], wakingRMSSD: [Double], baseline: Baseline, minEpochs: Int = 100) -> Tuning {
+        guard wakingHR.count >= minEpochs else { return base }
         func median(_ x: [Double]) -> Double? {
             guard !x.isEmpty else { return nil }
             let s = x.sorted(); return s[s.count / 2]
         }
         var t = base
-        if let hr = median(waking.compactMap(\.meanHR)) { t.wakeHROffsetBPM = min(max(hr - baseline.restingHR, 5), 40) }
-        let rm = waking.compactMap(\.rmssd)
-        if rm.count >= minEpochs / 2, let r = median(rm) { t.wakeHRVRatio = min(max(r / exp(baseline.hrvLnMean), 0.25), 1.2) }
+        if let hr = median(wakingHR) { t.wakeHROffsetBPM = min(max(hr - baseline.restingHR, 5), 40) }
+        if wakingRMSSD.count >= minEpochs / 2, let r = median(wakingRMSSD) { t.wakeHRVRatio = min(max(r / exp(baseline.hrvLnMean), 0.25), 1.2) }
         return t
     }
 
     // MARK: - Calibration record
 
-    /// Everything the reading needs about one person, kept between runs: the 14-night baseline and the two waking constants set from the
-    /// same days. It exists only once `requiredNights` nights are in; before that the reading is calibrating and shows nothing.
+    /// Everything the reading needs about one person, kept between runs: the 14-night baseline and the two waking constants, set from
+    /// the last `wakeDays` days. It exists only once `requiredNights` nights are in; before that the reading is calibrating and shows nothing.
     public struct Calibration: Equatable, Sendable, Codable {
         /// Bumped when the method changes, so an older record is rebuilt rather than trusted.
-        public static let version = 1
+        public static let version = 2
         public static let requiredNights = 14
+        /// Days the two waking constants are read from: the newest 60 that have data, not the 14 of the baseline. With 14 the constants
+        /// followed the person so closely that a hard fortnight became the new normal: three hard weeks read as ordinary by the second week,
+        /// and the week after read as unusually calm. Over 60 days a hard or an easy spell stays visible, and the constants still follow a
+        /// slow change in fitness (through the 14-night baseline they are measured against). Measured with `Tools/StressSim --sixmonths`.
+        public static let wakeDays = 60
 
         public var version: Int
         public var baseline: Baseline

@@ -8,7 +8,8 @@ import Foundation
 /// - from `calibrationNights` up to `trustedNights`: a range, but a short one, so it is read with a wider tolerance that narrows night by night;
 /// - from `trustedNights`: the plain range.
 ///
-/// The centre is the median and the spread the median absolute deviation scaled to a standard deviation (1.4826), so one night out (a drink,
+/// The centre is the median and the range `rangeSpreads` (2) standard deviations either side of it, the standard deviation read from the
+/// median absolute deviation (scaled by 1.4826), so one night out (a drink,
 /// a late workout, a cold coming) does not drag the range to itself the way a mean and a standard deviation would, and it matters most
 /// while there are few nights.
 public enum VitalRange {
@@ -21,6 +22,13 @@ public enum VitalRange {
     public static let windowNights = 30
     /// A range of `calibrationNights` readings is this many times wider than the final one.
     public static let widestFactor = 1.5
+    /// Standard deviations either side of the median that are still the usual range. At 1 a third of perfectly ordinary nights fall outside
+    /// each vital, and with several vitals watched most ordinary days show one out of range; at 2 it is about one night in twenty, and a
+    /// night that is really off (an illness, a drink) still shows on two or more vitals. Measured with `Tools/StressSim --sixmonths`.
+    public static let rangeSpreads = 2.0
+    /// The smallest half-width of a respiratory-rate range (breaths a minute). The nightly figure moves in steps of about 0.8 (it is read
+    /// from a spectrum), so a steady sleeper's readings are one value and its neighbours: a floor under one step calls every step out of range.
+    public static let respiratoryFloor = 1.0
 
     public enum Phase: Equatable, Sendable {
         case calibrating(nights: Int)
@@ -40,7 +48,7 @@ public enum VitalRange {
     public struct Band: Equatable, Sendable {
         /// The median of the readings.
         public let centre: Double
-        /// The spread, already widened while the range is short.
+        /// Half the width of the usual range: `rangeSpreads` standard deviations, wider still while the range is short.
         public let spread: Double
         public let lo: Double
         public let hi: Double
@@ -62,7 +70,7 @@ public enum VitalRange {
         let widen: Double = nights >= trustedNights
             ? 1
             : 1 + (widestFactor - 1) * Double(trustedNights - nights) / Double(trustedNights - calibrationNights)
-        let spread = 1.4826 * mad * widen
+        let spread = 1.4826 * mad * rangeSpreads * widen
         return Band(centre: centre, spread: spread, lo: values.min() ?? centre, hi: values.max() ?? centre, nights: nights)
     }
 

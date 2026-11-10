@@ -21,12 +21,13 @@ final class VitalRangeTests: XCTestCase {
     }
 
     func testCentreIsTheMedianAndSpreadTheScaledMAD() throws {
-        // 14 nights: no widening. Median 60, deviations 0 1 1 2 ... MAD of this set is 1.
+        // 14 nights: no widening. Median 60, deviations 0 1 1 2 ... MAD of this set is 1, and the range is two standard deviations either side.
         let h: [Double] = [59, 60, 61, 60, 59, 61, 60, 62, 58, 60, 60, 61, 59]
         let b = try XCTUnwrap(VitalRange.band(history: h))
         XCTAssertEqual(b.nights, 14)
         XCTAssertEqual(b.centre, 60, accuracy: 1e-9)
-        XCTAssertEqual(b.spread, 1.4826, accuracy: 1e-9)
+        XCTAssertEqual(b.spread, 1.4826 * VitalRange.rangeSpreads, accuracy: 1e-9)
+        XCTAssertEqual(VitalRange.rangeSpreads, 2, accuracy: 1e-9)
         XCTAssertFalse(b.learning)
     }
 
@@ -37,11 +38,11 @@ final class VitalRangeTests: XCTestCase {
         let a = try XCTUnwrap(VitalRange.band(history: calm))
         let b = try XCTUnwrap(VitalRange.band(history: withOutlier))
         XCTAssertEqual(a.centre, b.centre, accuracy: 0.5)
-        XCTAssertEqual(a.spread, b.spread, accuracy: 0.8)
+        XCTAssertEqual(a.spread, b.spread, accuracy: 1.6)
         // A mean and SD of the same set would put the SD near 9: the range would swallow nearly any reading.
         let m = withOutlier.reduce(0, +) / Double(withOutlier.count)
         let sd = (withOutlier.map { ($0 - m) * ($0 - m) }.reduce(0, +) / Double(withOutlier.count)).squareRoot()
-        XCTAssertGreaterThan(sd, 5 * b.spread)
+        XCTAssertGreaterThan(sd, 5 * b.spread / VitalRange.rangeSpreads)
     }
 
     func testShortRangeIsWiderAndNarrowsToTheFinalOne() throws {
@@ -54,7 +55,7 @@ final class VitalRangeTests: XCTestCase {
         XCTAssertGreaterThan(s7, s14)
         // Both medians and MADs are 60 and 1, so the ratio is the widening alone: 1.5 at 7 nights, 1 at 14.
         XCTAssertEqual(s7 / s14, 1.5, accuracy: 0.05)
-        XCTAssertEqual(try spread(nights: 20), s14, accuracy: 0.05)
+        XCTAssertEqual(try spread(nights: 20), s14, accuracy: 0.1)
         XCTAssertLessThan(try spread(nights: 10), s7)
         XCTAssertGreaterThan(try spread(nights: 10), s14)
     }

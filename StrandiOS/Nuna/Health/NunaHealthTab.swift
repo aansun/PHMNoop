@@ -279,7 +279,7 @@ struct NunaHealthMonitorCard: View {
     private var vitals: [Vital] {
         let hasRange = phase.hasRange
         return [
-            Vital(id: "resp", icon: "met:respiratory-rate", label: "RESP", ok: respiratory.flatMap { v in respS.verdict(v, floor: 0.3).map { $0 == .inRange } }),
+            Vital(id: "resp", icon: "met:respiratory-rate", label: "RESP", ok: respiratory.flatMap { v in respS.verdict(v, floor: VitalRange.respiratoryFloor).map { $0 == .inRange } }),
             Vital(id: "spo2", icon: "vital:spo2", label: "SpO₂", ok: hasRange ? spo2.map { $0 >= 95 } : nil),
             Vital(id: "rhr", icon: "met:resting-heart-rate", label: "RHR", ok: restingHr.flatMap { v in rhrS.verdict(v, floor: 1).map { $0 == .inRange } }),
             Vital(id: "hrv", icon: "met:heart-rate-variability", label: "HRV", ok: hrv.flatMap { v in hrvS.verdict(v, floor: 1).map { $0 == .inRange } }),

@@ -290,6 +290,50 @@ func runReal(path: String, outDir: String?) throws {
     for d in testDays { for h in leg[d]!.hours where h.maskedForActivity { maskedLegacy += 1 }; totalLegacy += leg[d]!.hours.count }
     print("legacy hours masked for motion: \(maskedLegacy) of \(totalLegacy) waking hours")
 
+    // 7. The app's own way: the calibration rebuilt every morning from the newest 14 nights, each day scored with that morning's record.
+    print("\n== 7. As the app runs it: rolling calibration, time in each band per day ==")
+    var stockByDay: [Int: [WhoopStress.Epoch]] = [:]
+    for e in first.epochs + wFixed.epochs { stockByDay[dayIndex(e.ts), default: []].append(e) }
+    struct Try { let wakeDays: Int; let floor: Double; let personalSleep: Bool }
+    let tries = [Try(wakeDays: 14, floor: 6, personalSleep: false), Try(wakeDays: 60, floor: 6, personalSleep: false), Try(wakeDays: 60, floor: 6, personalSleep: true),
+                 Try(wakeDays: 60, floor: 8, personalSleep: true), Try(wakeDays: 60, floor: 10, personalSleep: true), Try(wakeDays: 60, floor: 12, personalSleep: true)]
+    for tr in tries {
+        let wakeDays = tr.wakeDays
+        var non = [0.0, 0.0, 0.0], total = [0.0, 0.0, 0.0], slp = [0.0, 0.0, 0.0]
+        var worstHigh = 0.0, daysScored = 0, offs: [Double] = [], ratios: [Double] = [], highPerDay: [Double] = [], sleepOffs: [Double] = []
+        for d in testDays {
+            let known = nights.filter { $0.day <= d }.suffix(14)
+            guard known.count >= 14, let b = WhoopStress.Baseline.from(nightlyRMSSD: known.map(\.rmssd), nightlyRestingHR: known.map(\.rhr)) else { continue }
+            let firstDay = wakeDays == 14 ? dayIndex(known.first!.start) : d - wakeDays + 1
+            var eps: [WhoopStress.Epoch] = []
+            for k in firstDay..<d { eps.append(contentsOf: stockByDay[k] ?? []) }
+            var t = WhoopStress.calibrated(tuningStock, from: eps, baseline: b)
+            t.hrSpreadFloorBPM = tr.floor
+            if tr.personalSleep {
+                let sl = eps.filter { $0.kind == .sleep }.compactMap(\.meanHR).sorted()
+                if sl.count >= 100 { t.sleepHROffsetBPM = min(max(sl[sl.count / 2] - b.restingHR, 0), 20) }
+                sleepOffs.append(t.sleepHROffsetBPM)
+            }
+            offs.append(t.wakeHROffsetBPM); ratios.append(t.wakeHRVRatio)
+            let a = d * 86_400 - tz
+            let r = WhoopStress.analyze(hr: real.hr, rr: real.rr, gravity: real.gravity, sleep: sleepRanges, activities: workoutRanges,
+                                        baseline: b, from: a, to: min(a + 86_399, lastTs), tuning: t)
+            non[0] += r.nonActivity.low; non[1] += r.nonActivity.medium; non[2] += r.nonActivity.high
+            total[0] += r.total.low; total[1] += r.total.medium; total[2] += r.total.high
+            slp[0] += r.sleep.low; slp[1] += r.sleep.medium; slp[2] += r.sleep.high
+            worstHigh = max(worstHigh, r.nonActivity.high); highPerDay.append(r.nonActivity.high); daysScored += 1
+        }
+        guard daysScored > 0 else { continue }
+        func share(_ z: [Double]) -> String { let s = max(z.reduce(0, +), 1); return String(format: "%2.0f%% / %2.0f%% / %2.0f%%", z[0] / s * 100, z[1] / s * 100, z[2] / s * 100) }
+        func perDay(_ z: [Double]) -> String { zones((z[0] / Double(daysScored), z[1] / Double(daysScored), z[2] / Double(daysScored))) }
+        let sortedHigh = highPerDay.sorted()
+        print("-- HR spread floor \(Int(tr.floor)) bpm, sleep offset \(tr.personalSleep ? String(format: "personal %.1f-%.1f bpm", sleepOffs.min() ?? 0, sleepOffs.max() ?? 0) : "stock 3 bpm")")
+        print("waking constants from \(wakeDays) days (\(daysScored) days scored; offset \(String(format: "%.1f-%.1f", offs.min()!, offs.max()!)) bpm, HRV ratio \(String(format: "%.2f-%.2f", ratios.min()!, ratios.max()!)))")
+        print("   Non-activity  Low / Medium / High: \(share(non))   a day \(perDay(non))   High on the median day \(hm(sortedHigh[sortedHigh.count / 2])), on the worst \(hm(worstHigh))")
+        print("   Sleep         Low / Medium / High: \(share(slp))   a night \(perDay(slp))")
+        print("   Total day     Low / Medium / High: \(share(total))   a day \(perDay(total))")
+    }
+
     if let outDir {
         var json: [String: Any] = [:]
         json["days"] = dailyRows

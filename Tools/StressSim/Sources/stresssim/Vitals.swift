@@ -27,7 +27,7 @@ func rangeVerdict(_ value: Double, history: [Double], floor: Double, rule: Range
         let z = Baselines.deviation(value, state: state).z
         return abs(z) <= VitalBands.sigmaK ? .inRange : (z > 0 ? .above : .below)
     }
-    if rule.k == 1, rule.window == VitalRange.windowNights {
+    if rule.k == VitalRange.rangeSpreads, rule.window == VitalRange.windowNights {
         return VitalRange.band(history: history).map { VitalRange.verdict(value, in: $0, floor: floor) }
     }
     let values = Array(history.suffix(rule.window))
@@ -43,9 +43,9 @@ func rangeVerdict(_ value: Double, history: [Double], floor: Double, rule: Range
 }
 
 let rangeRules = [
-    RangeRule(name: "app: median ± 1.0 spread"),
+    RangeRule(name: "before: median ± 1.0 spread", k: 1.0),
     RangeRule(name: "median ± 1.5 spread", k: 1.5),
-    RangeRule(name: "median ± 2.0 spread", k: 2.0),
+    RangeRule(name: "app: median ± 2.0 spread", k: 2.0),
     RangeRule(name: "median ± 2.0, 60 nights", k: 2.0, window: 60),
     RangeRule(name: "EWMA ± 2 sigma (VitalBands)", ewma: true),
 ]
@@ -148,7 +148,7 @@ private func population() {
             var mine = 0, mineOut = 0
             var hist: [[Double]] = [[], [], []]
             for (j, n) in nights.enumerated() where n.worn {
-                let vals = [n.hrv, n.rhr, n.resp], floors = [1.0, 1.0, 0.3], keys = ["hrv", "resting_hr", "resp"]
+                let vals = [n.hrv, n.rhr, n.resp], floors = [1.0, 1.0, VitalRange.respiratoryFloor], keys = ["hrv", "resting_hr", "resp"]
                 if j >= 14 {
                     for k in 0..<3 {
                         guard let v = rangeVerdict(vals[k], history: hist[k], floor: floors[k], rule: rule, cfgKey: keys[k]) else { continue }
@@ -172,7 +172,7 @@ private func population() {
             let nights = person(seed: 5_000 + UInt64(p), skinSD: nil, spo2SD: nil)
             var hist: [[Double]] = [[], [], []]
             for (j, n) in nights.enumerated() where n.worn {
-                let vals = [n.hrv, n.rhr, n.resp], floors = [1.0, 1.0, 0.3], keys = ["hrv", "resting_hr", "resp"]
+                let vals = [n.hrv, n.rhr, n.resp], floors = [1.0, 1.0, VitalRange.respiratoryFloor], keys = ["hrv", "resting_hr", "resp"]
                 if j >= 14 {
                     var out = 0, adverse = 0
                     for k in 0..<3 {

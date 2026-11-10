@@ -832,8 +832,8 @@ final class NunaSeriesModel: ObservableObject {
         return v.count >= 3 ? v.reduce(0, +) / Double(v.count) : nil
     }
 
-    /// The usual range read from the last 30 readings before the latest one (`VitalRange`): the median as `mean`, the spread as a standard
-    /// deviation from the median absolute deviation (wider while there are few nights), and the extremes. Nil under seven nights.
+    /// The usual range read from the last 30 readings before the latest one (`VitalRange`): the median as `mean`, the half-width of the range as `sd`
+    /// (two standard deviations read from the median absolute deviation, wider while there are few nights), and the extremes. Nil under seven nights.
     var band: (mean: Double, sd: Double, lo: Double, hi: Double)? {
         let v = byDay.keys.sorted().dropLast().compactMap { byDay[$0] }
         guard let b = VitalRange.band(history: v) else { return nil }
@@ -850,7 +850,7 @@ final class NunaSeriesModel: ObservableObject {
         return VitalRange.band(history: v).map { VitalRange.verdict(value, in: $0, floor: floor) }
     }
 
-    /// The typical range shaded behind a chart: the mean of the last 30 readings plus and minus one spread. It is the line the In range / Above range
+    /// The typical range shaded behind a chart: the median of the last 30 readings plus and minus the range's half-width (two standard deviations). It is the line the In range / Above range
     /// chip is judged by, so a reading outside the shading always carries that chip and one inside it never does.
     var typicalRange: ClosedRange<Double>? { band.map { ($0.mean - $0.sd)...($0.mean + $0.sd) } }
 
