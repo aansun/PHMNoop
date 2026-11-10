@@ -235,12 +235,17 @@ struct NunaVO2MaxFooter: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @State private var hasData = true
+    @State private var latest: Double?
     @State private var showAdd = false
     @State private var showWaist = false
 
     var body: some View {
         VStack(spacing: NunaSpacing.section) {
             if !hasData { waiting }
+            if let latest {
+                hint
+                NunaVO2LevelCard(value: latest, age: profile.age)
+            }
             VStack(spacing: 12) {
                 Button { showAdd = true } label: { NunaVO2Row(symbol: "plus", title: "Add manual VO₂ max value") }.buttonStyle(.plain)
                 NavigationLink { NunaVO2ManualRecordingsView() } label: { NunaVO2Row(symbol: "list.bullet", title: "See all manual recordings") }.buttonStyle(.plain)
@@ -259,6 +264,20 @@ struct NunaVO2MaxFooter: View {
         }
     }
 
+    /// The blue note above the level card: what the figure rests on, and what would sharpen it.
+    private var hint: some View {
+        HStack(alignment: .center, spacing: 16) {
+            Image(systemName: "info").font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.insightBlue).frame(width: 22)
+            Text(profile.waistCm > 0
+                 ? "Your VO₂ max is worked out once a week from your resting heart rate, your waist and your profile, so it moves slowly."
+                 : "Your VO₂ max is worked out once a week from your resting heart rate and your profile. Adding your waist makes it sharper.")
+                .font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.insightBlue).textCase(nil).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16).padding(.vertical, 18).frame(maxWidth: .infinity, alignment: .leading)
+        .background(NunaPalette.insightBlue.opacity(0.14), in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+    }
+
     private var waiting: some View {
         VStack(spacing: 12) {
             Image(systemName: "applewatch").font(.system(size: 54, weight: .ultraLight)).foregroundStyle(NunaPalette.textSecondary).padding(.top, 8)
@@ -271,7 +290,113 @@ struct NunaVO2MaxFooter: View {
     }
 
     private func load() async {
-        hasData = !(await repo.exploreSeries(key: NunaVO2Manual.key, source: "my-whoop", days: 400)).isEmpty
+        let series = await repo.exploreSeries(key: NunaVO2Manual.key, source: "my-whoop", days: 400)
+        hasData = !series.isEmpty
+        latest = series.last?.value
+    }
+}
+
+/// Where a VO₂ max sits among people of the same age: five levels with their lower limits, the level the reading falls in, and about what share of
+/// people it is above. The spread is taken from the same age curves as the chart in "What is VO₂ max?" (5th, 50th and 95th percentile), read as a normal
+/// distribution, so the figures are close, not exact.
+enum NunaVO2Level {
+    struct Result { let bounds: [Int]; let tier: Int; let percent: Int }
+    static let names: [LocalizedStringKey] = ["Below Average", "Average", "Above Average", "Excellent", "Superior"]
+    /// The lowest figure the bar starts at.
+    static let floorValue = 15
+
+    private static func at(_ points: [(Double, Double)], _ age: Double) -> Double {
+        guard let first = points.first, let last = points.last else { return 0 }
+        if age <= first.0 { return first.1 }
+        if age >= last.0 { return last.1 }
+        for i in 1..<points.count where age <= points[i].0 {
+            let (x0, y0) = points[i - 1], (x1, y1) = points[i]
+            return y0 + (y1 - y0) * (age - x0) / (x1 - x0)
+        }
+        return last.1
+    }
+
+    static func assess(vo2: Double, age: Int) -> Result {
+        let a = Double(age)
+        let low = at(NunaVO2MaxInfo.low, a), mid = at(NunaVO2MaxInfo.average, a), high = at(NunaVO2MaxInfo.high, a)
+        let sd = max((high - low) / (2 * 1.645), 1)
+        // Lower limits of the four upper levels: the 40th, 60th, 80th and 95th percentile.
+        var bounds = [-0.2533, 0.2533, 0.8416, 1.6449].map { Int((mid + $0 * sd).rounded()) }
+        for i in 1..<bounds.count { bounds[i] = max(bounds[i], bounds[i - 1] + 1) }
+        bounds[0] = max(bounds[0], floorValue + 1)
+        let z = (vo2 - mid) / sd
+        let percent = min(max(Int((50 * (1 + erf(z / 2.0.squareRoot()))).rounded()), 1), 99)
+        return Result(bounds: bounds, tier: bounds.filter { vo2 >= Double($0) }.count, percent: percent)
+    }
+}
+
+/// "Your cardio fitness level": the five levels as a bar with the reading above it, the level it falls in, and what that says.
+struct NunaVO2LevelCard: View {
+    let value: Double
+    let age: Int
+
+    private static let share: [CGFloat] = [0.38, 0.18, 0.18, 0.13, 0.13]
+    private var tints: [Color] { [NunaPalette.textMuted, NunaPalette.rangeSteel, NunaPalette.insightBlue, NunaPalette.insightFrom.opacity(0.7), NunaPalette.insightFrom] }
+
+    var body: some View {
+        let r = NunaVO2Level.assess(vo2: value, age: age)
+        NunaCard(small: true, padding: EdgeInsets(top: 18, leading: 16, bottom: 18, trailing: 16)) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Your cardio fitness level").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary).padding(.bottom, 22)
+                bar(r).frame(height: 62)
+                (Text(NunaVO2Level.names[r.tier]).foregroundColor(NunaPalette.textPrimary)
+                 + Text(verbatim: " (\(range(r)) ml/kg/min)").foregroundColor(NunaPalette.textSecondary))
+                    .font(.nuna(size: 17, weight: .regular)).textCase(nil).padding(.top, 16)
+                Text(verbatim: String(localized: "Your latest VO₂ max is higher than about \(r.percent)% of people your age."))
+                    .font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true).padding(.top, 8)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func range(_ r: NunaVO2Level.Result) -> String {
+        switch r.tier {
+        case 0: return "\(NunaVO2Level.floorValue)-\(r.bounds[0] - 1)"
+        case 4: return "\(r.bounds[3])+"
+        default: return "\(r.bounds[r.tier - 1])-\(r.bounds[r.tier] - 1)"
+        }
+    }
+
+    private func bar(_ r: NunaVO2Level.Result) -> some View {
+        GeometryReader { geo in
+            let gap: CGFloat = 1.5
+            let usable = geo.size.width - gap * 4
+            let widths = Self.share.map { $0 * usable }
+            let starts = widths.indices.map { i in widths[..<i].reduce(0, +) + gap * CGFloat(i) }
+            let lows = [Double(NunaVO2Level.floorValue)] + r.bounds.map(Double.init)
+            let tier = r.tier
+            let span = tier < 4 ? lows[tier + 1] - lows[tier] : 10
+            let f = CGFloat(min(max((value - lows[tier]) / span, 0), 1))
+            let x = starts[tier] + f * widths[tier]
+            ZStack(alignment: .topLeading) {
+                HStack(spacing: gap) {
+                    ForEach(0..<5, id: \.self) { i in
+                        ZStack(alignment: .topLeading) {
+                            Rectangle().fill(tints[i].opacity(0.22))
+                            Rectangle().fill(tints[i]).frame(height: 3)
+                            Text(verbatim: i == 4 ? "\(r.bounds[3])+" : "\(Int(lows[i]))")
+                                .font(.nunaBoldFigure(size: 14)).foregroundStyle(tints[i]).textCase(nil).lineLimit(1)
+                                .padding(.leading, 9).frame(maxHeight: .infinity, alignment: .center).padding(.top, 3)
+                        }
+                        .frame(width: widths[i], height: 22)
+                        .clipShape(UnevenRoundedRectangle(topLeadingRadius: i == 0 ? 5 : 0, bottomLeadingRadius: i == 0 ? 5 : 0,
+                                                          bottomTrailingRadius: i == 4 ? 5 : 0, topTrailingRadius: i == 4 ? 5 : 0, style: .continuous))
+                    }
+                }
+                .offset(y: 40)
+                Text(verbatim: String(format: "%.0f", value)).font(.nunaBoldFigure(size: 18)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    .position(x: x, y: 10)
+                Image(systemName: "arrowtriangle.down.fill").font(.system(size: 11)).foregroundStyle(NunaPalette.textPrimary)
+                    .position(x: x, y: 31)
+            }
+        }
     }
 }
 #endif

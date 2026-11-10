@@ -65,9 +65,9 @@ struct NunaAverageHRInfo: View {
 /// Under the VO₂ max trend page: what it is, how it compares with other people your age, and how the figure is estimated.
 struct NunaVO2MaxInfo: View {
     /// VO₂ max (ml/kg/min) by age for the 95th, 50th and 5th percentile, read off the published fitness-by-age graph by Jayson Gifford (Brigham Young University).
-    private static let high: [(Double, Double)] = [(25, 61), (35, 51.5), (45, 47.8), (55, 42.3), (65, 35.2), (75, 31.4)]
-    private static let average: [(Double, Double)] = [(25, 42.7), (35, 35.9), (45, 31.6), (55, 27.1), (65, 23.7), (73, 21.4)]
-    private static let low: [(Double, Double)] = [(25, 25.1), (35, 22.4), (45, 19.8), (55, 18.3), (65, 14.7), (73, 13.9)]
+    static let high: [(Double, Double)] = [(25, 61), (35, 51.5), (45, 47.8), (55, 42.3), (65, 35.2), (75, 31.4)]
+    static let average: [(Double, Double)] = [(25, 42.7), (35, 35.9), (45, 31.6), (55, 27.1), (65, 23.7), (73, 21.4)]
+    static let low: [(Double, Double)] = [(25, 25.1), (35, 22.4), (45, 19.8), (55, 18.3), (65, 14.7), (73, 13.9)]
 
     var body: some View {
         VStack(spacing: NunaSpacing.section) {
