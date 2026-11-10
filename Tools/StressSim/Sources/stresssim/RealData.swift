@@ -338,7 +338,7 @@ func runReal(path: String, outDir: String?) throws {
     // what is left when a night of about 7 hours, nearly all Low, is taken out. Two constants are searched: the spread scale and the shift
     // of the waking reference; the sleep reference is the person's own (median sleeping heart rate over the same 60 days).
     if args.contains("--fit") {
-        print("\n== 8. Fit to WHOOP's Mon 9 Nov: Total day 60% Low / 38% Medium / 2% High ==")
+        print("\n== 8. Fit to WHOOP's Total day, five days pooled (Thu 5 to Mon 9 Nov 2026: 48:39 Low, 62:08 Medium, 7:15 High = 41% / 53% / 6%) ==")
         struct Cand { var scale: Double; var shift: Double; var sleepShift: Double; var total: [Double]; var non: [Double]; var slp: [Double]; var err: Double }
         var cands: [Cand] = []
         // Preload each test day's calibration once.
@@ -354,9 +354,9 @@ func runReal(path: String, outDir: String?) throws {
             if sl.count >= 100 { t.sleepHROffsetBPM = min(max(sl[sl.count / 2] - b.restingHR, 0), 20) }
             cals.append(DayCal(d: d, b: b, t: t))
         }
-        for scale in [1.4, 1.5, 1.6, 1.75] {
-            for shift in [10.0, 12, 14, 16] {
-                for sleepShift in [-1.75, -2.0, -2.25] {
+        for scale in [2.0, 2.3, 2.6] {
+            for shift in [2.0, 3, 4, 5] {
+                for sleepShift in [-1.6, -1.8, -2.0] {
                     var tot = [0.0, 0.0, 0.0], non = [0.0, 0.0, 0.0], slp = [0.0, 0.0, 0.0]
                     for c in cals {
                         var t = c.t; t.spreadScale = scale; t.wakeShiftBPM = shift; t.sleepRawShift = sleepShift
@@ -369,7 +369,7 @@ func runReal(path: String, outDir: String?) throws {
                     }
                     func norm(_ z: [Double]) -> [Double] { let s = max(z.reduce(0, +), 1); return z.map { $0 / s } }
                     let T = norm(tot), N = norm(non), S = norm(slp)
-                    let err = abs(T[0] - 0.60) + abs(T[1] - 0.38) + 2 * abs(T[2] - 0.02) + 0.5 * abs(S[0] - 0.85)
+                    let err = abs(T[0] - 0.41) + abs(T[1] - 0.53) + 2 * abs(T[2] - 0.06) + 0.5 * abs(S[0] - 0.85)
                     cands.append(Cand(scale: scale, shift: shift, sleepShift: sleepShift, total: T, non: N, slp: S, err: err))
                 }
             }
