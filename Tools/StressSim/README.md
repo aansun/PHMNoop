@@ -25,6 +25,15 @@ Two modes:
 /tmp/stresssim-build/release/stresssim --real PATH/noop-backup.sqlite --out DIR   # a real backup (unzip the .noopbak first), read-only
 ```
 
+```bash
+/tmp/stresssim-build/release/stresssim --sixmonths --out DIR     # 182 days for three people, then the vital-sign range (sixmonths.json)
+```
+
+`--sixmonths` rebuilds the calibration every morning the way the app does (newest 14 readable nights) and scores each day with the
+calibration it would have had. The life has what twenty days cannot: fitness that improves, two illnesses, a holiday, a hard three weeks
+and nights without the strap. It also compares other ways of building the calibration, and ends with the vital-sign range (`VitalRange`)
+and the early warning (`IllnessSignalEngine`) on the same nights and on a population of 300 people drawn from a statistical model.
+
 `--real` takes the first 14 readable main nights as the baseline and treats every later day as a test day. There is no ground truth
 there: it compares the methods with each other, with the person's workouts and nights, and weakly with the daily mood they logged.
 It prints aggregates only; `real.json` holds daily means, never raw samples.

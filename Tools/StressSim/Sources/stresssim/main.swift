@@ -11,6 +11,7 @@ let outDir: String? = args.firstIndex(of: "--out").flatMap { $0 + 1 < args.count
 
 if let i = args.firstIndex(of: "--real"), i + 1 < args.count { try runReal(path: args[i + 1], outDir: outDir); exit(0) }
 if args.contains("--baseline20") { try runBaseline20(outDir: outDir); exit(0) }
+if args.contains("--sixmonths") { try runSixMonths(outDir: outDir); exit(0) }
 
 // MARK: Helpers
 
