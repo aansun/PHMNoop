@@ -63,8 +63,38 @@ struct NunaExploreWorkout: Identifiable {
         return out.isEmpty ? String(localized: "Body weight") : out.joined(separator: ", ")
     }
 
-    /// The photo of the card: by what the routine needs and what it works most.
-    var image: String {
+    /// Every starter workout has a photo of its own, by workout id; no two share one. A program added later needs its photos added here, or it falls back to a shared one.
+    private static let photos: [String: String] = [
+        "full-body-beginner-gym·Full Body A": "ExploreSquat",
+        "full-body-beginner-gym·Full Body B": "ExploreCableRow",
+        "ppl-beginner-gym·Push": "ExploreBench",
+        "ppl-beginner-gym·Pull": "ExplorePullup",
+        "ppl-beginner-gym·Legs": "ExploreLegMachine",
+        "fat-loss-gym·Circuit": "ExploreConditioning",
+        "upper-lower-medium-gym·Upper": "ExploreIncline",
+        "upper-lower-medium-gym·Lower": "ExploreBarbellSquat",
+        "ppl-medium-gym·Push": "ExploreHeavyBench",
+        "ppl-medium-gym·Pull": "ExploreLatPulldown",
+        "ppl-medium-gym·Legs": "ExploreDeadliftLow",
+        "strength-5x5·Workout A": "ExplorePlates",
+        "strength-5x5·Workout B": "ExploreBarbellFloor",
+        "upper-lower-advanced-strength·Upper": "ExploreBarPull",
+        "upper-lower-advanced-strength·Lower": "ExploreDeadliftWoman",
+        "dumbbell-full-body·Full Body A": "ExploreDumbbell",
+        "dumbbell-full-body·Full Body B": "ExploreDumbbellPress",
+        "dumbbell-upper-lower·Upper": "ExploreDumbbellRow",
+        "dumbbell-upper-lower·Lower": "ExploreLunge",
+        "bodyweight-basics·Day A": "ExploreMat",
+        "bodyweight-basics·Day B": "ExploreBridge",
+        "bodyweight-strength·Upper": "ExploreHandstand",
+        "bodyweight-strength·Lower and core": "ExplorePlank",
+        "band-full-body·Full Body": "ExploreBand",
+    ]
+
+    var image: String { Self.photos[id] ?? fallbackImage }
+
+    /// For a workout that is not in the table (a program added later): a photo by what the routine needs and what it works most.
+    private var fallbackImage: String {
         let group = groups.first
         switch program.equipment {
         case .none: return Self.stable(id) % 2 == 0 ? "ExploreMat" : "ExploreConditioning"
@@ -114,34 +144,44 @@ struct NunaExploreWorkout: Identifiable {
 
 // MARK: - Card
 
-/// A tile of the Explore grid: the photo with the level in its corner, then the name in capitals and the length.
+/// A tile of the Explore grid: the photo fills the top of the card and fades into it, with the level in its corner; the name in capitals and the
+/// length sit on the fade, so photo and text read as one piece.
 struct NunaExploreCard: View {
     let workout: NunaExploreWorkout
+    private let photoHeight: CGFloat = 176
+    private let textTop: CGFloat = 112
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Color.clear.frame(height: 150)
+        ZStack(alignment: .top) {
+            Color.clear.frame(height: photoHeight)
                 .overlay { Image(workout.image).resizable().scaledToFill() }
-                .overlay(LinearGradient(colors: [NunaPalette.cardSurface.opacity(0), NunaPalette.cardSurface], startPoint: .center, endPoint: .bottom))
-                .overlay(alignment: .topTrailing) { badge.padding(8) }
                 .clipped()
-            VStack(alignment: .leading, spacing: 8) {
-                Text(verbatim: workout.title).font(.nuna(size: 14.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.leading).lineLimit(2).minimumScaleFactor(0.85)
-                Text("\(workout.minutes) min").font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                // Faded by its own opacity, not painted over with the card colour, so no seam shows whatever the card sits on.
+                .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.30), .init(color: .black.opacity(0.35), location: 0.52), .init(color: .clear, location: 0.68)],
+                                     startPoint: .top, endPoint: .bottom))
+            VStack(alignment: .leading, spacing: 0) {
+                Color.clear.frame(height: textTop)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(verbatim: workout.title).font(.nuna(size: 15.5, weight: .bold)).tracking(1.0).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.leading).lineLimit(2).minimumScaleFactor(0.85)
+                    Text("\(workout.minutes) min").font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                .frame(maxWidth: .infinity, minHeight: 70, maxHeight: 70, alignment: .topLeading)
+                .padding(.horizontal, 16).padding(.bottom, 16)
             }
-            .frame(maxWidth: .infinity, minHeight: 64, maxHeight: 64, alignment: .topLeading)
-            .padding(.horizontal, 14).padding(.bottom, 14).padding(.top, 2)
         }
+        .overlay(alignment: .topTrailing) { badge.padding(10) }
         .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
         .clipShape(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 
+    /// A small square-cornered label over the photo, like a tag.
     private var badge: some View {
-        Text(workout.level.title).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-            .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 9).frame(height: 24)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        Text(workout.level.title).font(.nuna(size: 12.5, weight: .semibold)).tracking(0.9).textCase(.uppercase)
+            .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 10).frame(height: 27)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 }
 
