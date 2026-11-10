@@ -76,22 +76,17 @@ extension NunaLabMarker {
     }
 }
 
-/// A status as a small tinted tag: a mark and its name, 18 pt high. On a card (`card`) the name is in capitals and small letters ("Out of Range") in
-/// the condensed figure face, a little firmer.
+/// A status as a small tinted tag: a mark and its name, 18 pt high. The name has a capital on each word ("Out of Range") and is set in the figure face
+/// (DIN Bold in the WHP skin), the same on the Health card, the summary tiles, the marker cards and the list.
 struct NunaLabStatusChip: View {
     let status: NunaLabStatus
-    var card = false
     var body: some View {
-        HStack(spacing: card ? 7 : 6) {
+        HStack(spacing: 7) {
             Image(systemName: status.symbol).font(.nuna(size: status == .noRange ? 5.5 : 9, weight: .heavy))
-            if card {
-                Text(status.cardTitle).font(.nuna(size: 10.5, weight: .bold, design: NunaType.design)).tracking(-0.1).textCase(nil).lineLimit(1)
-            } else {
-                Text(status.title).font(.nuna(size: 10.5, weight: .semibold)).textCase(nil).lineLimit(1)
-            }
+            Text(status.cardTitle).font(.nunaBoldFigure(size: 10.5)).tracking(0.1).textCase(nil).lineLimit(1)
         }
-        .foregroundStyle(status.tint).padding(.leading, card ? 7 : 5).padding(.trailing, card ? 5 : 5).frame(height: 18)
-        .background(status.tint.opacity(card ? 0.15 : 0.2), in: RoundedRectangle(cornerRadius: card ? 5 : 4, style: .continuous))
+        .foregroundStyle(status.tint).padding(.leading, 7).padding(.trailing, 5).frame(height: 18)
+        .background(status.tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
         .fixedSize()
     }
 }
@@ -356,7 +351,7 @@ struct NunaLabBookCard: View {
                                 VStack(alignment: .leading, spacing: 18) {
                                     ForEach(NunaLabStatus.readable, id: \.self) { s in
                                         HStack(spacing: 0) {
-                                            NunaLabStatusChip(status: s, card: true)
+                                            NunaLabStatusChip(status: s)
                                             Spacer(minLength: 6)
                                             Text(verbatim: "\(counts[s] ?? 0)").font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                                                 .frame(width: 16, height: 18, alignment: .leading)
@@ -416,7 +411,7 @@ struct NunaLabMarkerCard: View {
                         Text(verbatim: m.unit).font(.nuna(size: 15, weight: .medium)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1)
                     }
                 }
-                layer(top: 75.3, baseline: false, leading: 12, trailing: 0, alignment: .leading) { NunaLabStatusChip(status: m.status, card: true) }
+                layer(top: 75.3, baseline: false, leading: 12, trailing: 0, alignment: .leading) { NunaLabStatusChip(status: m.status) }
                 if let v = value {
                     layer(top: 53.5, baseline: false, leading: 0, trailing: 16, alignment: .trailing) { strip(m, v) }
                 }
