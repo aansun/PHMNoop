@@ -8,10 +8,10 @@ import WhoopStore
 
 // MARK: - Lab Book
 
-/// The Lab Book: your own numbers from a doctor or a pharmacy, next to the signals of the wearable. The page is the summary (`NunaLabSummaryPage`): how
-/// many markers sit inside their range, outside it or have none, then every marker as a card under its status, the latest tests and the way to add one.
+/// The Lab Book: your own numbers from a doctor or a pharmacy, next to the signals of the wearable. It opens on the landing page (`NunaLabLandingPage`):
+/// the counts, a ring with an arc for every biomarker, the latest tests and the way to add one. The full list is one touch away (`NunaLabSummaryPage`).
 struct NunaLabBookView: View {
-    var body: some View { NunaLabSummaryPage(title: "Lab Book") }
+    var body: some View { NunaLabLandingPage() }
 }
 
 // MARK: - One marker
