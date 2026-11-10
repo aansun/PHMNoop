@@ -3,7 +3,7 @@ import SwiftUI
 import StrandDesign
 import StrandAnalytics
 
-/// The Health tab: fitness age, the health monitor (the five vital signs against their usual range) and the stress monitor, one under the other.
+/// The Health tab: fitness age, the Lab Book, the health monitor (the five vital signs against their usual range) and the stress monitor, one under the other.
 struct NunaHealthTabView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
@@ -13,6 +13,7 @@ struct NunaHealthTabView: View {
         ScrollView {
             VStack(spacing: NunaSpacing.section) {
                 NunaFitnessAgeSummary()
+                NunaLabBookCard()
                 NunaHealthMonitorCard(hrv: day.hrv, restingHr: day.restingHr, spo2: day.spo2, respiratory: day.respiratory, skinTemp: day.extras["skin_temp"])
                 if !day.stressStatus.isReady {
                     // Still learning the person: no stress figure, only how far along it is.

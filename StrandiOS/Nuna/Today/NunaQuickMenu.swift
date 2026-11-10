@@ -101,6 +101,13 @@ struct NunaQuickRunner: View {
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
                 breathing = true
             }
+            // `--open-labbook`: the same for the Lab Book.
+            .task {
+                guard CommandLine.arguments.contains("--open-labbook"), !NunaTodayDebug.openedPlanner else { return }
+                NunaTodayDebug.openedPlanner = true
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                pushToday(.labBook)
+            }
             #endif
     }
 
