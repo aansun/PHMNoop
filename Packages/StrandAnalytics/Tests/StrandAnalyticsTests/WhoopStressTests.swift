@@ -163,4 +163,17 @@ final class WhoopStressTests: XCTestCase {
         XCTAssertTrue(d.sustainedHigh, "three hours of High in a row")
         XCTAssertNotNil(d.dayMean)
     }
+
+    /// The constants read from kept readings are the ones read from the epochs themselves, and too few readings leave the stock ones.
+    func testCalibrationFromPooledReadings() {
+        let b = WhoopStress.Baseline(hrvLnMean: log(70), hrvLnSD: 0.2, restingHR: 55, restingHRSD: 3, nights: 14)
+        let hr = (0..<200).map { 70.0 + Double($0 % 11) }          // median 75
+        let rmssd = (0..<120).map { 40.0 + Double($0 % 5) }        // median 42
+        let t = WhoopStress.calibrated(WhoopStress.Tuning(), wakingHR: hr, wakingRMSSD: rmssd, baseline: b)
+        XCTAssertEqual(t.wakeHROffsetBPM, 20, accuracy: 1e-9)
+        XCTAssertEqual(t.wakeHRVRatio, 42.0 / 70.0, accuracy: 1e-9)
+        let few = WhoopStress.calibrated(WhoopStress.Tuning(), wakingHR: Array(hr.prefix(50)), wakingRMSSD: rmssd, baseline: b)
+        XCTAssertEqual(few, WhoopStress.Tuning())
+        XCTAssertEqual(WhoopStress.Calibration.wakeDays, 60)
+    }
 }

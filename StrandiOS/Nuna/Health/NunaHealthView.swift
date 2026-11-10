@@ -179,7 +179,7 @@ struct NunaHealthView: View {
             case .below: return (String(localized: "low < \(f(r.lowerBound))"), belowIsGood ? ok : warn, belowIsGood ? "checkmark" : "exclamationmark")
             }
         }
-        let respChip = ranged(day.respiratory, respS, decimals: 1, floor: 0.3, aboveIsGood: false, belowIsGood: true)
+        let respChip = ranged(day.respiratory, respS, decimals: 1, floor: VitalRange.respiratoryFloor, aboveIsGood: false, belowIsGood: true)
         let hrvChip = ranged(day.hrv, hrvS, decimals: 0, floor: 1, aboveIsGood: true, belowIsGood: false)
         // A resting heart rate below the usual is good news, so only a rise is marked.
         let rhrChip = ranged(day.restingHr, rhrS, decimals: 0, floor: 1, aboveIsGood: false, belowIsGood: true)

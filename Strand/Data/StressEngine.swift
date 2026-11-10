@@ -23,8 +23,8 @@ enum StressStatus: Equatable {
 ///
 /// - A main night is the longest sleep of at least four hours that ends on a local day. It counts toward the 14 once its heart rate and HRV
 ///   could be read (a night the strap was not worn for is skipped, not guessed).
-/// - The baseline is the newest 14 such nights; the two waking constants are set from the waking, sedentary epochs of the same days
-///   (`WhoopStress.calibrated`). The record is kept in `UserDefaults` and rebuilt when a newer night arrives or the method's version changes.
+/// - The baseline is the newest 14 such nights; the two waking constants are set from the waking, sedentary epochs of the newest 60 days
+///   (`WhoopStress.calibrated`, `WhoopStress.Calibration.wakeDays`). The record is kept in `UserDefaults` and rebuilt when a newer night arrives or the method's version changes.
 /// - Nothing here changes `DaytimeStress`, which stays in the package as the previous formula.
 @MainActor
 final class StressEngine {
@@ -35,6 +35,15 @@ final class StressEngine {
     private static let nightsKey = "stress.nightFigures.v1"
     /// How many of the newest main nights are looked at while finding 14 readable ones.
     private static let nightsExamined = 40
+
+    /// The waking, sedentary readings of one day: heart rates in tenths of a beat and RMSSDs in milliseconds, with the fingerprint of the
+    /// day's heart rate so a day that has gained samples since is read again.
+    private struct WakingDay: Codable, Equatable {
+        var count: Int
+        var maxTs: Int
+        var hr: [Int]
+        var rmssd: [Int]
+    }
 
     private struct NightRecord: Codable, Equatable {
         var day: String
@@ -128,29 +137,40 @@ final class StressEngine {
         return .ready
     }
 
-    /// The two waking constants, read from the waking, sedentary epochs of the baseline days.
+    /// The two waking constants, read from the waking, sedentary epochs of the newest `Calibration.wakeDays` days that have data.
+    ///
+    /// A day's readings are kept (`WakingDay`), so a rebuild reads the raw samples of the days that are new or have changed and no others:
+    /// the first build goes through every day once, and each morning after it through one or two.
     private func wakingConstants(repo: Repository, nights: [NightRecord], baseline: WhoopStress.Baseline, sessions: [CachedSleepSession]) async -> WhoopStress.Tuning {
         let cal = Calendar.current
         let sleeps = sessions.filter { $0.endTs - $0.effectiveStartTs >= 20 * 60 }.map { $0.effectiveStartTs...$0.endTs }
         let works = await repo.workoutRows(days: 4000).filter { $0.endTs > $0.startTs }.map { $0.startTs...$0.endTs }
-        var day = cal.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(nights.first!.start)))
         let last = cal.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(nights.last!.end)))
-        var epochs: [WhoopStress.Epoch] = []
+        guard var day = cal.date(byAdding: .day, value: -(WhoopStress.Calibration.wakeDays - 1), to: last) else { return WhoopStress.Tuning() }
+        var kept = Self.loadWakingDays()
+        var used: [String: WakingDay] = [:]
         while day <= last {
             guard let next = cal.date(byAdding: .day, value: 1, to: day) else { break }
             let from = Int(day.timeIntervalSince1970), to = Int(next.timeIntervalSince1970) - 1
-            let hr = await repo.hrSamples(from: from - 600, to: to, limit: 200_000)
-            if hr.count > 3_600 {
-                let rr = await repo.rrIntervals(from: from - 600, to: to, limit: 200_000)
-                let g = await repo.gravitySamplesUnion(from: from - 600, to: to, limit: 200_000)
-                let r = await Task.detached(priority: .utility) {
-                    WhoopStress.analyze(hr: hr, rr: rr, gravity: g, sleep: sleeps, activities: works, baseline: baseline, from: from, to: to)
-                }.value
-                epochs.append(contentsOf: r.epochs)
-            }
+            let key = Repository.localDayKey(day)
             day = next
+            guard let fp = await repo.hrFingerprint(from: from, to: to), fp.count > 3_600 else { continue }
+            if let k = kept[key], k.count == fp.count, k.maxTs == fp.maxTs { used[key] = k; continue }
+            let hr = await repo.hrSamples(from: from - 600, to: to, limit: 200_000)
+            let rr = await repo.rrIntervals(from: from - 600, to: to, limit: 200_000)
+            let g = await repo.gravitySamplesUnion(from: from - 600, to: to, limit: 200_000)
+            let w = await Task.detached(priority: .utility) {
+                WhoopStress.wakingReadings(WhoopStress.analyze(hr: hr, rr: rr, gravity: g, sleep: sleeps, activities: works,
+                                                               baseline: baseline, from: from, to: to).epochs)
+            }.value
+            let rec = WakingDay(count: fp.count, maxTs: fp.maxTs, hr: w.hr.map { Int(($0 * 10).rounded()) }, rmssd: w.rmssd.map { Int($0.rounded()) })
+            kept[key] = rec
+            used[key] = rec
         }
-        return WhoopStress.calibrated(WhoopStress.Tuning(), from: epochs, baseline: baseline)
+        Self.saveWakingDays(kept)
+        let hr = used.values.flatMap { $0.hr.map { Double($0) / 10 } }
+        let rmssd = used.values.flatMap { $0.rmssd.map(Double.init) }
+        return WhoopStress.calibrated(WhoopStress.Tuning(), wakingHR: hr, wakingRMSSD: rmssd, baseline: baseline)
     }
 
     // MARK: A day of stress
@@ -194,6 +214,25 @@ final class StressEngine {
     private static func loadNights() -> [String: NightRecord] {
         guard let data = UserDefaults.standard.data(forKey: nightsKey), let m = try? JSONDecoder().decode([String: NightRecord].self, from: data) else { return [:] }
         return m
+    }
+
+    /// The kept waking days live in a file, not in `UserDefaults`: sixty days of readings are too much for a preference.
+    private static var wakingDaysURL: URL? {
+        guard let dir = try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true) else { return nil }
+        return dir.appendingPathComponent("stress-waking-days.json")
+    }
+
+    private static func loadWakingDays() -> [String: WakingDay] {
+        guard let url = wakingDaysURL, let data = try? Data(contentsOf: url),
+              let m = try? JSONDecoder().decode([String: WakingDay].self, from: data) else { return [:] }
+        return m
+    }
+
+    private static func saveWakingDays(_ m: [String: WakingDay]) {
+        guard let url = wakingDaysURL else { return }
+        // A little more than the window, so a day that drops out of it and comes back (a clock change) is not read twice.
+        let kept = Dictionary(uniqueKeysWithValues: m.sorted { $0.key > $1.key }.prefix(WhoopStress.Calibration.wakeDays + 10).map { ($0.key, $0.value) })
+        if let data = try? JSONEncoder().encode(kept) { try? data.write(to: url, options: .atomic) }
     }
 
     private static func saveNights(_ m: [String: NightRecord]) {

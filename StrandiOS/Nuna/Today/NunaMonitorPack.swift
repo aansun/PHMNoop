@@ -37,7 +37,7 @@ struct NunaMonitorPackCard: View {
         tally(hrv.flatMap { v in hrvS.verdict(v, floor: 1).map { $0 == .inRange } })
         tally(restingHr.flatMap { v in rhrS.verdict(v, floor: 1).map { $0 == .inRange } })
         tally(spo2.map { $0 >= 95 })
-        tally(respiratory.flatMap { v in respS.verdict(v, floor: 0.3).map { $0 == .inRange } })
+        tally(respiratory.flatMap { v in respS.verdict(v, floor: VitalRange.respiratoryFloor).map { $0 == .inRange } })
         tally(skinTemp.map { abs($0) < 0.5 })
         return (within, known)
     }

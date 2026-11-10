@@ -180,12 +180,12 @@ func runSixMonths(outDir: String?) throws {
         Persona(name: "athlete, variable", hrBias: -6, hrvScale: 1.5, dayBiasSD: 2.0, dayScaleSD: 0.16, nightBiasSD: 1.5, nightScaleSD: 0.20, seed: 303),
     ]
     let rules = [
-        CalRule(name: "app: rolling 14 nights"),
+        CalRule(name: "app: 14 nights, wake const 60 d", wakeDays: WhoopStress.Calibration.wakeDays),
+        CalRule(name: "before: both from 14 days"),
         CalRule(name: "frozen first 14 nights", frozen: true),
         CalRule(name: "rolling 14, stock wake const", stock: true),
         CalRule(name: "rolling 30 nights + 30 days", nights: 30, wakeDays: 30),
         CalRule(name: "rolling 30 robust + 30 days", nights: 30, robust: true, wakeDays: 30),
-        CalRule(name: "14 nights + wake const 60 d", wakeDays: 60),
     ]
     print("""
     StressSim, six months (182 days) for three people. Each morning the calibration is rebuilt as the app does and the day is scored with it.
@@ -391,7 +391,7 @@ func runSixMonths(outDir: String?) throws {
         let scored = results[0].estZones.keys.sorted()
         for t in order {
             let ds = scored.filter { life.dayTag[$0] == t }
-            print(pad("   " + t.rawValue, 16) + "truth \(zmean(truthZones, ds))    app \(zmean(results[0].estZones, ds))    rolling 30 robust \(zmean(results[4].estZones, ds))")
+            print(pad("   " + t.rawValue, 16) + "truth \(zmean(truthZones, ds))    app \(zmean(results[0].estZones, ds))    before \(zmean(results[1].estZones, ds))")
         }
 
         json[p.name] = [
