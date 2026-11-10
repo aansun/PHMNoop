@@ -172,7 +172,7 @@ struct NunaMarkerDetailView: View {
                 if !(span == 0 && !m.isPressure && inside.count >= 2) {
                     HStack(spacing: 14) {
                         legend(NunaPalette.charge, "Within your range")
-                        legend(NunaPalette.warning, "Outside your range")
+                        legend(NunaPalette.caution, "Outside your range")
                         Spacer(minLength: 0)
                     }
                 }

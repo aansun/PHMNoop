@@ -26,9 +26,9 @@ enum NunaLabStatus: CaseIterable, Hashable {
 
     var tint: Color {
         switch self {
-        case .outside: return NunaPalette.warning
+        case .outside: return NunaPalette.caution
         case .within: return NunaPalette.charge
-        case .noRange: return NunaPalette.effortModerate
+        case .noRange: return NunaPalette.rest
         case .noData: return NunaPalette.textMuted
         }
     }
@@ -56,51 +56,112 @@ extension NunaLabMarker {
     }
 }
 
-/// A status as a small tinted tag: a mark and its name.
+/// A status as a small tinted tag: a mark and its name, 18 pt high.
 struct NunaLabStatusChip: View {
     let status: NunaLabStatus
     var body: some View {
-        HStack(spacing: 7) {
-            Image(systemName: status.symbol).font(.nuna(size: status == .noRange ? 7 : 11, weight: .heavy))
-            Text(status.title).font(.nuna(size: 13.5, weight: .semibold)).textCase(nil).lineLimit(1)
+        HStack(spacing: 6) {
+            Image(systemName: status.symbol).font(.nuna(size: status == .noRange ? 5.5 : 9, weight: .heavy))
+            Text(status.title).font(.nuna(size: 10.5, weight: .semibold)).textCase(nil).lineLimit(1)
         }
-        .foregroundStyle(status.tint).padding(.horizontal, 10).frame(height: 28)
-        .background(status.tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .foregroundStyle(status.tint).padding(.horizontal, 5).frame(height: 18)
+        .background(status.tint.opacity(0.2), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
         .fixedSize()
     }
 }
 
 // MARK: - Ring
 
-/// Markers by status as a ring of arcs with a small gap between them, and whatever the screen puts in the middle.
+/// Markers as a ring of one arc each, in the order given, with a thin dark gap between two arcs, a soft haze of each arc's colour just inside it and a
+/// dark disc in the middle. The first arc is centred on the top, as on the ring it follows.
 struct NunaLabStatusRing<Center: View>: View {
-    let within: Int
-    let noRange: Int
-    let outside: Int
-    var lineWidth: CGFloat = 16
+    /// One colour for each marker, the ones that are within their range first.
+    let tints: [Color]
+    var lineWidth: CGFloat = 10
     let center: Center
 
-    init(within: Int, noRange: Int, outside: Int, lineWidth: CGFloat = 16, @ViewBuilder center: () -> Center) {
-        self.within = within; self.noRange = noRange; self.outside = outside; self.lineWidth = lineWidth; self.center = center()
+    init(tints: [Color], lineWidth: CGFloat = 10, @ViewBuilder center: () -> Center) {
+        self.tints = tints; self.lineWidth = lineWidth; self.center = center()
     }
 
+    /// The tints for markers counted by status: within range, then no range, then outside it.
+    static func tints(within: Int, noRange: Int, outside: Int) -> [Color] {
+        Array(repeating: NunaLabStatus.within.tint, count: within) + Array(repeating: NunaLabStatus.noRange.tint, count: noRange)
+            + Array(repeating: NunaLabStatus.outside.tint, count: outside)
+    }
+
+    /// The canvas reaches this far past the ring's frame on every side, so the glow is not cut off at the edge.
+    private static var bleed: CGFloat { 10 }
+
     var body: some View {
-        let parts: [(Int, Color)] = [(within, NunaLabStatus.within.tint), (noRange, NunaLabStatus.noRange.tint), (outside, NunaLabStatus.outside.tint)].filter { $0.0 > 0 }
-        let total = Double(max(parts.reduce(0) { $0 + $1.0 }, 1))
-        let gap = parts.count > 1 ? 0.012 : 0
         ZStack {
-            Circle().stroke(NunaPalette.ringTrack, lineWidth: lineWidth)
-            ForEach(Array(parts.enumerated()), id: \.offset) { i, p in
-                let a = Double(parts[..<i].reduce(0) { $0 + $1.0 }) / total, b = a + Double(p.0) / total
-                Circle().trim(from: a + gap / 2, to: max(a + gap / 2 + 0.001, b - gap / 2))
-                    .stroke(p.1, style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt))
-                    .shadow(color: p.1.opacity(0.4), radius: 6)
+            Canvas { ctx, size in
+                let c = CGPoint(x: size.width / 2, y: size.height / 2)
+                let r = min(size.width, size.height) / 2 - Self.bleed - lineWidth / 2 - 3   // the frame is 6 pt larger than the ring's outer diameter
+                let inner = r - lineWidth / 2
+                let disc = Path(ellipseIn: CGRect(x: c.x - inner, y: c.y - inner, width: inner * 2, height: inner * 2))
+                ctx.fill(disc, with: .color(NunaPalette.canvas.opacity(0.28)))
+                let n = tints.count
+                func arc(_ a0: Double, _ a1: Double, radius: CGFloat) -> Path {
+                    var p = Path(); p.addArc(center: c, radius: radius, startAngle: .radians(a0), endAngle: .radians(a1), clockwise: false); return p
+                }
+                guard n > 0 else {
+                    ctx.stroke(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)), with: .color(NunaPalette.ringTrack), lineWidth: lineWidth)
+                    return
+                }
+                let step = 2 * Double.pi / Double(n)
+                let start = -Double.pi / 2 - step / 2
+                let gap = Double(1.8 / r)
+                // The haze just inside each arc.
+                ctx.drawLayer { outer in
+                    outer.clip(to: disc)
+                    outer.drawLayer { layer in
+                        layer.addFilter(.blur(radius: lineWidth * 1.1))
+                        for (i, tint) in tints.enumerated() {
+                            let a0 = start + Double(i) * step, a1 = a0 + step
+                            layer.stroke(arc(a0, a1, radius: r - lineWidth * 0.5), with: .color(tint.opacity(0.32)), style: StrokeStyle(lineWidth: lineWidth * 2.2, lineCap: .butt))
+                        }
+                    }
+                }
+                // The arcs.
+                for (i, tint) in tints.enumerated() {
+                    let a0 = start + Double(i) * step + gap / 2, a1 = start + Double(i + 1) * step - gap / 2
+                    ctx.drawLayer { layer in
+                        layer.addFilter(.shadow(color: tint.opacity(0.35), radius: 5))
+                        layer.stroke(arc(a0, max(a1, a0 + 0.001), radius: r), with: .color(tint), style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt))
+                    }
+                }
+                // A short dark mark across each gap that reaches into the haze.
+                for i in 0..<n {
+                    let a = start + Double(i) * step
+                    var p = Path()
+                    p.move(to: CGPoint(x: c.x + (inner - lineWidth * 0.9) * CGFloat(cos(a)), y: c.y + (inner - lineWidth * 0.9) * CGFloat(sin(a))))
+                    p.addLine(to: CGPoint(x: c.x + (r + lineWidth / 2 + 1) * CGFloat(cos(a)), y: c.y + (r + lineWidth / 2 + 1) * CGFloat(sin(a))))
+                    ctx.stroke(p, with: .color(NunaPalette.card), style: StrokeStyle(lineWidth: 1.8, lineCap: .butt))
+                }
             }
-            .rotationEffect(.degrees(-90))
+            .padding(-Self.bleed)
             center
         }
-        .padding(lineWidth / 2)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// The middle of the ring: how many biomarkers, and the way into the page. Sized from the ring's diameter.
+struct NunaLabRingCenter: View {
+    let count: Int
+    let diameter: CGFloat
+    var body: some View {
+        let k = diameter / 156
+        ZStack {
+            Text(verbatim: "\(count)").font(.nuna(size: 28 * k, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                .offset(y: -12 * k)
+            HStack(spacing: 3 * k) {
+                Text("Biomarkers").font(.nuna(size: 10.5 * k, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                Image(systemName: "chevron.right").font(.nuna(size: 9 * k, weight: .bold))
+            }
+            .foregroundStyle(NunaPalette.textSecondary).offset(y: 19 * k)
+        }
     }
 }
 
@@ -156,46 +217,55 @@ struct NunaLabBookCard: View {
 
     private var markers: [NunaLabMarker] { NunaLabGrouping.markers(rows, reference: .init(heightCm: profile.heightCm, sex: profile.sex)) }
 
+    /// The left column is 150 pt wide: the chips, then the counts in a column that starts 134 pt in. The ring takes the rest, up to 156 pt.
+    private let leftColumn: CGFloat = 150
+
     var body: some View {
         let ms = markers
         let counts = Dictionary(grouping: ms, by: \.status).mapValues(\.count)
         let last = rows.map(\.takenAt).max()
         NavigationLink(value: NunaTodayRoute.labBook) {
-            NunaCard(small: true) {
-                VStack(alignment: .leading, spacing: 14) {
+            NunaCard(small: true, padding: EdgeInsets(top: 15, leading: 16, bottom: 14, trailing: 16)) {
+                VStack(alignment: .leading, spacing: 10) {
                     HStack {
                         Text("Lab Book").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                         Spacer(minLength: 0)
                         Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
-                    HStack(alignment: .center, spacing: 8) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            ForEach(NunaLabStatus.readable, id: \.self) { s in
-                                HStack(spacing: 0) {
-                                    NunaLabStatusChip(status: s)
-                                    Spacer(minLength: 8)
-                                    Text(verbatim: "\(counts[s] ?? 0)").font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                        .frame(width: 34, alignment: .trailing)
+                    GeometryReader { geo in
+                        let ring = min(156, geo.size.width - leftColumn - 8)
+                        HStack(alignment: .top, spacing: 0) {
+                            VStack(alignment: .leading, spacing: 0) {
+                                VStack(alignment: .leading, spacing: 18) {
+                                    ForEach(NunaLabStatus.readable, id: \.self) { s in
+                                        HStack(spacing: 0) {
+                                            NunaLabStatusChip(status: s)
+                                            Spacer(minLength: 6)
+                                            Text(verbatim: "\(counts[s] ?? 0)").font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                                .frame(width: 16, height: 18, alignment: .leading)
+                                        }
+                                        .frame(height: 18)
+                                    }
                                 }
+                                Spacer(minLength: 0)
+                                Group {
+                                    if let last {
+                                        Text(verbatim: String(localized: "Last updated: \(LabBookFormat.day(last))"))
+                                    } else if loaded {
+                                        Text("No results yet")
+                                    }
+                                }
+                                .font(.nuna(size: 11, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).padding(.bottom, 18)
                             }
-                            if let last {
-                                Text(verbatim: String(localized: "Last updated: \(LabBookFormat.day(last))")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            } else if loaded {
-                                Text("No results yet").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            .frame(width: leftColumn, height: ring + 4, alignment: .topLeading)
+                            Spacer(minLength: 0)
+                            NunaLabStatusRing(tints: NunaLabStatusRing<EmptyView>.tints(within: counts[.within] ?? 0, noRange: counts[.noRange] ?? 0, outside: counts[.outside] ?? 0), lineWidth: 10) {
+                                NunaLabRingCenter(count: ms.count, diameter: ring)
                             }
+                            .frame(width: ring + 6, height: ring + 6).padding(.top, 1).padding(.trailing, -3)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        NunaLabStatusRing(within: counts[.within] ?? 0, noRange: counts[.noRange] ?? 0, outside: counts[.outside] ?? 0, lineWidth: 13) {
-                            VStack(spacing: 2) {
-                                Text(verbatim: "\(ms.count)").font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                HStack(spacing: 2) {
-                                    Text("Biomarkers").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                    Image(systemName: "chevron.right").font(.nuna(size: 9, weight: .bold))
-                                }.foregroundStyle(NunaPalette.textSecondary)
-                            }
-                        }
-                        .frame(width: 138, height: 138)
                     }
+                    .frame(height: 160)
                 }
             }
         }
@@ -282,23 +352,22 @@ struct NunaLabSummaryPage: View {
         let counts = Dictionary(grouping: ms, by: \.status).mapValues(\.count)
         let last = shown.map(\.takenAt).max()
         return HStack(alignment: .center, spacing: 12) {
-            NunaLabStatusRing(within: counts[.within] ?? 0, noRange: counts[.noRange] ?? 0, outside: counts[.outside] ?? 0, lineWidth: 15) {
-                VStack(spacing: 2) {
-                    Text(verbatim: "\(ms.count)").font(.nuna(size: 44, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("Biomarkers").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                }
+            NunaLabStatusRing(tints: NunaLabStatusRing<EmptyView>.tints(within: counts[.within] ?? 0, noRange: counts[.noRange] ?? 0, outside: counts[.outside] ?? 0), lineWidth: 10) {
+                NunaLabRingCenter(count: ms.count, diameter: 156)
             }
-            .frame(width: 158, height: 158)
-            VStack(alignment: .leading, spacing: 12) {
+            .frame(width: 162, height: 162).padding(-3)
+            VStack(alignment: .leading, spacing: 18) {
                 ForEach(NunaLabStatus.readable, id: \.self) { s in
                     HStack(spacing: 0) {
                         NunaLabStatusChip(status: s)
                         Spacer(minLength: 6)
-                        Text(verbatim: "\(counts[s] ?? 0)").font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: "\(counts[s] ?? 0)").font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            .frame(height: 18)
                     }
+                    .frame(height: 18)
                 }
                 if let last {
-                    Text(verbatim: String(localized: "Last updated: \(LabBookFormat.day(last))")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    Text(verbatim: String(localized: "Last updated: \(LabBookFormat.day(last))")).font(.nuna(size: 11, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
         }
