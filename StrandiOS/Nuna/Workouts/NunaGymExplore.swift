@@ -11,7 +11,7 @@ struct NunaStarterProgram: Identifiable {
     enum Level: Int, CaseIterable, Identifiable {
         case beginner, medium, advanced
         var id: Int { rawValue }
-        var title: LocalizedStringKey { switch self { case .beginner: "Beginner"; case .medium: "Medium"; case .advanced: "Advanced" } }
+        var title: LocalizedStringKey { switch self { case .beginner: "Beginner"; case .medium: "Intermediate"; case .advanced: "Advanced" } }
         var icon: String { switch self { case .beginner: "chart.bar"; case .medium: "chart.bar.fill"; case .advanced: "flame" } }
     }
     enum Goal: Int, CaseIterable, Identifiable {
@@ -27,7 +27,7 @@ struct NunaStarterProgram: Identifiable {
         var icon: String { switch self { case .gym: "figure.strengthtraining.traditional"; case .dumbbells: "dumbbell.fill"; case .bands: "lines.measurement.horizontal"; case .none: "figure.stand" } }
     }
 
-    struct Move { let name: String; let sets: Int; let reps: Int?; let rest: Int }
+    struct Move { let name: String; let sets: Int; let reps: Int?; let rest: Int; var weightKg: Double? = nil; var repsHigh: Int? = nil }
     struct Routine: Identifiable { let name: String; let moves: [Move]; var id: String { name } }
 
     let id: String
@@ -116,7 +116,7 @@ enum NunaStarterPrograms {
             _ = try? await store.upsertLiftPrograms([LiftProgramRow(id: id, deviceId: repo.deviceId, name: name, note: nil, createdAt: stamp, updatedAt: stamp, archived: false)])
             let items = routine.moves.enumerated().map { i, mv in
                 LiftProgramItemRow(id: UUID().uuidString, deviceId: repo.deviceId, programId: id, ord: i, exercise: mv.name, targetSets: mv.sets,
-                                   targetRepsLow: mv.reps, targetRepsHigh: nil, targetRpe: nil, targetWeightKg: nil, restSec: mv.rest, note: nil)
+                                   targetRepsLow: mv.reps, targetRepsHigh: mv.repsHigh, targetRpe: nil, targetWeightKg: mv.weightKg, restSec: mv.rest, note: nil)
             }
             _ = try? await store.replaceLiftProgramItems(programId: id, items: items)
             if let group { NunaProgramGroupsModel.shared.move(id, to: group) }
@@ -152,8 +152,10 @@ struct NunaGymExploreView: View {
                 Text("No program matches these filters.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        ForEach(results) { p in
-            NavigationLink { NunaStarterProgramView(program: p) } label: { programCard(p) }.buttonStyle(.plain)
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            ForEach(NunaExploreWorkout.all(of: results)) { w in
+                NavigationLink(value: NunaWorkoutRoute.exploreWorkout(w.id)) { NunaExploreCard(workout: w) }.buttonStyle(.plain)
+            }
         }
         NunaTitleRow(title: "Routines") { EmptyView() }
         categories
@@ -256,31 +258,7 @@ struct NunaGymExploreView: View {
         }
     }
 
-    // MARK: Cards
-
-    private func programCard(_ p: NunaStarterProgram) -> some View {
-        NunaCard(small: true) {
-            HStack(spacing: 14) {
-                Image(systemName: p.goal.icon).font(.nuna(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 52, height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(verbatim: p.name).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-                    HStack(spacing: 6) {
-                        tag(p.level.title); tag(p.goal.title); tag(p.equipment.title)
-                    }
-                    Text(verbatim: (p.routines.count == 1 ? String(localized: "1 routine") : String(localized: "\(p.routines.count) routines")) + " · " + String(localized: "\(p.exerciseCount) exercises"))
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                Spacer(minLength: 4)
-                Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-            }
-        }
-    }
-
-    private func tag(_ t: LocalizedStringKey) -> some View {
-        Text(t).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            .padding(.horizontal, 7).frame(height: 20).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-    }
+    // MARK: Categories
 
     private var categories: some View {
         let cats: [(LocalizedStringKey, String, [NunaStarterProgram.Equipment])] = [
@@ -299,65 +277,6 @@ struct NunaGymExploreView: View {
                 }.buttonStyle(.plain)
             }
         }
-    }
-}
-
-// MARK: - One starter program
-
-/// A starter program: its routines and their exercises, with a button to add it to your own programs.
-struct NunaStarterProgramView: View {
-    let program: NunaStarterProgram
-    @EnvironmentObject private var repo: Repository
-    @State private var adding = false
-    @State private var added = false
-
-    var body: some View {
-        NunaDetailScreen(LocalizedStringKey(program.name)) {
-            HStack(spacing: 8) { tag(program.level.title); tag(program.goal.title); tag(program.equipment.title); Spacer(minLength: 0) }
-            ForEach(program.routines) { routine in
-                VStack(alignment: .leading, spacing: 10) {
-                    NunaTitleRow(title: LocalizedStringKey(routine.name)) { EmptyView() }
-                    NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                        VStack(spacing: 0) {
-                            ForEach(Array(routine.moves.enumerated()), id: \.offset) { i, mv in
-                                if i > 0 { NunaDivider() }
-                                HStack(spacing: 12) {
-                                    NunaExerciseThumb(name: mv.name, width: 50, height: 38)
-                                    Text(verbatim: mv.name).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
-                                    Spacer(minLength: 6)
-                                    Text(verbatim: NunaExerciseKind.of(mv.name).targetText(sets: mv.sets, reps: mv.reps) ?? "\(mv.sets)").font(.nuna(size: 15.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                }.padding(.vertical, 10)
-                            }
-                        }
-                    }
-                }
-            }
-            nunaFootnote("Adding it copies the routines into your Strength Trainer tab. Change the exercises, sets, reps and rest there; nothing here changes.")
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) { addBar }
-    }
-
-    private func tag(_ t: LocalizedStringKey) -> some View {
-        Text(t).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            .padding(.horizontal, 7).frame(height: 22).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-    }
-
-    private var addBar: some View {
-        Button {
-            guard !adding, !added else { return }
-            adding = true
-            Task { _ = await NunaStarterPrograms.add(program, repo: repo); adding = false; added = true; UINotificationFeedbackGenerator().notificationOccurred(.success) }
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: added ? "checkmark" : "plus").font(.nuna(size: 14, weight: .bold))
-                Text(added ? "Added to your programs" : "Add to my programs").font(.nuna(size: 17, weight: .bold))
-            }
-            .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56)
-            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-        }
-        .buttonStyle(.plain).disabled(added || adding).opacity(added ? 0.6 : 1)
-        .padding(.horizontal, NunaSpacing.screenH).padding(.vertical, 10)
-        .background(LinearGradient(colors: [NunaPalette.canvas.opacity(0), NunaPalette.canvas], startPoint: .top, endPoint: .center))
     }
 }
 

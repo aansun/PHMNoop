@@ -30,6 +30,9 @@ enum NunaWorkoutRoute: Hashable {
     case exercise(String)
     /// Ready-made programs to add to your own.
     case explore
+    /// One workout of a starter program: its details page, and the sets and weights to change before it starts (by `NunaExploreWorkout.id`).
+    case exploreWorkout(String)
+    case exploreEdit(String)
 }
 
 enum NunaWorkoutKind {

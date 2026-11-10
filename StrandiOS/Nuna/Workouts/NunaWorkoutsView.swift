@@ -26,6 +26,8 @@ extension View {
             case .exerciseLibrary: NunaExerciseLibraryView()
             case .exercise(let id): NunaExerciseDetailView(exerciseId: id)
             case .explore: NunaGymExploreView()
+            case .exploreWorkout(let id): if let w = NunaExploreWorkout.find(id) { NunaExploreWorkoutDetail(workout: w) }
+            case .exploreEdit(let id): if let w = NunaExploreWorkout.find(id) { NunaExploreWorkoutEditor(workout: w) }
             }
         }
     }
