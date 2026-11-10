@@ -34,8 +34,16 @@ struct NunaLineTrendView: View {
     /// Shown under the chart (an explanation card).
     var footer: AnyView?
     var endingDaysAgo = 0
+    /// The VO₂ max page: a month or six months only, whole figures on an axis in steps of four or more, the readings typed in by hand ringed in grey beside
+    /// the weekly estimate, and the sentence in a framed card with the way to ask Anya for tips.
+    var vo2Layout = false
+    /// The ranges the switch offers (days).
+    var ranges: [Int] = [7, 30, 180]
 
     @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var profile: ProfileStore
+    @State private var manualDays: Set<String> = []
+    @State private var showTips = false
     @StateObject private var series = NunaSeriesModel()
     @State private var range = 7
     @State private var page = 0
@@ -69,8 +77,9 @@ struct NunaLineTrendView: View {
             return NunaLineTrendView(name: "Average heart rate", icon: "met:average-heart-rate", noun: "average heart rate", key: key, unit: "bpm", also: "apple-health",
                                      comparesWithPrior: true, excludesToday: true, footer: AnyView(NunaAverageHRInfo()), endingDaysAgo: endingDaysAgo)
         case "vo2max_est":
-            return NunaLineTrendView(name: "VO₂ max", icon: "met:vo2-max", noun: "average estimated VO₂ max", key: key, unit: "ml/kg/min", decimals: 1, upIsGood: true,
-                                     closing: String(localized: "It is worked out once a week from your resting heart rate and your profile."), footer: AnyView(NunaVO2MaxFooter()), endingDaysAgo: endingDaysAgo)
+            return NunaLineTrendView(name: "VO₂ max", icon: "met:vo2-max", noun: "average estimated VO₂ max", key: key, unit: "mL/kg/min", upIsGood: true,
+                                     closing: String(localized: "It is worked out once a week from your resting heart rate and your profile."), footer: AnyView(NunaVO2MaxFooter()), endingDaysAgo: endingDaysAgo,
+                                     vo2Layout: true, ranges: [30, 180])
         case "vitality":
             return NunaLineTrendView(name: "Vitality", icon: "sparkles", noun: "average Vitality", key: key, unit: "", upIsGood: true,
                                      closing: String(localized: "It is worked out once a week from your sleep, activity and recovery."), endingDaysAgo: endingDaysAgo)
@@ -132,18 +141,26 @@ struct NunaLineTrendView: View {
         NunaDetailScreen("Trend view", centersTitle: true) {
             nameBox
             header(all, average)
-            Text(verbatim: sentence(average)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
-            if range <= 30 { legend }
+            if vo2Layout, let average {
+                NunaInsightCard(text: vo2Note(average), cta: "Get personalized tips") { showTips = true }
+            } else {
+                Text(verbatim: sentence(average)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
+            }
+            if vo2Layout { if range <= 30 { vo2Legend } } else if range <= 30 { legend }
             chart(all, average)
             if excludesToday { Text("Average does not include today").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(.horizontal, 2) }
             if let footer { footer }
         }
         .environment(\.nunaDetailSwitch, nil)
-        .task(id: repo.refreshSeq) { await series.load(repo: repo, key: key, source: source, days: 400, also: also) }
+        .task(id: repo.refreshSeq) { await series.load(repo: repo, key: key, source: source, days: 400, also: also); await loadManual() }
+        .onAppear { if !ranges.contains(range) { range = ranges.first(where: { $0 >= 30 }) ?? ranges[0] } }
         .onReceive(NotificationCenter.default.publisher(for: .nunaManualVO2Changed)) { _ in
             guard key == NunaVO2Manual.key else { return }
-            Task { await series.load(repo: repo, key: key, source: source, days: 400, also: also) }
+            Task { await series.load(repo: repo, key: key, source: source, days: 400, also: also); await loadManual() }
+        }
+        .sheet(isPresented: $showTips) {
+            NunaAnyaSheet(context: "VO₂ max", metric: NunaAnyaMetric(key: NunaVO2Manual.key, source: "my-whoop", title: "VO₂ max", unit: "mL/kg/min", decimals: 0, higherIsBetter: true))
         }
         .onReceive(NotificationCenter.default.publisher(for: .nunaBodyMeasurementChanged)) { _ in
             guard key == "weight" else { return }
@@ -180,7 +197,7 @@ struct NunaLineTrendView: View {
             }
             Spacer(minLength: 0)
             VStack(alignment: .trailing, spacing: 14) {
-                NunaRangeSwitch(range: $range) { page = 0 }
+                NunaRangeSwitch(choices: NunaRangeSwitch.standard.filter { ranges.contains($0.value) }, range: $range) { page = 0 }
                 NunaDateStepper(label: win.label, canGoBack: canGoBack, canGoForward: page > 0,
                                 back: { page += 1 }, forward: { page = max(0, page - 1) })
             }
@@ -205,6 +222,55 @@ struct NunaLineTrendView: View {
             return String(localized: "Your \(nounText) \(span) \(fmt(average)). Wear your strap to bed each night to track how this changes over time.")
         }
         return String(localized: "Your \(nounText) \(span) \(fmt(average)).") + " " + closing
+    }
+
+    private func loadManual() async {
+        manualDays = vo2Layout ? Set(await NunaVO2Manual.entries(repo: repo).map(\.day)) : []
+    }
+
+    /// The average of the window just before this one, whatever the page compares.
+    private var earlierAverage: Double? {
+        let w = win, cal = Calendar.current
+        let vals = (1...range).compactMap { i in cal.date(byAdding: .day, value: -i, to: w.start).flatMap { series.byDay[Repository.localDayKey($0)] } }
+        return vals.isEmpty ? nil : vals.reduce(0, +) / Double(vals.count)
+    }
+
+    /// The VO₂ max sentence: which way it moved against the window before, where it sits for the wearer's age, and a nudge when it is low.
+    private func vo2Note(_ average: Double) -> String {
+        let tier = NunaVO2Level.assess(vo2: average, age: profile.age).tier
+        let first: String
+        if let prior = earlierAverage, prior > 0 {
+            let c = (average - prior) / prior * 100
+            first = abs(c) < 2 ? String(localized: "Your VO₂ max stayed steady over this period.")
+                  : (c > 0 ? String(localized: "Your VO₂ max went up over this period.") : String(localized: "Your VO₂ max went down over this period."))
+        } else {
+            first = String(localized: "Your average VO₂ max over this period is \(fmt(average)).")
+        }
+        switch tier {
+        case 0: return first + " " + String(localized: "It sits below the usual range for your age.") + " " + String(localized: "Short, regular efforts add up over time.")
+        case 1: return first + " " + String(localized: "It sits in the usual range for your age.")
+        default: return first + " " + String(localized: "It sits above the usual range for your age.")
+        }
+    }
+
+    private var vo2Legend: some View {
+        HStack(spacing: 22) {
+            Spacer(minLength: 0)
+            legendDot("Manual entry", NunaPalette.textSecondary)
+            legendDot("Estimate", color)
+        }
+        .padding(.horizontal, 2).padding(.top, 4)
+    }
+
+    private func legendDot(_ title: LocalizedStringKey, _ tint: Color) -> some View {
+        HStack(spacing: 9) {
+            Circle().strokeBorder(tint, lineWidth: 2.5).frame(width: 11, height: 11)
+            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+        }
+    }
+
+    private func pointColor(_ p: Day) -> Color {
+        vo2Layout && manualDays.contains(Repository.localDayKey(p.date)) ? NunaPalette.textSecondary : color
     }
 
     private var legend: some View {
@@ -245,6 +311,12 @@ struct NunaLineTrendView: View {
         let all = readings + (band.map { [$0.lowerBound, $0.upperBound] } ?? [])
         let lo = all.min() ?? 0, hi = all.max() ?? 1
         let pad = max((hi - lo) * 0.12, decimals > 0 ? 0.3 : 2)
+        if vo2Layout {
+            // Even steps of at least four, the readings in the middle: 28, 32, 36, 40, 44 around a 36.
+            let step = max(4, ((hi - lo + 2 * pad) / 4 / 2).rounded(.up) * 2)
+            let low = max(0, ((lo + hi) / 2 - 2 * step) / 2).rounded(.down) * 2
+            return (low, low + 4 * step, (0...4).map { low + Double($0) * step })
+        }
         var step = (hi - lo + 2 * pad) / 4
         step = decimals > 0 ? max(0.2, (step * 10).rounded(.up) / 10) : max(1, step.rounded(.up))
         let low = decimals > 0 ? ((lo - pad) * 10).rounded(.down) / 10 : (lo - pad).rounded(.down)
@@ -261,7 +333,7 @@ struct NunaLineTrendView: View {
         }
         ForEach(ringed) { p in
             PointMark(x: .value("Day", p.date), y: .value("Value", p.value ?? 0))
-                .symbol { Circle().fill(NunaPalette.canvas).overlay(Circle().stroke(color, lineWidth: 2.5)).frame(width: 11, height: 11) }
+                .symbol { Circle().fill(NunaPalette.canvas).overlay(Circle().stroke(pointColor(p), lineWidth: 2.5)).frame(width: 11, height: 11) }
         }
         if let p = bars.first(where: { isPicked($0.date) }) {
             PointMark(x: .value("Day", p.date), y: .value("Value", p.value ?? 0))
@@ -271,9 +343,9 @@ struct NunaLineTrendView: View {
 
     private func chart(_ points: [Day], _ average: Double?) -> some View {
         let w = win
-        let week = range == 7, sixMonths = range > 30
+        let week = range == 7 || (vo2Layout && range <= 30), sixMonths = range > 30
         let bars = points.filter { $0.value != nil }
-        let band = sixMonths ? nil : series.typicalRange
+        let band = sixMonths || vo2Layout ? nil : series.typicalRange
         let (low, high, ticks) = axis(bars.compactMap(\.value), band: band)
         let ringed: [Day] = week ? bars : (picked != nil ? [] : bars.suffix(1).map { $0 })
         let marked = week ? bars : (sixMonths || picked != nil ? [] : bars.suffix(1).map { $0 })
@@ -312,7 +384,7 @@ struct NunaLineTrendView: View {
                         ZStack {
                             ForEach(marked) { p in
                                 if let v = p.value, let x = proxy.position(forX: p.date), let y = proxy.position(forY: v) {
-                                    Text(verbatim: fmt(v)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(color)
+                                    Text(verbatim: fmt(v)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(pointColor(p))
                                         .fixedSize().offset(x: !week && x > frame.width - 30 ? -16 : 0)
                                         .position(x: frame.minX + x + labelOffset(p, in: bars).width, y: frame.minY + y + labelOffset(p, in: bars).height)
                                 }
@@ -345,6 +417,29 @@ struct NunaLineTrendView: View {
         }
         .frame(height: 340)
         .accessibilityLabel(Text(name))
+    }
+}
+
+/// One short passage in a card with a violet-to-teal frame, and a button under it that says what to do next.
+struct NunaInsightCard: View {
+    let text: String
+    let cta: LocalizedStringKey
+    let action: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(verbatim: text).font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).lineSpacing(4).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            Button(action: action) {
+                HStack(spacing: 8) {
+                    Text(cta).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    Image(systemName: "arrow.right").font(.nuna(size: 15, weight: .bold))
+                }
+                .foregroundStyle(LinearGradient(colors: [NunaPalette.insightFrom, NunaPalette.insightBlue], startPoint: .leading, endPoint: .trailing))
+            }.buttonStyle(.plain)
+        }
+        .padding(.horizontal, 18).padding(.vertical, 20).frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous)
+            .strokeBorder(LinearGradient(colors: [NunaPalette.insightFrom.opacity(0.6), NunaPalette.insightTo.opacity(0.6)], startPoint: .leading, endPoint: .trailing), lineWidth: 1.5))
     }
 }
 #endif
