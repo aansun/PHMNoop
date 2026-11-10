@@ -53,20 +53,21 @@ public enum WhoopStress {
         public var sleepHROffsetBPM = 3.0
         /// Daytime RMSSD as a fraction of the nightly one when calm and sedentary.
         public var wakeHRVRatio = 0.6
-        /// Fitted (spreadScale 1.6, wakeShiftBPM 10, sleepRawShift -1.8) so that a person's day reads like the one WHOOP's own Stress Monitor
-        /// showed for Mon 9 Nov 2026: Total day 14:06 Low, 8:57 Medium, 0:29 High (60% / 38% / 2%). Searched on 17 days of a real backup with
-        /// `Tools/StressSim --real PATH --fit`: it lands at Total 58 / 38 / 4, Non-activity 55 / 44 / 2, Sleep 89 / 9 / 2. One reference day
-        /// fixes the overall level but not how it moves, so the tracking figures of the simulation, not this fit, are what show it follows.
+        /// Fitted (spreadScale 2.0, wakeShiftBPM 5, sleepRawShift -1.8) so that a person's days read like the five WHOOP's own Stress Monitor
+        /// showed for Thu 5 to Mon 9 Nov 2026, pooled: Total day 48:39 Low, 62:08 Medium, 7:15 High (41% / 53% / 6%). Searched on 17 days of a
+        /// real backup with `Tools/StressSim --real PATH --fit`: it lands at Total 41 / 52 / 6, Non-activity 25 / 71 / 3, Sleep 94 / 5 / 1.
+        /// The five days run from 18% to 60% Low, so the overall level is fixed here and the day-to-day movement is not: that is what the
+        /// simulation's tracking figures, and a replay of those five days, are for.
         /// Added to the z-sum while asleep. WHOOP calls Low "calm, relaxed or sleepy" and Medium "neutral, alert", so a typical night
         /// (z = 0) must land in Low and a typical waking minute in Medium; without the shift both would sit at 1.5.
         public var sleepRawShift = -1.8
         /// Multiplies the spreads both z-scores divide by (1 = the raw spread). Above 1 the score moves less for the same departure from the
         /// baseline, so fewer moments reach High.
-        public var spreadScale = 1.6
+        public var spreadScale = 2.0
         /// Added to the waking reference heart rate (bpm), on top of `wakeHROffsetBPM`: where a person's usual waking state sits on the
         /// scale. `calibrated` puts their median waking moment at neutral; WHOOP's day, as far as is known, is mostly Low (asleep) and Medium,
         /// with little High, so the usual waking state belongs a little below neutral.
-        public var wakeShiftBPM = 10.0
+        public var wakeShiftBPM = 5.0
         /// Floors on the spreads the z-scores divide by, so a very steady baseline does not make everything extreme.
         public var hrSpreadFloorBPM = 6.0
         public var hrvLnSpreadFloor = 0.25
