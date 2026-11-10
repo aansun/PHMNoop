@@ -198,11 +198,12 @@ final class LiftSessionController: ObservableObject {
 
     /// Called once the session has been written to the store. With `summaryId` the screen stays up for the summary of that session
     /// instead of closing; the shell then swaps the session for the summary.
-    func finishedSaving(summaryId: String? = nil) {
+    /// `requestSummary: false` keeps the screen up without asking the shell to swap it: the screen shows the summary itself.
+    func finishedSaving(summaryId: String? = nil, requestSummary: Bool = true) {
         teardown(keepScreen: summaryId != nil)
         LiftSessionPersistence.clear()
         savedSessions += 1
-        if let summaryId { summaryRequest = summaryId }
+        if let summaryId, requestSummary { summaryRequest = summaryId }
     }
 
     private func teardown(keepScreen: Bool = false) {

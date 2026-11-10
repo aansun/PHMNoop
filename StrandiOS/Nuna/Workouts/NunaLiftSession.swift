@@ -42,6 +42,9 @@ struct NunaLiftSessionView: View {
     @State private var draft: [FocusTarget: String] = [:]
     /// Set when the saved session's summary is about to replace this screen, so the session going away does not close it.
     @State private var showingSummary = false
+    /// The saved session whose summary this screen turns into. Held here, in the screen itself: the shell that used to swap the screen over cannot be
+    /// relied on to hear that the session was saved while a full-screen cover hides it, and the screen then stayed on "No session running".
+    @State private var summaryId: String?
     @FocusState private var focused: FocusTarget?
     /// The set whose hold is being timed, and when it started.
     @State private var timing: (slot: LiftSlot, since: Date)?
@@ -60,7 +63,9 @@ struct NunaLiftSessionView: View {
     var body: some View {
         ZStack {
             NunaBackdrop()
-            if let engine {
+            if let summaryId {
+                NavigationStack { NunaGymSessionView(sessionId: summaryId).nunaWorkoutDestinations() }
+            } else if let engine {
                 VStack(spacing: 0) {
                     // Pinned: the header and the running timer stay on screen however many exercises are below.
                     VStack(spacing: 10) {
@@ -850,7 +855,9 @@ struct NunaLiftSessionView: View {
         showingFinish = false
         await repo.refresh()
         try? await Task.sleep(nanoseconds: 600_000_000)
-        session.finishedSaving(summaryId: sessionId)
+        // The summary takes the screen first, then the session is taken down behind it, so "No session running" is never on show.
+        summaryId = sessionId
+        session.finishedSaving(summaryId: sessionId, requestSummary: false)
     }
 
     /// Starts the screen's slide down and waits for it to end.
