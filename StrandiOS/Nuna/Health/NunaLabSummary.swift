@@ -199,12 +199,20 @@ private struct NunaLabRingCanvas: View, Animatable {
                     }
                 }
             }
-            // A short dark mark across each gap that reaches into the haze.
-            for i in 0..<n {
-                let a = start + Double(i) * step
-                var p = Path()
-                p.move(to: pt(inner - lineWidth * 0.9, a)); p.addLine(to: pt(r + lineWidth / 2 + 0.5, a))
-                ctx.stroke(p, with: .color(NunaPalette.card), style: StrokeStyle(lineWidth: 1.8, lineCap: .butt))
+            // The gap between two arcs is a soft shadow rather than a line: dark where it cuts the ring, thinning out and fading as it reaches into the haze.
+            ctx.drawLayer { layer in
+                layer.addFilter(.blur(radius: 1.1))
+                for i in 0..<n {
+                    let a = start + Double(i) * step
+                    let outerPt = pt(r + lineWidth / 2 + 0.5, a), innerPt = pt(inner - lineWidth * 0.75, a)
+                    var p = Path()
+                    p.move(to: outerPt); p.addLine(to: innerPt)
+                    layer.stroke(p, with: .linearGradient(Gradient(stops: [
+                        .init(color: NunaPalette.canvas.opacity(0.85), location: 0),
+                        .init(color: NunaPalette.canvas.opacity(0.6), location: 0.45),
+                        .init(color: NunaPalette.canvas.opacity(0), location: 1)
+                    ]), startPoint: outerPt, endPoint: innerPt), style: StrokeStyle(lineWidth: 2.2, lineCap: .butt))
+                }
             }
             // The arcs: the one picked grows outward and inward into a bright wedge, with a fan of its colour down to the middle.
             for (i, tint) in tints.enumerated() {
