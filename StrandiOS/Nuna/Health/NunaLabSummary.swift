@@ -73,15 +73,20 @@ struct NunaLabStatusChip: View {
 // MARK: - Ring
 
 /// Markers as a ring of one arc each, in the order given, with a thin dark gap between two arcs, a soft haze of each arc's colour just inside it and a
-/// dark disc in the middle. The first arc is centred on the top, as on the ring it follows.
+/// dark disc in the middle. The first arc is centred on the top, as on the ring it follows. With `onPick` the arcs can be touched: the arc picked
+/// grows into a bright wedge that reaches the middle and the others dim.
 struct NunaLabStatusRing<Center: View>: View {
     /// One colour for each marker, the ones that are within their range first.
     let tints: [Color]
     var lineWidth: CGFloat = 10
+    /// The arc picked out, if any.
+    var selected: Int?
+    /// A touch on the ring: the arc under it, or nil for a touch in the middle or on the arc that is already picked.
+    var onPick: ((Int?) -> Void)?
     let center: Center
 
-    init(tints: [Color], lineWidth: CGFloat = 10, @ViewBuilder center: () -> Center) {
-        self.tints = tints; self.lineWidth = lineWidth; self.center = center()
+    init(tints: [Color], lineWidth: CGFloat = 10, selected: Int? = nil, onPick: ((Int?) -> Void)? = nil, @ViewBuilder center: () -> Center) {
+        self.tints = tints; self.lineWidth = lineWidth; self.selected = selected; self.onPick = onPick; self.center = center()
     }
 
     /// The tints for markers counted by status: within range, then no range, then outside it.
@@ -90,60 +95,135 @@ struct NunaLabStatusRing<Center: View>: View {
             + Array(repeating: NunaLabStatus.outside.tint, count: outside)
     }
 
-    /// The canvas reaches this far past the ring's frame on every side, so the glow is not cut off at the edge.
-    private static var bleed: CGFloat { 10 }
-
     var body: some View {
-        ZStack {
-            Canvas { ctx, size in
-                let c = CGPoint(x: size.width / 2, y: size.height / 2)
-                let r = min(size.width, size.height) / 2 - Self.bleed - lineWidth / 2 - 3   // the frame is 6 pt larger than the ring's outer diameter
-                let inner = r - lineWidth / 2
-                let disc = Path(ellipseIn: CGRect(x: c.x - inner, y: c.y - inner, width: inner * 2, height: inner * 2))
-                ctx.fill(disc, with: .color(NunaPalette.canvas.opacity(0.28)))
-                let n = tints.count
-                func arc(_ a0: Double, _ a1: Double, radius: CGFloat) -> Path {
-                    var p = Path(); p.addArc(center: c, radius: radius, startAngle: .radians(a0), endAngle: .radians(a1), clockwise: false); return p
+        GeometryReader { geo in
+            ZStack {
+                NunaLabRingCanvas(tints: tints, lineWidth: lineWidth, emph: NunaLabVector(tints.indices.map { $0 == selected ? 1.0 : 0.0 }))
+                if onPick != nil {
+                    Color.clear.contentShape(Circle()).onTapGesture(coordinateSpace: .local) { pick($0, geo.size) }
                 }
-                guard n > 0 else {
-                    ctx.stroke(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)), with: .color(NunaPalette.ringTrack), lineWidth: lineWidth)
-                    return
-                }
-                let step = 2 * Double.pi / Double(n)
-                let start = -Double.pi / 2 - step / 2
-                let gap = Double(1.8 / r)
-                // The haze just inside each arc.
-                ctx.drawLayer { outer in
-                    outer.clip(to: disc)
-                    outer.drawLayer { layer in
-                        layer.addFilter(.blur(radius: lineWidth * 1.1))
-                        for (i, tint) in tints.enumerated() {
-                            let a0 = start + Double(i) * step, a1 = a0 + step
-                            layer.stroke(arc(a0, a1, radius: r - lineWidth * 0.5), with: .color(tint.opacity(0.32)), style: StrokeStyle(lineWidth: lineWidth * 2.2, lineCap: .butt))
-                        }
-                    }
-                }
-                // The arcs.
-                for (i, tint) in tints.enumerated() {
-                    let a0 = start + Double(i) * step + gap / 2, a1 = start + Double(i + 1) * step - gap / 2
-                    ctx.drawLayer { layer in
-                        layer.addFilter(.shadow(color: tint.opacity(0.35), radius: 5))
-                        layer.stroke(arc(a0, max(a1, a0 + 0.001), radius: r), with: .color(tint), style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt))
-                    }
-                }
-                // A short dark mark across each gap that reaches into the haze.
-                for i in 0..<n {
-                    let a = start + Double(i) * step
-                    var p = Path()
-                    p.move(to: CGPoint(x: c.x + (inner - lineWidth * 0.9) * CGFloat(cos(a)), y: c.y + (inner - lineWidth * 0.9) * CGFloat(sin(a))))
-                    p.addLine(to: CGPoint(x: c.x + (r + lineWidth / 2 + 1) * CGFloat(cos(a)), y: c.y + (r + lineWidth / 2 + 1) * CGFloat(sin(a))))
-                    ctx.stroke(p, with: .color(NunaPalette.card), style: StrokeStyle(lineWidth: 1.8, lineCap: .butt))
-                }
+                center
             }
-            .padding(-Self.bleed)
-            center
         }
         .accessibilityElement(children: .combine)
+    }
+
+    private func pick(_ p: CGPoint, _ size: CGSize) {
+        let n = tints.count
+        guard n > 0 else { return }
+        let dx = p.x - size.width / 2, dy = p.y - size.height / 2
+        let outer = min(size.width, size.height) / 2
+        let d = (dx * dx + dy * dy).squareRoot()
+        guard d <= outer + 6 else { return }
+        if d < outer * 0.3 { onPick?(nil); return }
+        let step = 2 * Double.pi / Double(n)
+        var t = atan2(Double(dy), Double(dx)) - (-Double.pi / 2 - step / 2)
+        t = t.truncatingRemainder(dividingBy: 2 * .pi); if t < 0 { t += 2 * .pi }
+        let i = min(Int(t / step), n - 1)
+        onPick?(i == selected ? nil : i)
+    }
+}
+
+/// A list of numbers that SwiftUI can animate from one list to another of the same length (the emphasis of each arc of the ring).
+struct NunaLabVector: VectorArithmetic {
+    var values: [Double]
+    init(_ values: [Double]) { self.values = values }
+    var count: Int { values.count }
+    subscript(i: Int) -> Double { values[i] }
+    var max: Double? { values.max() }
+
+    static var zero: NunaLabVector { NunaLabVector([]) }
+    private static func combine(_ a: NunaLabVector, _ b: NunaLabVector, _ f: (Double, Double) -> Double) -> NunaLabVector {
+        let n = Swift.max(a.count, b.count)
+        return NunaLabVector((0..<n).map { f($0 < a.count ? a.values[$0] : 0, $0 < b.count ? b.values[$0] : 0) })
+    }
+    static func + (a: NunaLabVector, b: NunaLabVector) -> NunaLabVector { combine(a, b, +) }
+    static func - (a: NunaLabVector, b: NunaLabVector) -> NunaLabVector { combine(a, b, -) }
+    static func += (a: inout NunaLabVector, b: NunaLabVector) { a = a + b }
+    static func -= (a: inout NunaLabVector, b: NunaLabVector) { a = a - b }
+    mutating func scale(by rhs: Double) { values = values.map { $0 * rhs } }
+    var magnitudeSquared: Double { values.reduce(0) { $0 + $1 * $1 } }
+}
+
+/// The drawing of the ring. Its emphasis (one number from 0 to 1 for each arc) is animatable, so a picked arc grows and the others fade as it changes.
+private struct NunaLabRingCanvas: View, Animatable {
+    let tints: [Color]
+    let lineWidth: CGFloat
+    var emph: NunaLabVector
+    var animatableData: NunaLabVector {
+        get { emph }
+        set { emph = newValue }
+    }
+
+    /// The canvas reaches this far past the ring's frame on every side, so the glow and a grown wedge are not cut off at the edge.
+    private static var bleed: CGFloat { 12 }
+
+    var body: some View {
+        Canvas { ctx, size in
+            let c = CGPoint(x: size.width / 2, y: size.height / 2)
+            let r = min(size.width, size.height) / 2 - Self.bleed - lineWidth / 2 - 3   // the frame is 6 pt larger than the ring's outer diameter
+            let inner = r - lineWidth / 2
+            let disc = Path(ellipseIn: CGRect(x: c.x - inner, y: c.y - inner, width: inner * 2, height: inner * 2))
+            ctx.fill(disc, with: .color(NunaPalette.canvas.opacity(0.28)))
+            let n = tints.count
+            func pt(_ radius: CGFloat, _ a: Double) -> CGPoint { CGPoint(x: c.x + radius * CGFloat(cos(a)), y: c.y + radius * CGFloat(sin(a))) }
+            func arc(_ a0: Double, _ a1: Double, radius: CGFloat) -> Path {
+                var p = Path(); p.addArc(center: c, radius: radius, startAngle: .radians(a0), endAngle: .radians(a1), clockwise: false); return p
+            }
+            func annulus(_ a0: Double, _ a1: Double, _ rIn: CGFloat, _ rOut: CGFloat) -> Path {
+                var p = Path()
+                p.addArc(center: c, radius: rOut, startAngle: .radians(a0), endAngle: .radians(a1), clockwise: false)
+                p.addArc(center: c, radius: rIn, startAngle: .radians(a1), endAngle: .radians(a0), clockwise: true)
+                p.closeSubpath()
+                return p
+            }
+            guard n > 0 else {
+                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)), with: .color(NunaPalette.ringTrack), lineWidth: lineWidth)
+                return
+            }
+            let e: [Double] = (0..<n).map { $0 < emph.count ? min(max(emph[$0], 0), 1) : 0 }
+            let top = e.max() ?? 0
+            /// How much of an arc's own brightness stays: all of it for the arc picked, a third for the others while one is picked.
+            func keep(_ i: Int) -> Double { 1 - 0.68 * (top - e[i]) }
+            let step = 2 * Double.pi / Double(n)
+            let start = -Double.pi / 2 - step / 2
+            let gap = Double(1.8 / r)
+            // The haze just inside each arc.
+            ctx.drawLayer { outer in
+                outer.clip(to: disc)
+                outer.drawLayer { layer in
+                    layer.addFilter(.blur(radius: lineWidth * 1.1))
+                    for (i, tint) in tints.enumerated() {
+                        let a0 = start + Double(i) * step, a1 = a0 + step
+                        layer.stroke(arc(a0, a1, radius: r - lineWidth * 0.5), with: .color(tint.opacity(0.32 * keep(i))), style: StrokeStyle(lineWidth: lineWidth * 2.2, lineCap: .butt))
+                    }
+                }
+            }
+            // A short dark mark across each gap that reaches into the haze.
+            for i in 0..<n {
+                let a = start + Double(i) * step
+                var p = Path()
+                p.move(to: pt(inner - lineWidth * 0.9, a)); p.addLine(to: pt(r + lineWidth / 2 + 0.5, a))
+                ctx.stroke(p, with: .color(NunaPalette.card), style: StrokeStyle(lineWidth: 1.8, lineCap: .butt))
+            }
+            // The arcs: the one picked grows outward and inward into a bright wedge, with a fan of its colour down to the middle.
+            for (i, tint) in tints.enumerated() {
+                let a0 = start + Double(i) * step + gap / 2, a1 = max(start + Double(i + 1) * step - gap / 2, a0 + 0.001)
+                let grow = CGFloat(e[i])
+                let rOut = r + lineWidth / 2 + 7 * grow
+                let rIn = rOut - (lineWidth + 30 * grow)
+                if e[i] > 0.01 {
+                    var fan = Path()
+                    fan.move(to: c); fan.addLine(to: pt(rIn, a0)); fan.addArc(center: c, radius: rIn, startAngle: .radians(a0), endAngle: .radians(a1), clockwise: false); fan.closeSubpath()
+                    ctx.fill(fan, with: .radialGradient(Gradient(colors: [tint.opacity(0), tint.opacity(0.34 * e[i])]), center: c, startRadius: 0, endRadius: rIn))
+                }
+                ctx.drawLayer { layer in
+                    layer.addFilter(.shadow(color: tint.opacity(0.35 * keep(i)), radius: 5))
+                    layer.fill(annulus(a0, a1, rIn, rOut), with: .color(tint.opacity(keep(i))))
+                }
+            }
+        }
+        .padding(-Self.bleed)
     }
 }
 
@@ -274,6 +354,58 @@ struct NunaLabBookCard: View {
     }
 }
 
+// MARK: - One marker as a card
+
+/// A marker as a card that opens its page: name, latest value with its unit, the status, and the strip that shows where the reading sits.
+struct NunaLabMarkerCard: View {
+    let marker: NunaLabMarker
+
+    var body: some View {
+        let m = marker, latest = m.latest, value = latest?.value
+        NavigationLink { NunaLabMarkerHost(markerKey: m.key, isBody: m.category == .bodyMeasurement) } label: {
+            NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .top) {
+                        Text(verbatim: m.name).font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(2).multilineTextAlignment(.leading)
+                        Spacer(minLength: 6)
+                        Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    }
+                    HStack(alignment: .bottom, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                                Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                                Text(verbatim: m.unit).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1)
+                            }
+                            NunaLabStatusChip(status: m.status)
+                        }
+                        Spacer(minLength: 0)
+                        if let v = value { strip(m, v) }
+                    }
+                }
+            }
+        }.buttonStyle(.plain)
+    }
+
+    @ViewBuilder private func strip(_ m: NunaLabMarker, _ v: Double) -> some View {
+        if let r = m.range {
+            NunaLabRangeStrip(position: Self.position(v, r), ranged: true)
+        } else {
+            let values = m.numeric.compactMap(\.value)
+            if let lo = values.min(), let hi = values.max(), hi > lo {
+                NunaLabRangeStrip(position: 0.1 + 0.8 * (v - lo) / (hi - lo), ranged: false)
+            }
+        }
+    }
+
+    /// Where a value sits on the strip: the middle 60% is the range, the sides are what is below and above it.
+    static func position(_ v: Double, _ r: NunaLabRange) -> Double {
+        let span = max(r.high - r.low, 0.000_1)
+        if v < r.low { return max(0.02, 0.2 - 0.18 * min((r.low - v) / (span * 0.5), 1)) }
+        if v > r.high { return min(0.98, 0.8 + 0.18 * min((v - r.high) / (span * 0.5), 1)) }
+        return 0.2 + 0.6 * (v - r.low) / span
+    }
+}
+
 // MARK: - The summary page
 
 /// The Lab Book page, and the same page for one test (`testId`): the ring and the three counts, a line about where the markers sit, a search and the
@@ -288,7 +420,6 @@ struct NunaLabSummaryPage: View {
     @ObservedObject private var changes = NunaDataChanges.shared
     @State private var rows: [LabMarkerRow] = []
     @State private var loaded = false
-    @State private var adding = false
     @State private var addingMarker: MarkerDefinition?
     @State private var sort: Sort = .status
     @State private var filter: Set<NunaLabStatus> = []
@@ -313,26 +444,15 @@ struct NunaLabSummaryPage: View {
         NunaDetailScreen(title) {
             if !loaded {
                 ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
-            } else if ms.isEmpty && testId == nil {
-                emptyCard
-                addButton
             } else {
                 header(ms)
                 insight(ms)
                 searchField
                 filterRow
                 list(ms)
-                if testId == nil { history }
-                if testId == nil { addButton }
             }
-            NunaExpandRow(title: "About the Lab Book", subtitle: "", systemImage: "lock",
-                          text: "Lab Book keeps your own numbers. It doesn't test, read, or judge them, and it's not medical advice. A range shows where a reading sits against the one you copied from your own report or, for weight and waist, against the WHO reference. Everything stays on this iPhone.")
         }
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") { rows = await NunaLabStore.load(repo); loaded = true }
-        .sheet(isPresented: $adding) {
-            NunaLabTestFlow { rows = await NunaLabStore.load(repo) }
-                .nunaSheetChrome(detents: [.large])
-        }
         .sheet(item: $addingMarker) { def in
             NunaLabAddSheet(preselect: def.key, preselectName: def.displayName, preselectUnit: def.canonicalUnit) { drafts in
                 await NunaLabStore.save(drafts, repo: repo); rows = await NunaLabStore.load(repo)
@@ -383,14 +503,6 @@ struct NunaLabSummaryPage: View {
         else { text = String(localized: "\(outside) of \(judged.count) markers with a range sit outside it. The range comes from your own report; Lab Book doesn't judge it.") }
         return VStack(alignment: .leading, spacing: 12) {
             Text(verbatim: text).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-            if testId == nil {
-                NavigationLink { NunaLabHistoryView() } label: {
-                    HStack(spacing: 8) {
-                        Text("See lab history").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        Image(systemName: "arrow.right").font(.nuna(size: 14, weight: .bold))
-                    }.foregroundStyle(NunaPalette.effortModerate)
-                }.buttonStyle(.plain)
-            }
         }
         .padding(18).frame(maxWidth: .infinity, alignment: .leading)
         .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.effortModerate.opacity(0.55), lineWidth: 1.5))
@@ -476,42 +588,7 @@ struct NunaLabSummaryPage: View {
         }
     }
 
-    private func markerCard(_ m: NunaLabMarker) -> some View {
-        let latest = m.latest, value = latest?.value
-        return NavigationLink { NunaLabMarkerHost(markerKey: m.key, isBody: m.category == .bodyMeasurement) } label: {
-            NunaCard(small: true) {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .top) {
-                        Text(verbatim: m.name).font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(2).multilineTextAlignment(.leading)
-                        Spacer(minLength: 6)
-                        Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                    }
-                    HStack(alignment: .bottom, spacing: 8) {
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack(alignment: .firstTextBaseline, spacing: 5) {
-                                Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                                Text(verbatim: m.unit).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1)
-                            }
-                            NunaLabStatusChip(status: m.status)
-                        }
-                        Spacer(minLength: 0)
-                        if let v = value { strip(m, v) }
-                    }
-                }
-            }
-        }.buttonStyle(.plain)
-    }
-
-    @ViewBuilder private func strip(_ m: NunaLabMarker, _ v: Double) -> some View {
-        if let r = m.range {
-            NunaLabRangeStrip(position: Self.position(v, r), ranged: true)
-        } else {
-            let values = m.numeric.compactMap(\.value)
-            if let lo = values.min(), let hi = values.max(), hi > lo {
-                NunaLabRangeStrip(position: 0.1 + 0.8 * (v - lo) / (hi - lo), ranged: false)
-            }
-        }
-    }
+    private func markerCard(_ m: NunaLabMarker) -> some View { NunaLabMarkerCard(marker: m) }
 
     /// A catalog marker with nothing recorded yet: its name and a dash, and a touch opens the sheet to add its first reading.
     private func emptyCard(_ def: MarkerDefinition) -> some View {
@@ -528,56 +605,6 @@ struct NunaLabSummaryPage: View {
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
         }.buttonStyle(.plain)
-    }
-
-    /// Where a value sits on the strip: the middle 60% is the range, the sides are what is below and above it.
-    static func position(_ v: Double, _ r: NunaLabRange) -> Double {
-        let span = max(r.high - r.low, 0.000_1)
-        if v < r.low { return max(0.02, 0.2 - 0.18 * min((r.low - v) / (span * 0.5), 1)) }
-        if v > r.high { return min(0.98, 0.8 + 0.18 * min((v - r.high) / (span * 0.5), 1)) }
-        return 0.2 + 0.6 * (v - r.low) / span
-    }
-
-    // MARK: Test history and adding
-
-    private var history: some View {
-        let tests = NunaLabTests.group(rows)
-        return VStack(alignment: .leading, spacing: 12) {
-            NunaDivider().padding(.top, 8)
-            HStack(alignment: .firstTextBaseline) {
-                Text("Test history").font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                Spacer(minLength: 8)
-                NavigationLink { NunaLabHistoryView() } label: {
-                    HStack(spacing: 6) {
-                        Text("View all").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        Image(systemName: "arrow.right").font(.nuna(size: 14, weight: .bold))
-                    }.foregroundStyle(NunaPalette.textPrimary)
-                }.buttonStyle(.plain)
-            }
-            ForEach(tests.prefix(3)) { NunaLabTestRow(test: $0) }
-        }
-    }
-
-    private var addButton: some View {
-        Button { adding = true } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "plus").font(.nuna(size: 14, weight: .bold))
-                Text("Add results").font(.nuna(size: 17, weight: .bold))
-            }
-            .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
-            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-        }.buttonStyle(.plain)
-    }
-
-    private var emptyCard: some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 10) {
-                Image(systemName: "testtube.2").font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                Text("Your own logbook").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Keep the numbers you get from your doctor or pharmacy, next to your wearable signals. Add a result by hand or bring in a file. Everything stays on this phone.")
-                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-            }.frame(maxWidth: .infinity, alignment: .leading)
-        }
     }
 }
 
