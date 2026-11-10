@@ -24,11 +24,31 @@ enum NunaLabStatus: CaseIterable, Hashable {
         }
     }
 
+    /// The name as it is written on a card and over a section of the list.
+    var cardTitle: LocalizedStringKey {
+        switch self {
+        case .outside: return "Out of Range"
+        case .within: return "Within Range"
+        case .noRange: return "No Range"
+        case .noData: return "No Data Available"
+        }
+    }
+
     var tint: Color {
         switch self {
         case .outside: return NunaPalette.caution
         case .within: return NunaPalette.charge
         case .noRange: return NunaPalette.rest
+        case .noData: return NunaPalette.textMuted
+        }
+    }
+
+    /// The tints on the small range bar of a card: the same orange, a softer mint and a steel blue.
+    var stripTint: Color {
+        switch self {
+        case .outside: return NunaPalette.caution
+        case .within: return NunaPalette.rangeMint
+        case .noRange: return NunaPalette.rangeSteel
         case .noData: return NunaPalette.textMuted
         }
     }
@@ -56,16 +76,22 @@ extension NunaLabMarker {
     }
 }
 
-/// A status as a small tinted tag: a mark and its name, 18 pt high.
+/// A status as a small tinted tag: a mark and its name, 18 pt high. On a card (`card`) the name is in capitals and small letters ("Out of Range") in
+/// the condensed figure face, a little firmer.
 struct NunaLabStatusChip: View {
     let status: NunaLabStatus
+    var card = false
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: card ? 7 : 6) {
             Image(systemName: status.symbol).font(.nuna(size: status == .noRange ? 5.5 : 9, weight: .heavy))
-            Text(status.title).font(.nuna(size: 10.5, weight: .semibold)).textCase(nil).lineLimit(1)
+            if card {
+                Text(status.cardTitle).font(.nuna(size: 10.5, weight: .bold, design: NunaType.design)).tracking(-0.1).textCase(nil).lineLimit(1)
+            } else {
+                Text(status.title).font(.nuna(size: 10.5, weight: .semibold)).textCase(nil).lineLimit(1)
+            }
         }
-        .foregroundStyle(status.tint).padding(.horizontal, 5).frame(height: 18)
-        .background(status.tint.opacity(0.2), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .foregroundStyle(status.tint).padding(.leading, card ? 7 : 5).padding(.trailing, card ? 5 : 5).frame(height: 18)
+        .background(status.tint.opacity(card ? 0.15 : 0.2), in: RoundedRectangle(cornerRadius: card ? 5 : 4, style: .continuous))
         .fixedSize()
     }
 }
@@ -255,39 +281,42 @@ struct NunaLabRingCenter: View {
 
 // MARK: - Range strip
 
-/// Where the latest reading sits against its range, on a short bar: amber below, green inside, amber above, with a small mark over the reading.
-/// Without a range the bar is one neutral run and the mark shows where the reading is among the person's own.
+/// Where the latest reading sits against its range, on a short bar: orange below, mint inside, orange above, with a small white mark over the reading.
+/// Without a range the bar is one steel-blue run and the mark shows where the reading is among the person's own. 120 x 23.7 pt: the mark takes the
+/// top 7.7 pt, the bar is 16 pt high with a 4 pt line along its top, and the stretches are 0.7 pt apart.
 struct NunaLabRangeStrip: View {
     /// 0...1 across the bar; the middle 60% is the range.
     let position: Double
     let ranged: Bool
-    var tint: Color = NunaPalette.textPrimary
 
     var body: some View {
         Canvas { ctx, size in
-            let barY: CGFloat = 14, h = size.height - barY, gap: CGFloat = 2
-            let w = size.width
+            let barTop: CGFloat = 7.7, h: CGFloat = 16, line: CGFloat = 4, gap: CGFloat = 0.7, end: CGFloat = 4, w = size.width
             func segment(_ x0: CGFloat, _ x1: CGFloat, _ color: Color, left: CGFloat, right: CGFloat) {
-                let rect = CGRect(x: x0, y: barY, width: max(x1 - x0, 1), height: h)
-                let shape = UnevenRoundedRectangle(topLeadingRadius: left, bottomLeadingRadius: left, bottomTrailingRadius: right, topTrailingRadius: right, style: .continuous)
-                ctx.fill(shape.path(in: rect), with: .color(color.opacity(0.22)))
-                var top = Path(); top.move(to: CGPoint(x: x0 + left * 0.6, y: barY + 1.5)); top.addLine(to: CGPoint(x: x1 - right * 0.6, y: barY + 1.5))
-                ctx.stroke(top, with: .color(color), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                let rect = CGRect(x: x0, y: barTop, width: max(x1 - x0, 1), height: h)
+                let shape = UnevenRoundedRectangle(topLeadingRadius: left, bottomLeadingRadius: left, bottomTrailingRadius: right, topTrailingRadius: right, style: .continuous).path(in: rect)
+                ctx.fill(shape, with: .color(color.opacity(0.15)))
+                ctx.drawLayer { layer in
+                    layer.clip(to: shape)
+                    layer.fill(Path(CGRect(x: x0, y: barTop, width: x1 - x0, height: line)), with: .color(color))
+                }
             }
             if ranged {
                 let a = w * 0.2, b = w * 0.8
-                segment(0, a - gap / 2, NunaLabStatus.outside.tint, left: 7, right: 2)
-                segment(a + gap / 2, b - gap / 2, NunaLabStatus.within.tint, left: 2, right: 2)
-                segment(b + gap / 2, w, NunaLabStatus.outside.tint, left: 2, right: 7)
+                segment(0, a - gap / 2, NunaLabStatus.outside.stripTint, left: end, right: 0)
+                segment(a + gap / 2, b - gap / 2, NunaLabStatus.within.stripTint, left: 0, right: 0)
+                segment(b + gap / 2, w, NunaLabStatus.outside.stripTint, left: 0, right: end)
             } else {
-                segment(0, w, NunaLabStatus.noRange.tint, left: 7, right: 7)
+                segment(0, w, NunaLabStatus.noRange.stripTint, left: end, right: end)
             }
+            // The mark: a white triangle with a dark rim, its point on the top of the bar.
             let x = min(max(CGFloat(position) * w, 6), w - 6)
             var tri = Path()
-            tri.move(to: CGPoint(x: x - 6, y: 1)); tri.addLine(to: CGPoint(x: x + 6, y: 1)); tri.addLine(to: CGPoint(x: x, y: 11)); tri.closeSubpath()
-            ctx.fill(tri, with: .color(tint))
+            tri.move(to: CGPoint(x: x - 4, y: 1.7)); tri.addLine(to: CGPoint(x: x + 4, y: 1.7)); tri.addLine(to: CGPoint(x: x, y: 6.4)); tri.closeSubpath()
+            ctx.stroke(tri, with: .color(NunaPalette.canvas.opacity(0.9)), style: StrokeStyle(lineWidth: 2.6, lineJoin: .round))
+            ctx.fill(tri, with: .color(NunaPalette.textPrimary))
         }
-        .frame(width: 138, height: 38)
+        .frame(width: 120, height: 23.7)
         .accessibilityHidden(true)
     }
 }
@@ -364,34 +393,45 @@ struct NunaLabBookCard: View {
 
 // MARK: - One marker as a card
 
-/// A marker as a card that opens its page: name, latest value with its unit, the status, and the strip that shows where the reading sits.
+/// A marker as a card that opens its page: name, latest value with its unit, the status, and the strip that shows where the reading sits. The parts
+/// sit at fixed places (name baseline 24.8 pt from the top, value baseline 61 pt, status 75.3 pt, the strip 53.5 pt) on a card 109.3 pt high, the way
+/// the lab cards of the reference are laid out; a long name scales down on its one line.
 struct NunaLabMarkerCard: View {
     let marker: NunaLabMarker
 
     var body: some View {
         let m = marker, latest = m.latest, value = latest?.value
         NavigationLink { NunaLabMarkerHost(markerKey: m.key, isBody: m.category == .bodyMeasurement) } label: {
-            NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(alignment: .top) {
-                        Text(verbatim: m.name).font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(2).multilineTextAlignment(.leading)
-                        Spacer(minLength: 6)
-                        Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                    }
-                    HStack(alignment: .bottom, spacing: 8) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(alignment: .firstTextBaseline, spacing: 5) {
-                                Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                                Text(verbatim: m.unit).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1)
-                            }
-                            NunaLabStatusChip(status: m.status)
-                        }
-                        Spacer(minLength: 0)
-                        if let v = value { strip(m, v) }
+            ZStack {
+                layer(top: 24.8, baseline: true, leading: 12, trailing: 40, alignment: .leading) {
+                    Text(verbatim: m.name).font(.nuna(size: 14, weight: .medium)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1).minimumScaleFactor(0.75)
+                }
+                layer(top: 12.7, baseline: false, leading: 0, trailing: 16, alignment: .trailing) {
+                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(width: 16, height: 16)
+                }
+                layer(top: 61, baseline: true, leading: 12, trailing: 0, alignment: .leading) {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                        Text(verbatim: m.unit).font(.nuna(size: 15, weight: .medium)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1)
                     }
                 }
+                layer(top: 75.3, baseline: false, leading: 12, trailing: 0, alignment: .leading) { NunaLabStatusChip(status: m.status, card: true) }
+                if let v = value {
+                    layer(top: 53.5, baseline: false, leading: 0, trailing: 16, alignment: .trailing) { strip(m, v) }
+                }
             }
+            .frame(maxWidth: .infinity).frame(height: 109.3)
+            .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
         }.buttonStyle(.plain)
+    }
+
+    /// One part of the card, put `top` pt from the card's top edge (or, with `baseline`, with its first baseline there).
+    private func layer<Content: View>(top: CGFloat, baseline: Bool, leading: CGFloat, trailing: CGFloat, alignment: Alignment, @ViewBuilder _ content: () -> Content) -> some View {
+        Group {
+            if baseline { content().alignmentGuide(.top) { $0[.firstTextBaseline] } } else { content() }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment == .trailing ? .topTrailing : .topLeading)
+        .padding(.top, top).padding(.leading, leading).padding(.trailing, trailing)
     }
 
     @ViewBuilder private func strip(_ m: NunaLabMarker, _ v: Double) -> some View {
@@ -570,12 +610,12 @@ struct NunaLabSummaryPage: View {
                 ForEach([NunaLabStatus.outside, .within, .noRange], id: \.self) { s in
                     let group = found.filter { $0.status == s }.sorted(by: byName)
                     if !group.isEmpty {
-                        section(s.title, count: group.count)
+                        section(s.cardTitle, count: group.count)
                         ForEach(group) { markerCard($0) }
                     }
                 }
                 if !gaps.isEmpty {
-                    section(NunaLabStatus.noData.title, count: gaps.count)
+                    section(NunaLabStatus.noData.cardTitle, count: gaps.count)
                     ForEach(gaps, id: \.key) { emptyCard($0) }
                 }
             }
@@ -589,9 +629,9 @@ struct NunaLabSummaryPage: View {
         VStack(spacing: 12) {
             NunaDivider().padding(.top, 8)
             HStack(alignment: .firstTextBaseline) {
-                Text(title).font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text(title).font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 Spacer(minLength: 8)
-                Text(count == 1 ? LocalizedStringKey("1 biomarker") : LocalizedStringKey("\(count) biomarkers")).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Text(count == 1 ? LocalizedStringKey("1 Biomarker") : LocalizedStringKey("\(count) Biomarkers")).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
     }
