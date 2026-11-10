@@ -29,6 +29,10 @@ public enum VitalRange {
     /// The smallest half-width of a respiratory-rate range (breaths a minute). The nightly figure moves in steps of about 0.8 (it is read
     /// from a spectrum), so a steady sleeper's readings are one value and its neighbours: a floor under one step calls every step out of range.
     public static let respiratoryFloor = 1.0
+    /// The smallest half-width of a skin-temperature range, in degrees C from the person's own baseline. The figure is already a deviation, so
+    /// the range is centred on its own median and only widens for a wearer whose nights vary more than this (half of a fixed 0.5 would
+    /// call a third of one wearer's nights out of range).
+    public static let skinTempFloor = 0.5
 
     public enum Phase: Equatable, Sendable {
         case calibrating(nights: Int)

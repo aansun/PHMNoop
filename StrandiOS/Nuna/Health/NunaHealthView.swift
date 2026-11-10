@@ -186,9 +186,14 @@ struct NunaHealthView: View {
         let spo2 = day.spo2
         let spo2Chip: Chip? = hasRange ? spo2.map { $0 >= 95 ? (String(localized: "within 95% - 100%"), ok, "checkmark") : (String(localized: "low < 95%"), warn, "exclamationmark") } : calibrating
         let skin = day.extras["skin_temp"]
-        let skinChip: Chip? = hasRange ? skin.map { v in
-            abs(v) < 0.5 ? (String(localized: "within -0.5 - 0.5"), ok, "checkmark")
-                : (v < 0 ? (String(localized: "low < -0.5"), warn, "exclamationmark") : (String(localized: "elevated > 0.5"), warn, "exclamationmark"))
+        let skinChip: Chip? = hasRange ? skin.flatMap { v -> Chip? in
+            guard let verdict = skinS.skinVerdict(v), let r = skinS.skinRange else { return nil }
+            func f(_ x: Double) -> String { String(format: "%.1f", locale: AppLanguage.activeLocale, x) }
+            switch verdict {
+            case .inRange: return (String(localized: "within \(f(r.lowerBound)) - \(f(r.upperBound))"), ok, "checkmark")
+            case .above: return (String(localized: "elevated > \(f(r.upperBound))"), warn, "exclamationmark")
+            case .below: return (String(localized: "low < \(f(r.lowerBound))"), warn, "exclamationmark")
+            }
         } : calibrating
         let skinText = skin.map { (($0 >= 0 ? "+" : "−") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs($0))) } ?? "–"
         func tile(_ key: String, icon: String, label: LocalizedStringKey, value: String, unit: String, _ chip: Chip?) -> some View {
@@ -205,7 +210,7 @@ struct NunaHealthView: View {
 
     private var skinCaption: LocalizedStringKey? {
         guard let v = day.extras["skin_temp"] else { return nil }
-        return abs(v) < 0.5 ? "Small deviation" : "Larger deviation"
+        return skinS.skinVerdict(v) == .inRange ? "Small deviation" : "Larger deviation"
     }
 
     private var hrvHero: some View {

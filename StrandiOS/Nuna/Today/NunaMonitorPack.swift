@@ -21,6 +21,7 @@ struct NunaMonitorPackCard: View {
     @StateObject private var hrvS = NunaSeriesModel()
     @StateObject private var rhrS = NunaSeriesModel()
     @StateObject private var respS = NunaSeriesModel()
+    @StateObject private var skinS = NunaSeriesModel()
 
     /// The vital signs the tile watches: HRV, resting heart rate, blood oxygen, respiratory rate and skin temperature. The count is
     /// always out of these, so a vital with no reading shows up as a missing one ("4/5") and not as a smaller total ("4/4").
@@ -38,7 +39,7 @@ struct NunaMonitorPackCard: View {
         tally(restingHr.flatMap { v in rhrS.verdict(v, floor: 1).map { $0 == .inRange } })
         tally(spo2.map { $0 >= 95 })
         tally(respiratory.flatMap { v in respS.verdict(v, floor: VitalRange.respiratoryFloor).map { $0 == .inRange } })
-        tally(skinTemp.map { abs($0) < 0.5 })
+        tally(skinTemp.flatMap { v in skinS.skinVerdict(v).map { $0 == .inRange } })
         return (within, known)
     }
 
@@ -66,6 +67,7 @@ struct NunaMonitorPackCard: View {
             await hrvS.load(repo: repo, key: "hrv", source: "my-whoop", days: 400)
             await rhrS.load(repo: repo, key: "rhr", source: "my-whoop", days: 400)
             await respS.load(repo: repo, key: "resp_rate", source: "my-whoop")
+            await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop")
         }
     }
 

@@ -850,6 +850,21 @@ final class NunaSeriesModel: ObservableObject {
         return VitalRange.band(history: v).map { VitalRange.verdict(value, in: $0, floor: floor) }
     }
 
+    /// Skin temperature against the person's own nights: the readings are deviations in degrees (a stored value of 20 or more is an absolute
+    /// temperature from an import and is left out), judged like the other vitals but never tighter than `VitalRange.skinTempFloor`.
+    func skinVerdict(_ value: Double) -> VitalRange.Verdict? {
+        let v = byDay.keys.sorted().dropLast().compactMap { byDay[$0] }.filter { abs($0) < 20 }
+        return VitalRange.band(history: v).map { VitalRange.verdict(value, in: $0, floor: VitalRange.skinTempFloor) }
+    }
+
+    /// The range that verdict uses, as bounds (centre ± half-width, at least `skinTempFloor`).
+    var skinRange: ClosedRange<Double>? {
+        let v = byDay.keys.sorted().dropLast().compactMap { byDay[$0] }.filter { abs($0) < 20 }
+        guard let b = VitalRange.band(history: v) else { return nil }
+        let w = max(b.spread, VitalRange.skinTempFloor)
+        return (b.centre - w)...(b.centre + w)
+    }
+
     /// The typical range shaded behind a chart: the median of the last 30 readings plus and minus the range's half-width (two standard deviations). It is the line the In range / Above range
     /// chip is judged by, so a reading outside the shading always carries that chip and one inside it never does.
     var typicalRange: ClosedRange<Double>? { band.map { ($0.mean - $0.sd)...($0.mean + $0.sd) } }
