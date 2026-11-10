@@ -27,9 +27,6 @@ struct NunaMarkerDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var rows: [LabMarkerRow] = []
     @State private var loaded = false
-    /// The span of the chart in days; 0 shows every reading.
-    @State private var span = 365
-    @State private var page = 0
     @State private var adding = false
 
     @State private var signal: MetricDescriptor?
@@ -151,14 +148,11 @@ struct NunaMarkerDetailView: View {
 
     // MARK: Trend
 
+    /// The chart shows every reading: from a few days before the first one to now.
     private var windowDates: (from: Date, to: Date) {
         let cal = Calendar.current, now = Date()
-        if span == 0 {
-            let first = rows.map(\.takenAt).min().map { Date(timeIntervalSince1970: TimeInterval($0)) } ?? now
-            return (cal.date(byAdding: .day, value: -3, to: first) ?? first, now)
-        }
-        let to = cal.date(byAdding: .day, value: -page * span, to: now) ?? now
-        return (cal.date(byAdding: .day, value: -span, to: to) ?? to, to)
+        let first = rows.map(\.takenAt).min().map { Date(timeIntervalSince1970: TimeInterval($0)) } ?? now
+        return (cal.date(byAdding: .day, value: -3, to: first) ?? first, now)
     }
 
     private func inWindow(_ m: NunaLabMarker) -> [LabMarkerRow] {
@@ -169,43 +163,17 @@ struct NunaMarkerDetailView: View {
     private func trendCard(_ m: NunaLabMarker) -> some View {
         let w = windowDates
         let inside = inWindow(m)
-        let values = inside.compactMap(\.value)
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM yy")
-        let earliest = m.numeric.first?.takenAt ?? 0
         return VStack(alignment: .leading, spacing: 14) {
-            if !(span == 0 && !m.isPressure && inside.count >= 2) { legendPill(m) }
+            legendPill(m)
             if inside.isEmpty {
-                Text("No readings in this period. Use the arrows to look at an earlier one.")
+                Text("No readings for this marker.")
                     .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).textCase(nil)
                     .frame(maxWidth: .infinity, minHeight: 160)
-            } else if span == 0, !m.isPressure, inside.count >= 2 {
-                // The long view reads like the HRV page: one stretch per month with its average, over the range band.
-                NunaCard {
-                    NunaSegmentedChart(points: inside.compactMap { r in r.value.map { (Date(timeIntervalSince1970: TimeInterval(r.takenAt)), $0) } },
-                                       color: NunaPalette.charge, decimals: MarkerCatalog.definition(for: m.key)?.decimals ?? 1,
-                                       band: m.range.map { $0.low...$0.high }, directional: false, height: 240)
-                }
             } else {
                 NunaLabChart(points: inside.map { r in
                     NunaLabChart.Point(id: r.id, date: Date(timeIntervalSince1970: TimeInterval(r.takenAt)), value: r.value ?? 0,
                                        second: m.isPressure ? m.diastolic[r.takenAt]?.value : nil, status: m.status(r))
                 }, range: m.range, from: w.from, to: w.to, format: { LabBookFormat.value($0, key: m.key) })
-            }
-            HStack(alignment: .center) {
-                NunaRangeSwitch(choices: [(90, "3M"), (365, "1Y"), (0, "All")], range: $span, onSelect: { page = 0 })
-                Spacer(minLength: 6)
-                if span != 0 {
-                    NunaDateStepper(label: f.string(from: w.from) + " – " + f.string(from: w.to), canGoBack: Int(w.from.timeIntervalSince1970) > earliest, canGoForward: page > 0,
-                                    back: { page += 1 }, forward: { page = max(0, page - 1) })
-                }
-            }
-            if !inside.isEmpty {
-                NunaDivider()
-                HStack(alignment: .top, spacing: 0) {
-                    summaryFigure("Lowest", values.min(), m)
-                    summaryFigure("Average", values.isEmpty ? nil : values.reduce(0, +) / Double(values.count), m)
-                    summaryFigure("Highest", values.max(), m)
-                }
             }
         }
     }
@@ -230,13 +198,6 @@ struct NunaMarkerDetailView: View {
             Capsule().fill(tint).frame(width: 11, height: 2.4)
             Text(text).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
         }
-    }
-
-    private func summaryFigure(_ label: LocalizedStringKey, _ v: Double?, _ m: NunaLabMarker) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v.map { LabBookFormat.value($0, key: m.key) } ?? "–").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-        }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: What it says
