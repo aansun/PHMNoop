@@ -12,6 +12,7 @@ final class StravaSettingsModel: ObservableObject {
     @Published private(set) var records: [StravaUploadRecord] = StravaActivityStore.load()
     @Published private(set) var busy = false
     @Published var statusText: String?
+    @Published private(set) var importSummary: StravaImportSummary?
 
     var isConfigured: Bool { hasCredentials }
 
@@ -248,6 +249,25 @@ final class StravaSettingsModel: ObservableObject {
             setBusy(false)
             statusText = message(for: error)
         }
+    }
+
+    /// Brings the last `days` days of Strava activities in as workouts, for the ones the strap has heart rate for (see `StravaImporter`).
+    func importFromStrava(days: Int, repo: Repository) async {
+        guard StravaExperiment.isEnabled, isConnected, let credentials = StravaCredentials.current else { return }
+        setBusy(true)
+        statusText = nil
+        do {
+            importSummary = try await StravaImporter.run(days: days, repo: repo, client: StravaAPIClient(credentials: credentials))
+        } catch let error as StravaError {
+            if case .server(let status, _) = error, status == 401 || status == 403 {
+                statusText = StravaError.readAccessRequired.localizedDescription
+            } else {
+                statusText = message(for: error)
+            }
+        } catch {
+            statusText = message(for: error)
+        }
+        setBusy(false)
     }
 
     func record(for row: WorkoutRow) -> StravaUploadRecord? {

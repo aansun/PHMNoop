@@ -21,12 +21,18 @@ struct StravaActivitySummary: Decodable {
     let sportType: String?
     let startDate: String?
     let externalId: String?
+    let name: String?
+    let elapsedTime: Int?
+    let distance: Double?
 
     enum CodingKeys: String, CodingKey {
         case id
         case sportType = "sport_type"
         case startDate = "start_date"
         case externalId = "external_id"
+        case name
+        case elapsedTime = "elapsed_time"
+        case distance
     }
 }
 

@@ -16,6 +16,7 @@ struct NunaStravaView: View {
     @State private var clientID = ""
     @State private var clientSecret = ""
     @State private var editingCredentials = false
+    @State private var importDays = 30
 
     private var uploadable: [WorkoutRow] {
         workouts.filter { StravaEligibility.canUpload($0) }
@@ -130,6 +131,7 @@ struct NunaStravaView: View {
             NunaCard(small: true) {
                 NunaToggleRow("Upload automatically", subtitle: "New GPS, treadmill and gym workouts are uploaded when they finish", systemImage: "arrow.up.circle", isOn: $automatic).padding(.vertical, 8)
             }
+            importCard
             VStack(alignment: .leading, spacing: 10) {
                 nunaRuledHeader("Waiting to upload")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
@@ -160,6 +162,36 @@ struct NunaStravaView: View {
                 }
             }
             nunaFootnote("Uploaded as FIT files: GPS and treadmill workouts, and gym sessions you logged in PHMN. Gym data from Hevy or Apple Health, and sports without GPS, are not included. Nothing is uploaded while the integration is off.")
+        }
+    }
+
+    /// The way in from Strava: workouts done with another app and shared there, such as Hevy. Only those the strap has heart rate for come in.
+    private var importCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            nunaRuledHeader("Import from Strava")
+            NunaCard(small: true) {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Bring in workouts you logged in another app and shared to Strava, such as Hevy. Only those the strap recorded heart rate for come in, and Effort comes from the strap, never from Strava.")
+                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    HStack(spacing: 8) {
+                        ForEach([7, 30, 90], id: \.self) { d in
+                            Button { importDays = d } label: {
+                                Text("Last \(d) days").font(.nuna(size: 13, weight: .bold)).foregroundStyle(importDays == d ? NunaPalette.onAccent : NunaPalette.textPrimary)
+                                    .frame(maxWidth: .infinity).frame(height: 38)
+                                    .background(importDays == d ? NunaPalette.textPrimary : NunaPalette.glassStrong, in: Capsule())
+                            }.buttonStyle(.plain)
+                        }
+                    }
+                    Button { Task { await model.importFromStrava(days: importDays, repo: repo) } } label: {
+                        Text(model.busy ? "Importing…" : "Import workouts").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
+                            .frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                    }.buttonStyle(.plain).disabled(model.busy).opacity(model.busy ? 0.5 : 1)
+                    if let r = model.importSummary {
+                        Text(verbatim: String(localized: "Added \(r.added) · already here \(r.alreadyHere) · no strap heart rate \(r.noHeartRate)"))
+                            .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                }.frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 
