@@ -103,9 +103,9 @@ struct NunaAnyaSettingsView: View {
             }.buttonStyle(.plain)
             Text("Anya is not a medical tool. Its answers are personal notes, not a doctor's advice.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
-        .confirmationDialog("Delete all conversations?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { coach.deleteAllConversations(); historyCount = 0 }
-            Button("Cancel", role: .cancel) {}
+        .nunaDialog("Delete all conversations?", isPresented: $confirmDeleteAll) {
+            NunaDialogButton("Delete", role: .destructive) { coach.deleteAllConversations(); historyCount = 0 }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("This removes the current conversation and the saved ones from this iPhone.") }
         .onAppear { historyCount = CoachConversationHistoryStore.load().count }
     }

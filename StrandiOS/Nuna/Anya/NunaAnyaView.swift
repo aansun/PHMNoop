@@ -125,10 +125,10 @@ struct NunaAnyaView: View {
         .onChange(of: coach.sending) { _, sending in
             if !sending, !coach.messages.isEmpty { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
         }
-        .confirmationDialog("Add to Anya", isPresented: $showAttach, titleVisibility: .visible) {
-            Button("Photo") { showPhoto = true }
-            Button("Document") { showDocument = true }
-            Button("Cancel", role: .cancel) {}
+        .nunaDialog("Add to Anya", isPresented: $showAttach) {
+            NunaDialogButton("Photo") { showPhoto = true }
+            NunaDialogButton("Document") { showDocument = true }
+            NunaDialogButton("Cancel", role: .cancel) {}
         }
         .photosPicker(isPresented: $showPhoto, selection: $photoItem, matching: .images)
         .fileImporter(isPresented: $showDocument, allowedContentTypes: [.pdf, .plainText, .commaSeparatedText, .json, .rtf, .html], allowsMultipleSelection: false) { importDocument($0) }

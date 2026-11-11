@@ -164,8 +164,8 @@ struct NunaLabRecordingsView: View {
             }
         }
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") { rows = await NunaLabStore.load(repo); loaded = true }
-        .confirmationDialog("Remove this reading?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
-            Button("Remove", role: .destructive) {
+        .nunaDialog("Remove this reading?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {
+            NunaDialogButton("Remove", role: .destructive) {
                 if let r = removing {
                     var ids = [r.id]
                     // A blood-pressure reading goes with its diastolic half.
@@ -174,7 +174,7 @@ struct NunaLabRecordingsView: View {
                 }
                 removing = nil
             }
-            Button("Cancel", role: .cancel) { removing = nil }
+            NunaDialogButton("Cancel", role: .cancel) { removing = nil }
         }
     }
 

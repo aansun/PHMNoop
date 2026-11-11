@@ -139,9 +139,9 @@ struct NunaTodayCustomizeSheet: View {
         .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .interactiveDismissDisabled(isDirty)
-        .confirmationDialog("Discard your changes?", isPresented: $confirmDiscard, titleVisibility: .visible) {
-            Button("Discard changes", role: .destructive) { dismiss() }
-            Button("Keep editing", role: .cancel) {}
+        .nunaDialog("Discard your changes?", isPresented: $confirmDiscard) {
+            NunaDialogButton("Discard changes", role: .destructive) { dismiss() }
+            NunaDialogButton("Keep editing", role: .cancel) {}
         }
     }
 

@@ -67,9 +67,9 @@ struct NunaNutritionView: View {
             caffeineCard
         }
         .sheet(item: $addMeal) { m in NunaFoodAddSheet(day: dayKey, meal: m).nunaSheetChrome(detents: [.large]) }
-        .confirmationDialog("Delete this entry?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { if let e = deleting { Task { await NunaFoodStore.delete(id: e.id, repo: repo) } }; deleting = nil }
-            Button("Cancel", role: .cancel) { deleting = nil }
+        .nunaDialog("Delete this entry?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
+            NunaDialogButton("Delete", role: .destructive) { if let e = deleting { Task { await NunaFoodStore.delete(id: e.id, repo: repo) } }; deleting = nil }
+            NunaDialogButton("Cancel", role: .cancel) { deleting = nil }
         }
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") { await load() }
         .task(id: dayKey) { food = await NunaFoodStore.day(dayKey, repo: repo) }

@@ -672,41 +672,22 @@ struct NunaActionItem: Identifiable {
     let action: () -> Void
 }
 
-/// The three outlined circles at the corner of a saved workout, and the small dark popover under them: a large symbol and a capital label for
-/// each action. The action runs once the popover has gone, so a sheet or a dialog can open without meeting it.
+/// The three outlined circles at the corner of a saved workout, and the sheet from the bottom they open (`NunaMenu`): one plain row for each action. The action
+/// runs once the sheet has gone, so a sheet or a dialog can open without meeting it.
 struct NunaActionsButton: View {
     let items: [NunaActionItem]
-    @State private var shown = false
 
     var body: some View {
-        Button { shown = true } label: {
+        NunaMenu {
+            ForEach(items) { item in
+                NunaMenuItem(item.title, icon: item.symbol, role: item.destructive ? .destructive : nil, action: item.action)
+                    .disabled(!item.enabled)
+            }
+        } label: {
             HStack(spacing: 4) { ForEach(0..<3, id: \.self) { _ in Circle().strokeBorder(NunaPalette.textPrimary, lineWidth: 2).frame(width: 8, height: 8) } }
                 .frame(width: 44, height: 44).contentShape(Rectangle())
         }
         .accessibilityLabel(Text("More"))
-        .popover(isPresented: $shown, attachmentAnchor: .point(.bottom), arrowEdge: .top) {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(items) { item in
-                    Button {
-                        shown = false
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { item.action() }
-                    } label: {
-                        HStack(spacing: 16) {
-                            Image(systemName: item.symbol).font(.system(size: 22, weight: .light)).frame(width: 30)
-                            Text(item.title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(0.8)).textCase(.uppercase).lineLimit(1)
-                        }
-                        .foregroundStyle(item.destructive ? NunaPalette.alertText : NunaPalette.textPrimary)
-                        .padding(.horizontal, 20).frame(maxWidth: .infinity, alignment: .leading).frame(height: 58)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain).disabled(!item.enabled).opacity(item.enabled ? 1 : 0.4)
-                }
-            }
-            .padding(.vertical, 6).frame(minWidth: 230)
-            .presentationCompactAdaptation(.popover)
-            .presentationBackground(Color(white: 0.13))
-            .preferredColorScheme(NunaTheme.colorScheme)
-        }
     }
 }
 #endif
