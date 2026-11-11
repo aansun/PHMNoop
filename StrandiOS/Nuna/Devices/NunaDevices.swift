@@ -444,7 +444,7 @@ struct NunaDeviceDetailView: View {
                     NavigationLink(value: NunaDeviceRoute.battery) {
                         HStack {
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(verbatim: String(localized: "Battery \(Int(pct.rounded()))%")).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: String(localized: "Battery \(Int(pct.rounded()))%")).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Text(verbatim: live.charging == true ? String(localized: "Charging") : (live.batteryEstimate.map { String(localized: "Not charging · about \(NunaDeviceFormat.remaining($0.remainingHours))") } ?? String(localized: "Not charging")))
                                     .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             }

@@ -114,8 +114,9 @@ extension View {
             case .dayStreak: NunaDayStreakView()
             case .settings: NunaMeView(pushed: true)
             } }
-            // On the Settings pages nothing is set larger than the title of the page: the centred title is 18, text in the body stays at 17 or less.
-            .environment(\.nunaCenteredTitleSize, 18)
+            // On the Settings pages the title is set small in the middle of the bar at 18 pt, and nothing in the body is larger. The Settings list itself
+            // (pushed from the profile) keeps its own large title.
+            .environment(\.nunaSettingsPage, r != .settings)
         }
     }
 }

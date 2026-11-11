@@ -74,7 +74,7 @@ struct NunaDoubleTapView: View {
                 HStack(spacing: 12) {
                     NunaIconTile("hand.tap")
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Tap the strap twice").font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Tap the strap twice").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text("Then it does what you choose below.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()

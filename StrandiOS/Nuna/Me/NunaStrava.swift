@@ -102,7 +102,7 @@ struct NunaStravaView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 10) {
                     nunaRuledHeader("Connection")
-                    Text(model.isConfigured ? "Ready to connect" : "Not connected").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(model.isConfigured ? "Ready to connect" : "Not connected").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     if !model.isConfigured { Text("Save the credentials first").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                     Button { Task { await model.connect() } } label: {
                         Text("Connect Strava").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -120,7 +120,7 @@ struct NunaStravaView: View {
                 HStack(spacing: 12) {
                     Image(systemName: "checkmark.circle.fill").font(.system(size: 24)).foregroundStyle(NunaPalette.charge)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Connected").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Connected").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: model.athleteName.map { "Strava · \($0)" } ?? "Strava").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()

@@ -111,7 +111,21 @@ public struct NunaFAB: View {
 // MARK: Header and sections
 
 /// Screen header: optional back control, title, optional trailing content.
+private struct NunaSettingsPageKey: EnvironmentKey { static let defaultValue = false }
+public extension EnvironmentValues {
+    /// True on the Settings pages. Their page title is set small and in the middle of the bar, in capitals, at 18 pt, as the WHOOP app does, and nothing in the
+    /// body is set larger than it. Set once where the Settings routes are resolved (`nunaMeDestinations`).
+    var nunaSettingsPage: Bool {
+        get { self[NunaSettingsPageKey.self] }
+        set { self[NunaSettingsPageKey.self] = newValue }
+    }
+}
+
+/// The size of a page title set in the middle of the bar on a Settings page.
+public let nunaSettingsTitleSize: CGFloat = 18
+
 public struct NunaHeader<Trailing: View>: View {
+    @Environment(\.nunaSettingsPage) private var settingsPage
     private let title: LocalizedStringKey
     private let onBack: (() -> Void)?
     private let trailing: Trailing
@@ -121,6 +135,23 @@ public struct NunaHeader<Trailing: View>: View {
     }
 
     public var body: some View {
+        if settingsPage, let onBack {
+            ZStack {
+                HStack(spacing: 10) {
+                    NunaIconButton("chevron.left", label: "Back", action: onBack)
+                    Spacer(minLength: 8)
+                    trailing
+                }
+                Text(title).font(.nuna(size: nunaSettingsTitleSize, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7).padding(.horizontal, 56)
+                    .accessibilityAddTraits(.isHeader)
+            }
+        } else {
+            leadingBar
+        }
+    }
+
+    private var leadingBar: some View {
         HStack(spacing: 10) {
             if let onBack {
                 NunaIconButton("chevron.left", label: "Back", action: onBack)

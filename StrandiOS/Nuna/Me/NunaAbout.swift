@@ -110,7 +110,7 @@ struct NunaHowItWorksView: View {
                             NunaIconTile(s.icon, tint: tint(s))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(verbatim: s.overline).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).foregroundStyle(tint(s))
-                                Text(verbatim: s.title).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                                Text(verbatim: s.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                             }
                         }
                         Text(verbatim: s.body).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -161,7 +161,7 @@ struct NunaScoringGuideView: View {
                                 }
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(verbatim: s.displayName).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(color(s))
-                                    Text(verbatim: s.headline).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                                    Text(verbatim: s.headline).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                                 }
                             }
                             Text(verbatim: s.bodyText).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)

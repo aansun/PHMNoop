@@ -24,9 +24,7 @@ struct NunaAppearanceView: View {
     private var experience: ExperienceMode { ExperienceMode(rawValue: experienceRaw) ?? .nuna }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: NunaSpacing.section) {
-                NunaHeader("Appearance", onBack: { dismiss() })
+        NunaDetailScreen("Appearance") {
                 Text("Choose light or dark, spacing and the app icon. Colour and type follow the app's design guide.")
                     .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 experienceCard
@@ -45,11 +43,7 @@ struct NunaAppearanceView: View {
                 iconCard
                 #endif
                 nunaFootnote("Haptics are under Strap automations, the Live Activity under History sync and the morning brief under Anya.")
-            }
-            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 24)
         }
-        .nunaScreenBackground()
-        .toolbar(.hidden, for: .navigationBar)
         .alert("Couldn't change the app icon", isPresented: Binding(get: { iconError != nil }, set: { if !$0 { iconError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: { Text(verbatim: iconError ?? "") }
@@ -65,7 +59,7 @@ struct NunaAppearanceView: View {
                         .frame(width: 44, height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                     VStack(alignment: .leading, spacing: 2) {
                         nunaRuledHeader("Experience")
-                        Text(verbatim: experience.displayName).font(.nuna(size: NunaTypeSize.h2 - 2, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: experience.displayName).font(.nuna(size: 16, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                         Text("Switch to Default to return to the original NOOP look").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer(minLength: 8)

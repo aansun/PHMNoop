@@ -73,7 +73,7 @@ struct NunaExperimentsView: View {
         NunaDetailScreen("Experiments") {
             NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack { Text("Still being tested").font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer(); NunaChip(verbatim: String(localized: "\(on) on")) }
+                    HStack { Text("Still being tested").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer(); NunaChip(verbatim: String(localized: "\(on) on")) }
                     Text("These can change or be less accurate, and none is medical. Turn one off to go back to the standard behaviour.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
