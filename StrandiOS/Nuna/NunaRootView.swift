@@ -211,6 +211,8 @@ struct NunaRootView: View {
                 .nunaMeDestinations()
         }
         .toolbar(.hidden, for: .tabBar)
+        // Every page pushed in the Settings tab, whichever way it is opened (a route or a plain link), takes the Settings page title and type scale.
+        .environment(\.nunaSettingsPage, tab == .me)
         .environment(\.nunaPushToday) { paths[Tab.today.rawValue].append($0) }
         .environment(\.nunaPushMe) { paths[Tab.today.rawValue].append($0) }
         .environment(\.nunaPushWorkout) { paths[tab.rawValue].append($0) }

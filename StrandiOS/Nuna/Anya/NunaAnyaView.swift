@@ -15,12 +15,21 @@ enum NunaAnyaRoute: Hashable {
     case custom
     case chatGPT
     case settings, memory, history, instructions, brief, voiceCoach, plan, environment
+
+    /// The pages that belong to AI Settings (Settings > App Settings > AI Settings) take the Settings page title and type scale. The chat history and the
+    /// plan are pages of the Anya tab and keep their own.
+    var isSettingsPage: Bool {
+        switch self {
+        case .history, .plan: return false
+        default: return true
+        }
+    }
 }
 
 extension View {
     func nunaAnyaDestinations() -> some View {
         navigationDestination(for: NunaAnyaRoute.self) { r in
-            switch r {
+            Group { switch r {
             case .connect: NunaAnyaConnectView()
             case .apiKey(let raw): NunaAnyaKeyView(provider: AIProvider(rawValue: raw) ?? .openAI)
             case .custom: NunaAnyaCustomView()
@@ -33,7 +42,8 @@ extension View {
             case .voiceCoach: NunaAnyaVoiceCoachView()
             case .plan: NunaAnyaPlanView()
             case .environment: NunaEnvironmentView()
-            }
+            } }
+            .environment(\.nunaSettingsPage, r.isSettingsPage)
         }
     }
 }
