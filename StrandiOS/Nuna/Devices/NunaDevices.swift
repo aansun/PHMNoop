@@ -75,7 +75,7 @@ private struct NunaDevicesContent: View {
     private var removed: [PairedDevice] { registry.devices.filter { $0.status == .archived } }
 
     var body: some View {
-        NunaDetailScreen("Devices", trailing: AnyView(NavigationLink(value: NunaDeviceRoute.helpHub) { NunaBareIcon("questionmark.circle") }.buttonStyle(.plain).accessibilityLabel(Text("Help")))) {
+        NunaDetailScreen("Device Settings", trailing: AnyView(NavigationLink(value: NunaDeviceRoute.helpHub) { NunaBareIcon("questionmark.circle") }.buttonStyle(.plain).accessibilityLabel(Text("Help")))) {
             if let d = active { deviceHeader(d) }
             NunaPageTabs([(value: 0, title: "Status"), (value: 1, title: "Advanced")], selection: $tab)
             if tab == 0 { statusTab } else { advancedTab }

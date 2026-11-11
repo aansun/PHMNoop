@@ -105,7 +105,39 @@ struct NunaStrapArt: View {
     }
 }
 
-/// A vertical battery: a thin track filled from the bottom, with the figure beside it.
+/// The charging flow: drops of blue fall from the top of the column towards the battery bar, growing as they go and shrinking away as they reach it,
+/// one after another, as the WHOOP app draws it. A small bolt stands at the top, where the charger is.
+struct NunaChargeFlow: View {
+    static let height: CGFloat = 92
+    private static let drops = 3
+    private static let period = 2.4
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            Canvas { gc, size in
+                for i in 0..<Self.drops {
+                    // Each drop is a third of a cycle behind the one before it.
+                    let phase = ((t / Self.period) + Double(i) / Double(Self.drops)).truncatingRemainder(dividingBy: 1)
+                    let y = 18 + (size.height - 18) * CGFloat(phase * phase * 0.35 + phase * 0.65)   // eases in, as a drop does
+                    // Small at the top, largest in the middle, gone at the bar.
+                    let r = 1.5 + 3.6 * CGFloat(sin(phase * .pi))
+                    let alpha = min(1, phase * 6) * min(1, (1 - phase) * 3)
+                    let rect = CGRect(x: size.width / 2 - r, y: y - r, width: r * 2, height: r * 2)
+                    gc.fill(Path(ellipseIn: rect), with: .color(NunaPalette.effort.opacity(0.9 * alpha)))
+                }
+            }
+        }
+        .frame(width: 22, height: Self.height)
+        .overlay(alignment: .top) {
+            Image(systemName: "bolt.fill").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.effort)
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// A vertical battery: a thin track filled from the bottom, with the figure beside it. While the strap charges the drops of `NunaChargeFlow` run
+/// into the top of the bar, and the figure carries a bolt.
 struct NunaBatteryGauge: View {
     let pct: Double?
     let charging: Bool
@@ -116,31 +148,37 @@ struct NunaBatteryGauge: View {
     private let barHeight: CGFloat = 250
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: 14) {
+        HStack(alignment: .bottom, spacing: 12) {
             VStack(alignment: .trailing, spacing: 4) {
-                if charging {
-                    Image(systemName: "bolt.fill").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.charge)
-                }
                 if let pct {
                     HStack(alignment: .firstTextBaseline, spacing: 2) {
-                        Text(verbatim: "\(Int(pct.rounded()))").font(.nuna(size: 46, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("%").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: "\(Int(pct.rounded()))").font(.nuna(size: 58, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            .contentTransition(.numericText())
+                        Text("%").font(.nuna(size: 24, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     }
                 } else {
-                    Text(verbatim: "–").font(.nuna(size: 46, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted)
+                    Text(verbatim: "–").font(.nuna(size: 58, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted)
                 }
-                Text(verbatim: model).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: model).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 if let estimate {
                     Text(verbatim: estimate).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
-            ZStack(alignment: .bottom) {
-                Capsule().fill(NunaPalette.ink.opacity(0.10)).frame(width: 6, height: barHeight)
-                Capsule().fill(tint).frame(width: 6, height: max(6, barHeight * CGFloat((pct ?? 0) / 100)))
-                    .animation(.easeOut(duration: 0.6), value: pct)
+            VStack(spacing: 4) {
+                if charging { NunaChargeFlow().transition(.opacity) }
+                ZStack(alignment: .bottom) {
+                    Capsule().fill(NunaPalette.ink.opacity(0.10)).frame(width: 6, height: barHeight)
+                    Capsule().fill(tint).frame(width: 6, height: max(6, barHeight * CGFloat((pct ?? 0) / 100)))
+                        .animation(.easeOut(duration: 0.6), value: pct)
+                }
             }
+            .frame(width: 22)
+            .animation(.easeInOut(duration: 0.3), value: charging)
         }
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(verbatim: pct.map { "\(Int($0.rounded()))%" } ?? "–"))
+        .accessibilityValue(charging ? Text("Charging") : Text(verbatim: ""))
     }
 }
 
