@@ -157,7 +157,10 @@ struct NunaExploreCard: View {
 /// The page a card opens: the photo, the numbers of the session, what it is and works, and its exercises. Next goes on to the sets and weights.
 struct NunaExploreWorkoutDetail: View {
     let workout: NunaExploreWorkout
+    @EnvironmentObject private var repo: Repository
     @Environment(\.dismiss) private var dismiss
+    @State private var choosingGroup = false
+    @State private var saved = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -172,7 +175,7 @@ struct NunaExploreWorkoutDetail: View {
                         fact("Muscle groups", workout.groupsText)
                         exercises
                     }
-                    .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 130)
+                    .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 190)
                 }
             }
             .scrollIndicators(.hidden).ignoresSafeArea(edges: .top)
@@ -181,6 +184,15 @@ struct NunaExploreWorkoutDetail: View {
         .background(NunaBackdrop())
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom, spacing: 0) { nextBar }
+        .sheet(isPresented: $choosingGroup) {
+            NunaAddToProgramsSheet { placement in
+                Task {
+                    _ = await NunaStarterPrograms.add(workout.asProgram, repo: repo, placement: placement)
+                    saved = true
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                }
+            }
+        }
     }
 
     private var topBar: some View {
@@ -267,14 +279,26 @@ struct NunaExploreWorkoutDetail: View {
     }
 
     private var nextBar: some View {
-        NavigationLink(value: NunaWorkoutRoute.exploreEdit(workout.id)) {
-            Text("Next").font(.nuna(size: 17, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.accent)
-                .frame(maxWidth: .infinity).frame(height: 58)
-                .overlay(Capsule().strokeBorder(NunaPalette.accent, lineWidth: 2))
+        VStack(spacing: 10) {
+            Button { choosingGroup = true } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: saved ? "checkmark" : "plus").font(.nuna(size: 15, weight: .semibold))
+                    Text(saved ? "Saved to your programs" : "Save to my programs").font(.nuna(size: 15, weight: .bold))
+                }
+                .foregroundStyle(saved ? NunaPalette.textSecondary : NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 48)
+                .background(NunaPalette.canvas, in: Capsule())
+                .background(NunaPalette.glassStrong, in: Capsule())
+            }
+            .buttonStyle(.plain).disabled(saved)
+            NavigationLink(value: NunaWorkoutRoute.exploreEdit(workout.id)) {
+                Text("Next").font(.nuna(size: 17, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.accent)
+                    .frame(maxWidth: .infinity).frame(height: 58)
+                    .overlay(Capsule().strokeBorder(NunaPalette.accent, lineWidth: 2))
+            }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
         .padding(.horizontal, NunaSpacing.screenH).padding(.vertical, 10)
-        .background(LinearGradient(colors: [NunaPalette.canvas.opacity(0), NunaPalette.canvas], startPoint: .top, endPoint: .init(x: 0.5, y: 0.4)))
+        .background(LinearGradient(colors: [NunaPalette.canvas.opacity(0), NunaPalette.canvas], startPoint: .top, endPoint: .init(x: 0.5, y: 0.3)))
     }
 }
 
@@ -296,6 +320,7 @@ struct NunaExploreWorkoutEditor: View {
     @State private var adding = false
     @State private var saving = false
     @State private var saved = false
+    @State private var choosingGroup = false
     @State private var keyboardUp = false
 
     private struct SetRow: Identifiable { let id = UUID(); var reps: String; var weight: String }
@@ -319,6 +344,7 @@ struct NunaExploreWorkoutEditor: View {
         .toolbar(.hidden, for: .navigationBar)
         // The bar steps aside while a number is typed, so it does not ride on top of the keyboard and the fields.
         .safeAreaInset(edge: .bottom, spacing: 0) { if !keyboardUp { startBar } }
+        .sheet(isPresented: $choosingGroup) { NunaAddToProgramsSheet { save($0) } }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
         .onAppear {
@@ -486,20 +512,20 @@ struct NunaExploreWorkoutEditor: View {
         session.start(plan: plan, programId: nil, programName: workout.title)
     }
 
-    private func save() {
+    private func save(_ placement: NunaProgramPlacement) {
         guard !items.isEmpty, !saving, !saved else { return }
         saving = true
         let program = NunaStarterProgram(id: workout.program.id, name: workout.title, level: workout.level, goal: workout.program.goal,
                                          equipment: workout.program.equipment, routines: [.init(name: workout.title, moves: moves())])
         Task {
-            _ = await NunaStarterPrograms.add(program, repo: repo)
+            _ = await NunaStarterPrograms.add(program, repo: repo, placement: placement)
             saving = false; saved = true
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         }
     }
 
     private var saveButton: some View {
-        Button { save() } label: {
+        Button { choosingGroup = true } label: {
             HStack(spacing: 8) {
                 Image(systemName: saved ? "checkmark" : "square.and.arrow.down").font(.nuna(size: 15, weight: .semibold))
                 Text(saved ? "Saved to your programs" : "Save to my programs").font(.nuna(size: 15, weight: .bold))

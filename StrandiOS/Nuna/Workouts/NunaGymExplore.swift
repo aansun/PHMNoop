@@ -98,14 +98,20 @@ enum NunaStarterPrograms {
     /// Add a program to the person's own: one program per routine, in a folder named after it when there is more than one.
     @MainActor
     @discardableResult
-    static func add(_ p: NunaStarterProgram, repo: Repository) async -> Int {
+    static func add(_ p: NunaStarterProgram, repo: Repository, placement: NunaProgramPlacement = .auto) async -> Int {
         guard let store = await repo.storeHandle() else { return 0 }
         let now = Int(Date().timeIntervalSince1970)
         // A plan of several routines gets a group of its own; a single routine goes into the group of its type (Gym, At home, ...).
-        var group: NunaProgramGroup? = p.routines.count > 1 ? NunaProgramGroupsModel.shared.add(name: p.name) : nil
-        if group == nil {
-            let moves = p.routines.flatMap { $0.moves.map(\.name) }
-            if let type = NunaProgramType.primary(of: NunaProgramType.classify(exercises: moves, isAnya: false)) { group = NunaProgramGroupsModel.shared.add(name: type.name) }
+        var group: NunaProgramGroup?
+        switch placement {
+        case .auto:
+            group = p.routines.count > 1 ? NunaProgramGroupsModel.shared.add(name: p.name) : nil
+            if group == nil {
+                let moves = p.routines.flatMap { $0.moves.map(\.name) }
+                if let type = NunaProgramType.primary(of: NunaProgramType.classify(exercises: moves, isAnya: false)) { group = NunaProgramGroupsModel.shared.add(name: type.name) }
+            }
+        case .ungrouped: group = nil
+        case .group(let chosen): group = chosen
         }
         var added = 0
         for (index, routine) in p.routines.enumerated() {
@@ -122,6 +128,8 @@ enum NunaStarterPrograms {
             if let group { NunaProgramGroupsModel.shared.move(id, to: group) }
             added += 1
         }
+        // A group picked by the person is the one My Program shows next, so the program is in view when they go back.
+        if case .auto = placement {} else { NunaProgramGroupsModel.shared.openGroupId = group?.id ?? "" }
         await repo.refresh()
         return added
     }
