@@ -8,7 +8,7 @@ import WhoopStore
 
 struct NunaWorkoutHistoryView: View {
     @EnvironmentObject private var repo: Repository
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.distanceSystemKey) private var distanceRaw = ""
     @StateObject private var m = NunaWorkoutsModel()

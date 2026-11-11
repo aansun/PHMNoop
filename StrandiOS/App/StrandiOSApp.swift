@@ -56,7 +56,7 @@ struct StrandiOSApp: App {
     @AppStorage(AccentColor.customHexKey) private var accentCustomHex = AccentColor.defaultCustomHex
     /// Effort's display scale is also embedded in the shared widget snapshot. Observe it here so a
     /// Settings change gets one accurate full rebuild instead of waiting for an unrelated repo refresh.
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     /// A steady HR does not necessarily publish a new `bpm`, but the accumulated Effort still changes.
     /// Keep the Rings widget current during an active foreground session without reloading it more often
     /// than the widget publisher's own one-minute HR budget.

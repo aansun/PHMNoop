@@ -40,7 +40,7 @@ struct NunaReviewInputs: Equatable {
     var strain: Double?
     var floor: Double?
     var target: Double?
-    var scale: EffortScale = .hundred
+    var scale: EffortScale = .whoop
     /// Minutes of high non-activity stress today and their 30-day average.
     var highStressMin: Double?
     var highStressAvgMin: Double?

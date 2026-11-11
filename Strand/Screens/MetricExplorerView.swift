@@ -649,7 +649,7 @@ private struct MetricRow: View {
     // (/100→/21, #268).
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.temperatureKey) private var temperatureRaw = ""
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     private var unitLabel: String {
         let system = UnitSystem(rawValue: unitSystemRaw) ?? .metric
         let temp = UnitPrefs.resolveTemperature(system: system, override: temperatureRaw)
@@ -742,7 +742,7 @@ struct MetricDetailView: View {
     @AppStorage(UnitPrefs.temperatureKey) private var temperatureRaw = ""
     // Effort display scale (#268) — routes the Effort metric's numbers + unit; display-only, the plotted
     // series stays 0–100. Every other metric is scale-agnostic (see MetricDescriptor.format).
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     /// Line vs bar for the hero chart, the same preference `TrendsView` reads. This view had never
     /// consulted it, so a chosen `bar` drew a line here while the trend chart for the SAME metric drew
     /// bars. Display-only: nothing about the plotted series changes.

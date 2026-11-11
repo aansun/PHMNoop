@@ -45,10 +45,10 @@ struct NunaWorkoutsView: View {
     @EnvironmentObject private var intelligence: IntelligenceEngine
     @EnvironmentObject private var router: NavRouter
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.distanceSystemKey) private var distanceRaw = ""
-    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = false
+    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = PuffinExperiment.autoDetectWorkoutsDefault
     @StateObject private var m = NunaWorkoutsModel()
     @State private var suggestion: AutoWorkoutSuggestion?
     @State private var showCoach = false

@@ -73,7 +73,7 @@ struct NunaWorkoutLogFigures: View {
     let averages: NunaWorkoutAverages?
     /// With the steps known they take the second place (the duration then moves to the head of the zones, see `NunaWorkoutLogZones`).
     var steps: Int? = nil
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
     var body: some View {

@@ -121,7 +121,7 @@ struct CompareView: View {
     // Effort display scale (#268) — routes the Effort metric's min/max + hover read-outs onto WHOOP's
     // 0–21 axis; display-only, the normalized overlay shape is untouched. Every other metric is
     // scale-agnostic (see MetricDescriptor.format).
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
     // Distinct, high-legibility series colors (avoid the recovery/strain ramps so
@@ -730,7 +730,7 @@ private struct OverlayChart: View {
     let series: [CompareSeries]
     /// Effort display scale (#268) — passed through to the hover tooltip's real-value read-outs. The
     /// plotted points stay min–max normalized 0–1, so the line shape is unaffected.
-    var effortScale: EffortScale = .hundred
+    var effortScale: EffortScale = .whoop
     var height: CGFloat = 260
 
     @State private var hoverX: CGFloat? = nil
@@ -1138,7 +1138,7 @@ private struct MultiTooltip: View {
     /// model. Replaces a per-frame linear `rows` scan per series.
     let values: [String: Double]
     /// Effort display scale (#268) — the per-series real value converts onto WHOOP's 0–21 axis when set.
-    var effortScale: EffortScale = .hundred
+    var effortScale: EffortScale = .whoop
     let anchorX: CGFloat
     let container: CGSize
 

@@ -24,7 +24,7 @@ struct NunaHealthView: View {
     @StateObject private var spo2S = NunaSeriesModel()
     @StateObject private var respS = NunaSeriesModel()
     @StateObject private var skinS = NunaSeriesModel()
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @State private var hrvRange = 30
     @State private var hrvPage = 0
     @State private var rhrRange = 30

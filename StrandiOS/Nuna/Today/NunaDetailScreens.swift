@@ -189,7 +189,7 @@ struct NunaEffortDetailView: View {
     @EnvironmentObject private var router: NavRouter
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @StateObject private var day = NunaTodayModel()
     /// Minutes in the heart-rate zones day by day, for the 30-day comparison and the weekly zone cards.
     @StateObject private var zones = NunaEffortZoneHistory()
@@ -1524,7 +1524,7 @@ struct NunaAllMetricsView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @StateObject private var day = NunaTodayModel()
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @State private var showEdit = false
     @AppStorage(KeyMetricPrefs.layoutKey) private var keyMetricsRaw = ""
     @AppStorage("today.keyMetricsDetailed") private var detailed = false

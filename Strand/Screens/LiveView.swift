@@ -48,7 +48,7 @@ struct LiveView: View {
     }
 
     /// Effort display scale (#268) — routes the live + saved workout Effort read-outs. Display-only.
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
     /// Whether the ACTIVE registry device is a WHOOP, resolved once and handed to the leaves.

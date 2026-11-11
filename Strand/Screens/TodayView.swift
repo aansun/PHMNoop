@@ -239,7 +239,7 @@ struct TodayView: View {
     // cards already sit on an opaque canvas, so readability is unchanged either way.
     @AppStorage(SceneBackgroundPrefs.enabledKey) private var showDayCycleBackground = true
     // Effort display scale (#268), drives the Effort tile's value + caption. Display-only.
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
     // #233: the HRV window setting, read here only to explain (never recompute) an empty Charge ring
     // caused by the Deep window finding no deep-stage sleep. Same key/default SettingsView reads.

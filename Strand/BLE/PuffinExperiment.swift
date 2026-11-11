@@ -113,14 +113,21 @@ enum PuffinExperiment {
     /// The TRIMP recipe every Effort computation on this device should use.
     static var effortMethod: StrainScorer.Method { banisterEffortEnabled ? .banister : .edwards }
 
-    /// Opt-in "Continuous HRV capture": hold the dense realtime HR stream armed even with no Live screen
-    /// open, so the strap banks beat-to-beat R-R intervals 24/7 for far better overnight HRV/recovery/
-    /// sleep (vs the sparse history offload). Uses more battery (continuous HR streaming). Default OFF;
-    /// applied on launch + each (re)bond and driven by `BLEManager.setKeepRealtimeForData(_:)`. Mirrors
-    /// the Android `NoopPrefs.KEY_CONTINUOUS_HRV`. Works on WHOOP 4 and 5/MG (both emit 0x2A37 R-R).
+    /// "Continuous HRV capture": hold the dense realtime HR stream armed even with no Live screen
+    /// open, so the strap banks beat-to-beat R-R intervals for far better overnight HRV/recovery/
+    /// sleep (vs the sparse history offload). Uses more battery (continuous HR streaming).
+    ///
+    /// Default ON (Nov 2026) for anyone who has not chosen, together with "Overnight only" below, so the
+    /// default captures the night, which is what the recovery and sleep scores are built from, at about half
+    /// the battery cost of 24/7. A stored choice either way wins over this default. Applied on launch + each
+    /// (re)bond and driven by `BLEManager.setKeepRealtimeForData(_:)`. The Android
+    /// `NoopPrefs.KEY_CONTINUOUS_HRV` still defaults to OFF. Works on WHOOP 4 and 5/MG (both emit 0x2A37 R-R).
     static let keepRealtimeForDataKey = "noopContinuousHrv"
+    static let keepRealtimeForDataDefault = true
 
-    static var keepRealtimeForDataEnabled: Bool { UserDefaults.standard.bool(forKey: keepRealtimeForDataKey) }
+    static var keepRealtimeForDataEnabled: Bool {
+        (UserDefaults.standard.object(forKey: keepRealtimeForDataKey) as? Bool) ?? keepRealtimeForDataDefault
+    }
 
     /// Opt-in "Overnight only" refinement of Continuous HRV capture (#927): arm the dense realtime stream
     /// only inside the nightly window (the reused quiet-hours window convention: minutes since local
@@ -248,14 +255,18 @@ enum PuffinExperiment {
     /// Test Centre view via @AppStorage on this key. Mirrors the Android `PuffinExperiment.KEY_HRV_READINESS`.
     static let hrvReadinessKey = "noopHrvReadiness"
 
-    /// Opt-in "Auto-detect workouts": after a sync / on Today appear, scan the last day or two of HR for a
+    /// "Auto-detect workouts": after a sync / on Today appear, scan the last day or two of HR for a
     /// SUSTAINED-ELEVATED window (resting HR + 30 bpm held ≥ 12 min) that doesn't overlap a saved workout,
     /// and surface ONE dismissible Today card offering to save it as a manual-style workout. Pure read +
     /// suggestion: nothing is ever created without the user tapping Save, and turning this OFF stops all
-    /// detection and hides the card. Default OFF. Mirrors the Android `NoopPrefs.KEY_AUTO_DETECT_WORKOUTS`.
+    /// detection and hides the card. Default ON (Nov 2026), as the WHOOP app finds activities by itself; a
+    /// stored choice wins. The Android `NoopPrefs.KEY_AUTO_DETECT_WORKOUTS` still defaults to OFF.
     static let autoDetectWorkoutsKey = "noopAutoDetectWorkouts"
+    static let autoDetectWorkoutsDefault = true
 
-    static var autoDetectWorkoutsEnabled: Bool { UserDefaults.standard.bool(forKey: autoDetectWorkoutsKey) }
+    static var autoDetectWorkoutsEnabled: Bool {
+        (UserDefaults.standard.object(forKey: autoDetectWorkoutsKey) as? Bool) ?? autoDetectWorkoutsDefault
+    }
 
     /// "Journal reminder" (#627). When ON, Today shows a persistent journal widget (a last-7-days
     /// completion strip that taps through to the journal) and nudges when today isn't logged yet.

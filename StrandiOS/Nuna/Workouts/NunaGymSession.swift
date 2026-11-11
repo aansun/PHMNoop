@@ -120,7 +120,7 @@ struct NunaGymSessionView: View {
         stravaMessage = strava.statusText
     }
 
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
     /// The Effort the session added with its 30-day average beside it, and the cardio and muscular share at the right. The bar is level with

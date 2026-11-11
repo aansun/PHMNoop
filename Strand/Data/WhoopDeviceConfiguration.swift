@@ -26,14 +26,14 @@ struct WhoopDeviceConfiguration: Equatable {
             modelRaw: family == .whoop4 ? WhoopModel.whoop4.rawValue : WhoopModel.whoop5mg.rawValue,
             // Overnight capture is the best data/battery balance for both generations. It keeps the
             // dense R-R stream available for sleep/recovery without making daytime battery cost mandatory.
-            continuousHrv: true,
+            continuousHrv: PuffinExperiment.keepRealtimeForDataDefault,
             continuousHrvOvernightOnly: true,
             hrvWindowRaw: HrvWindow.whole.rawValue,
             sleepStagingV2: true,
             // WHOOP 5/MG has richer motion records; the engine still self-gates when a night is sparse.
             motionAwareWake: family == .whoop5,
-            // Keep NOOP's native axis as the honest default; the WHOOP 0-21 scale is display-only.
-            effortScaleRaw: EffortScale.hundred.rawValue,
+            // The WHOOP 0-21 Day Strain axis, as in the WHOOP app (display-only; the stored value stays 0-100).
+            effortScaleRaw: EffortScale.whoop.rawValue,
             banisterEffort: PuffinExperiment.banisterEffortDefault,
             stressPersonalBaseline: false,
             // WHOOP 4.0 has materially less battery headroom than 5.0/MG, so protect its last

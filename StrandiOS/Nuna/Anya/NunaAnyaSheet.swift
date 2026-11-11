@@ -56,7 +56,7 @@ struct NunaAnyaSheet: View {
     @EnvironmentObject private var profile: ProfileStore
     @EnvironmentObject private var router: NavRouter
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @State private var read: NunaAnyaRead?
     @State private var loaded = false
     @State private var explanation: String?

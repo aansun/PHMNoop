@@ -13,7 +13,7 @@ import WhoopStore
 /// day. The magnifier on the right narrows the day to its last six hours and back.
 struct NunaHRFullScreen: View {
     @EnvironmentObject private var repo: Repository
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     let onClose: () -> Void
 
     @State private var dayStart = Repository.logicalDayStart(Date())

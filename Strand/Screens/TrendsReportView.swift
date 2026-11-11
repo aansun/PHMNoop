@@ -207,7 +207,7 @@ struct TrendsReportSheet: View {
     // length/mass system, which is why both are needed to resolve it.
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.temperatureKey) private var temperatureRaw = ""
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
 
     private var units: ReportDisplayUnits {
         TrendsReportData.units(systemRaw: unitSystemRaw, temperatureRaw: temperatureRaw, effortScaleRaw: effortScaleRaw)

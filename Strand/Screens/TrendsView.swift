@@ -65,7 +65,7 @@ struct TrendsView: View {
     @State private var weekOffset = 0
 
     // Effort display scale (#268) — routes the Effort small-multiple's numbers + unit. Display-only.
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     // Trend chart style (line vs bar) — display-only; flips every trend card between the gradient line
     // and value-ramp bars. Read here at the screen root so a Settings change re-renders on return.
     @AppStorage(UnitPrefs.trendChartStyleKey) private var trendChartStyleRaw = TrendChartStyle.line.rawValue

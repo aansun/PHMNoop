@@ -42,7 +42,7 @@ struct WorkoutDetailView: View {
             override: distanceSystemRaw)
     }
 
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
     /// Loaded HR curve over the session window (5-min-ish bucket means). Empty until loaded.

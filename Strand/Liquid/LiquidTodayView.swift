@@ -2046,7 +2046,7 @@ struct LiquidTodayView: View {
 
     // The user's Effort display scale (#268), 0–100 by default or the WHOOP 0–21 axis if chosen — the SAME
     // preference the Workouts screen + Trends read, so a workout's Effort number is identical everywhere.
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
     /// The Effort this view should show: the live in-progress score when it beats the stored row, else the

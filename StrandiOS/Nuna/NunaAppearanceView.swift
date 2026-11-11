@@ -14,7 +14,7 @@ struct NunaAppearanceView: View {
     @AppStorage("appIcon.name") private var iconName = ""
     @AppStorage(UnitPrefs.systemKey) private var unitSystem = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.distanceSystemKey) private var distance = ""
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScale = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScale = EffortScale.whoop.rawValue
     @AppStorage(NunaSleepChartStyle.storageKey) private var sleepChartRaw = NunaSleepChartStyle.classic.rawValue
     @State private var iconError: String?
     @AppStorage(NunaTabBarPrefs.autoHideKey) private var barAutoHide = false
