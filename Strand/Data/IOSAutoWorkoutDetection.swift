@@ -14,10 +14,14 @@ struct AutoWorkoutSuggestion: Equatable, Sendable {
     /// When the detector could not name the sport with confidence, the three it finds most likely (best first), so the person can
     /// pick the closest one. Empty when the sport is named.
     var alternatives: [String] = []
+    /// Set when the workout was found on Strava (the activity's id, its title and its distance) rather than by the heart-rate detector.
+    var stravaId: Int? = nil
+    var stravaName: String? = nil
+    var distanceM: Double? = nil
 
     /// The same window saved under another sport (one of `alternatives`, chosen by the person).
     func withSport(_ name: String) -> AutoWorkoutSuggestion {
-        AutoWorkoutSuggestion(workout: workout, sport: name, confidence: confidence)
+        AutoWorkoutSuggestion(workout: workout, sport: name, confidence: confidence, stravaId: stravaId, stravaName: stravaName, distanceM: distanceM)
     }
 
     var startSec: Int { workout.startSec }

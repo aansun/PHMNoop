@@ -86,7 +86,8 @@ struct NunaManualWorkoutSheet: View {
                         HStack(alignment: .center, spacing: 14) {
                             Image(systemName: "sparkle").font(.nuna(size: 17, weight: .regular)).foregroundStyle(Self.info).frame(width: 26)
                             Text(detected == nil ? "Adding a past activity helps PHMN recognize and classify your future workouts more accurately."
-                                 : "PHMN detected this activity. Pick what it was and save it, or delete it if the detection was wrong.")
+                                 : (detected?.stravaId != nil ? "This workout is on Strava and your strap recorded heart rate during it. Check it and save it, or delete it if you do not want it here."
+                                    : "PHMN detected this activity. Pick what it was and save it, or delete it if the detection was wrong."))
                                 .font(.nuna(size: 14, weight: .regular)).foregroundStyle(Self.info).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         }
                         .padding(.horizontal, 16).padding(.vertical, 14).frame(maxWidth: .infinity, alignment: .leading)
@@ -196,7 +197,7 @@ struct NunaManualWorkoutSheet: View {
 
     private var header: some View {
         ZStack {
-            Text(detected != nil ? "Activity detected" : (editing == nil ? "Add activity" : "Edit activity")).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(1.2))
+            Text(detected != nil ? (detected?.stravaId != nil ? "Found on Strava" : "Activity detected") : (editing == nil ? "Add activity" : "Edit activity")).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(1.2))
                 .textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             HStack {
                 Button { dismiss() } label: {
