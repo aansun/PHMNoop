@@ -149,8 +149,20 @@ struct NunaTodayActivities: View {
         }
         .sheet(isPresented: $confirming) {
             if let s = detected {
-                NunaManualWorkoutSheet(detected: s, onDelete: { repo.dismissDetectedSuggestion(s.workout); detected = nil }) { row, _ in
+                NunaManualWorkoutSheet(detected: s, onDelete: {
+                    if let id = s.stravaId { StravaHandled.add(id); repo.dismissStravaSuggestion(s.workout) } else { repo.dismissDetectedSuggestion(s.workout) }
+                    detected = nil
+                }) { row, _ in
                     Task {
+                        // A workout from Strava keeps its title and, when the sheet had none, its distance.
+                        var row = row
+                        if s.stravaId != nil {
+                            let title = (s.stravaName ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                            row = WorkoutRow(startTs: row.startTs, endTs: row.endTs, sport: row.sport, source: row.source, durationS: row.durationS, energyKcal: row.energyKcal,
+                                             avgHr: row.avgHr, maxHr: row.maxHr, strain: row.strain, distanceM: row.distanceM ?? s.distanceM, zonesJSON: row.zonesJSON,
+                                             notes: title.isEmpty ? "Strava" : "Strava · " + title, steps: row.steps)
+                            if let id = s.stravaId { StravaHandled.add(id) }
+                        }
                         await repo.saveManualWorkout(row)
                         await repo.refresh()
                         NotificationCenter.default.post(name: .nunaWorkoutsChanged, object: nil)
@@ -173,10 +185,21 @@ struct NunaTodayActivities: View {
             detected = Calendar.current.isDate(Date(timeIntervalSince1970: TimeInterval(w.startSec)), inSameDayAs: dayStart) ? s : nil
             return
         }
+        if CommandLine.arguments.contains("--demo-strava-detected") {
+            // The same for a workout found on Strava: its row and its check, without an account.
+            let end = Int(Date().timeIntervalSince1970) - 600
+            let w = DetectedWorkout(startSec: end - 41 * 60, endSec: end, avgBpm: 112, peakBpm: 148, durationMin: 41)
+            let s = AutoWorkoutSuggestion(workout: w, sport: "Strength Training", confidence: 1, stravaId: 1, stravaName: "Evening Weight Training", distanceM: nil)
+            detected = Calendar.current.isDate(Date(timeIntervalSince1970: TimeInterval(w.startSec)), inSameDayAs: dayStart) ? s : nil
+            return
+        }
         #endif
+        // A workout found on Strava, when it began on the day on show, comes first: it knows the sport and the exact times, and the heart-rate detector is
+        // not asked at all, so the same session is not offered twice.
+        let sameDay: (AutoWorkoutSuggestion) -> Bool = { Calendar.current.isDate(Date(timeIntervalSince1970: TimeInterval($0.startSec)), inSameDayAs: dayStart) }
+        if let fromStrava = await StravaDetector.suggestion(repo: repo), sameDay(fromStrava) { detected = fromStrava; return }
         guard autoDetect, let s = await repo.autoDetectSuggestion() else { detected = nil; return }
-        let start = Date(timeIntervalSince1970: TimeInterval(s.startSec))
-        detected = Calendar.current.isDate(start, inSameDayAs: dayStart) ? s : nil
+        detected = sameDay(s) ? s : nil
     }
 
     /// "Activity detected" with a Process button: a dark outlined tile, the words, and the way into the check.
@@ -186,7 +209,7 @@ struct NunaTodayActivities: View {
                 .frame(width: 95, height: 40)
                 .background(Color.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
-            Text("Activity detected").font(.nuna(size: 12.5, weight: .heavy)).tracking(1.1).foregroundStyle(NunaPalette.textPrimary)
+            Text(s.stravaId != nil ? "Found on Strava" : "Activity detected").font(.nuna(size: 12.5, weight: .heavy)).tracking(1.1).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(2).multilineTextAlignment(.leading)
             Spacer(minLength: 6)
             Button { confirming = true } label: {

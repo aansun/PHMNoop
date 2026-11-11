@@ -11,6 +11,7 @@ struct NunaStravaView: View {
     @EnvironmentObject private var repo: Repository
     @AppStorage(StravaExperiment.enabledKey) private var enabled = false
     @AppStorage(StravaExperiment.automaticUploadKey) private var automatic = false
+    @AppStorage(StravaExperiment.autoDetectKey) private var detectFromStrava = true
     @StateObject private var model = StravaSettingsModel()
     @State private var workouts: [WorkoutRow] = []
     @State private var clientID = ""
@@ -130,6 +131,9 @@ struct NunaStravaView: View {
             }
             NunaCard(small: true) {
                 NunaToggleRow("Upload automatically", subtitle: "New GPS, treadmill and gym workouts are uploaded when they finish", systemImage: "arrow.up.circle", isOn: $automatic).padding(.vertical, 8)
+            }
+            NunaCard(small: true) {
+                NunaToggleRow("Find workouts on Strava", subtitle: "A workout on Strava that PHMN does not have, and the strap has heart rate for, shows in Today's activities to process", systemImage: "arrow.down.circle", isOn: $detectFromStrava).padding(.vertical, 8)
             }
             importCard
             VStack(alignment: .leading, spacing: 10) {

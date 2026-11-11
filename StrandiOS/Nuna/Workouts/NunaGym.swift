@@ -470,28 +470,38 @@ struct NunaGymView: View {
         .sheet(isPresented: $choosingBuild) { buildSheet }
     }
 
-    /// The sheet's choice is acted on once it has gone: a page cannot be pushed, or a second sheet raised, while it is still on its way down.
+    /// The same kind of sheet as End and save / Discard: a short sheet from the bottom with one plain row for each way in. The choice is acted on once
+    /// the sheet has gone: a page cannot be pushed, or a second sheet raised, while it is still on its way down.
     private var buildSheet: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Build a workout").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).padding(.top, 22).padding(.bottom, 8)
-            startOption("From Explore", "safari", "Pick a ready-made workout and save it to a group.") {
-                choosingBuild = false
-                tab = 2
-            }
-            startOption("Generate with Anya", "sparkles", "Describe your goal and Anya builds the program.") {
+        VStack(spacing: 12) {
+            buildOption("safari", "From Explore") { choosingBuild = false; tab = 2 }
+            buildOption("sparkles", "Generate with Anya") {
                 choosingBuild = false
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { buildingWithAnya = true }
             }
-            startOption("Build my own", "square.and.pencil", "Choose the exercises, sets and reps yourself.") {
+            buildOption("square.and.pencil", "Build my own") {
                 choosingBuild = false
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { pushWorkout(.program("new")) }
             }
-            Spacer(minLength: 0)
         }
-        .padding(.horizontal, NunaSpacing.screenH)
+        .padding(.horizontal, NunaSpacing.screenH).padding(.top, 34).frame(maxHeight: .infinity, alignment: .top)
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
-        .nunaSheetChrome(detents: [.height(360)])
+        .nunaSheetChrome(detents: [.height(298)])
+    }
+
+    private func buildOption(_ icon: String, _ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 18) {
+                Image(systemName: icon).font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).frame(width: 34)
+                Text(title).font(.nuna(size: 16, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 22).frame(height: 64)
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     /// A bare icon at the right end of the My Program title.

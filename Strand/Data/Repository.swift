@@ -3391,6 +3391,21 @@ final class Repository: ObservableObject {
         autoDetectDismissedSpans = prunedAutoDetectSpans(spans, now: Int(Date().timeIntervalSince1970))
     }
 
+    /// Has this suggestion been dismissed already (its exact span, or a span it overlaps from the older overlap list)? Used for the suggestions that do not come from
+    /// `autoDetectSuggestion`, such as a workout found on Strava, so one dismissal rule covers both.
+    func isAutoDetectDismissed(_ s: AutoWorkoutSuggestion) -> Bool {
+        Self.selectAutoDetectSuggestion([s], autoDismissedTokens: autoDetectDismissedSpans, detectedDismissedTokens: dismissedDetectedSpans) == nil
+    }
+
+    /// DISMISS a workout found on Strava. The exact span is recorded as for any suggestion, and also in the overlap list, so the heart-rate detector does
+    /// not bring the same session back under its own start and end.
+    func dismissStravaSuggestion(_ w: DetectedWorkout) {
+        dismissDetectedSuggestion(w)
+        let token = "\(w.startSec):\(w.endSec)"
+        var spans = dismissedDetectedSpans
+        if !spans.contains(token) { spans.append(token); dismissedDetectedSpans = spans }
+    }
+
     // MARK: - Workout detail (read-only helpers, additive) , #410
     //
     // The workout-detail screen needs two reads over a single session's [startTs, endTs] window:
