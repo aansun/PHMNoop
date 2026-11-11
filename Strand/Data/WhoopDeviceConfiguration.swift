@@ -14,6 +14,7 @@ struct WhoopDeviceConfiguration: Equatable {
     let motionAwareWake: Bool
     let effortScaleRaw: String
     let banisterEffort: Bool
+    let autoDetectWorkouts: Bool
     let stressPersonalBaseline: Bool
     let powerSaving: Bool
     let powerSavingBatteryPct: Int
@@ -30,11 +31,13 @@ struct WhoopDeviceConfiguration: Equatable {
             continuousHrvOvernightOnly: true,
             hrvWindowRaw: HrvWindow.whole.rawValue,
             sleepStagingV2: true,
-            // WHOOP 5/MG has richer motion records; the engine still self-gates when a night is sparse.
-            motionAwareWake: family == .whoop5,
+            // Off for both: it only removes wake time, and PHMN's own nights already read 93.8% sleep efficiency against
+            // WHOOP's 88.1% (Nov 2026), so it would move sleep further from WHOOP, not closer.
+            motionAwareWake: false,
             // The WHOOP 0-21 Day Strain axis, as in the WHOOP app (display-only; the stored value stays 0-100).
             effortScaleRaw: EffortScale.whoop.rawValue,
             banisterEffort: PuffinExperiment.banisterEffortDefault,
+            autoDetectWorkouts: PuffinExperiment.autoDetectWorkoutsDefault,
             stressPersonalBaseline: false,
             // WHOOP 4.0 has materially less battery headroom than 5.0/MG, so protect its last
             // charge without slowing normal sync on the longer-lived generation.
@@ -43,5 +46,24 @@ struct WhoopDeviceConfiguration: Equatable {
             pauseHrvOnLowBattery: true,
             lowRefresh: false
         )
+    }
+
+    /// Writes every value of this profile to the preferences the app reads, the same keys the Settings toggles use, so every
+    /// screen that watches one of them follows. The caller then re-arms the strap stream, power saving and the scoring pass.
+    func write(to d: UserDefaults = .standard) {
+        d.set(modelRaw, forKey: "selectedWhoopModel")
+        d.set(continuousHrv, forKey: PuffinExperiment.keepRealtimeForDataKey)
+        d.set(continuousHrvOvernightOnly, forKey: PuffinExperiment.continuousHrvOvernightOnlyKey)
+        d.set(hrvWindowRaw, forKey: UnitPrefs.hrvWindowKey)
+        d.set(sleepStagingV2, forKey: PuffinExperiment.experimentalSleepV2Key)
+        d.set(motionAwareWake, forKey: PuffinExperiment.motionAwareWakeKey)
+        d.set(effortScaleRaw, forKey: UnitPrefs.effortScaleKey)
+        d.set(banisterEffort, forKey: PuffinExperiment.banisterEffortKey)
+        d.set(autoDetectWorkouts, forKey: PuffinExperiment.autoDetectWorkoutsKey)
+        d.set(stressPersonalBaseline, forKey: PuffinExperiment.stressPersonalBaselineKey)
+        d.set(powerSaving, forKey: PuffinExperiment.powerSavingKey)
+        d.set(powerSavingBatteryPct, forKey: PuffinExperiment.powerSavingBatteryPctKey)
+        d.set(!pauseHrvOnLowBattery, forKey: PuffinExperiment.pauseHrvDisabledKey)
+        d.set(lowRefresh, forKey: PuffinExperiment.lowRefreshKey)
     }
 }

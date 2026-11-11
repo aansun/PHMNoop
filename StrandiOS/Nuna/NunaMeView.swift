@@ -49,6 +49,8 @@ enum NunaMeRoute: Hashable {
     case automations, doubleTap, presence, sessionCues, sedentary, shortcuts, alarm
     case data, backup, imports, appleHealth, strava, hevy, environment
     case advanced, experiments, testCentre, about
+    /// The settings closest to the WHOOP app, with what differs from them and one button to use them.
+    case recommended
     case search
     case applications
     /// The new Settings structure: the profile page, the App Settings list, the levels, and the two Support pages.
@@ -90,6 +92,7 @@ extension View {
             case .hevy: NunaHevyView()
             case .environment: NunaEnvironmentView()
             case .advanced: NunaAdvancedView()
+            case .recommended: NunaRecommendedView()
             case .experiments: NunaExperimentsView()
             case .testCentre: NunaTestCentreView()
             case .about: NunaAboutView()

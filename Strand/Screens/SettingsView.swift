@@ -1749,6 +1749,7 @@ struct SettingsView: View {
             motionAwareWake: motionAwareWakeEnabled,
             effortScaleRaw: effortScaleRaw,
             banisterEffort: banisterEffortEnabled,
+            autoDetectWorkouts: autoDetectWorkoutsEnabled,
             stressPersonalBaseline: stressPersonalBaselineEnabled,
             powerSaving: powerSavingEnabled,
             powerSavingBatteryPct: powerSavingBatteryPct,
@@ -1800,6 +1801,7 @@ struct SettingsView: View {
         motionAwareWakeEnabled = recommended.motionAwareWake
         effortScaleRaw = recommended.effortScaleRaw
         banisterEffortEnabled = recommended.banisterEffort
+        autoDetectWorkoutsEnabled = recommended.autoDetectWorkouts
         stressPersonalBaselineEnabled = recommended.stressPersonalBaseline
         powerSavingEnabled = recommended.powerSaving
         powerSavingBatteryPct = recommended.powerSavingBatteryPct
