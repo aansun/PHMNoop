@@ -95,14 +95,20 @@ enum PuffinExperiment {
     /// HRR scores 0.00 under Edwards and about 43 under Banister; that is the difference between
     /// under-rating intermittent work and not seeing it at all.
     ///
-    /// Default OFF, and it must stay a choice rather than become the default: it re-scores every day in
-    /// the window against a different recipe, so flipping it silently would move a headline metric's
-    /// whole history. Each method maps a theoretical maximum day to exactly 100 via its own log
-    /// denominator (`StrainScorer.logMapDenominator`), so the two are on the same axis and switching does
-    /// not rescale the axis under the user. Mirrors the Android `NoopPrefs.KEY_BANISTER_EFFORT`.
+    /// Default ON (Nov 2026) for anyone who has not chosen: scored against the WHOOP app's own Day Strain
+    /// on eight days, Edwards read zero on six of them (bias -5.8 of 21) and Banister, with its sedentary
+    /// floor calibrated (`StrainScorer.banisterSedentaryHRR`), came within 2.4. A person who has switched
+    /// it either way keeps their choice: the stored value wins over this default. It re-scores every day
+    /// in the window against a different recipe; each method maps a theoretical maximum day to exactly 100
+    /// via its own log denominator (`StrainScorer.logMapDenominator`), so the two are on the same axis
+    /// and switching does not rescale the axis under the user. The Android `NoopPrefs.KEY_BANISTER_EFFORT`
+    /// still defaults to OFF with the old floor: that side has not been changed yet.
     static let banisterEffortKey = "noopBanisterEffort"
+    static let banisterEffortDefault = true
 
-    static var banisterEffortEnabled: Bool { UserDefaults.standard.bool(forKey: banisterEffortKey) }
+    static var banisterEffortEnabled: Bool {
+        (UserDefaults.standard.object(forKey: banisterEffortKey) as? Bool) ?? banisterEffortDefault
+    }
 
     /// The TRIMP recipe every Effort computation on this device should use.
     static var effortMethod: StrainScorer.Method { banisterEffortEnabled ? .banister : .edwards }

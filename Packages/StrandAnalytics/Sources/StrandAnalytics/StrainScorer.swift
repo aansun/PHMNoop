@@ -78,7 +78,20 @@ public enum StrainScorer {
     /// not to erase genuine light activity, high enough that ordinary sitting nets to nothing. Resting HR
     /// is measured asleep, so a waking body sits above it even at complete rest — precisely the gap this
     /// closes. Treat it as calibratable, not as physiology.
-    public static let banisterSedentaryHRR: Double = 0.10
+    ///
+    /// CALIBRATION (one wearer, 8 days, Nov 2026): 0.10 was the first guess and it was too low. Scoring
+    /// the heart-rate curves of eight WHOOP-app days with this recipe against the Day Strain the WHOOP
+    /// app showed for the same days, the quiet days (WHOOP 1.6 to 4.4 of 21) came out at 8.5 to 10.8
+    /// with 0.10, because a waking desk day sits near 15 to 20% of reserve, not 10%. Over those eight
+    /// days the mean absolute error against WHOOP fell from 3.7 (floor 0.10) to 2.4 (0.18) and 2.1
+    /// (0.21); leaving one day out at a time, the best floor stayed at 0.21 to 0.23. The curves were read
+    /// off screenshots, which puts the mean heart rate about 3 bpm high and so pushes the best floor up,
+    /// so the true optimum is a little below 0.21; 0.18 allows for that. Workouts are scored through the
+    /// same recipe and a walk scores best with a floor of 0.10 or lower, but at 0.18 four walks still
+    /// land within about 0.7 of WHOOP's. Strength sessions stay about 4 to 5 points under WHOOP's at any
+    /// floor: WHOOP adds a muscular load that a heart-rate-only recipe cannot see. One wearer and eight
+    /// days: a place to start, not a fit to trust. Pinned by `StrainWhoopCalibrationTests`.
+    public static let banisterSedentaryHRR: Double = 0.18
 
     /// TRIMP per minute at `banisterSedentaryHRR` — the rate subtracted from every day.
     static func banisterBaselineRatePerMinute(b: Double) -> Double {

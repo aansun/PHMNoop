@@ -11,7 +11,7 @@ struct NunaAdvancedView: View {
     @AppStorage(PuffinExperiment.keepRealtimeForDataKey) private var continuous = false
     @AppStorage(PuffinExperiment.continuousHrvOvernightOnlyKey) private var overnight = true
     @AppStorage(UnitPrefs.hrvWindowKey) private var window = HrvWindow.whole.rawValue
-    @AppStorage(PuffinExperiment.banisterEffortKey) private var banister = false
+    @AppStorage(PuffinExperiment.banisterEffortKey) private var banister = PuffinExperiment.banisterEffortDefault
     @AppStorage(PuffinExperiment.powerSavingKey) private var powerSaving = false
 
     var body: some View {
