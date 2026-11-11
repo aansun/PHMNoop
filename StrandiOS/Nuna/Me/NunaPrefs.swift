@@ -18,7 +18,7 @@ struct NunaUnitsView: View {
     @AppStorage(UnitPrefs.distanceSystemKey) private var distance = ""
     @AppStorage(UnitPrefs.temperatureKey) private var temperature = ""
     @AppStorage(UnitPrefs.skinTempDisplayKey) private var skinTemp = ""
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScale = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScale = EffortScale.whoop.rawValue
 
     private var bodyUnits: UnitSystem { UnitSystem(rawValue: system) ?? .metric }
     private var distUnits: UnitSystem { UnitPrefs.resolveDistance(system: bodyUnits, override: distance) }
@@ -105,7 +105,7 @@ struct NunaFeaturesView: View {
 
 /// What happens around a workout: whether the app suggests one by itself, the heart-rate zones, and how the phone behaves while one is recorded.
 struct NunaActivitySettingsView: View {
-    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = false
+    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = PuffinExperiment.autoDetectWorkoutsDefault
     @AppStorage("workoutKeepScreenOn") private var keepOn = false
     @AppStorage(UnitPrefs.liveActivityKey) private var liveActivity = true
     @AppStorage(LiveActivityController.designKey) private var liveDesign = "standard"

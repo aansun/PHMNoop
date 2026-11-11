@@ -48,7 +48,7 @@ struct WorkoutsView: View {
     }
 
     // Effort display scale (#268) — drives the effort hero's read-out. Display-only.
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
     /// All loaded sessions, newest first. Seedable for previews. #797: this holds only the rows inside the

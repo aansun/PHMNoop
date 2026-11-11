@@ -20,7 +20,7 @@ struct IntelligenceView: View {
     @State private var range: IntelRange = .month
 
     // Effort display scale (#268) — routes every Effort value/label on this screen. Display-only.
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
     var body: some View {

@@ -5,7 +5,7 @@ import StrandDesign
 /// The shortcut from the top right of Workouts: the two switches that decide what happens around a workout. Auto-detect and the
 /// Strava upload are the same settings as in Me, so changing them here changes them there.
 struct NunaWorkoutSettingsView: View {
-    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = false
+    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = PuffinExperiment.autoDetectWorkoutsDefault
     @AppStorage(StravaExperiment.enabledKey) private var strava = false
     @AppStorage(AudioCoachingPreferences.enabledKey) private var audioCoach = false
 

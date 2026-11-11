@@ -239,7 +239,7 @@ struct NunaProfileView: View {
     @EnvironmentObject private var router: NavRouter
     @EnvironmentObject private var updateStore: UpdateStore
     @State private var showInbox = false
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @State private var workouts: [WorkoutRow] = []
     @State private var fitnessAge: Double?
     @State private var highlightsPeriod = Period.all

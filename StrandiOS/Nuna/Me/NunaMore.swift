@@ -8,7 +8,7 @@ private func rescore(_ model: AppModel) { Task { await model.intelligence.analyz
 
 struct NunaAdvancedView: View {
     @EnvironmentObject private var model: AppModel
-    @AppStorage(PuffinExperiment.keepRealtimeForDataKey) private var continuous = false
+    @AppStorage(PuffinExperiment.keepRealtimeForDataKey) private var continuous = PuffinExperiment.keepRealtimeForDataDefault
     @AppStorage(PuffinExperiment.continuousHrvOvernightOnlyKey) private var overnight = true
     @AppStorage(UnitPrefs.hrvWindowKey) private var window = HrvWindow.whole.rawValue
     @AppStorage(PuffinExperiment.banisterEffortKey) private var banister = PuffinExperiment.banisterEffortDefault

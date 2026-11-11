@@ -99,7 +99,7 @@ struct NunaAnyaFloating: ViewModifier {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @EnvironmentObject private var coach: AICoachEngine
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @StateObject private var model = NunaAnyaFloatingModel()
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @State private var open = false

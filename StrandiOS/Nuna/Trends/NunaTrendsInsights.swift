@@ -368,7 +368,7 @@ struct NunaCompareView: View {
     @StateObject private var store = NunaSignalStore()
     @State private var picked: [String] = ["recovery", "sleep_performance"]
     @State private var selectedDay: String?
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @State private var range = 30
     @State private var shiftBack = false
     @State private var saved: [SavedComparison] = SavedComparison.load()
@@ -568,7 +568,7 @@ struct NunaCompareView: View {
 struct NunaExploreView: View {
     @EnvironmentObject private var repo: Repository
     @StateObject private var store = NunaSignalStore()
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @State private var query = ""
     @State private var filter = "all"
     @State private var favourites: Set<String> = Set(UserDefaults.standard.stringArray(forKey: "nuna.explore.fav") ?? [])

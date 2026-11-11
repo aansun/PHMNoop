@@ -169,7 +169,7 @@ struct NunaTodayView: View {
     @AppStorage(DashboardCardPrefs.selectionKey) var dashboardCardsRaw = ""
     @AppStorage(NunaDashPrefs.key) var myDashboardRaw = ""
     @AppStorage(HostedCardPrefs.selectionKey) var hostedCardsRaw = ""
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
 
     @StateObject var model = NunaTodayModel()
     /// The year of sleep, charge and effort figures the My Dashboard cards that open a trend page show.

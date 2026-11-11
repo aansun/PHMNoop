@@ -13,7 +13,7 @@ struct NunaAnyaTodayCard: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
     @EnvironmentObject private var appModel: AppModel
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     /// The weather and air, when they are on: Anya reads them with the plan and after a session.
     @ObservedObject private var environment = EnvironmentStore.shared
 

@@ -296,7 +296,7 @@ struct NunaHighlightsCard: View {
     @AppStorage(NunaPlanStore.key) private var planRaw = ""
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var appModel: AppModel
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @AppStorage(NunaHighlightPrefs.dismissedKey) private var dismissedRaw = ""
     @State private var dragX: CGFloat = 0
     /// Whether yesterday already has journal answers. Starts true so the link stays hidden until the check has run.

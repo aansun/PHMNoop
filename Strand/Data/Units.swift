@@ -120,7 +120,7 @@ enum UnitPrefs {
     /// mirrors Android's effortDisplayFactor helper so digest sentences match the charts on both.
     static func currentEffortDisplayFactor() -> Double {
         let raw = UserDefaults.standard.string(forKey: effortScaleKey) ?? ""
-        return raw == EffortScale.whoop.rawValue ? 0.21 : 1.0
+        return raw == EffortScale.whoop.rawValue ? 1.0 : 0.21
     }
 
     /// Whether the live-HR Live Activity (Lock Screen + Dynamic Island) may show, iOS only (#336).
@@ -153,9 +153,10 @@ enum UnitPrefs {
         UnitSystem(rawValue: raw) ?? system
     }
 
-    /// Resolve the stored Effort-scale raw value, defaulting to NOOP's native 0–100 axis.
+    /// Resolve the stored Effort-scale raw value, defaulting to WHOOP's 0–21 Day Strain axis (Nov 2026: the defaults follow the
+    /// WHOOP app, and the iOS root already seeded this value on first launch). Someone who chose 0–100 keeps it: the stored value wins.
     static func resolveEffortScale(_ raw: String) -> EffortScale {
-        EffortScale(rawValue: raw) ?? .hundred
+        EffortScale(rawValue: raw) ?? .whoop
     }
 }
 

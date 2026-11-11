@@ -12,7 +12,7 @@ struct NunaTrainingLoadView: View {
 
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @StateObject private var m = NunaWorkoutsModel()
     @State private var weeks = 5
     @State private var zoneMinutes: [Double] = [0, 0, 0, 0, 0]

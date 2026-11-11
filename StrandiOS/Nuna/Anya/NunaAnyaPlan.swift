@@ -57,7 +57,7 @@ struct NunaAnyaPlanView: View {
     @EnvironmentObject private var profile: ProfileStore
     @EnvironmentObject private var router: NavRouter
     @EnvironmentObject private var coach: AICoachEngine
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @State private var plan: DayPlan.Plan?
     @State private var charge: Int?
     @State private var yesterdayEffort: Double?

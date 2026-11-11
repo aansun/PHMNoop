@@ -8,7 +8,7 @@ import WhoopStore
 /// suggestion. It only ever suggests; saving or dismissing is always the wearer's choice.
 struct NunaAutoDetectView: View {
     @EnvironmentObject private var repo: Repository
-    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var on = false
+    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var on = PuffinExperiment.autoDetectWorkoutsDefault
     @State private var suggestion: AutoWorkoutSuggestion?
 
     var body: some View {

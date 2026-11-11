@@ -140,7 +140,7 @@ struct WeeklyDigestContent: View {
 
     /// The Effort display scale (#268), so the Week-in-review Effort gauge matches the Today tile
     /// and the Trends small-multiple instead of being stuck on "of 100". Charge/Rest stay 0–100.
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
     #if os(iOS)
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -507,7 +507,7 @@ private struct DigestScoreCard: View {
     let accessibility: String
     /// The Effort display scale (#268). Only consulted for the Effort card; Charge/Rest are genuine
     /// 0–100 scores and ignore it, keeping their "of 100" caption and integer mean.
-    var effortScale: EffortScale = .hundred
+    var effortScale: EffortScale = .whoop
     let presentation: Presentation
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

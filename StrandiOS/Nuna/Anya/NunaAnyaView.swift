@@ -66,7 +66,7 @@ struct NunaAnyaView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @EnvironmentObject private var router: NavRouter
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @StateObject private var memory = CoachMemoryStore()
     @StateObject private var voice = CoachVoiceInput()
     /// The weather and air, when they are on: Anya's tab shows what she reads from them.

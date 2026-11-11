@@ -33,7 +33,7 @@ extension View {
 /// Compare and Insights. Every figure is computed from the stored daily series.
 struct NunaTrendsView: View {
     @EnvironmentObject private var repo: Repository
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @StateObject private var m = NunaTrendsModel()
     @State private var range = 30
     /// How many whole windows back the screen is looking: 0 is the window ending today.

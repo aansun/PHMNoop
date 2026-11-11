@@ -572,7 +572,7 @@ struct NunaAnyaBriefView: View {
     @EnvironmentObject private var coach: AICoachEngine
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @State private var enabled = CoachBriefScheduler.isEnabled
     @State private var minutes = CoachBriefScheduler.timeMinutes
     @State private var generating = false

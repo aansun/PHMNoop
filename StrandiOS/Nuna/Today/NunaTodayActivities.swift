@@ -31,7 +31,7 @@ struct NunaTodayActivities: View {
     @State private var night: (onset: Date, wake: Date)?
     @State private var naps: [(dayKey: String, nap: NunaNap)] = []
     /// A workout the detector found that is not logged yet (Auto-detect on): shown as its own row until it is saved or deleted.
-    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = false
+    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = PuffinExperiment.autoDetectWorkoutsDefault
     @State private var detected: AutoWorkoutSuggestion?
     @State private var confirming = false
     /// Ideas committed to in the Daily Outlook, shown after today's rows until they are added, started or removed.

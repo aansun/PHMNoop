@@ -90,7 +90,7 @@ struct NunaWorkoutHeaderCard: View {
     let source: LocalizedStringKey
     let strain: Double?
     let dayEffort: Double?
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 

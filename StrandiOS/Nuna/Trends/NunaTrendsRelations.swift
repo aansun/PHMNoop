@@ -7,7 +7,7 @@ import StrandAnalytics
 
 struct NunaChargeEffortView: View {
     @EnvironmentObject private var repo: Repository
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @StateObject private var m = NunaTrendsModel()
     @State private var range = 30
     @State private var selected: String?
