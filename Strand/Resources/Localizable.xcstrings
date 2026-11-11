@@ -9239,5 +9239,14 @@
  "Raw heartbeat intervals (R-R)": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Interval detak jantung mentah (R-R)"}}}},
  "PPG signal": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sinyal PPG"}}}},
  "Motion data": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Data gerak"}}}},
- "Your health data is never attached to a feedback report.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Data kesehatanmu tidak pernah dilampirkan pada laporan masukan."}}}}
+ "Your health data is never attached to a feedback report.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Data kesehatanmu tidak pernah dilampirkan pada laporan masukan."}}}},
+ "Open source licenses": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lisensi sumber terbuka"}}}},
+ "Disclaimer": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Penafian"}}}},
+ "Privacy policy": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kebijakan privasi"}}}},
+ "Terms of use": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ketentuan penggunaan"}}}},
+ "This document is not in this build.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dokumen ini tidak ada di build ini."}}}},
+ "What PHMN is built on": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Yang menjadi dasar PHMN"}}}},
+ "Not affiliated with WHOOP, not a medical device": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak berafiliasi dengan WHOOP, bukan perangkat medis"}}}},
+ "How your data is kept": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Bagaimana datamu disimpan"}}}},
+ "The terms for using PHMN": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ketentuan untuk memakai PHMN"}}}}
 }, "version":"1.0" }

@@ -33,6 +33,8 @@ struct NunaMeView: View {
                     NunaSettingsLink(route: .feedback, icon: "bubble.left.and.bubble.right", title: "Feedback", subtitle: "Tell us what you think")
                     NunaSettingsLink(route: .about, icon: NunaIcons.about, title: "About")
                 }
+                Text(verbatim: NunaAppVersion.text).font(.nuna(size: 13, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                    .frame(maxWidth: .infinity).padding(.top, 30)
             }
             .padding(.horizontal, 20).padding(.top, 14).padding(.bottom, 130)
         }
@@ -49,6 +51,8 @@ enum NunaMeRoute: Hashable {
     case automations, doubleTap, presence, sessionCues, sedentary, shortcuts, alarm
     case data, backup, imports, appleHealth, strava, hevy, environment
     case advanced, experiments, testCentre, about
+    /// Under About: the licences of what PHMN is built on, one licence, and the project documents (`NunaLegalDoc` raw values).
+    case licenses, license(String), legal(String)
     /// The settings closest to the WHOOP app, with what differs from them and one button to use them.
     case recommended
     case search
@@ -96,6 +100,9 @@ extension View {
             case .experiments: NunaExperimentsView()
             case .testCentre: NunaTestCentreView()
             case .about: NunaAboutView()
+            case .licenses: NunaLicensesView()
+            case .license(let id): NunaLicenseDetailView(id: id)
+            case .legal(let name): NunaLegalDocView(doc: NunaLegalDoc(rawValue: name) ?? .terms)
             case .search: NunaMeSearchView()
             case .applications: NunaApplicationsView()
             case .profile: NunaProfileView()

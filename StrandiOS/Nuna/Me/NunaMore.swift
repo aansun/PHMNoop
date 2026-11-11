@@ -101,34 +101,4 @@ struct NunaExperimentsView: View {
 }
 
 // MARK: - About (About.dc)
-
-/// Who made the app and under which terms. What has a page of its own lives there and is not listed again: What's new and How it works are in the
-/// Support section of Settings, the strap log, models and connection help in the Devices help, the bug report in the Test Centre.
-struct NunaAboutView: View {
-    private var version: String { UpdateWatch.installedVersion }
-    private var build: String { (Bundle.main.infoDictionary?["CFBundleVersion"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? "–" }
-
-    var body: some View {
-        NunaDetailScreen("About") {
-            VStack(spacing: 14) {
-                PHMNMark(.puck, size: 72, color: NunaPalette.textPrimary)
-                PHMNWordmark(height: 16, color: NunaPalette.textPrimary).accessibilityLabel(Text("PHMN"))
-                Text(verbatim: String(localized: "App version: \(version) (build \(build))")).font(.nuna(size: 13.5, weight: .semibold)).tracking(0)
-                    .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-            .frame(maxWidth: .infinity).padding(.top, 18).padding(.bottom, 10)
-            NunaSettingsGroup {
-                Link(destination: URL(string: "https://github.com/aansun/PHMNoop")!) { NunaListRow("Report a problem", description: "Open on GitHub", systemImage: "arrow.up.right.square", showsChevron: true) }.buttonStyle(.plain)
-                NunaDivider()
-                NavigationLink { NunaLicensesView() } label: { NunaListRow("Open-source notices", description: "MuscleMap, free-exercise-db, openGym and fonts", systemImage: "doc.plaintext", showsChevron: true) }.buttonStyle(.plain)
-            }
-            VStack(spacing: 12) {
-                Text("PHMN is an internal fork of NOOP by ryanbr, with an iOS layer, Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for fitness age.")
-                Text("Not a medical device. It does not diagnose or detect disease and does not replace a professional. Not affiliated with WHOOP, Inc.")
-            }
-            .font(.nuna(size: 12.5, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textMuted).multilineTextAlignment(.center).textCase(nil)
-            .fixedSize(horizontal: false, vertical: true).padding(.horizontal, 6).padding(.top, 4)
-        }
-    }
-}
 #endif
