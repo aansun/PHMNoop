@@ -466,15 +466,18 @@ struct NunaProgramDetailView: View {
         ZStack {
             HStack {
                 Button { dismiss() } label: {
-                    Image(systemName: "chevron.left").font(.nuna(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44)
+                    // The whole 48 pt square takes the touch, not only the thin strokes of the arrow.
+                    Image(systemName: "chevron.left").font(.nuna(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        .frame(width: 48, height: 48).contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
                 Spacer()
                 menu
             }
             Text("Program gym").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                .accessibilityAddTraits(.isHeader)
+                .accessibilityAddTraits(.isHeader).allowsHitTesting(false)
         }
-        .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8)
+        .padding(.horizontal, NunaSpacing.screenH - 8).padding(.top, 8)
+        .zIndex(1)
     }
 
     private var menu: some View {
