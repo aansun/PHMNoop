@@ -12,9 +12,7 @@ struct ExperienceView: View {
     private var current: ExperienceMode { ExperienceMode(rawValue: experienceRaw) ?? .nuna }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: NunaSpacing.section) {
-                NunaHeader("Experience", onBack: { dismiss() })
+        NunaDetailScreen("Experience") {
                 Text("Pick the look of the whole app. Your data, scores and settings stay the same.")
                     .font(.nuna(size: 13.5, weight: .semibold))
                     .foregroundStyle(NunaPalette.textSecondary)
@@ -40,13 +38,7 @@ struct ExperienceView: View {
                             .fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                 }
-            }
-            .padding(.horizontal, NunaSpacing.screenH)
-            .padding(.top, 14)
-            .padding(.bottom, 24)
         }
-        .nunaScreenBackground()
-        .toolbar(.hidden, for: .navigationBar)
         .sheet(item: $pending) { mode in
             ExperienceConfirmSheet(target: mode) {
                 experienceRaw = mode.rawValue
@@ -65,7 +57,7 @@ struct ExperienceView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 10) {
                         Text(verbatim: mode.displayName)
-                            .font(.nuna(size: NunaTypeSize.h2, weight: .heavy))
+                            .font(.nuna(size: 16, weight: .heavy))
                             .foregroundStyle(NunaPalette.textPrimary)
                         NunaChip(tag)
                         Spacer(minLength: 0)

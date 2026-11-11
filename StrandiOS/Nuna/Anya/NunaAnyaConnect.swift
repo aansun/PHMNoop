@@ -72,7 +72,7 @@ struct NunaAnyaConnectView: View {
         HStack(spacing: 14) {
             NunaIconTile(icon)
             VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: subtitle).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 if let badge { NunaChip(verbatim: badge).fixedSize().padding(.top, 2) }
             }
@@ -127,7 +127,7 @@ struct NunaAnyaKeyView: View {
                 Text(verbatim: e).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             Button { save() } label: {
-                Text("Save and start").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                Text("Save and start").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain).disabled(key.trimmingCharacters(in: .whitespaces).isEmpty && !saved).opacity(key.trimmingCharacters(in: .whitespaces).isEmpty && !saved ? 0.4 : 1)
             if saved {
                 Button(role: .destructive) { coach.clearKey() } label: {
@@ -243,7 +243,7 @@ struct NunaAnyaCustomView: View {
                 Text(testing ? "Testing…" : "Test connection").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain).disabled(testing || urlEmpty)
             Button { save() } label: {
-                Text("Save and start").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                Text("Save and start").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain).disabled(urlEmpty).opacity(urlEmpty ? 0.4 : 1)
         }
         .scrollDismissesKeyboard(.interactively)
@@ -298,7 +298,7 @@ struct NunaAnyaChatGPTView: View {
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
                 Button { auth.openVerificationPage() } label: {
-                    Text("Open the sign-in page").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                    Text("Open the sign-in page").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
                 Button { UIPasteboard.general.string = code.userCode } label: {
                     Text("Copy the code").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -316,7 +316,7 @@ struct NunaAnyaChatGPTView: View {
                         Text("Sign in with your ChatGPT account using a one-time device code, without pasting an API key.")
                             .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         Button { auth.startLogin() } label: {
-                            Text(auth.isBusy ? "Getting a code…" : "Get a device code").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                            Text(auth.isBusy ? "Getting a code…" : "Get a device code").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain).disabled(auth.isBusy)
                     }
                 }

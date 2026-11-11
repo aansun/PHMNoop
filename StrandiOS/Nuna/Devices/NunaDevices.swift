@@ -13,7 +13,8 @@ enum NunaDeviceRoute: Hashable {
 extension View {
     func nunaDeviceDestinations() -> some View {
         navigationDestination(for: NunaDeviceRoute.self) { r in
-            switch r {
+            // The device pages sit under Settings > Device Settings: the Settings page title and type scale.
+            Group { switch r {
             case .detail(let id): NunaDeviceDetailView(deviceId: id)
             case .battery: NunaDeviceBatteryView()
             case .sync: NunaDeviceSyncView()
@@ -22,7 +23,8 @@ extension View {
             case .repair: NunaDeviceRepairView()
             case .log: NunaDeviceLogView()
             case .models: NunaDeviceModelsView()
-            }
+            } }
+            .environment(\.nunaSettingsPage, true)
         }
     }
 }
