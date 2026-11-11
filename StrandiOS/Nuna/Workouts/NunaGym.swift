@@ -261,6 +261,7 @@ struct NunaGymView: View {
     @State private var loaded = false
     @State private var picking = false
     @State private var choosingStart = false
+    @State private var buildChoiceOpen = false
     @State private var buildingWithAnya = false
     @State private var groupListOpen = false
     @ObservedObject private var groupsModel = NunaProgramGroupsModel.shared
@@ -362,20 +363,21 @@ struct NunaGymView: View {
     }
 
     private func startOption(_ title: LocalizedStringKey, _ icon: String, _ detail: LocalizedStringKey, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 14) {
-                Image(systemName: icon).font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 28)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                    Text(detail).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).multilineTextAlignment(.leading)
-                }
-                Spacer(minLength: 0)
+        Button(action: action) { optionLabel(title, icon, detail) }.buttonStyle(.plain)
+    }
+
+    private func optionLabel(_ title: LocalizedStringKey, _ icon: String, _ detail: LocalizedStringKey) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 28)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Text(detail).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).multilineTextAlignment(.leading)
             }
-            .padding(.horizontal, 18).frame(height: 76)
-            .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-            .contentShape(Rectangle())
+            Spacer(minLength: 0)
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 18).frame(height: 76)
+        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+        .contentShape(Rectangle())
     }
 
     // MARK: Programs
@@ -455,14 +457,30 @@ struct NunaGymView: View {
         .buttonStyle(.plain)
     }
 
-    /// The same, by hand.
+    /// The same, by hand, or from a ready-made workout: the button opens the two ways in under it.
     private var buildButton: some View {
-        NavigationLink(value: NunaWorkoutRoute.program("new")) {
-            Text("Build a workout").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+        VStack(spacing: 10) {
+            Button { withAnimation(.easeOut(duration: 0.2)) { buildChoiceOpen.toggle() } } label: {
+                HStack(spacing: 8) {
+                    Text("Build a workout").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    Image(systemName: buildChoiceOpen ? "chevron.up" : "chevron.down").font(.nuna(size: 13, weight: .bold))
+                }
                 .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54)
                 .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            if buildChoiceOpen {
+                Button { buildChoiceOpen = false; tab = 2 } label: {
+                    optionLabel("From Explore", "safari", "Pick a ready-made workout and save it to a group.")
+                }
+                .buttonStyle(.plain)
+                NavigationLink(value: NunaWorkoutRoute.program("new")) {
+                    optionLabel("Build my own", "square.and.pencil", "Choose the exercises, sets and reps yourself.")
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .buttonStyle(.plain)
     }
 
     /// A bare icon at the right end of the My Program title.
