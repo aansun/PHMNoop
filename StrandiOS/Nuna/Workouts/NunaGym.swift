@@ -287,11 +287,10 @@ struct NunaGymView: View {
             weekSection
             recordsSection
         case 1:
-            // Start a workout, then My Workouts: build one with Anya or by hand, then the list. Anya's own note about training comes last.
+            // Start a workout, then My Workouts: Anya's read of today, the way to build a workout, then the list.
             topActions
             NunaDivider()
             programsSection
-            NunaGymAnyaCard(model: anyaModel)
         default:
             NunaGymExploreView(embedded: true)
         }
@@ -418,7 +417,7 @@ struct NunaGymView: View {
             NunaTitleRow(title: "My Workouts") {
                 Button { askForGroup(.new(programId: nil)) } label: { programIcon("folder.badge.plus") }.buttonStyle(.plain).accessibilityLabel(Text("New group"))
             }
-            generateCard
+            NunaGymAnyaCard(model: anyaModel)
             buildButton
             NunaDivider().padding(.vertical, 6)
             VStack(alignment: .leading, spacing: 12) {
@@ -432,30 +431,6 @@ struct NunaGymView: View {
                 ForEach(inGroup, id: \.id) { p in programRow(p) }
             }
         }
-    }
-
-    /// The card that builds a program with Anya: a violet-to-teal outline, what it does, and the way in.
-    private var generateCard: some View {
-        let shape = RoundedRectangle(cornerRadius: 22, style: .continuous)
-        return Button { buildingWithAnya = true } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Generate with Anya").font(.nuna(size: 16.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                Text("Describe your goal and Anya will build the program for you.").font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                    .lineSpacing(3).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                HStack(spacing: 8) {
-                    Text("Get started").font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    Image(systemName: "arrow.right").font(.nuna(size: 15, weight: .bold))
-                }
-                .foregroundStyle(Color(red: 0.49, green: 0.46, blue: 0.94)).padding(.top, 2)
-            }
-            .padding(.horizontal, 18).padding(.vertical, 16).frame(maxWidth: .infinity, alignment: .leading)
-            .background(LinearGradient(colors: [Color(red: 0.17, green: 0.15, blue: 0.33).opacity(0.9), Color(red: 0.11, green: 0.2, blue: 0.26).opacity(0.9)],
-                                       startPoint: .topLeading, endPoint: .bottomTrailing), in: shape)
-            .overlay(shape.strokeBorder(LinearGradient(colors: [Color(red: 0.47, green: 0.4, blue: 0.9), Color(red: 0.25, green: 0.6, blue: 0.72)],
-                                                       startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5))
-            .contentShape(shape)
-        }
-        .buttonStyle(.plain)
     }
 
     /// The same, by hand, or from a ready-made workout or Anya: the button raises a sheet from the bottom with the three ways in.
