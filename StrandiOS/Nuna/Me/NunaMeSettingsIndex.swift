@@ -138,6 +138,7 @@ enum NunaMeSettingsIndex {
         .init(route: .environment, title: "Read it now", note: "The weather and air where you are"),
         .init(route: .hevy, title: "Done", note: ""),
         .init(route: .advanced, title: "Continuous HRV", note: "Record R-R all day"),
+        .init(route: .recommended, title: "Recommended settings", note: "Closest to the WHOOP app"),
         .init(route: .advanced, title: "Overnight only", note: "Saves power, only while asleep"),
         .init(route: .advanced, title: "Exponential intensity scale", note: "Scores Strain with Banister TRIMP instead of heart-rate zones. Re-scores history"),
         .init(route: .advanced, title: "Power saving", note: "Pauses extra capture when the phone or strap battery is low"),

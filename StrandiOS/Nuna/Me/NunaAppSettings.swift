@@ -8,6 +8,7 @@ struct NunaAppSettingsView: View {
     var body: some View {
         NunaDetailScreen("App Settings", centersTitle: true) {
             VStack(spacing: 10) {
+                NunaSettingsLink(route: .recommended, icon: "wand.and.stars", title: "Recommended settings", subtitle: "Closest to the WHOOP app")
                 NunaSettingsLink(route: .activity, icon: "heart.text.square", title: "Activity Settings")
                 NunaSettingsLink(route: .anya, icon: NunaIcons.ai, title: "AI Settings")
                 NunaSettingsLink(route: .appearance, icon: NunaIcons.appearance, title: "Appearance")
