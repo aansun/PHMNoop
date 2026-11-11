@@ -57,7 +57,8 @@ struct NunaStrapChip: View {
                         .offset(x: NunaStrapIconArt.dotCenter.x - d / 2, y: NunaStrapIconArt.dotCenter.y - d / 2)
                 }
         }
-        .frame(minHeight: 44)
+        // The whole 44 pt square takes the touch, not only the strokes of the drawn strap.
+        .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
 }
