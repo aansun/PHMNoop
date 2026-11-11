@@ -103,7 +103,7 @@ struct NunaRecommendedView: View {
             }
             if differing > 0 {
                 Button { confirm = true } label: {
-                    Text("Use recommended settings").font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
+                    Text("Use recommended settings").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                         .frame(maxWidth: .infinity).frame(height: 50)
                         .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).padding(.top, 6)
@@ -145,7 +145,7 @@ struct NunaRecommendedView: View {
     private func row(_ l: Line) -> some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(l.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text(l.title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 Text(verbatim: l.now).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer(minLength: 8)

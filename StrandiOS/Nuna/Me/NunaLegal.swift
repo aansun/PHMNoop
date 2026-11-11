@@ -41,6 +41,13 @@ struct NunaAboutView: View {
 
 // MARK: - The documents
 
+extension Theme {
+    /// The reading style of the documents in About: the Coach theme with the text at 14, smaller than the 18 of the page's title (its own headings stay at 17 or less).
+    static var nunaReader: Theme {
+        Theme.strand.text { ForegroundColor(NunaPalette.textPrimary); FontSize(14) }
+    }
+}
+
 /// The project's own documents, shipped in the app as they are in the repository (`project.yml` lists them as resources), so what is read here is what is kept there.
 enum NunaLegalDoc: String {
     case privacy, terms, disclaimer
@@ -68,9 +75,9 @@ struct NunaLegalDocView: View {
     var body: some View {
         NunaDetailScreen(doc.title, centersTitle: true) {
             if let text = doc.text {
-                Markdown(text).markdownTheme(.nuna).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
+                Markdown(text).markdownTheme(.nunaReader).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                Text("This document is not in this build.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Text("This document is not in this build.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
     }
@@ -129,7 +136,7 @@ struct NunaLicensesView: View {
                     NavigationLink(value: NunaMeRoute.license(n.id)) {
                         // The name as its makers write it (MarkdownUI, GRDB.swift), not in capitals.
                         HStack(spacing: 12) {
-                            Text(verbatim: n.name).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                            Text(verbatim: n.name).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                                 .multilineTextAlignment(.leading)
                             Spacer(minLength: 8)
                             Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
@@ -153,7 +160,7 @@ struct NunaLicenseDetailView: View {
                     Text(verbatim: n.license).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                     Text(verbatim: [n.author, n.version].compactMap { $0 }.joined(separator: " · ")).font(.nuna(size: 13.5, weight: .semibold))
                         .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    Text(verbatim: n.used).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    Text(verbatim: n.used).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                         .fixedSize(horizontal: false, vertical: true).padding(.top, 4)
                     if let u = URL(string: n.url) {
                         Link(destination: u) { Text("Open the project").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).underline() }.padding(.top, 4)

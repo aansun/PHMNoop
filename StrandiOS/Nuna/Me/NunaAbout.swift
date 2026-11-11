@@ -60,7 +60,7 @@ struct NunaWhatsNewView: View {
                     Spacer()
                     Text(verbatim: date).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                 }
-                Text(verbatim: title).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                Text(verbatim: title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 if !fixes.isEmpty { nunaTrendsCap("New / Enhancement") }
                 ForEach(Array(items.enumerated()), id: \.offset) { _, item in bullet(item) }
                 if !fixes.isEmpty {

@@ -66,7 +66,7 @@ enum NunaMeRoute: Hashable {
 extension View {
     func nunaMeDestinations() -> some View {
         navigationDestination(for: NunaMeRoute.self) { r in
-            switch r {
+            Group { switch r {
             case .persona: NunaPersonaView()
             case .achievements: NunaAchievementsView()
             case .zones: NunaZonesView()
@@ -113,7 +113,9 @@ extension View {
             case .feedback: NunaFeedbackView()
             case .dayStreak: NunaDayStreakView()
             case .settings: NunaMeView(pushed: true)
-            }
+            } }
+            // On the Settings pages nothing is set larger than the title of the page: the centred title is 18, text in the body stays at 17 or less.
+            .environment(\.nunaCenteredTitleSize, 18)
         }
     }
 }

@@ -252,9 +252,9 @@ struct NunaPrivacyView: View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: "info").font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.insightBlue).frame(width: 22).padding(.top, 2)
             VStack(alignment: .leading, spacing: 8) {
-                Text("Configure what leaves your iPhone").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text("Configure what leaves your iPhone").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 Text("There is no account and no server. Scores are computed on the iPhone from the strap and Apple Health. Below is what PHMN may use, and the few things that can leave only when you ask.")
-                    .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.insightBlue).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.insightBlue).textCase(nil).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
         }
@@ -265,9 +265,9 @@ struct NunaPrivacyView: View {
     /// A heading in sentence case, what it covers, and its rows one under the other.
     private func section<Rows: View>(_ title: LocalizedStringKey, _ blurb: LocalizedStringKey, @ViewBuilder rows: () -> Rows) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(title).font(.nuna(size: NunaTypeSize.h1, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 .accessibilityAddTraits(.isHeader)
-            Text(blurb).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            Text(blurb).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 .fixedSize(horizontal: false, vertical: true).padding(.top, 8).padding(.bottom, 18)
             VStack(spacing: 12) { rows() }
         }
@@ -288,14 +288,14 @@ struct NunaPrivacyView: View {
             }
             .frame(maxWidth: .infinity).padding(.top, 18).padding(.bottom, 26)
             Text("PHMN has no account and no server, and it never sells your data. These are never sent to an AI provider:")
-                .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
             VStack(alignment: .leading, spacing: 16) {
                 ForEach(["Raw heartbeat intervals (R-R)", "PPG signal", "Motion data"], id: \.self) { item in
-                    Text(LocalizedStringKey(item)).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    Text(LocalizedStringKey(item)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }.padding(.top, 20)
             Text("Your health data is never attached to a feedback report.")
-                .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true).padding(.top, 20)
+                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true).padding(.top, 20)
         }
     }
 
@@ -315,9 +315,9 @@ private struct PrivacyRowLabel: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(title).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).multilineTextAlignment(.leading)
+            Text(title).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).multilineTextAlignment(.leading)
             Spacer(minLength: 12)
-            Text(verbatim: value).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).multilineTextAlignment(.trailing)
+            Text(verbatim: value).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).multilineTextAlignment(.trailing)
         }
         .padding(.horizontal, 22).padding(.vertical, 18).frame(maxWidth: .infinity, minHeight: 64)
         .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
