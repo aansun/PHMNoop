@@ -488,7 +488,9 @@ struct NunaGymView: View {
     /// list of groups below it with the one on show lit, and the menu of that group beside it.
     private func groupPicker(_ open: NunaProgramGroup?, count: Int) -> some View {
         VStack(spacing: 10) {
-            HStack(spacing: 8) {
+            // One box as wide as a program row, with the menu inside it where a program's menu is, so the folder and what is in it line up edge to edge. An
+            // Ungrouped box has no menu but keeps its place, so the chevron does not move from one group to the next.
+            HStack(spacing: 0) {
                 Button { withAnimation(.easeOut(duration: 0.2)) { groupListOpen.toggle() } } label: {
                     HStack(spacing: 16) {
                         Image(systemName: "folder").font(.nuna(size: 19, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 32)
@@ -498,8 +500,7 @@ struct NunaGymView: View {
                         Spacer(minLength: 0)
                         Image(systemName: groupListOpen ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                     }
-                    .padding(.horizontal, 18).frame(height: 60)
-                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+                    .padding(.leading, 18).padding(.trailing, 10).frame(height: 62)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text("Group"))
@@ -508,10 +509,14 @@ struct NunaGymView: View {
                         Button { askForGroup(.rename(open)) } label: { Label("Rename group", systemImage: "pencil") }
                         Button(role: .destructive) { deletingGroup = open } label: { Label("Delete group", systemImage: "trash") }
                     } label: {
-                        Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34, height: 44).contentShape(Rectangle())
+                        Image(systemName: "ellipsis").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle())
                     }
+                } else {
+                    Color.clear.frame(width: 44, height: 44)
                 }
             }
+            .padding(.trailing, 8)
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
             if groupListOpen { groupList(open) }
         }
     }
