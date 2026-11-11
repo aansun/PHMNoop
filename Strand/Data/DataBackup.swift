@@ -107,7 +107,7 @@ enum DataBackup {
             // (and #1014 added a quick_check read of the whole file first); run it off the main
             // actor so the UI never beach-balls. Only file paths cross the hop.
             try await Task.detached(priority: .utility) {
-                try writeVerifiedBackupZip(dbURL: dbURL, to: dest, settingsJSON: currentSettingsJSON())
+                try writeVerifiedBackupZip(dbURL: dbURL, to: dest, settingsJSON: currentSettingsJSON(), extras: PHMNBackupExtras.collect())
             }.value
             return exportOutcome(dest, dbURL: dbURL)
         } catch {
@@ -122,7 +122,7 @@ enum DataBackup {
             if fm.fileExists(atPath: staged.path) { try fm.removeItem(at: staged) }
             // Off the main actor: same reason as the macOS branch (heavy read + DEFLATE). Only paths hop.
             try await Task.detached(priority: .utility) {
-                try writeVerifiedBackupZip(dbURL: dbURL, to: staged, settingsJSON: currentSettingsJSON())
+                try writeVerifiedBackupZip(dbURL: dbURL, to: staged, settingsJSON: currentSettingsJSON(), extras: PHMNBackupExtras.collect())
             }.value
         } catch {
             return .failure(String(localized: "Export failed: \(error.localizedDescription)"))
@@ -222,11 +222,11 @@ enum DataBackup {
         verifyWrittenBackup(at: url) == .intact
     }
 
-    private static func writeVerifiedBackupZip(dbURL: URL, to dest: URL, settingsJSON: Data?) throws {
+    private static func writeVerifiedBackupZip(dbURL: URL, to dest: URL, settingsJSON: Data?, extras: PHMNBackupExtras.Snapshot? = nil) throws {
         if let complaint = DatabaseIntegrity.quickCheckFailure(atPath: dbURL.path) {
             throw ExportIntegrityFailure(complaint: complaint)
         }
-        try writeBackupZip(dbURL: dbURL, to: dest, settingsJSON: settingsJSON, manifestJSON: currentManifestJSON())
+        try writeBackupZip(dbURL: dbURL, to: dest, settingsJSON: settingsJSON, manifestJSON: currentManifestJSON(), extras: extras)
         switch verifyWrittenBackup(at: dest) {
         case .intact:
             break
@@ -259,7 +259,7 @@ enum DataBackup {
         return Data(json.utf8)
     }
 
-    private static func writeBackupZip(dbURL: URL, to dest: URL, settingsJSON: Data?, manifestJSON: Data) throws {
+    private static func writeBackupZip(dbURL: URL, to dest: URL, settingsJSON: Data?, manifestJSON: Data, extras: PHMNBackupExtras.Snapshot? = nil) throws {
         let archive = try Archive(url: dest, accessMode: .create)
         try archive.addEntry(with: backupEntryName, fileURL: dbURL, compressionMethod: .deflate)
         let fm = FileManager.default
@@ -271,6 +271,19 @@ enum DataBackup {
             try settingsJSON.write(to: tmpJSON)
             defer { try? fm.removeItem(at: tmpJSON) }
             try archive.addEntry(with: BackupSettings.entryName, fileURL: tmpJSON, compressionMethod: .deflate)
+        }
+        // What PHMN keeps outside the database (see PHMNBackupExtras): the allowed UserDefaults keys and the few folders of files. Optional entries an importer that
+        // does not know them ignores, written before the manifest so the manifest stays the last entry.
+        if let extras {
+            if let plist = extras.defaultsPlist {
+                let tmp = fm.temporaryDirectory.appendingPathComponent("phmn-defaults-\(UUID().uuidString).plist")
+                try plist.write(to: tmp)
+                defer { try? fm.removeItem(at: tmp) }
+                try archive.addEntry(with: PHMNBackupExtras.defaultsEntryName, fileURL: tmp, compressionMethod: .deflate)
+            }
+            for file in extras.files {
+                try archive.addEntry(with: file.entry, fileURL: file.url, compressionMethod: .deflate)
+            }
         }
         // #1410: manifest LAST (after the DB + optional settings) and ALWAYS written — even a legacy
         // nil-settings backup states which build produced it.
@@ -322,7 +335,7 @@ enum DataBackup {
         do {
             let fm = FileManager.default
             if fm.fileExists(atPath: dest.path) { try fm.removeItem(at: dest) }
-            try writeVerifiedBackupZip(dbURL: dbURL, to: dest, settingsJSON: currentSettingsJSON())
+            try writeVerifiedBackupZip(dbURL: dbURL, to: dest, settingsJSON: currentSettingsJSON(), extras: PHMNBackupExtras.collect())
             return exportOutcome(dest, dbURL: dbURL)
         } catch {
             return .failure(String(localized: "Backup failed: \(error.localizedDescription)"))
@@ -335,12 +348,13 @@ enum DataBackup {
     /// legacy single-entry ZIP — tests cover both shapes. Not used by app code; production goes
     /// through `writeBackup(checkpoint:to:)`.
     static func writeBackupForTesting(databaseAt dbURL: URL, to dest: URL,
-                                      settings: [String: Any]? = nil) throws {
+                                      settings: [String: Any]? = nil,
+                                      extras: PHMNBackupExtras.Snapshot? = nil) throws {
         let fm = FileManager.default
         if fm.fileExists(atPath: dest.path) { try fm.removeItem(at: dest) }
         try writeBackupZip(dbURL: dbURL, to: dest,
                            settingsJSON: settings.flatMap { BackupSettings.encode($0) },
-                           manifestJSON: currentManifestJSON())
+                           manifestJSON: currentManifestJSON(), extras: extras)
     }
 
     // MARK: - Import
@@ -408,6 +422,7 @@ enum DataBackup {
     /// same reason as `dbPath` (tests use a suite-scoped UserDefaults, never the runner's real domain).
     static func restore(from pickedSource: URL, toDatabaseAt dbPath: String,
                         settingsDefaults: UserDefaults = .standard,
+                        restoreSupportDirectory: URL? = nil,
                         allowOversize: Bool = false) -> BackupResult {
         // If the picked file is a .noopbak ZIP, extract the SQLite entry to a temp dir first.
         // Legacy plain-SQLite files fall straight through. The extracted dir is cleaned up below.
@@ -570,6 +585,11 @@ enum DataBackup {
                     }
                 }
             }
+            // What PHMN keeps outside the database (see PHMNBackupExtras): applied last, so the full journal catalogue a backup carries wins over the bridged
+            // names above, and only now that the database swap has landed. A backup without it (every older one) restores exactly as before.
+            if let extractedDir {
+                PHMNBackupExtras.apply(extractedDir: extractedDir, defaults: settingsDefaults, supportDirectory: restoreSupportDirectory)
+            }
             // #57 debug: record when a restore swapped the DB, so the export can correlate a restore with a
             // later write stall (a restore not followed by a relaunch is the #57 failure).
             UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "backup.lastRestoreAt")
@@ -680,18 +700,32 @@ enum DataBackup {
     private static func extractBackupZip(at zipURL: URL, into destDir: URL,
                                          allowOversize: Bool = false) throws {
         let archive = try Archive(url: zipURL, accessMode: .read)
+        var extraFileBytes: Int64 = 0
         for entry in archive where entry.type == .file {
             let name = (entry.path as NSString).lastPathComponent
             let limit: Int64
-            switch name {
-            case backupEntryName:
-                limit = allowOversize ? Int64.max : maxBackupSQLiteBytes
-            case BackupSettings.entryName:
-                limit = maxBackupSettingsBytes
-            default:
-                continue
+            var out = destDir.appendingPathComponent(name)
+            if let rel = PHMNBackupExtras.relativePath(forEntry: entry.path) {
+                // A file of PHMN's own folders: kept under its path, one cap for each and one for all of them. Beyond a cap it is skipped, not fatal:
+                // the database and the settings are what the restore stands on.
+                let size = Int64(entry.uncompressedSize)
+                guard size <= PHMNBackupExtras.maxFileBytes, extraFileBytes + size <= PHMNBackupExtras.maxTotalFileBytes else { continue }
+                extraFileBytes += size
+                out = destDir.appendingPathComponent("phmn-files").appendingPathComponent(rel)
+                try FileManager.default.createDirectory(at: out.deletingLastPathComponent(), withIntermediateDirectories: true)
+                limit = PHMNBackupExtras.maxFileBytes
+            } else {
+                switch name {
+                case backupEntryName:
+                    limit = allowOversize ? Int64.max : maxBackupSQLiteBytes
+                case BackupSettings.entryName:
+                    limit = maxBackupSettingsBytes
+                case PHMNBackupExtras.defaultsEntryName:
+                    limit = PHMNBackupExtras.maxDefaultsBytes
+                default:
+                    continue
+                }
             }
-            let out = destDir.appendingPathComponent(name)
             if FileManager.default.fileExists(atPath: out.path) { try FileManager.default.removeItem(at: out) }
             FileManager.default.createFile(atPath: out.path, contents: nil)
             let handle = try FileHandle(forWritingTo: out)

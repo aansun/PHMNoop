@@ -190,6 +190,24 @@ struct NunaBackupView: View {
                     }
                 }
             }
+            NunaSettingsGroup("What a backup holds") {
+                NunaListRow("Recordings and scores", description: "Heart rate, sleep, workouts, Recovery and Effort", systemImage: "waveform.path.ecg")
+                NunaDivider()
+                NunaListRow("Programs and gym history", description: "Programs, their groups, sessions, sets and your own exercises", systemImage: "dumbbell")
+                NunaDivider()
+                NunaListRow("Food, journal and lab results", description: "Meals, saved foods, journal entries and markers", systemImage: "fork.knife")
+                NunaDivider()
+                NunaListRow("Notes and goals", description: "Exercise notes, goals, weekly plan and experiments", systemImage: "target")
+                NunaDivider()
+                NunaListRow("Hydration, caffeine, mood and breathing", description: "Logs and your own breathing exercises", systemImage: "drop")
+                NunaDivider()
+                NunaListRow("Workout routes and reviews", description: "GPS routes, and the notes and photos of a workout review", systemImage: "map")
+                NunaDivider()
+                NunaListRow("Anya", description: "Her memory, your instructions and the conversations", systemImage: "sparkles")
+                NunaDivider()
+                NunaListRow("Settings and layouts", description: "Profile, units, notifications, shortcuts, card order and appearance", systemImage: "gearshape")
+            }
+            nunaFootnote("Not saved: API keys and sign-ins (Anya, Strava, Hevy), the strap's pairing and alarm state, step calibration and background pictures. Connect them again after a restore.")
             NunaCard(small: true) {
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: "exclamationmark.triangle").foregroundStyle(NunaPalette.warning)
