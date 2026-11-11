@@ -108,7 +108,9 @@ struct NunaStrapArt: View {
 /// The charging flow: drops of blue fall from the top of the column towards the battery bar, growing as they go and shrinking away as they reach it,
 /// one after another, as the WHOOP app draws it. A small bolt stands at the top, where the charger is.
 struct NunaChargeFlow: View {
-    static let height: CGFloat = 92
+    static let height: CGFloat = 124
+    /// The circle with the bolt in it, and the length of the column it stands over.
+    static let badge: CGFloat = 36
     private static let drops = 3
     private static let period = 2.4
 
@@ -119,18 +121,25 @@ struct NunaChargeFlow: View {
                 for i in 0..<Self.drops {
                     // Each drop is a third of a cycle behind the one before it.
                     let phase = ((t / Self.period) + Double(i) / Double(Self.drops)).truncatingRemainder(dividingBy: 1)
-                    let y = 18 + (size.height - 18) * CGFloat(phase * phase * 0.35 + phase * 0.65)   // eases in, as a drop does
+                    let top = Self.badge + 6
+                    let y = top + (size.height - top) * CGFloat(phase * phase * 0.35 + phase * 0.65)   // eases in, as a drop does
                     // Small at the top, largest in the middle, gone at the bar.
-                    let r = 1.5 + 3.6 * CGFloat(sin(phase * .pi))
+                    let r = 1.8 + 4.2 * CGFloat(sin(phase * .pi))
                     let alpha = min(1, phase * 6) * min(1, (1 - phase) * 3)
                     let rect = CGRect(x: size.width / 2 - r, y: y - r, width: r * 2, height: r * 2)
                     gc.fill(Path(ellipseIn: rect), with: .color(NunaPalette.effort.opacity(0.9 * alpha)))
                 }
             }
         }
-        .frame(width: 22, height: Self.height)
+        .frame(width: Self.badge, height: Self.height)
         .overlay(alignment: .top) {
-            Image(systemName: "bolt.fill").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.effort)
+            // The charger: a bolt in a ring.
+            ZStack {
+                Circle().fill(NunaPalette.effort.opacity(0.14))
+                Circle().stroke(NunaPalette.effort, lineWidth: 2)
+                Image(systemName: "bolt.fill").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.effort)
+            }
+            .frame(width: Self.badge, height: Self.badge)
         }
         .accessibilityHidden(true)
     }
@@ -144,7 +153,9 @@ struct NunaBatteryGauge: View {
     let model: String
     let estimate: String?
 
-    private var tint: Color { (pct ?? 100) <= 10 ? NunaPalette.alert : ((pct ?? 100) <= 20 ? NunaPalette.warning : NunaPalette.charge) }
+    /// Red at 10% or less, yellow up to 30%, green above. The WHOOP app showed yellow at 22% to 24% (the PHMN bar was green there): the exact limit is not
+    /// published, so 30% is the nearest round figure that covers what was seen, and not an official one.
+    private var tint: Color { (pct ?? 100) <= 10 ? NunaPalette.alert : ((pct ?? 100) <= 30 ? NunaPalette.warning : NunaPalette.charge) }
     private let barHeight: CGFloat = 250
 
     var body: some View {
@@ -172,7 +183,7 @@ struct NunaBatteryGauge: View {
                         .animation(.easeOut(duration: 0.6), value: pct)
                 }
             }
-            .frame(width: 22)
+            .frame(width: NunaChargeFlow.badge)
             .animation(.easeInOut(duration: 0.3), value: charging)
         }
         .contentShape(Rectangle())
