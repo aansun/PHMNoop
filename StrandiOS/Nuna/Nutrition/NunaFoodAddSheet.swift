@@ -100,9 +100,9 @@ struct NunaFoodAddSheet: View {
                 .buttonStyle(.plain).accessibilityLabel(Text(page == .manual ? "Back" : "Close"))
             Text(page == .manual ? "Type the numbers" : "Add food").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             Spacer(minLength: 8)
-            Menu {
+            NunaMenu {
                 ForEach(NunaMeal.allCases) { m in
-                    Button { meal = m } label: { if meal == m { Label(m.singular, systemImage: "checkmark") } else { Text(m.singular) } }
+                    NunaMenuItem(m.singular, selected: meal == m) { meal = m }
                 }
             } label: {
                 HStack(spacing: 6) {
@@ -232,9 +232,9 @@ struct NunaFoodAddSheet: View {
                         ForEach(Array(list.enumerated()), id: \.element.id) { i, f in
                             if i > 0 { NunaDivider() }
                             Button { Task { await add(f) } } label: { foodRow(f) }.buttonStyle(.plain)
-                                .contextMenu {
+                                .nunaLongPressMenu {
                                     if let sid = f.savedID {
-                                        Button(role: .destructive) { Task { await NunaFoodStore.deleteSaved(id: sid, repo: repo); saved = await NunaFoodStore.savedFoods(repo: repo) } } label: { Label("Delete", systemImage: "trash") }
+                                        NunaMenuItem("Delete", icon: "trash", role: .destructive) { Task { await NunaFoodStore.deleteSaved(id: sid, repo: repo); saved = await NunaFoodStore.savedFoods(repo: repo) } }
                                     }
                                 }
                         }

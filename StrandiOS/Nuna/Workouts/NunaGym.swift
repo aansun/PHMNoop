@@ -505,9 +505,9 @@ struct NunaGymView: View {
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text("Group"))
                 if let open {
-                    Menu {
-                        Button { askForGroup(.rename(open)) } label: { Label("Rename group", systemImage: "pencil") }
-                        Button(role: .destructive) { deletingGroup = open } label: { Label("Delete group", systemImage: "trash") }
+                    NunaMenu {
+                        NunaMenuItem("Rename group", icon: "pencil") { askForGroup(.rename(open)) }
+                        NunaMenuItem("Delete group", icon: "trash", role: .destructive) { deletingGroup = open }
                     } label: {
                         Image(systemName: "ellipsis").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle())
                     }
@@ -589,26 +589,21 @@ struct NunaGymView: View {
 
     /// Move a program into a group, out of one, or into a new one.
     private func programMenu(_ p: LiftProgramRow) -> some View {
-        Menu {
-            Button { Task { await NunaGymStore.start(program: p, repo: repo, session: session) } } label: {
-                Label(session.isActive ? "Open session" : "Start", systemImage: session.isActive ? "arrow.up.forward" : "play.fill")
-            }
-            .disabled((itemCounts[p.id]?.exercises ?? 0) == 0)
-            Divider()
-            Menu {
+        NunaMenu {
+            NunaMenuItem(session.isActive ? "Open session" : "Start", icon: session.isActive ? "arrow.up.forward" : "play.fill") { Task { await NunaGymStore.start(program: p, repo: repo, session: session) } }
+                .disabled((itemCounts[p.id]?.exercises ?? 0) == 0)
+            NunaMenuSub("Move to group", icon: "folder") {
                 ForEach(groupsModel.groups) { g in
-                    Button { groupsModel.move(p.id, to: g) } label: {
-                        if groupsModel.group(of: p.id)?.id == g.id { Label(g.name, systemImage: "checkmark") } else { Text(verbatim: g.name) }
-                    }
+                    NunaMenuItem(verbatim: g.name, selected: groupsModel.group(of: p.id)?.id == g.id) { groupsModel.move(p.id, to: g) }
                 }
-                if groupsModel.group(of: p.id) != nil { Button { groupsModel.move(p.id, to: nil) } label: { Label("Ungrouped", systemImage: "tray") } }
-                Button { askForGroup(.new(programId: p.id)) } label: { Label("New group", systemImage: "folder.badge.plus") }
-            } label: { Label("Move to group", systemImage: "folder") }
-            Divider()
-            Button { Task { await shareProgram(p) } } label: { Label("Share routine", systemImage: "square.and.arrow.up") }
-            Button { Task { _ = await NunaGymStore.duplicate(p, repo: repo) } } label: { Label("Duplicate routine", systemImage: "plus.square.on.square") }
-            NavigationLink(value: NunaWorkoutRoute.programEdit(p.id)) { Label("Edit routine", systemImage: "pencil") }
-            Button(role: .destructive) { deletingProgram = p } label: { Label("Delete routine", systemImage: "trash") }
+                if groupsModel.group(of: p.id) != nil { NunaMenuItem("Ungrouped", icon: "tray") { groupsModel.move(p.id, to: nil) } }
+                NunaMenuItem("New group", icon: "folder.badge.plus") { askForGroup(.new(programId: p.id)) }
+            }
+            NunaMenuGap()
+            NunaMenuItem("Share routine", icon: "square.and.arrow.up") { Task { await shareProgram(p) } }
+            NunaMenuItem("Duplicate routine", icon: "plus.square.on.square") { Task { _ = await NunaGymStore.duplicate(p, repo: repo) } }
+            NunaMenuItem("Edit routine", icon: "pencil") { pushWorkout(.programEdit(p.id)) }
+            NunaMenuItem("Delete routine", icon: "trash", role: .destructive) { deletingProgram = p }
         } label: {
             Image(systemName: "ellipsis").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle())
         }

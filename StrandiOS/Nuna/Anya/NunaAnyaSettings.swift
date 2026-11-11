@@ -338,10 +338,10 @@ struct NunaAnyaMemoryView: View {
                 .background(LinearGradient(colors: [Color(red: 0.14, green: 0.15, blue: 0.27), Color(red: 0.12, green: 0.18, blue: 0.27)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
             }.buttonStyle(.plain)
         }
-        .contextMenu {
-            Button { editing = m } label: { Label("Edit", systemImage: "pencil") }
-            Button { store.setActive(m, !m.isActive) } label: { Label(m.isActive ? "Pause" : "Activate", systemImage: m.isActive ? "pause.circle" : "play.circle") }
-            Button(role: .destructive) { store.delete(m) } label: { Label("Delete", systemImage: "trash") }
+        .nunaLongPressMenu {
+            NunaMenuItem("Edit", icon: "pencil") { editing = m }
+            NunaMenuItem(m.isActive ? "Pause" : "Activate", icon: m.isActive ? "pause.circle" : "play.circle") { store.setActive(m, !m.isActive) }
+            NunaMenuItem("Delete", icon: "trash", role: .destructive) { store.delete(m) }
         }
     }
 
@@ -746,7 +746,14 @@ struct NunaAnyaVoiceCoachView: View {
                         HStack {
                             Text("Announce every").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Spacer()
-                            Picker("", selection: $every) { ForEach(1...10, id: \.self) { Text(verbatim: String(localized: "\($0) km")).tag($0) } }.pickerStyle(.menu).tint(NunaPalette.textPrimary)
+                            NunaMenu {
+                                ForEach(1...10, id: \.self) { k in NunaMenuItem(verbatim: String(localized: "\(k) km"), selected: every == k) { every = k } }
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Text(verbatim: String(localized: "\(every) km")).font(.nuna(size: 16, weight: .semibold))
+                                    Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 11, weight: .bold))
+                                }.foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 36)
+                            }
                         }
                     }
                 }

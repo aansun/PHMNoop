@@ -444,15 +444,15 @@ struct NunaJournalView: View {
                     Text("Restore").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             } else {
-                Menu {
-                    Button("Rename…") { renameDraft = item.displayName ?? item.canonical; renaming = item }
-                    Menu("Group") {
-                        ForEach(JournalGroup.displayOrder, id: \.self) { g in Button(g.title) { catalog.setGroup(item.canonical, to: g) } }
+                NunaMenu {
+                    NunaMenuItem("Rename…", icon: "pencil") { renameDraft = item.displayName ?? item.canonical; renaming = item }
+                    NunaMenuSub("Group", icon: "folder") {
+                        ForEach(JournalGroup.displayOrder, id: \.self) { g in NunaMenuItem(verbatim: g.title, selected: g == item.group) { catalog.setGroup(item.canonical, to: g) } }
                     }
-                    if item.kind.isNumeric { Button("Change to Yes/No") { catalog.setKind(item.canonical, to: .bool) } }
-                    else { Button("Change to Number") { catalog.setKind(item.canonical, to: .numeric(unitLabel: nil)) } }
+                    if item.kind.isNumeric { NunaMenuItem("Change to Yes/No", icon: "checkmark.circle") { catalog.setKind(item.canonical, to: .bool) } }
+                    else { NunaMenuItem("Change to Number", icon: "number") { catalog.setKind(item.canonical, to: .numeric(unitLabel: nil)) } }
                 } label: {
-                    NunaBareIcon("slider.horizontal.3", target: 36)
+                    NunaBareIcon("gearshape", target: 36)
                 }
                 Button { catalog.remove(item.canonical) } label: {
                     Image(systemName: "minus").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.alertText)
@@ -476,8 +476,8 @@ struct NunaJournalView: View {
                         .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
                     NunaSegmented<Bool>([(value: false, title: "Yes/No"), (value: true, title: "Number")], selection: $customNumeric)
                     HStack {
-                        Menu {
-                            ForEach(JournalGroup.displayOrder, id: \.self) { g in Button(g.title) { customGroup = g } }
+                        NunaMenu {
+                            ForEach(JournalGroup.displayOrder, id: \.self) { g in NunaMenuItem(verbatim: g.title, selected: g == customGroup) { customGroup = g } }
                         } label: {
                             HStack(spacing: 6) { Text(verbatim: customGroup.title); Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 11, weight: .bold)) }
                                 .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 42).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))

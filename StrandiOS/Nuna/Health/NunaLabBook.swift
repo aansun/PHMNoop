@@ -245,11 +245,11 @@ struct NunaMarkerDetailView: View {
                     nunaTrendsCap("Compare with a signal")
                     Text(verbatim: String(localized: "side by side · \(window.phrase) before each reading")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
-                Menu {
+                NunaMenu {
                     ForEach(LabBookSignals.options) { metric in
-                        Button { signal = metric } label: { Label(metric.title, systemImage: signal?.id == metric.id ? "checkmark" : metric.icon) }
+                        NunaMenuItem(verbatim: metric.title, icon: metric.icon, selected: signal?.id == metric.id) { signal = metric }
                     }
-                    if signal != nil { Divider(); Button(role: .destructive) { signal = nil } label: { Label("Clear", systemImage: "xmark") } }
+                    if signal != nil { NunaMenuGap(); NunaMenuItem("Clear", icon: "xmark", role: .destructive) { signal = nil } }
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "plus.circle.fill").font(.nuna(size: 16, weight: .bold))

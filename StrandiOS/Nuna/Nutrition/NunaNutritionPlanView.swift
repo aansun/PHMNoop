@@ -71,9 +71,9 @@ struct NunaNutritionPlanView: View {
                 }
                 NunaDivider()
                 row("Pace") {
-                    Menu {
+                    NunaMenu {
                         ForEach(Self.paces, id: \.self) { p in
-                            Button { pace = p; recalculate() } label: { if pace == p { Label(paceLabel(p), systemImage: "checkmark") } else { Text(verbatim: paceLabel(p)) } }
+                            NunaMenuItem(verbatim: paceLabel(p), selected: pace == p) { pace = p; recalculate() }
                         }
                     } label: { value(paceLabel(pace)) }
                 }
@@ -99,17 +99,17 @@ struct NunaNutritionPlanView: View {
                 if hasPlan {
                     NunaDivider()
                     row("Protein") {
-                        Menu {
+                        NunaMenu {
                             ForEach([1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4], id: \.self) { v in
-                                Button { proteinPerKg = v } label: { if proteinPerKg == v { Label("\(nutFmt(v, 1)) g/kg", systemImage: "checkmark") } else { Text(verbatim: "\(nutFmt(v, 1)) g/kg") } }
+                                NunaMenuItem(verbatim: "\(nutFmt(v, 1)) g/kg", selected: proteinPerKg == v) { proteinPerKg = v }
                             }
                         } label: { value("\(nutFmt(proteinPerKg, 1)) g/kg · \(nutFmt(macros?.proteinG)) g") }
                     }
                     NunaDivider()
                     row("Fat") {
-                        Menu {
+                        NunaMenu {
                             ForEach([0.20, 0.25, 0.28, 0.30, 0.35, 0.40], id: \.self) { v in
-                                Button { fatShare = v } label: { if abs(fatShare - v) < 0.001 { Label("\(Int(v * 100))%", systemImage: "checkmark") } else { Text(verbatim: "\(Int(v * 100))%") } }
+                                NunaMenuItem(verbatim: "\(Int(v * 100))%", selected: abs(fatShare - v) < 0.001) { fatShare = v }
                             }
                         } label: { value("\(Int((fatShare * 100).rounded()))% · \(nutFmt(macros?.fatG)) g") }
                     }

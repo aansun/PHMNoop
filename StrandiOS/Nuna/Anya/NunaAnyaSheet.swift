@@ -476,10 +476,10 @@ extension NunaAnyaSheet {
 
     private var floatingComposer: some View {
         HStack(spacing: 12) {
-            Menu {
-                Button { openFull() } label: { Label("Continue in the Anya tab", systemImage: "bubble.left.and.bubble.right") }
-                Button { path.append(NunaAnyaRoute.memory) } label: { Label("Memory", systemImage: "lightbulb") }
-                Button { path.append(NunaAnyaRoute.settings) } label: { Label("Anya settings", systemImage: "gearshape") }
+            NunaMenu {
+                NunaMenuItem("Continue in the Anya tab", icon: "bubble.left.and.bubble.right") { openFull() }
+                NunaMenuItem("Memory", icon: "lightbulb") { path.append(NunaAnyaRoute.memory) }
+                NunaMenuItem("Anya settings", icon: "gearshape") { path.append(NunaAnyaRoute.settings) }
             } label: {
                 Image(systemName: "plus").font(.system(size: 22, weight: .regular))
                     .frame(width: 52, height: 52).background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 16, style: .continuous))

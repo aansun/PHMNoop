@@ -32,11 +32,9 @@ struct NunaDetailSwitcher: View {
 
     var body: some View {
         if let sw, let cur = sw.items.first(where: { $0.key == sw.current }) {
-            Menu {
+            NunaMenu {
                 ForEach(sw.items) { item in
-                    Button { sw.select(item.key) } label: {
-                        if item.key == sw.current { Label(item.title, systemImage: "checkmark") } else { Text(verbatim: item.title) }
-                    }
+                    NunaMenuItem(verbatim: item.title, selected: item.key == sw.current) { sw.select(item.key) }
                 }
             } label: {
                 HStack(spacing: 12) {

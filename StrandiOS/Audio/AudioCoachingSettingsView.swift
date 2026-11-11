@@ -119,12 +119,20 @@ struct AudioCoachingSettingsView: View {
                             Toggle("Time", isOn: $distanceIncludesDuration)
                             Toggle("Heart rate", isOn: $distanceIncludesHeartRate)
                             Divider().overlay(StrandPalette.hairline)
-                            Picker("Announce every", selection: $distanceMilestoneKilometers) {
-                                ForEach(1...10, id: \.self) { kilometres in
-                                    Text("Every \(kilometres) km").tag(kilometres)
+                            HStack {
+                                Text("Announce every").font(StrandFont.body).foregroundStyle(StrandPalette.textPrimary)
+                                Spacer(minLength: 8)
+                                NunaMenu {
+                                    ForEach(1...10, id: \.self) { kilometres in
+                                        NunaMenuItem(verbatim: String(localized: "Every \(kilometres) km"), selected: distanceMilestoneKilometers == kilometres) { distanceMilestoneKilometers = kilometres }
+                                    }
+                                } label: {
+                                    HStack(spacing: 6) {
+                                        Text("Every \(distanceMilestoneKilometers) km").font(StrandFont.body)
+                                        Image(systemName: "chevron.up.chevron.down").font(.system(size: 11, weight: .bold))
+                                    }.foregroundStyle(StrandPalette.textPrimary).frame(minHeight: 36)
                                 }
                             }
-                            .pickerStyle(.menu)
                             Text("Audio announces every \(distanceMilestoneKilometers) km: \(distanceMilestoneKilometers), \(distanceMilestoneKilometers * 2), \(distanceMilestoneKilometers * 3) km, and so on.")
                                 .font(StrandFont.footnote)
                                 .foregroundStyle(StrandPalette.textTertiary)

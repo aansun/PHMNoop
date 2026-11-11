@@ -193,7 +193,7 @@ struct NunaLabRecordingsView: View {
         }
         .padding(.horizontal, 16).frame(height: 62)
         .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
-        .contextMenu { Button(role: .destructive) { removing = r } label: { Label("Remove", systemImage: "trash") } }
+        .nunaLongPressMenu { NunaMenuItem("Remove", icon: "trash", role: .destructive) { removing = r } }
     }
 }
 

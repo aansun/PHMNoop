@@ -322,9 +322,9 @@ struct NunaNutritionView: View {
                         }
                         Spacer(minLength: 6)
                         Text(verbatim: nutFmt(e.kcal)).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                        Menu {
-                            Button { Task { await NunaFoodStore.keep(name: e.name, kcal: e.kcal, proteinG: e.proteinG, carbsG: e.carbsG, fatG: e.fatG, repo: repo) } } label: { Label("Save as a food", systemImage: "bookmark") }
-                            Button(role: .destructive) { deleting = e } label: { Label("Delete", systemImage: "trash") }
+                        NunaMenu {
+                            NunaMenuItem("Save as a food", icon: "bookmark") { Task { await NunaFoodStore.keep(name: e.name, kcal: e.kcal, proteinG: e.proteinG, carbsG: e.carbsG, fatG: e.fatG, repo: repo) } }
+                            NunaMenuItem("Delete", icon: "trash", role: .destructive) { deleting = e }
                         } label: { Image(systemName: "ellipsis").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted).frame(width: 36, height: 40) }
                     }
                     .padding(.vertical, 8)

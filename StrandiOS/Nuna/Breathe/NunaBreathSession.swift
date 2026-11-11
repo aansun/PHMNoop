@@ -148,11 +148,9 @@ struct NunaBreathSessionView: View {
                 Image(systemName: "arrow.up.left.and.arrow.down.right").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 40, height: 44).contentShape(Rectangle())
             }.buttonStyle(.plain).accessibilityLabel(Text("Full screen"))
-            Menu {
+            NunaMenu {
                 ForEach(NunaBreathAudioMode.allCases) { m in
-                    Button { audioModeRaw = m.rawValue; cue.apply(m) } label: {
-                        if audioMode == m { Label(m.title, systemImage: "checkmark") } else { Text(m.title) }
-                    }
+                    NunaMenuItem(m.title, selected: audioMode == m) { audioModeRaw = m.rawValue; cue.apply(m) }
                 }
             } label: {
                 Image(systemName: audioMode == .off ? "speaker.slash" : (audioMode == .voice ? "person.wave.2" : "speaker.wave.2")).font(.nuna(size: 15, weight: .bold))

@@ -409,10 +409,10 @@ struct NunaExploreWorkoutEditor: View {
                     Text("\(item.wrappedValue.sets.count) sets").font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 Spacer(minLength: 8)
-                Menu {
-                    Button { move(item.wrappedValue.id, by: -1) } label: { Label("Move up", systemImage: "arrow.up") }
-                    Button { move(item.wrappedValue.id, by: 1) } label: { Label("Move down", systemImage: "arrow.down") }
-                    Button(role: .destructive) { remove(item.wrappedValue.id) } label: { Label("Remove exercise", systemImage: "trash") }
+                NunaMenu {
+                    NunaMenuItem("Move up", icon: "arrow.up") { move(item.wrappedValue.id, by: -1) }
+                    NunaMenuItem("Move down", icon: "arrow.down") { move(item.wrappedValue.id, by: 1) }
+                    NunaMenuItem("Remove exercise", icon: "trash", role: .destructive) { remove(item.wrappedValue.id) }
                 } label: {
                     Image(systemName: "line.3.horizontal").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 44, height: 44)
                 }

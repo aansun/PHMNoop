@@ -71,7 +71,7 @@ struct NunaRestDetailView: View {
 
     private var settingsButton: some View {
         NavigationLink(value: NunaTodayRoute.sleepSettings) {
-            Image(systemName: "slider.horizontal.3").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            Image(systemName: "gearshape").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 .frame(width: 44, height: 44)
         }
         .buttonStyle(.plain).accessibilityLabel(Text("Sleep settings"))

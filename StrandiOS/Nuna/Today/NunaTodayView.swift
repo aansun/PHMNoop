@@ -254,8 +254,8 @@ struct NunaTodayView: View {
             NunaQuickPlus(open: false) { setQuick(true) }
                 .opacity(showQuick ? 0 : 1)
                 .anchorPreference(key: NunaQuickAnchorKey.self, value: .bounds) { $0 }
-                .contextMenu {
-                    Button { editingQuick = true } label: { Label("Customize quick actions", systemImage: "slider.horizontal.3") }
+                .nunaLongPressMenu {
+                    NunaMenuItem("Customize quick actions", icon: "gearshape") { editingQuick = true }
                 }
         }
         .padding(.horizontal, 4).padding(.top, 14)
@@ -650,7 +650,7 @@ struct NunaTodayView: View {
                 NunaAddCard("Add a card here") { addAfter = nil; showAddCard = true }.moveDisabled(true).plainRow()
             }
             VStack(spacing: 10) {
-                Button { customize = .today } label: { Label("Card settings", systemImage: "slider.horizontal.3").lineLimit(1).minimumScaleFactor(0.8) }
+                Button { customize = .today } label: { Label("Card settings", systemImage: "gearshape").lineLimit(1).minimumScaleFactor(0.8) }
                     .buttonStyle(.nuna(.ghost, height: 52, fullWidth: true))
                 Button { sectionOrderRaw = ""; hiddenSectionsRaw = ""; keyMetricsRaw = ""; dashboardCardsRaw = ""; myDashboardRaw = ""; hostedCardsRaw = "" } label: { Text("Restore defaults").lineLimit(1).minimumScaleFactor(0.8) }
                     .buttonStyle(.nuna(.ghost, height: 52, fullWidth: true))
@@ -950,7 +950,7 @@ struct NunaTodayView: View {
                             }
                             .accessibilityLabel(Text(metricsLayout == .cards ? "Show as list" : "Show as cards"))
                             Button { customize = .keyMetrics } label: {
-                                Image(systemName: "slider.horizontal.3").font(.nuna(size: 14, weight: .bold)).frame(width: 40, height: 40).contentShape(Rectangle())
+                                Image(systemName: "gearshape").font(.nuna(size: 14, weight: .bold)).frame(width: 40, height: 40).contentShape(Rectangle())
                             }
                             .accessibilityLabel(Text("Edit"))
                             NavigationLink(value: NunaTodayRoute.allMetrics) {
