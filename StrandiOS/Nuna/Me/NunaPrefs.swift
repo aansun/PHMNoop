@@ -206,65 +206,97 @@ struct NunaPrivacyView: View {
     @State private var notifications = ""
     @State private var location = ""
     @State private var microphone = ""
-    @State private var confirmDeleteAll = false
 
     var body: some View {
-        NunaDetailScreen("Privacy") {
-            NunaCard(highlight: true) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Image(systemName: "lock.shield").font(.nuna(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("Your data stays on this iPhone").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("There is no account and no server. Scores are computed on the device from the strap and Apple Health.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                }.frame(maxWidth: .infinity, alignment: .leading)
+        NunaDetailScreen("Privacy", centersTitle: true) {
+            info
+            section("Phone permissions", "What PHMN may use on this iPhone. Tap one to change it in iOS Settings.") {
+                permission("Bluetooth", bluetooth)
+                permission("Notifications", notifications)
+                permission("Location", location)
+                permission("Microphone and speech", microphone)
             }
-            NunaSettingsGroup("iOS permissions") {
-                perm("Bluetooth", "Connects to the WHOOP strap", "antenna.radiowaves.left.and.right", bluetooth)
-                NunaDivider()
-                perm("Notifications", "Briefs, reminders and alerts", "bell", notifications)
-                NunaDivider()
-                perm("Location", "Only during a GPS workout, never in the background", "location", location)
-                NunaDivider()
-                perm("Microphone and speech", "Voice input for Anya, recognised on the iPhone", "mic", microphone)
-                NunaDivider()
-                Button { openIOSSettings() } label: { NunaListRow("Open iOS Settings", description: "Change any permission", systemImage: "gearshape", showsChevron: true) }.buttonStyle(.plain)
-            }
-            NunaSettingsGroup("What can leave the iPhone") {
+            rule
+            section("What can leave the iPhone", "Only when you turn it on or ask for it.") {
                 NavigationLink(value: NunaAnyaRoute.settings) {
-                    NunaListRow("Text summary to an AI provider", subtitle: LocalizedStringKey(coach.isConfigured && coach.dataConsent ? String(localized: "On, only when you ask") : String(localized: "Off. Only after you allow Anya and ask")), systemImage: NunaGlyph.anya, showsChevron: true)
+                    PrivacyRowLabel(title: "AI summary", value: coach.isConfigured && coach.dataConsent ? String(localized: "On, when you ask") : String(localized: "Off"))
                 }.buttonStyle(.plain)
-                NunaDivider()
                 NavigationLink(value: NunaMeRoute.strava) {
-                    NunaListRow("Strava", subtitle: LocalizedStringKey(stravaSubtitle), systemImage: "figure.run", showsChevron: true)
+                    PrivacyRowLabel(title: "Strava", value: stravaOn && StravaTokenStore.isConnected ? String(localized: "On") : String(localized: "Off"))
                 }.buttonStyle(.plain)
-                NunaDivider()
                 NavigationLink(value: NunaMeRoute.appleHealth) {
-                    NunaListRow("Apple Health", subtitle: LocalizedStringKey(health.auth == .authorized ? String(localized: "On. Steps, heart rate, vitals, sleep and workouts are written to Health on this iPhone") : String(localized: "Off. Nothing is written to Health")), systemImage: "heart.text.square", showsChevron: true)
+                    PrivacyRowLabel(title: "Apple Health", value: health.auth == .authorized ? String(localized: "On") : String(localized: "Off"))
                 }.buttonStyle(.plain)
-                NunaDivider()
-                NavigationLink(value: NunaMeRoute.backup) { NunaListRow("Export and backup", description: "Only when you ask for it", systemImage: "square.and.arrow.up", showsChevron: true) }.buttonStyle(.plain)
-                NunaDivider()
-                NunaListRow("Exercise videos", subtitle: "Only when you tap Watch a video: YouTube gets the exercise name", systemImage: "play.rectangle")
-                NunaDivider()
-                NunaListRow("Anything else", subtitle: "No other app receives your data", systemImage: "nosign") { NunaChip("None") }
+                NavigationLink(value: NunaMeRoute.backup) {
+                    PrivacyRowLabel(title: "Export and backup", value: String(localized: "When you ask"))
+                }.buttonStyle(.plain)
+                PrivacyRowLabel(title: "Exercise videos", value: String(localized: "Only when you tap"))
+                PrivacyRowLabel(title: "Other apps", value: String(localized: "None"))
             }
-            nunaFootnote("Raw heartbeat intervals, PPG and motion are never sent to an AI provider.")
-            NunaSettingsGroup("Delete data") {
-                NavigationLink(value: NunaMeRoute.imports) { NunaListRow("Delete imported Apple Health data", subtitle: "Strap data is not touched", systemImage: "trash", showsChevron: true) }.buttonStyle(.plain)
+            rule
+            section("Your data", "Remove what PHMN imported. Strap data is not touched.") {
+                NavigationLink(value: NunaMeRoute.imports) {
+                    PrivacyRowLabel(title: "Delete Apple Health data", value: String(localized: "Manage"))
+                }.buttonStyle(.plain)
             }
+            rule
+            additional
         }
         .task { await refresh() }
     }
 
-    /// What Strava gets, in words: workouts only, and only when it is connected.
-    private var stravaSubtitle: String {
-        guard stravaOn, StravaTokenStore.isConnected else { return String(localized: "Off. Nothing is uploaded") }
-        return StravaExperiment.isAutomaticUploadEnabled
-            ? String(localized: "On. GPS, treadmill and your own gym workouts upload automatically")
-            : String(localized: "On. A workout uploads only when you choose")
+    // MARK: Parts
+
+    /// The page's one sentence: where the data lives, and what this page is for.
+    private var info: some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: "info").font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.insightBlue).frame(width: 22).padding(.top, 2)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Configure what leaves your iPhone").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text("There is no account and no server. Scores are computed on the iPhone from the strap and Apple Health. Below is what PHMN may use, and the few things that can leave only when you ask.")
+                    .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.insightBlue).textCase(nil).fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(20)
+        .background(NunaPalette.insightBlue.opacity(0.14), in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
     }
 
-    private func perm(_ title: LocalizedStringKey, _ sub: LocalizedStringKey, _ icon: String, _ state: String) -> some View {
-        NunaListRow(title, description: sub, systemImage: icon) { if !state.isEmpty { NunaChip(verbatim: state) } }
+    /// A heading in sentence case, what it covers, and its rows one under the other.
+    private func section<Rows: View>(_ title: LocalizedStringKey, _ blurb: LocalizedStringKey, @ViewBuilder rows: () -> Rows) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title).font(.nuna(size: NunaTypeSize.h1, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                .accessibilityAddTraits(.isHeader)
+            Text(blurb).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                .fixedSize(horizontal: false, vertical: true).padding(.top, 8).padding(.bottom, 18)
+            VStack(spacing: 12) { rows() }
+        }
+    }
+
+    private var rule: some View { NunaDivider().padding(.vertical, 12) }
+
+    private func permission(_ title: LocalizedStringKey, _ state: String) -> some View {
+        Button { openIOSSettings() } label: { PrivacyRowLabel(title: title, value: state) }.buttonStyle(.plain)
+    }
+
+    /// What holds whatever the settings above say.
+    private var additional: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 10) {
+                Text("Additional privacy settings").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Image(systemName: "eye").font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
+            }
+            .frame(maxWidth: .infinity).padding(.top, 18).padding(.bottom, 26)
+            Text("PHMN has no account and no server, and it never sells your data. These are never sent to an AI provider:")
+                .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 16) {
+                ForEach(["Raw heartbeat intervals (R-R)", "PPG signal", "Motion data"], id: \.self) { item in
+                    Text(LocalizedStringKey(item)).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+            }.padding(.top, 20)
+            Text("Your health data is never attached to a feedback report.")
+                .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true).padding(.top, 20)
+        }
     }
 
     private func refresh() async {
@@ -273,6 +305,24 @@ struct NunaPrivacyView: View {
         notifications = (n == .authorized || n == .provisional) ? String(localized: "Allowed") : (n == .denied ? String(localized: "Off") : String(localized: "Not asked"))
         switch CLLocationManager().authorizationStatus { case .authorizedAlways: location = String(localized: "Always"); case .authorizedWhenInUse: location = String(localized: "While in use"); case .denied, .restricted: location = String(localized: "Off"); default: location = String(localized: "Not asked") }
         switch AVAudioApplication.shared.recordPermission { case .granted: microphone = String(localized: "Allowed"); case .denied: microphone = String(localized: "Off"); default: microphone = String(localized: "Optional") }
+    }
+}
+
+/// One row of the Privacy page: the name on the left, what it is set to on the right, on a card of its own.
+private struct PrivacyRowLabel: View {
+    let title: LocalizedStringKey
+    let value: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(title).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).multilineTextAlignment(.leading)
+            Spacer(minLength: 12)
+            Text(verbatim: value).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).multilineTextAlignment(.trailing)
+        }
+        .padding(.horizontal, 22).padding(.vertical, 18).frame(maxWidth: .infinity, minHeight: 64)
+        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
     }
 }
 #endif
