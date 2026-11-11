@@ -215,7 +215,7 @@ struct NunaZonesView: View {
                 VStack(alignment: .leading, spacing: 22) {
                     Color.clear.frame(height: 52)
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Heart Rate Zones").font(.nuna(size: 22, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Heart Rate Zones").font(.nuna(size: 16, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textPrimary)
                         Text("Zones are set as a share of your maximum heart rate. Change the maximum, or turn on manual zones to choose where each one starts.")
                             .font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
                     }

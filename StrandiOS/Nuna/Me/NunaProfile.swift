@@ -434,7 +434,7 @@ struct NunaProfileView: View {
         let earned = list.filter { $0.level > 0 }.count
         return VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
-                (Text("Achievements") + Text(verbatim: " (\(earned))").foregroundStyle(NunaPalette.textSecondary)).font(.nuna(size: 21, weight: .semibold)).textCase(nil)
+                (Text("Achievements") + Text(verbatim: " (\(earned))").foregroundStyle(NunaPalette.textSecondary)).font(.nuna(size: 16, weight: .semibold)).textCase(nil)
                 Spacer(minLength: 8)
                 NavigationLink(value: NunaMeRoute.achievements) {
                     HStack(spacing: 8) {
@@ -476,7 +476,7 @@ struct NunaProfileView: View {
     }
 
     private func sectionTitle(_ t: LocalizedStringKey) -> some View {
-        Text(t).font(.nuna(size: 21, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
+        Text(t).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
     }
 
     private func periodPicker(_ binding: Binding<Period>) -> some View {

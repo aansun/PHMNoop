@@ -11,7 +11,7 @@ struct NunaFeedbackView: View {
         NunaDetailScreen("Feedback") {
             VStack(spacing: 14) {
                 Image(systemName: "bubble.left.and.bubble.right").font(.system(size: 34, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Tell us what you think").font(.nuna(size: NunaTypeSize.h2, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text("Tell us what you think").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 Text("What you like, what is missing and what does not work: every message is read, and it is how PHMN gets better.")
                     .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
