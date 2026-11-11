@@ -439,11 +439,11 @@ struct NunaCompareView: View {
         let rest = NunaSignals.all.filter { !picked.contains($0.id) }
         var groups: [String] = []
         for sig in rest where !groups.contains(sig.group) { groups.append(sig.group) }
-        return Menu {
+        return NunaMenu {
             ForEach(groups, id: \.self) { g in
-                Section(LocalizedStringKey(g)) {
+                NunaMenuSub(verbatim: String(localized: String.LocalizationValue(g))) {
                     ForEach(rest.filter { $0.group == g }) { sig in
-                        Button(sig.title) {
+                        NunaMenuItem(verbatim: sig.title) {
                             picked.append(sig.id)
                             Task { await store.ensure(sig, repo: repo) }
                         }

@@ -169,8 +169,8 @@ struct NunaExerciseDetailView: View {
                         nunaTrendsCap(activeMetric.title)
                     }
                     Spacer(minLength: 8)
-                    Menu {
-                        Picker("Period", selection: $period) { ForEach(Period.allCases, id: \.self) { Text($0.title).tag($0) } }
+                    NunaMenu {
+                        ForEach(Period.allCases, id: \.self) { p in NunaMenuItem(p.title, selected: period == p) { period = p } }
                     } label: {
                         HStack(spacing: 4) {
                             Text(period.title).font(.nuna(size: 13.5, weight: .bold))

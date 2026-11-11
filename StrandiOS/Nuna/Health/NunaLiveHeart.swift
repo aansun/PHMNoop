@@ -512,11 +512,9 @@ struct NunaDeepTimelineView: View {
 
     /// The signal picker: one dropdown instead of a row of tabs, tinted with the colour of the signal on show.
     private var metricMenu: some View {
-        Menu {
+        NunaMenu {
             ForEach(metrics) { m in
-                Button { metric = m } label: {
-                    if metric == m { Label(m.title, systemImage: "checkmark") } else { Text(verbatim: m.title) }
-                }
+                NunaMenuItem(verbatim: m.title, selected: metric == m) { metric = m }
             }
         } label: {
             // The signal's icon in the neutral icon colour; the colour of the signal lives in the chart only.

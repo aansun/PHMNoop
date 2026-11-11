@@ -193,23 +193,23 @@ struct NunaGymExploreView: View {
                         .background(anyFilter ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
                 menuChip("Level", on: level != nil) {
-                    Button("Any") { level = nil }
-                    ForEach(NunaStarterProgram.Level.allCases) { l in Button { level = l } label: { Label { Text(l.title) } icon: { if level == l { Image(systemName: "checkmark") } } } }
+                    NunaMenuItem("Any", selected: level == nil) { level = nil }
+                    ForEach(NunaStarterProgram.Level.allCases) { l in NunaMenuItem(l.title, selected: level == l) { level = l } }
                 }
                 menuChip("Goal", on: goal != nil) {
-                    Button("Any") { goal = nil }
-                    ForEach(NunaStarterProgram.Goal.allCases) { g in Button { goal = g } label: { Label { Text(g.title) } icon: { if goal == g { Image(systemName: "checkmark") } } } }
+                    NunaMenuItem("Any", selected: goal == nil) { goal = nil }
+                    ForEach(NunaStarterProgram.Goal.allCases) { g in NunaMenuItem(g.title, selected: goal == g) { goal = g } }
                 }
                 menuChip("Equipment", on: equipment != nil) {
-                    Button("Any") { equipment = nil }
-                    ForEach(NunaStarterProgram.Equipment.allCases) { e in Button { equipment = e } label: { Label { Text(e.title) } icon: { if equipment == e { Image(systemName: "checkmark") } } } }
+                    NunaMenuItem("Any", selected: equipment == nil) { equipment = nil }
+                    ForEach(NunaStarterProgram.Equipment.allCases) { e in NunaMenuItem(e.title, selected: equipment == e) { equipment = e } }
                 }
             }
         }
     }
 
     private func menuChip<Content: View>(_ title: LocalizedStringKey, on: Bool, @ViewBuilder _ content: () -> Content) -> some View {
-        Menu { content() } label: {
+        NunaMenu { content() } label: {
             HStack(spacing: 6) { Text(title).font(.nuna(size: 13.5, weight: .bold)); Image(systemName: "chevron.down").font(.nuna(size: 11, weight: .bold)) }
                 .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36)
                 .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))

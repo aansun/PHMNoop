@@ -36,7 +36,7 @@ enum NunaIcons {
     // Settings
     static let appearance = "slider.horizontal.3"
     /// The "adjust this feature" button and row: Breathing, Workout and Anya settings all carry it.
-    static let featureSettings = "slider.horizontal.3"
+    static let featureSettings = "gearshape"
     static let units = "ruler"
     static let filter = "line.3.horizontal.decrease"
     static let finish = "flag.checkered"

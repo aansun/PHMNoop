@@ -206,7 +206,7 @@ private struct NunaDevicesContent: View {
                     }
                 }
                 NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
-                    actionLabel("Manage this strap", nil, "slider.horizontal.3", enabled: true)
+                    actionLabel("Manage this strap", nil, "gearshape", enabled: true)
                 }.buttonStyle(.plain)
             }
             .padding(.top, 10).padding(.bottom, 10)

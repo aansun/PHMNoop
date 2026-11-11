@@ -120,9 +120,9 @@ struct NunaAnyaFoodCard: View {
                     Text("kcal").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     if addedCount == nil {
                         HStack(spacing: 6) {
-                            Menu {
+                            NunaMenu {
                                 ForEach([0.5, 1.0, 1.5, 2.0], id: \.self) { f in
-                                    Button { scale[i] = f } label: { if factor(i) == f { Label(sizeLabel(f), systemImage: "checkmark") } else { Text(verbatim: sizeLabel(f)) } }
+                                    NunaMenuItem(verbatim: sizeLabel(f), selected: factor(i) == f) { scale[i] = f }
                                 }
                             } label: {
                                 Text(verbatim: sizeLabel(factor(i))).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)

@@ -372,11 +372,11 @@ struct NunaWorkoutsView: View {
                         .font(.nuna(size: NunaTypeSize.h3, weight: .heavy, design: NunaType.design))
                         .foregroundStyle(NunaPalette.textPrimary)
                     Spacer(minLength: 8)
-                    Menu {
-                        Button("Previous week", systemImage: "chevron.left") { weekOffset += 1 }
-                        Button("Next week", systemImage: "chevron.right") { weekOffset = max(0, weekOffset - 1) }
+                    NunaMenu {
+                        NunaMenuItem("Previous week", icon: "chevron.left") { weekOffset += 1 }
+                        NunaMenuItem("Next week", icon: "chevron.right") { weekOffset = max(0, weekOffset - 1) }
                             .disabled(weekOffset == 0)
-                        if weekOffset > 0 { Button("Current week") { weekOffset = 0 } }
+                        if weekOffset > 0 { NunaMenuItem("Current week", icon: "calendar") { weekOffset = 0 } }
                     } label: {
                         HStack(spacing: 4) {
                             Text(verbatim: range)

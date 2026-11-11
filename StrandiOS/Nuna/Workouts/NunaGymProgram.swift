@@ -151,9 +151,9 @@ struct NunaProgramEditor: View {
                     exerciseMenu(item, index: i, lib: lib)
                 }
                 HStack(spacing: 8) {
-                    Menu {
+                    NunaMenu {
                         ForEach([30, 45, 60, 90, 120, 150, 180, 240], id: \.self) { secs in
-                            Button { setRest(item.id, secs) } label: { Text(verbatim: LiftFormat.duration(secs)) }
+                            NunaMenuItem(verbatim: LiftFormat.duration(secs), selected: secs == (item.restSec ?? LiftPlanItem.defaultRestSec)) { setRest(item.id, secs) }
                         }
                     } label: { chip("timer", String(localized: "Rest: \(LiftFormat.duration(item.restSec ?? LiftPlanItem.defaultRestSec))")) }
                     Button { noteDraft = item.note ?? ""; noteFor = item.id } label: { chip("note.text", item.note.flatMap { $0.isEmpty ? nil : String(localized: "Note") } ?? String(localized: "Add note")) }
@@ -184,21 +184,19 @@ struct NunaProgramEditor: View {
     }
 
     private func exerciseMenu(_ item: LiftProgramItemRow, index i: Int, lib: NunaLibraryExercise?) -> some View {
-        Menu {
-            if let lib { Button { demo = lib } label: { Label("Show the demo", systemImage: "play.rectangle") } }
-            else { Button { video = item.exercise } label: { Label("Watch a video", systemImage: "play.rectangle") } }
-            Button { replacing = item } label: { Label("Replace exercise", systemImage: "arrow.triangle.2.circlepath") }
+        NunaMenu {
+            if let lib { NunaMenuItem("Show the demo", icon: "play.rectangle") { demo = lib } }
+            else { NunaMenuItem("Watch a video", icon: "play.rectangle") { video = item.exercise } }
+            NunaMenuItem("Replace exercise", icon: "arrow.triangle.2.circlepath") { replacing = item }
             if NunaExerciseKind.natural(item.exercise) == .bodyweight {
                 let tracks = NunaExerciseKind.weightOverrides.contains(item.exercise)
-                Button { NunaExerciseKind.setTracksWeight(!tracks, for: item.exercise); items = items } label: {
-                    Label(tracks ? "Bodyweight only" : "Add weight", systemImage: tracks ? "figure.stand" : "scalemass")
-                }
+                NunaMenuItem(tracks ? "Bodyweight only" : "Add weight", icon: tracks ? "figure.stand" : "scalemass") { NunaExerciseKind.setTracksWeight(!tracks, for: item.exercise); items = items }
             }
-            Button { editing = NunaItemTarget(id: item.id, item: item) } label: { Label("Muscles and technique", systemImage: "figure.strengthtraining.traditional") }
-            Divider()
-            Button { move(i, -1) } label: { Label("Move up", systemImage: "arrow.up") }.disabled(i == 0)
-            Button { move(i, 1) } label: { Label("Move down", systemImage: "arrow.down") }.disabled(i == items.count - 1)
-            Button(role: .destructive) { items.removeAll { $0.id == item.id } } label: { Label("Remove exercise", systemImage: "trash") }
+            NunaMenuItem("Muscles and technique", icon: "figure.strengthtraining.traditional") { editing = NunaItemTarget(id: item.id, item: item) }
+            NunaMenuGap()
+            NunaMenuItem("Move up", icon: "arrow.up") { move(i, -1) }.disabled(i == 0)
+            NunaMenuItem("Move down", icon: "arrow.down") { move(i, 1) }.disabled(i == items.count - 1)
+            NunaMenuItem("Remove exercise", icon: "trash", role: .destructive) { items.removeAll { $0.id == item.id } }
         } label: {
             Image(systemName: "ellipsis").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 36, height: 34).contentShape(Rectangle())
         }
@@ -390,6 +388,7 @@ struct NunaProgramDetailView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var session: LiftSessionController
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.nunaPushWorkout) private var pushWorkout
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @State private var program: LiftProgramRow?
     @State private var items: [LiftProgramItemRow] = []
@@ -479,11 +478,11 @@ struct NunaProgramDetailView: View {
     }
 
     private var menu: some View {
-        Menu {
-            Button { Task { if let program { NunaGymStore.presentShare(await NunaGymStore.shareText(program, repo: repo, system: system)) } } } label: { Label("Share routine", systemImage: "square.and.arrow.up") }
-            Button { Task { if let program { _ = await NunaGymStore.duplicate(program, repo: repo); dismiss() } } } label: { Label("Duplicate routine", systemImage: "plus.square.on.square") }
-            NavigationLink(value: NunaWorkoutRoute.programEdit(programId)) { Label("Edit program", systemImage: "pencil") }
-            Button(role: .destructive) { confirmDelete = true } label: { Label("Delete program", systemImage: "trash") }
+        NunaMenu {
+            NunaMenuItem("Share routine", icon: "square.and.arrow.up") { Task { if let program { NunaGymStore.presentShare(await NunaGymStore.shareText(program, repo: repo, system: system)) } } }
+            NunaMenuItem("Duplicate routine", icon: "plus.square.on.square") { Task { if let program { _ = await NunaGymStore.duplicate(program, repo: repo); dismiss() } } }
+            NunaMenuItem("Edit program", icon: "pencil") { pushWorkout(.programEdit(programId)) }
+            NunaMenuItem("Delete program", icon: "trash", role: .destructive) { confirmDelete = true }
         } label: { Image(systemName: "ellipsis").font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle()) }
         .accessibilityLabel(Text("Program menu"))
     }
@@ -852,11 +851,11 @@ struct NunaProgramItemView: View {
                 nunaTrendsCap("Also works (counts half a set)")
                 NunaFlowChips(items: LiftMuscle.ordered.filter { secondaries.contains($0) && $0 != primary }.map(\.rawValue) + ["+"]) { id in
                     if id == "+" {
-                        Menu {
+                        NunaMenu {
                             ForEach(LiftMuscle.Region.allCases, id: \.self) { region in
-                                Section(region.displayName) {
+                                NunaMenuSub(verbatim: region.displayName) {
                                     ForEach(LiftMuscle.inRegion(region).filter { $0 != primary && !secondaries.contains($0) }, id: \.self) { mu in
-                                        Button(mu.displayName) { secondaries.insert(mu) }
+                                        NunaMenuItem(verbatim: mu.displayName) { secondaries.insert(mu) }
                                     }
                                 }
                             }

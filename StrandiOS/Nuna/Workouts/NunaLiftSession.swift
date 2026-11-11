@@ -224,7 +224,7 @@ struct NunaLiftSessionView: View {
                 .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 10).frame(height: 36)
                 .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }
-            Button { showingSettings = true } label: { NunaBareIcon("slider.horizontal.3", target: 40) }
+            Button { showingSettings = true } label: { NunaBareIcon("gearshape", target: 40) }
                 .buttonStyle(.plain).accessibilityLabel(Text("Settings"))
             Button {
                 unfinishedChoice = nil; programChoice = nil; setCountChanges = []
@@ -409,21 +409,19 @@ struct NunaLiftSessionView: View {
     /// The three dots of an exercise: weight on a bodyweight move, the RPE column, and folding it away. The demo is on its picture and name;
     /// sets are added with Add set and deleted by swiping the row.
     private func exerciseMenu(_ engine: LiftSessionEngine, index: Int, item: LiftPlanItem, lib: NunaLibraryExercise?) -> some View {
-        Menu {
+        NunaMenu {
             if NunaExerciseKind.natural(item.exercise) == .bodyweight {
                 let tracks = NunaExerciseKind.weightOverrides.contains(item.exercise)
-                Button { NunaExerciseKind.setTracksWeight(!tracks, for: item.exercise) } label: {
-                    Label(tracks ? "Bodyweight only" : "Add weight", systemImage: tracks ? "figure.stand" : "scalemass")
-                }
+                NunaMenuItem(tracks ? "Bodyweight only" : "Add weight", icon: tracks ? "figure.stand" : "scalemass") { NunaExerciseKind.setTracksWeight(!tracks, for: item.exercise) }
             }
             if engine.canReplaceExercise(at: index) {
-                Button { replacing = ReplaceTarget(index: index) } label: { Label("Replace exercise", systemImage: "arrow.triangle.2.circlepath") }
+                NunaMenuItem("Replace exercise", icon: "arrow.triangle.2.circlepath") { replacing = ReplaceTarget(index: index) }
             }
             if let next = engine.slots(forExercise: index).first(where: { !engine.isCompleted($0) }), engine.currentSlot?.exerciseIndex != index {
-                Button { session.jump(to: next); opened.insert(index) } label: { Label("Start this exercise", systemImage: "play") }
+                NunaMenuItem("Start this exercise", icon: "play") { session.jump(to: next); opened.insert(index) }
             }
-            Button { showRpe.toggle() } label: { Label(showRpe ? "Hide RPE" : "Show RPE", systemImage: "gauge.with.needle") }
-            Button { opened.remove(index) } label: { Label("Fold away", systemImage: "chevron.up") }
+            NunaMenuItem(showRpe ? "Hide RPE" : "Show RPE", icon: "gauge.with.needle") { showRpe.toggle() }
+            NunaMenuItem("Fold away", icon: "chevron.up") { opened.remove(index) }
         } label: {
             Image(systemName: "ellipsis").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).rotationEffect(.degrees(90))
                 .frame(width: 34, height: 40).contentShape(Rectangle())
@@ -435,11 +433,9 @@ struct NunaLiftSessionView: View {
     private func restMenu(index: Int, item: LiftPlanItem) -> some View {
         let presets = [15, 30, 45, 60, 90, 120, 150, 180, 240, 300]
         let options = (presets + [item.restSec]).sorted().reduce(into: [Int]()) { if $0.last != $1 { $0.append($1) } }
-        return Menu {
+        return NunaMenu {
             ForEach(options, id: \.self) { sec in
-                Button { session.setRest(forExercise: index, seconds: sec) } label: {
-                    if sec == item.restSec { Label(LiftFormat.duration(sec), systemImage: "checkmark") } else { Text(verbatim: LiftFormat.duration(sec)) }
-                }
+                NunaMenuItem(verbatim: LiftFormat.duration(sec), selected: sec == item.restSec) { session.setRest(forExercise: index, seconds: sec) }
             }
         } label: {
             HStack(spacing: 8) {
