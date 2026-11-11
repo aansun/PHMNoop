@@ -69,7 +69,7 @@ struct NunaImportView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 12) {
                     NunaIconTile(icon)
-                    Text(title).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 }
                 Text(blurb).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 Button { presentImporter(target) } label: {

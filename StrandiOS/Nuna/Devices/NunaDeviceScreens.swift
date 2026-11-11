@@ -105,7 +105,7 @@ struct NunaDeviceSyncView: View {
                     }
                     if !live.backfilling {
                         Button { model.ble.syncNow() } label: {
-                            Text("Sync now").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                            Text("Sync now").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain).disabled(!live.connected).opacity(live.connected ? 1 : 0.4)
                     }
                 }
@@ -179,7 +179,7 @@ struct NunaDeviceHelpView: View {
             HStack(alignment: .top, spacing: 14) {
                 Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text(detail).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     action().padding(.top, 2)
                 }
@@ -228,7 +228,7 @@ struct NunaDeviceRepairView: View {
             HStack(alignment: .top, spacing: 14) {
                 Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text(detail).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     Button(action: run) { Text(button).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)) }.buttonStyle(.plain).padding(.top, 2)
                 }
@@ -322,7 +322,7 @@ struct NunaDeviceModelsView: View {
     private func badge(_ t: String, _ s: LocalizedStringKey) -> some View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: t).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: t).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Text(s).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }.frame(maxWidth: .infinity, alignment: .leading)
         }

@@ -103,7 +103,7 @@ struct NunaPersonaView: View {
                 HStack(spacing: 16) {
                     ProfileAvatarView(imageData: profile.avatarImageData, size: 64)
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Profile photo").font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Profile photo").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         HStack(spacing: 10) {
                             PhotosPicker(selection: $photoItem, matching: .images) {
                                 Text(profile.hasAvatar ? "Change photo" : "Choose photo").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -290,7 +290,7 @@ struct NunaZonesView: View {
                     .keyboardType(.numberPad)
                     .font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             } else {
-                Text(verbatim: blank ? "–" : String(value.wrappedValue)).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary.opacity(editable ? 1 : 0.55))
+                Text(verbatim: blank ? "–" : String(value.wrappedValue)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary.opacity(editable ? 1 : 0.55))
                 Spacer(minLength: 0)
             }
             Text(verbatim: "bpm").font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary.opacity(editable ? 1 : 0.7)).textCase(nil)
@@ -303,7 +303,7 @@ struct NunaZonesView: View {
     private var manualToggle: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Manual Heart Rate Zones").font(.nuna(size: 17, weight: .medium)).textCase(nil).foregroundStyle(NunaPalette.textPrimary)
+                Text("Manual Heart Rate Zones").font(.nuna(size: 16, weight: .medium)).textCase(nil).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
                 Toggle("", isOn: Binding(get: { manual }, set: { on in
                     if on { mins = starts }

@@ -20,7 +20,7 @@ struct NunaDetailHeader: View {
     /// The title small and in the middle of the bar, between the way back and the controls, instead of large at the left.
     var centersTitle = false
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.nunaCenteredTitleSize) private var centeredTitleSize
+    @Environment(\.nunaSettingsPage) private var settingsPage
     /// With the metric dropdown below, it already names the screen, so the title is left out rather than said twice.
     @Environment(\.nunaDetailSwitch) private var switcher
 
@@ -34,7 +34,7 @@ struct NunaDetailHeader: View {
     }
 
     var body: some View {
-        if centersTitle {
+        if centersTitle || settingsPage {
             ZStack {
                 HStack(spacing: 10) {
                     backButton
@@ -44,7 +44,7 @@ struct NunaDetailHeader: View {
                         Button(action: onAnya) { AnyaMark(size: 32).frame(width: 44, height: 44) }.accessibilityLabel(Text("Ask Anya"))
                     }
                 }
-                Text(title).font(.nuna(size: centeredTitleSize, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                Text(title).font(.nuna(size: settingsPage ? nunaSettingsTitleSize : 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7).padding(.horizontal, 56).accessibilityAddTraits(.isHeader)
             }
         } else {
@@ -86,15 +86,6 @@ struct NunaDetailHeader: View {
                 .accessibilityLabel(Text("Ask Anya"))
             }
         }
-    }
-}
-
-private struct NunaCenteredTitleSizeKey: EnvironmentKey { static let defaultValue: CGFloat = 15 }
-extension EnvironmentValues {
-    /// The size of a title set small in the middle of the bar. The Settings pages raise it, so that no text on them is larger than the title of the page.
-    var nunaCenteredTitleSize: CGFloat {
-        get { self[NunaCenteredTitleSizeKey.self] }
-        set { self[NunaCenteredTitleSizeKey.self] = newValue }
     }
 }
 

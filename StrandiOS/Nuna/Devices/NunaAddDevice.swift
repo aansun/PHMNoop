@@ -52,7 +52,7 @@ struct NunaAddDeviceSheet: View {
             if step != .model {
                 Button { back() } label: { NunaBareIcon("chevron.left") }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
             }
-            Text("Add a WHOOP").font(.nuna(size: 18, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            Text("Add a WHOOP").font(.nuna(size: 16, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
             Button(action: onClose) { NunaBareIcon("xmark") }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
         }

@@ -195,7 +195,7 @@ struct NunaDayStreakView: View {
 
     private var warning: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Don't let your streak fade").font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            Text("Don't let your streak fade").font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             Text("Looks like you're not wearing your strap. Put it back on before tomorrow night to avoid losing your streak.")
                 .font(.nuna(size: 16.5, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
         }

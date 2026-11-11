@@ -241,7 +241,7 @@ struct NunaAnyaMemoryView: View {
     private var hero: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Shape your experience.").font(.nuna(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                Text("Shape your experience.").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
                 Text("Help Anya understand you better.").font(.nuna(size: 14.5, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer(minLength: 8)
@@ -259,7 +259,7 @@ struct NunaAnyaMemoryView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 10) {
                 Image(systemName: "sparkles").font(.system(size: 20)).foregroundStyle(Color(red: 0.55, green: 0.55, blue: 0.98))
-                Text("Share something new").font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text("Share something new").font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             }
             Button { writing = true } label: {
                 HStack(spacing: 12) {
@@ -279,7 +279,7 @@ struct NunaAnyaMemoryView: View {
     private func linkRow(_ icon: String, _ title: LocalizedStringKey) -> some View {
         HStack(spacing: 16) {
             Image(systemName: icon).font(.system(size: 21, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30)
-            Text(title).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            Text(title).font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             Spacer(minLength: 6)
             Image(systemName: "arrow.right").font(.system(size: 17)).foregroundStyle(Color(red: 0.45, green: 0.50, blue: 0.95))
         }
@@ -314,7 +314,7 @@ struct NunaAnyaMemoryView: View {
             Button { editing = m } label: {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .top, spacing: 8) {
-                        Text(verbatim: m.title).font(.nuna(size: 18, weight: .regular)).foregroundStyle(m.isActive ? NunaPalette.textPrimary : NunaPalette.textMuted)
+                        Text(verbatim: m.title).font(.nuna(size: 16, weight: .regular)).foregroundStyle(m.isActive ? NunaPalette.textPrimary : NunaPalette.textMuted)
                             .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         Spacer(minLength: 6)
                         Image(systemName: "chevron.right").font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).padding(.top, 5)
