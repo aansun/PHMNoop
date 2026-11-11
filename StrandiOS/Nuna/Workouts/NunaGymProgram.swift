@@ -382,8 +382,9 @@ struct NunaProgramRun { let date: Date; let volumeKg: Double; let reps: Int; let
 
 // MARK: - Program page
 
-/// A program as it is opened from the Gym list or a shortcut: its name in full, the note, the exercises and what they add up to, with
-/// Start at the bottom and the menu at the top right for editing or deleting. Editing is its own screen, reached from the menu.
+/// A program as it is opened from the Gym list or a shortcut, laid out like a workout in Explore: the photo with its name and numbers, then how the runs of it
+/// have gone (volume or duration, over a week or six months), what it works and its exercises, with Start at the bottom and the menu at the top right for
+/// editing or deleting. Editing is its own screen, reached from the menu.
 struct NunaProgramDetailView: View {
     let programId: String
     @EnvironmentObject private var repo: Repository
@@ -396,53 +397,63 @@ struct NunaProgramDetailView: View {
     @State private var confirmDelete = false
     @State private var starting = false
     @State private var runs: [NunaProgramRun] = []
-    @State private var metric = RunMetric.volume
-    @State private var period = RunPeriod.threeMonths
-    @State private var selectedDate: Date?
+    /// 0 volume, 1 duration.
+    @State private var metric = 0
+    /// 7 days a bar each, or 180 days a bar for each week.
+    @State private var span = 7
+    @State private var picked: Date?
     /// The exercise whose movement is open in a sheet, so it can be seen before the session starts.
     @State private var preview: String?
 
-    private enum RunMetric: String, CaseIterable {
-        case volume, reps, duration
-        var title: LocalizedStringKey { switch self { case .volume: "Volume"; case .reps: "Reps"; case .duration: "Duration" } }
-    }
-    private enum RunPeriod: String, CaseIterable {
-        case threeMonths, year, all
-        var title: LocalizedStringKey { switch self { case .threeMonths: "Last 3 months"; case .year: "Last year"; case .all: "All time" } }
-        var days: Int? { switch self { case .threeMonths: 92; case .year: 366; case .all: nil } }
+    private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
+
+    /// The program as an Explore workout, which gives the numbers, the muscles, the equipment and a photo that fits what it works. A program saved from
+    /// Explore keeps the photo it was saved with.
+    private var asWorkout: NunaExploreWorkout? {
+        guard let program else { return nil }
+        let moves = items.map { NunaStarterProgram.Move(name: $0.exercise, sets: $0.targetSets ?? 1, reps: $0.targetRepsLow, rest: $0.restSec ?? LiftPlanItem.defaultRestSec) }
+        let probe = NunaStarterProgram(id: programId, name: program.name, level: .medium, goal: .muscle, equipment: .gym, routines: [.init(name: program.name, moves: moves)])
+        let equipment: NunaStarterProgram.Equipment = NunaExploreWorkout(program: probe, routine: probe.routines[0]).equipmentText == String(localized: "Body weight") ? .none : .gym
+        let real = NunaStarterProgram(id: programId, name: program.name, level: .medium, goal: .muscle, equipment: equipment, routines: probe.routines)
+        return NunaExploreWorkout(program: real, routine: real.routines[0])
     }
 
-    private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
-    private var totalSets: Int { items.reduce(0) { $0 + ($1.targetSets ?? 1) } }
-    private var estimatedMinutes: Int {
-        let secs = items.reduce(0) { $0 + ($1.targetSets ?? 1) * (45 + ($1.restSec ?? LiftPlanItem.defaultRestSec)) }
-        return Int((Double(secs) / 60).rounded())
+    private var image: String {
+        if let program, let match = NunaExploreWorkout.all(of: NunaStarterPrograms.all).first(where: { $0.title == program.name }) { return match.image }
+        return asWorkout?.image ?? "ExplorePlates"
     }
 
     var body: some View {
-        NunaDetailScreen("Program gym", trailing: AnyView(menu)) {
-            if let program {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(verbatim: program.name).font(.nuna(size: NunaTypeSize.h2, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    if let note = program.note, !note.isEmpty {
-                        Text(verbatim: note).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
+        ZStack(alignment: .top) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if let program, let w = asWorkout {
+                        NunaWorkoutHero(image: image, title: program.name, byline: Text("My program"),
+                                        stats: [("\(w.minutes)", "min", "Est duration"), ("\(items.count)", nil, "Exercises"), ("\(w.totalSets)", nil, "Total sets")])
+                        VStack(alignment: .leading, spacing: 26) {
+                            progressCard
+                            if let note = program.note, !note.isEmpty {
+                                Text(verbatim: note).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                            }
+                            NunaDivider()
+                            if !items.isEmpty {
+                                fact("Equipment", w.equipmentText)
+                                fact("Muscle groups", w.groupsText)
+                            }
+                            exerciseList
+                        }
+                        .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 130)
+                    } else if loaded {
+                        Text("This program is no longer there.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 120)
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                summaryCard
-                if !runs.isEmpty { progressCard }
-                NunaTitleRow(title: "Exercises") { EmptyView() }
-                if !items.isEmpty {
-                    Text("Tap an exercise to see how it is done.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .frame(maxWidth: .infinity, alignment: .leading).padding(.top, -6)
-                }
-                exerciseList
-            } else if loaded {
-                Text("This program is no longer there.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
+            .scrollIndicators(.hidden).ignoresSafeArea(edges: .top)
+            topBar
         }
+        .background(NunaBackdrop())
+        .toolbar(.hidden, for: .navigationBar)
         .task(id: repo.refreshSeq) { await load() }
         .sheet(item: Binding(get: { preview.map { NunaVideoTarget(name: $0) } }, set: { preview = $0?.name })) { t in NunaExercisePreviewSheet(name: t.name) }
         .safeAreaInset(edge: .bottom, spacing: 0) { startBar }
@@ -452,126 +463,179 @@ struct NunaProgramDetailView: View {
         } message: { Text("Sessions you already logged from it are kept.") }
     }
 
+    private var topBar: some View {
+        ZStack {
+            HStack {
+                Button { dismiss() } label: {
+                    Image(systemName: "chevron.left").font(.nuna(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44)
+                }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
+                Spacer()
+                menu
+            }
+            Text("Program gym").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                .accessibilityAddTraits(.isHeader)
+        }
+        .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8)
+    }
+
     private var menu: some View {
         Menu {
             Button { Task { if let program { NunaGymStore.presentShare(await NunaGymStore.shareText(program, repo: repo, system: system)) } } } label: { Label("Share routine", systemImage: "square.and.arrow.up") }
             Button { Task { if let program { _ = await NunaGymStore.duplicate(program, repo: repo); dismiss() } } } label: { Label("Duplicate routine", systemImage: "plus.square.on.square") }
             NavigationLink(value: NunaWorkoutRoute.programEdit(programId)) { Label("Edit program", systemImage: "pencil") }
             Button(role: .destructive) { confirmDelete = true } label: { Label("Delete program", systemImage: "trash") }
-        } label: { NunaBareIcon("ellipsis") }
+        } label: { Image(systemName: "ellipsis").font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle()) }
         .accessibilityLabel(Text("Program menu"))
     }
 
-    private var summaryCard: some View {
-        NunaCard {
-            HStack {
-                tile("Exercises", "\(items.count)", nil)
-                tile("Sets", "\(totalSets)", nil)
-                tile("Estimated", "\(estimatedMinutes)", "min")
-            }
+    private func fact(_ label: LocalizedStringKey, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(label).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: value).font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func tile(_ l: LocalizedStringKey, _ v: String, _ unit: String?) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(verbatim: v).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                if let unit { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-            }
-        }.frame(maxWidth: .infinity, alignment: .leading)
+    // MARK: Progress
+
+    /// One bar of the chart: a day in the week view, a week in the six-month view.
+    private struct Bucket { let date: Date; let value: Double }
+
+    private func value(_ r: NunaProgramRun) -> Double {
+        metric == 0 ? LiftFormat.display(fromKilograms: r.volumeKg, system: system) : r.minutes
     }
 
-    private func runValue(_ r: NunaProgramRun) -> Double {
-        switch metric { case .volume: return r.volumeKg; case .reps: return Double(r.reps); case .duration: return r.minutes }
-    }
-
-    /// What this routine added up to each time it was run: volume, reps or how long it took, over the period chosen.
-    private var progressCard: some View {
-        let cutoff = period.days.map { Date().addingTimeInterval(-Double($0) * 86_400) }
-        let points = runs.filter { cutoff == nil || $0.date >= cutoff! }.map { (date: $0.date, v: runValue($0)) }
-        let shown = selectedDate.flatMap { sel in points.min { abs($0.date.timeIntervalSince(sel)) < abs($1.date.timeIntervalSince(sel)) } } ?? points.last
-        func text(_ v: Double) -> (String, String) {
-            switch metric {
-            case .volume: return (NunaTrendsFormat.num(LiftFormat.display(fromKilograms: v, system: system)), UnitFormatter.massUnit(system))
-            case .reps: return ("\(Int(v))", "")
-            case .duration: return ("\(Int(v.rounded()))", "min")
-            }
+    /// Where the chart starts and ends, and the bars with something in them.
+    private func buckets() -> (start: Date, end: Date, bars: [Bucket]) {
+        let cal = Calendar.current
+        let unit: Calendar.Component = span == 7 ? .day : .weekOfYear
+        let today = Date()
+        let thisBucket = cal.dateInterval(of: unit, for: today)?.start ?? cal.startOfDay(for: today)
+        let start: Date = span == 7 ? (cal.date(byAdding: .day, value: -6, to: cal.startOfDay(for: today)) ?? thisBucket)
+                                    : (cal.date(byAdding: .weekOfYear, value: -25, to: thisBucket) ?? thisBucket)
+        let end = cal.date(byAdding: unit, value: 1, to: thisBucket) ?? today
+        var sums: [Date: Double] = [:]
+        for r in runs where r.date >= start && r.date < end {
+            guard let key = cal.dateInterval(of: unit, for: r.date)?.start else { continue }
+            sums[key, default: 0] += value(r)
         }
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .firstTextBaseline) {
-                    if let p = shown {
-                        let t = text(p.v)
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: t.0).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            if !t.1.isEmpty { Text(verbatim: t.1).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-                            Text(verbatim: NunaWorkoutFormat.day(Int(p.date.timeIntervalSince1970))).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.restText).textCase(nil)
-                        }
-                    }
-                    Spacer(minLength: 8)
-                    Menu {
-                        Picker("Period", selection: $period) { ForEach(RunPeriod.allCases, id: \.self) { Text($0.title).tag($0) } }
-                    } label: {
-                        HStack(spacing: 4) { Text(period.title).font(.nuna(size: 13.5, weight: .bold)); Image(systemName: "chevron.down").font(.nuna(size: 11, weight: .bold)) }
-                            .foregroundStyle(NunaPalette.restText).frame(minHeight: 32)
+        return (start, end, sums.filter { $0.value > 0 }.map { Bucket(date: $0.key, value: $0.value) }.sorted { $0.date < $1.date })
+    }
+
+    private func figure(_ v: Double) -> (String, String) {
+        metric == 0 ? (NunaTrendsFormat.num(v), UnitFormatter.massUnit(system)) : ("\(Int(v.rounded()))", String(localized: "min"))
+    }
+
+    /// What the runs of this routine added up to: volume or how long they took, a bar a day for the last week or a bar a week for six months, the total at the top
+    /// until a bar is touched.
+    @ViewBuilder private var progressCard: some View {
+        if runs.isEmpty {
+            // Nothing to draw yet: a line, not an empty chart with its switches.
+            if loaded {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Progress").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Run this routine a couple of times and its progress shows here.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                .padding(18).frame(maxWidth: .infinity, alignment: .leading)
+                .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+        } else { chartCard }
+    }
+
+    private var chartCard: some View {
+        let cal = Calendar.current
+        let unit: Calendar.Component = span == 7 ? .day : .weekOfYear
+        let b = buckets()
+        let total = b.bars.map(\.value).reduce(0, +)
+        let touched = picked.flatMap { p in b.bars.first { cal.isDate($0.date, equalTo: p, toGranularity: unit) } }
+        let shown = touched?.value ?? total
+        let f = figure(shown)
+        let color = metric == 0 ? NunaPalette.effortModerate : NunaPalette.recoveryBlue
+        let caption: String = {
+            guard let t = touched else { return String(localized: "Total") }
+            let df = DateFormatter(); df.locale = AppLanguage.activeLocale
+            df.setLocalizedDateFormatFromTemplate(span == 7 ? "EEE, MMM d" : "MMM d")
+            return span == 7 ? df.string(from: t.date) : String(localized: "Week of \(df.string(from: t.date))")
+        }()
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(touched == nil ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(verbatim: b.bars.isEmpty ? "–" : f.0).font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(touched == nil ? NunaPalette.textPrimary : color)
+                        if !b.bars.isEmpty { Text(verbatim: f.1).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(touched == nil ? NunaPalette.textPrimary : color).textCase(nil) }
                     }
                 }
-                if points.count >= 2 {
-                    Chart {
-                        ForEach(Array(points), id: \.date) { p in
-                            LineMark(x: .value("Date", p.date), y: .value("Value", p.v)).foregroundStyle(NunaPalette.textPrimary).interpolationMethod(.monotone)
-                            PointMark(x: .value("Date", p.date), y: .value("Value", p.v)).foregroundStyle(NunaPalette.textPrimary)
-                        }
-                        if let sel = shown {
-                            RuleMark(x: .value("Date", sel.date)).foregroundStyle(NunaPalette.restText.opacity(0.5))
-                            PointMark(x: .value("Date", sel.date), y: .value("Value", sel.v)).foregroundStyle(NunaPalette.restText).symbolSize(90)
-                        }
-                    }
-                    .chartXSelection(value: $selectedDate)
-                    .chartYScale(domain: .automatic(includesZero: false))
-                    .chartXAxis { AxisMarks(values: .automatic(desiredCount: 4)) { _ in AxisValueLabel(format: .dateTime.day().month(.abbreviated)).foregroundStyle(NunaPalette.textMuted) } }
-                    .chartYAxis { AxisMarks(position: .leading) { _ in AxisGridLine().foregroundStyle(NunaPalette.hairline); AxisValueLabel().foregroundStyle(NunaPalette.textMuted) } }
-                    .frame(height: 170)
+                Spacer(minLength: 0)
+                VStack(alignment: .trailing, spacing: 10) {
+                    NunaRangeSwitch(choices: [(0, String(localized: "Volume")), (1, String(localized: "Duration"))], range: $metric) { picked = nil }
+                    NunaRangeSwitch(choices: [(7, String(localized: "Weekly")), (180, String(localized: "6 months"))], range: $span) { picked = nil }
+                }
+            }
+            Chart {
+                ForEach(b.bars, id: \.date) { bar in
+                    BarMark(x: .value("Date", bar.date, unit: unit), y: .value("Value", bar.value), width: .ratio(span == 7 ? 0.5 : 0.7))
+                        .foregroundStyle(color).cornerRadius(3).opacity(touched == nil || touched?.date == bar.date ? 1 : 0.3)
+                }
+            }
+            .chartXSelection(value: $picked)
+            .chartXScale(domain: b.start...b.end)
+            .chartYScale(domain: .automatic(includesZero: true))
+            .chartXAxis {
+                if span == 7 {
+                    AxisMarks(values: .stride(by: .day)) { _ in AxisValueLabel(format: .dateTime.weekday(.narrow), centered: true).foregroundStyle(NunaPalette.textMuted) }
                 } else {
-                    Text("Run this routine a couple of times and its progress shows here.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                HStack(spacing: 8) {
-                    ForEach(RunMetric.allCases, id: \.self) { m in
-                        Button { metric = m } label: {
-                            Text(m.title).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(metric == m ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                                .padding(.horizontal, 16).frame(height: 36).background(metric == m ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                        }.buttonStyle(.plain)
-                    }
-                    Spacer(minLength: 0)
+                    AxisMarks(values: .stride(by: .month)) { _ in AxisValueLabel(format: .dateTime.month(.abbreviated)).foregroundStyle(NunaPalette.textMuted) }
                 }
             }
+            .chartYAxis {
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { _ in
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 1)).foregroundStyle(NunaPalette.textMuted.opacity(0.25))
+                    AxisValueLabel().foregroundStyle(NunaPalette.textMuted)
+                }
+            }
+            .frame(height: 200)
+            .accessibilityLabel(Text(metric == 0 ? "Volume" : "Duration"))
+            if b.bars.isEmpty {
+                Text("No runs of this routine in this period.")
+                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
+
+    // MARK: Exercises
 
     @ViewBuilder private var exerciseList: some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-            VStack(spacing: 0) {
-                if items.isEmpty {
-                    Text("No exercises yet. Choose Edit program to add some.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 16)
-                }
-                ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
-                    if i > 0 { NunaDivider() }
-                    Button { preview = item.exercise } label: {
-                    HStack(spacing: 12) {
-                        NunaExerciseThumb(name: item.exercise, width: 50, height: 38)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                Text("Exercises").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Rectangle().fill(NunaPalette.hairlineSoft).frame(height: 1)
+            }
+            if items.isEmpty {
+                Text("No exercises yet. Choose Edit program to add some.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            } else {
+                Text("Tap an exercise to see how it is done.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).padding(.top, -6)
+            }
+            ForEach(items, id: \.id) { item in
+                Button { preview = item.exercise } label: {
+                    HStack(spacing: 14) {
+                        NunaExerciseThumb(name: item.exercise, width: 70, height: 56)
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(verbatim: item.exercise).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
+                            Text(verbatim: item.exercise).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(2).multilineTextAlignment(.leading)
                             if !detail(item).isEmpty { Text(verbatim: detail(item)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                         }
-                        Spacer(minLength: 6)
+                        Spacer(minLength: 8)
                         if let s = item.targetSets {
                             Text(verbatim: NunaExerciseKind.of(item.exercise).targetText(sets: s, reps: item.targetRepsLow) ?? "\(s)").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         }
-                    }.padding(.vertical, 12).contentShape(Rectangle())
-                    }.buttonStyle(.plain).accessibilityHint(Text("Shows how the exercise is done"))
+                    }
+                    .padding(.horizontal, 8).padding(.vertical, 6).padding(.trailing, 8)
+                    .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain).accessibilityHint(Text("Shows how the exercise is done"))
             }
         }
     }
@@ -585,17 +649,19 @@ struct NunaProgramDetailView: View {
 
     private var startBar: some View {
         let running = session.isActive
+        let off = program == nil || (items.isEmpty && !running) || starting
         return Button { Task { await start() } } label: {
             HStack(spacing: 8) {
                 Image(systemName: running ? "arrow.up.forward" : "play.fill").font(.nuna(size: 14, weight: .bold))
-                Text(running ? "Open the running session" : "Start").font(.nuna(size: 17, weight: .bold))
+                Text(running ? "Open the running session" : "Start").font(.nuna(size: 17, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
             }
-            .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56)
-            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            .foregroundStyle(NunaPalette.accent).frame(maxWidth: .infinity).frame(height: 58)
+            .background(NunaPalette.canvas, in: Capsule())
+            .overlay(Capsule().strokeBorder(NunaPalette.accent, lineWidth: 2))
         }
-        .buttonStyle(.plain).disabled(program == nil || (items.isEmpty && !running) || starting).opacity(program == nil || (items.isEmpty && !running) ? 0.4 : 1)
-        .padding(.horizontal, NunaSpacing.screenH).padding(.top, 10).padding(.bottom, 10)
-        .background(LinearGradient(colors: [NunaPalette.canvas.opacity(0), NunaPalette.canvas], startPoint: .top, endPoint: .center))
+        .buttonStyle(.plain).disabled(off).opacity(off ? 0.4 : 1)
+        .padding(.horizontal, NunaSpacing.screenH).padding(.vertical, 10)
+        .background(LinearGradient(colors: [NunaPalette.canvas.opacity(0), NunaPalette.canvas], startPoint: .top, endPoint: .init(x: 0.5, y: 0.4)))
     }
 
     private func load() async {

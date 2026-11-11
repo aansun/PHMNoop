@@ -209,42 +209,9 @@ struct NunaExploreWorkoutDetail: View {
         .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8)
     }
 
-    /// A wide photo is not stretched to the height of a tall one: it would be enlarged past what its pixels can show.
-    private var heroHeight: CGFloat {
-        guard let size = UIImage(named: workout.image)?.size, size.height > 0 else { return 520 }
-        return size.width > size.height ? 400 : 540
-    }
-
     private var hero: some View {
-        Color.clear.frame(height: heroHeight)
-            .overlay { Image(workout.image).resizable().scaledToFill() }
-            .overlay(LinearGradient(colors: [NunaPalette.canvas.opacity(0.55), NunaPalette.canvas.opacity(0)], startPoint: .top, endPoint: .init(x: 0.5, y: 0.25)))
-            .overlay(LinearGradient(colors: [NunaPalette.canvas.opacity(0), NunaPalette.canvas], startPoint: .init(x: 0.5, y: 0.35), endPoint: .bottom))
-            .overlay(alignment: .bottomLeading) {
-                VStack(alignment: .leading, spacing: 14) {
-                    Text(verbatim: workout.title).font(.nuna(size: 34, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text("By PHMN").font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    HStack(alignment: .top, spacing: 0) {
-                        stat("\(workout.minutes)", unit: "min", label: "Est duration")
-                        stat("\(workout.exerciseCount)", unit: nil, label: "Exercises")
-                        stat("\(workout.totalSets)", unit: nil, label: "Total sets")
-                    }.padding(.top, 10)
-                }
-                .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 14)
-            }
-            .clipped()
-    }
-
-    private func stat(_ value: String, unit: LocalizedStringKey?, label: LocalizedStringKey) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: value).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                if let unit { Text(unit).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
-            }
-            Text(label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        NunaWorkoutHero(image: workout.image, title: workout.title, byline: Text("By PHMN"),
+                        stats: [("\(workout.minutes)", "min", "Est duration"), ("\(workout.exerciseCount)", nil, "Exercises"), ("\(workout.totalSets)", nil, "Total sets")])
     }
 
     private func fact(_ label: LocalizedStringKey, _ value: String) -> some View {
@@ -299,6 +266,52 @@ struct NunaExploreWorkoutDetail: View {
         }
         .padding(.horizontal, NunaSpacing.screenH).padding(.vertical, 10)
         .background(LinearGradient(colors: [NunaPalette.canvas.opacity(0), NunaPalette.canvas], startPoint: .top, endPoint: .init(x: 0.5, y: 0.3)))
+    }
+}
+
+// MARK: - Shared hero
+
+/// The top of a workout page: a photo that fades into the page, the title, who it is by, and the numbers of the session. Shared by the Explore details and a saved program.
+struct NunaWorkoutHero: View {
+    let image: String
+    let title: String
+    let byline: Text
+    let stats: [(value: String, unit: LocalizedStringKey?, label: LocalizedStringKey)]
+
+    /// A wide photo is not stretched to the height of a tall one: it would be enlarged past what its pixels can show.
+    private var heroHeight: CGFloat {
+        guard let size = UIImage(named: image)?.size, size.height > 0 else { return 520 }
+        return size.width > size.height ? 400 : 540
+    }
+
+    var body: some View {
+        Color.clear.frame(height: heroHeight)
+            .overlay { Image(image).resizable().scaledToFill() }
+            .overlay(LinearGradient(colors: [NunaPalette.canvas.opacity(0.55), NunaPalette.canvas.opacity(0)], startPoint: .top, endPoint: .init(x: 0.5, y: 0.25)))
+            .overlay(LinearGradient(colors: [NunaPalette.canvas.opacity(0), NunaPalette.canvas], startPoint: .init(x: 0.5, y: 0.35), endPoint: .bottom))
+            .overlay(alignment: .bottomLeading) {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(verbatim: title).font(.nuna(size: 34, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                    byline.font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    HStack(alignment: .top, spacing: 0) {
+                        ForEach(Array(stats.enumerated()), id: \.offset) { _, st in stat(st.value, unit: st.unit, label: st.label) }
+                    }.padding(.top, 10)
+                }
+                .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 14)
+            }
+            .clipped()
+    }
+
+    private func stat(_ value: String, unit: LocalizedStringKey?, label: LocalizedStringKey) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(verbatim: value).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                if let unit { Text(unit).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
+            }
+            Text(label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
