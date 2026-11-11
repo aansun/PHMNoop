@@ -246,6 +246,16 @@ targets:
           - "Resources/Info.plist"
           - "Resources/NOOP.entitlements"
       - path: StrandiOSShared
+      # About: the project's own documents, shipped as they are kept in the repository (the open-source licences JSON,
+      # Tools/build-open-source-licenses.py, is under StrandiOS/Resources/Legal and comes with the StrandiOS sources above).
+      - path: TERMS.md
+        buildPhase: resources
+      - path: DISCLAIMER.md
+        buildPhase: resources
+      - path: docs/PRIVACY_SECURITY.md
+        buildPhase: resources
+      - path: LICENSE
+        buildPhase: resources
     # iOS-only locale resources. Keep these out of the macOS target: the iPhone app can opt into
     # Indonesian without changing the reference macOS surface.
     resources:
