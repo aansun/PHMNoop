@@ -397,11 +397,11 @@ struct NunaProgramDetailView: View {
     @State private var confirmDelete = false
     @State private var starting = false
     @State private var runs: [NunaProgramRun] = []
-    /// 0 volume, 1 duration.
-    @State private var metric = 0
-    /// 7 days a bar each, or 180 days a bar for each week.
+    /// 7 days or 30 days a bar each, or 180 days a bar for each week.
     @State private var span = 7
+    /// The bar that is touched: its figure replaces the total at the top and the other bars step back.
     @State private var picked: Date?
+    @State private var touchBeganOnPicked: Bool?
     /// The exercise whose movement is open in a sheet, so it can be seen before the session starts.
     @State private var preview: String?
 
@@ -501,36 +501,33 @@ struct NunaProgramDetailView: View {
     /// One bar of the chart: a day in the week view, a week in the six-month view.
     private struct Bucket { let date: Date; let value: Double }
 
-    private func value(_ r: NunaProgramRun) -> Double {
-        metric == 0 ? LiftFormat.display(fromKilograms: r.volumeKg, system: system) : r.minutes
-    }
+    private func volume(_ r: NunaProgramRun) -> Double { LiftFormat.display(fromKilograms: r.volumeKg, system: system) }
+
+    private var unit: Calendar.Component { span == 180 ? .weekOfYear : .day }
 
     /// Where the chart starts and ends, and the bars with something in them.
     private func buckets() -> (start: Date, end: Date, bars: [Bucket]) {
         let cal = Calendar.current
-        let unit: Calendar.Component = span == 7 ? .day : .weekOfYear
         let today = Date()
         let thisBucket = cal.dateInterval(of: unit, for: today)?.start ?? cal.startOfDay(for: today)
-        let start: Date = span == 7 ? (cal.date(byAdding: .day, value: -6, to: cal.startOfDay(for: today)) ?? thisBucket)
-                                    : (cal.date(byAdding: .weekOfYear, value: -25, to: thisBucket) ?? thisBucket)
+        let start: Date
+        switch span {
+        case 7: start = cal.date(byAdding: .day, value: -6, to: cal.startOfDay(for: today)) ?? thisBucket
+        case 30: start = cal.date(byAdding: .day, value: -29, to: cal.startOfDay(for: today)) ?? thisBucket
+        default: start = cal.date(byAdding: .weekOfYear, value: -25, to: thisBucket) ?? thisBucket
+        }
         let end = cal.date(byAdding: unit, value: 1, to: thisBucket) ?? today
         var sums: [Date: Double] = [:]
         for r in runs where r.date >= start && r.date < end {
             guard let key = cal.dateInterval(of: unit, for: r.date)?.start else { continue }
-            sums[key, default: 0] += value(r)
+            sums[key, default: 0] += volume(r)
         }
         return (start, end, sums.filter { $0.value > 0 }.map { Bucket(date: $0.key, value: $0.value) }.sorted { $0.date < $1.date })
     }
 
-    private func figure(_ v: Double) -> (String, String) {
-        metric == 0 ? (NunaTrendsFormat.num(v), UnitFormatter.massUnit(system)) : ("\(Int(v.rounded()))", String(localized: "min"))
-    }
-
-    /// What the runs of this routine added up to: volume or how long they took, a bar a day for the last week or a bar a week for six months, the total at the top
-    /// until a bar is touched.
     @ViewBuilder private var progressCard: some View {
         if runs.isEmpty {
-            // Nothing to draw yet: a line, not an empty chart with its switches.
+            // Nothing to draw yet: a line, not an empty chart with its switch.
             if loaded {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Progress").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
@@ -542,51 +539,58 @@ struct NunaProgramDetailView: View {
         } else { chartCard }
     }
 
+    /// The volume the runs of this routine added up to, a bar a day over a week or a month and a bar a week over six months, as the heart rate variability page draws
+    /// its days: the total at the top until a bar is touched, then that bar's day and figure, with the others stepping back.
     private var chartCard: some View {
         let cal = Calendar.current
-        let unit: Calendar.Component = span == 7 ? .day : .weekOfYear
         let b = buckets()
         let total = b.bars.map(\.value).reduce(0, +)
         let touched = picked.flatMap { p in b.bars.first { cal.isDate($0.date, equalTo: p, toGranularity: unit) } }
         let shown = touched?.value ?? total
-        let f = figure(shown)
-        let color = metric == 0 ? NunaPalette.effortModerate : NunaPalette.recoveryBlue
+        let color = NunaPalette.effortModerate
         let caption: String = {
             guard let t = touched else { return String(localized: "Total") }
             let df = DateFormatter(); df.locale = AppLanguage.activeLocale
-            df.setLocalizedDateFormatFromTemplate(span == 7 ? "EEE, MMM d" : "MMM d")
-            return span == 7 ? df.string(from: t.date) : String(localized: "Week of \(df.string(from: t.date))")
+            df.setLocalizedDateFormatFromTemplate(span == 180 ? "MMM d" : "EEE, MMM d")
+            return span == 180 ? String(localized: "Week of \(df.string(from: t.date))") : df.string(from: t.date)
         }()
+        let top = b.bars.map(\.value).max() ?? 0
+        func nearest(_ x: CGFloat, _ proxy: ChartProxy, _ frame: CGRect) -> Date? {
+            guard let at: Date = proxy.value(atX: x - frame.minX) else { return nil }
+            return b.bars.min { abs($0.date.timeIntervalSince(at)) < abs($1.date.timeIntervalSince(at)) }?.date
+        }
         return VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(verbatim: caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(touched == nil ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: b.bars.isEmpty ? "–" : f.0).font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(touched == nil ? NunaPalette.textPrimary : color)
-                        if !b.bars.isEmpty { Text(verbatim: f.1).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(touched == nil ? NunaPalette.textPrimary : color).textCase(nil) }
+                        Text(verbatim: b.bars.isEmpty ? "–" : NunaTrendsFormat.num(shown)).font(.nuna(size: 40, weight: .semibold, design: NunaType.design))
+                            .foregroundStyle(touched == nil ? NunaPalette.textPrimary : color)
+                        if !b.bars.isEmpty {
+                            Text(verbatim: UnitFormatter.massUnit(system)).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(touched == nil ? NunaPalette.textPrimary : color).textCase(nil)
+                        }
                     }
                 }
                 Spacer(minLength: 0)
-                VStack(alignment: .trailing, spacing: 10) {
-                    NunaRangeSwitch(choices: [(0, String(localized: "Volume")), (1, String(localized: "Duration"))], range: $metric) { picked = nil }
-                    NunaRangeSwitch(choices: [(7, String(localized: "Weekly")), (180, String(localized: "6 months"))], range: $span) { picked = nil }
-                }
+                NunaRangeSwitch(range: $span) { picked = nil }
             }
             Chart {
                 ForEach(b.bars, id: \.date) { bar in
-                    BarMark(x: .value("Date", bar.date, unit: unit), y: .value("Value", bar.value), width: .ratio(span == 7 ? 0.5 : 0.7))
+                    BarMark(x: .value("Date", bar.date, unit: unit), y: .value("Volume", bar.value), width: .ratio(span == 7 ? 0.5 : (span == 30 ? 0.6 : 0.7)))
                         .foregroundStyle(color).cornerRadius(3).opacity(touched == nil || touched?.date == bar.date ? 1 : 0.3)
                 }
+                if let t = touched {
+                    RuleMark(x: .value("Picked", t.date, unit: unit)).foregroundStyle(Color.white.opacity(0.85)).lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
+                }
             }
-            .chartXSelection(value: $picked)
             .chartXScale(domain: b.start...b.end)
-            .chartYScale(domain: .automatic(includesZero: true))
+            .chartYScale(domain: 0...max(top * 1.15, 1))
             .chartXAxis {
-                if span == 7 {
-                    AxisMarks(values: .stride(by: .day)) { _ in AxisValueLabel(format: .dateTime.weekday(.narrow), centered: true).foregroundStyle(NunaPalette.textMuted) }
-                } else {
-                    AxisMarks(values: .stride(by: .month)) { _ in AxisValueLabel(format: .dateTime.month(.abbreviated)).foregroundStyle(NunaPalette.textMuted) }
+                switch span {
+                case 7: AxisMarks(values: .stride(by: .day)) { _ in AxisValueLabel(format: .dateTime.weekday(.narrow), centered: true).foregroundStyle(NunaPalette.textMuted) }
+                case 30: AxisMarks(values: .stride(by: .day, count: 7)) { _ in AxisValueLabel(format: .dateTime.month(.abbreviated).day()).foregroundStyle(NunaPalette.textMuted) }
+                default: AxisMarks(values: .stride(by: .month)) { _ in AxisValueLabel(format: .dateTime.month(.abbreviated)).foregroundStyle(NunaPalette.textMuted) }
                 }
             }
             .chartYAxis {
@@ -595,11 +599,27 @@ struct NunaProgramDetailView: View {
                     AxisValueLabel().foregroundStyle(NunaPalette.textMuted)
                 }
             }
+            .chartOverlay { proxy in
+                GeometryReader { geo in
+                    if let frame = proxy.plotFrame.map({ geo[$0] }) {
+                        Rectangle().fill(Color.clear).contentShape(Rectangle()).frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
+                            .gesture(DragGesture(minimumDistance: 0)
+                                .onChanged { g in
+                                    let hit = nearest(g.location.x, proxy, frame)
+                                    if touchBeganOnPicked == nil { touchBeganOnPicked = picked != nil && hit.map { cal.isDate($0, equalTo: picked!, toGranularity: unit) } == true }
+                                    if let hit { picked = hit }
+                                }
+                                .onEnded { g in
+                                    if touchBeganOnPicked == true, abs(g.translation.width) < 6 { picked = nil }
+                                    touchBeganOnPicked = nil
+                                })
+                    }
+                }
+            }
             .frame(height: 200)
-            .accessibilityLabel(Text(metric == 0 ? "Volume" : "Duration"))
+            .accessibilityLabel(Text("Volume"))
             if b.bars.isEmpty {
-                Text("No runs of this routine in this period.")
-                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Text("No runs of this routine in this period.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -615,8 +635,6 @@ struct NunaProgramDetailView: View {
             }
             if items.isEmpty {
                 Text("No exercises yet. Choose Edit program to add some.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            } else {
-                Text("Tap an exercise to see how it is done.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).padding(.top, -6)
             }
             ForEach(items, id: \.id) { item in
                 Button { preview = item.exercise } label: {
