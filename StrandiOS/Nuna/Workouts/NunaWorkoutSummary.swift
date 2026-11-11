@@ -83,11 +83,11 @@ struct NunaWorkoutSummaryView: View {
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
         .environment(\.nunaAnyaCardContext, "workouts")
-        .confirmationDialog("Delete this workout?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) {
+        .nunaDialog("Delete this workout?", isPresented: $confirmDelete) {
+            NunaDialogButton("Delete", role: .destructive) {
                 if let r = m.row(key) { Task { NunaWorkoutReviewStore.remove(startTs: r.startTs, sport: r.sport); await repo.deleteWorkout(r); await repo.refresh(); dismiss() } }
             }
-            Button("Cancel", role: .cancel) {}
+            NunaDialogButton("Cancel", role: .cancel) {}
         }
     }
 

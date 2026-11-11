@@ -106,4 +106,89 @@ private struct NunaDiscardModal: View {
         .allowsHitTesting(isPresented)
     }
 }
+// MARK: - A question in the middle of the screen
+
+private struct NunaDialogDismissKey: EnvironmentKey { static let defaultValue: () -> Void = {} }
+extension EnvironmentValues {
+    fileprivate var nunaDialogDismiss: () -> Void {
+        get { self[NunaDialogDismissKey.self] }
+        set { self[NunaDialogDismissKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// What `confirmationDialog` was, drawn as the question WHOOP asks before something is thrown away: a card in the middle of the screen over a dimmed one, the title, a
+    /// sentence, and one wide button for each answer (`NunaDialogButton`). Backing out by tapping outside is a Cancel.
+    func nunaDialog<Actions: View, Message: View>(_ title: LocalizedStringKey, isPresented: Binding<Bool>, @ViewBuilder actions: @escaping () -> Actions,
+                                                  @ViewBuilder message: @escaping () -> Message) -> some View {
+        overlay { NunaDialogModal(isPresented: isPresented, title: Text(title), actions: actions, message: message) }
+    }
+
+    func nunaDialog<Actions: View, Message: View>(_ title: Text, isPresented: Binding<Bool>, @ViewBuilder actions: @escaping () -> Actions,
+                                                  @ViewBuilder message: @escaping () -> Message) -> some View {
+        overlay { NunaDialogModal(isPresented: isPresented, title: title, actions: actions, message: message) }
+    }
+
+    /// The same with no sentence under the title.
+    func nunaDialog<Actions: View>(_ title: LocalizedStringKey, isPresented: Binding<Bool>, @ViewBuilder actions: @escaping () -> Actions) -> some View {
+        nunaDialog(title, isPresented: isPresented, actions: actions, message: { EmptyView() })
+    }
+}
+
+/// One answer of a `nunaDialog`. A destructive one is the filled button, a cancel one is outlined, any other is a plain wide row. The work is done first and the
+/// dialog closed after, so an answer can read the state that opened it.
+struct NunaDialogButton: View {
+    private let title: LocalizedStringKey
+    private let role: ButtonRole?
+    private let action: () -> Void
+    @Environment(\.nunaDialogDismiss) private var dismiss
+
+    init(_ title: LocalizedStringKey, role: ButtonRole? = nil, action: @escaping () -> Void) {
+        self.title = title; self.role = role; self.action = action
+    }
+
+    var body: some View {
+        Button { action(); dismiss() } label: {
+            Text(title).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .foregroundStyle(role == .destructive ? NunaPalette.onAccent : NunaPalette.textPrimary)
+                .multilineTextAlignment(.center).frame(maxWidth: .infinity).frame(minHeight: 52).padding(.horizontal, 12)
+                .background {
+                    if role == .destructive { RoundedRectangle(cornerRadius: 18, style: .continuous).fill(NunaPalette.accent) }
+                    else if role == .cancel { RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 2) }
+                    else { RoundedRectangle(cornerRadius: 18, style: .continuous).fill(NunaPalette.glassStrong) }
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct NunaDialogModal<Actions: View, Message: View>: View {
+    @Binding var isPresented: Bool
+    let title: Text
+    let actions: () -> Actions
+    let message: () -> Message
+
+    var body: some View {
+        ZStack {
+            if isPresented {
+                Color.black.opacity(0.62).ignoresSafeArea().contentShape(Rectangle()).onTapGesture { isPresented = false }
+                VStack(spacing: 18) {
+                    title.font(.nuna(size: 19, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                        .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                    message().font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                    VStack(spacing: 10) { actions() }
+                        .environment(\.nunaDialogDismiss) { isPresented = false }
+                }
+                .padding(.horizontal, 22).padding(.vertical, 26).frame(maxWidth: 340)
+                .background(NunaPalette.cardHighlight, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+                .padding(.horizontal, 28)
+                .transition(.scale(scale: 0.96).combined(with: .opacity))
+            }
+        }
+        .animation(.easeOut(duration: 0.18), value: isPresented)
+        .allowsHitTesting(isPresented)
+    }
+}
 #endif

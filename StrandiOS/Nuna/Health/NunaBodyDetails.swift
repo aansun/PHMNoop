@@ -312,11 +312,11 @@ struct NunaCycleView: View {
             }
         }
         .task(id: repo.cycleTrackingSeq) { starts = await repo.periodStarts() }
-        .confirmationDialog("Delete all logged period starts?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete all period history", role: .destructive) {
+        .nunaDialog("Delete all logged period starts?", isPresented: $confirmDelete) {
+            NunaDialogButton("Delete all period history", role: .destructive) {
                 Task { await repo.deleteAllPeriodStarts(); await model.refreshV5Signals() }
             }
-            Button("Cancel", role: .cancel) {}
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("This permanently removes the on-device period-start history. Sensor history is not changed.") }
     }
 

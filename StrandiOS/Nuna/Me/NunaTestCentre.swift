@@ -57,9 +57,9 @@ struct NunaTestCentreView: View {
             }
             nunaFootnote("Switch on one test, wear the strap, then open Report and strap probes to bundle it. The probes that write to the strap keep their own confirmation there.")
         }
-        .confirmationDialog("Restart the baseline?", isPresented: $confirmRecalibrate, titleVisibility: .visible) {
-            Button("Restart", role: .destructive) { Baselines.recalibrateRecoveryBaselines(); Task { await model.intelligence.analyzeRecent(); await model.repo.refresh() }; recalibrated = true }
-            Button("Cancel", role: .cancel) {}
+        .nunaDialog("Restart the baseline?", isPresented: $confirmRecalibrate) {
+            NunaDialogButton("Restart", role: .destructive) { Baselines.recalibrateRecoveryBaselines(); Task { await model.intelligence.analyzeRecent(); await model.repo.refresh() }; recalibrated = true }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("Recovery and your HRV baseline are learned again from tonight, which takes about 4 nights. Your history stays.") }
     }
 }

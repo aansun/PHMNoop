@@ -58,9 +58,9 @@ struct NunaGymSessionView: View {
         .alert(stravaMessage ?? "", isPresented: Binding(get: { stravaMessage != nil }, set: { if !$0 { stravaMessage = nil } })) {
             Button("OK", role: .cancel) {}
         }
-        .confirmationDialog("Delete this workout?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { Task { await deleteSession() } }
-            Button("Cancel", role: .cancel) {}
+        .nunaDialog("Delete this workout?", isPresented: $confirmDelete) {
+            NunaDialogButton("Delete", role: .destructive) { Task { await deleteSession() } }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("\(sets.count) recorded sets will be removed, and so will the workout this session created. This cannot be undone.") }
     }
 

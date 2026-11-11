@@ -166,13 +166,13 @@ struct NunaPersonaView: View {
             guard let item else { return }
             Task { let data = try? await item.loadTransferable(type: Data.self); if let data { profile.setAvatar(data) }; photoItem = nil }
         }
-        .confirmationDialog("Restart the baseline?", isPresented: $confirmRecalibrate, titleVisibility: .visible) {
-            Button("Restart", role: .destructive) {
+        .nunaDialog("Restart the baseline?", isPresented: $confirmRecalibrate) {
+            NunaDialogButton("Restart", role: .destructive) {
                 Baselines.recalibrateRecoveryBaselines()
                 Task { await model.intelligence.analyzeRecent(); await model.repo.refresh() }
                 recalibrated = true
             }
-            Button("Cancel", role: .cancel) {}
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("Recovery and your HRV baseline are learned again from tonight, which takes about 4 nights. Your history stays.") }
     }
 }

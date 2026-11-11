@@ -307,13 +307,13 @@ struct NunaGymView: View {
             Button("Save") { saveGroupDialog() }
             Button("Cancel", role: .cancel) {}
         }
-        .confirmationDialog("Delete this routine?", isPresented: Binding(get: { deletingProgram != nil }, set: { if !$0 { deletingProgram = nil } }), titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { if let p = deletingProgram { Task { await deleteProgram(p) } }; deletingProgram = nil }
-            Button("Cancel", role: .cancel) { deletingProgram = nil }
+        .nunaDialog("Delete this routine?", isPresented: Binding(get: { deletingProgram != nil }, set: { if !$0 { deletingProgram = nil } })) {
+            NunaDialogButton("Delete", role: .destructive) { if let p = deletingProgram { Task { await deleteProgram(p) } }; deletingProgram = nil }
+            NunaDialogButton("Cancel", role: .cancel) { deletingProgram = nil }
         } message: { Text("Sessions you already logged from it are kept.") }
-        .confirmationDialog("Delete this group?", isPresented: Binding(get: { deletingGroup != nil }, set: { if !$0 { deletingGroup = nil } }), titleVisibility: .visible) {
-            Button("Delete group", role: .destructive) { if let g = deletingGroup { groupsModel.delete(g) }; deletingGroup = nil }
-            Button("Cancel", role: .cancel) { deletingGroup = nil }
+        .nunaDialog("Delete this group?", isPresented: Binding(get: { deletingGroup != nil }, set: { if !$0 { deletingGroup = nil } })) {
+            NunaDialogButton("Delete group", role: .destructive) { if let g = deletingGroup { groupsModel.delete(g) }; deletingGroup = nil }
+            NunaDialogButton("Cancel", role: .cancel) { deletingGroup = nil }
         } message: { Text("The programs in it are kept and become ungrouped.") }
         .sheet(isPresented: $picking) { NunaExercisePicker { picked in
             Task { await NunaGymStore.startFreehand(picked, repo: repo, session: session) }

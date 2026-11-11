@@ -101,9 +101,9 @@ struct NunaProgramEditor: View {
                 items[i] = next
             }
         }
-        .confirmationDialog("Delete this program?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { Task { await deleteProgram() } }
-            Button("Cancel", role: .cancel) {}
+        .nunaDialog("Delete this program?", isPresented: $confirmDelete) {
+            NunaDialogButton("Delete", role: .destructive) { Task { await deleteProgram() } }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("Sessions you already logged from it are kept.") }
     }
 
@@ -456,9 +456,9 @@ struct NunaProgramDetailView: View {
         .task(id: repo.refreshSeq) { await load() }
         .sheet(item: Binding(get: { preview.map { NunaVideoTarget(name: $0) } }, set: { preview = $0?.name })) { t in NunaExercisePreviewSheet(name: t.name) }
         .safeAreaInset(edge: .bottom, spacing: 0) { startBar }
-        .confirmationDialog("Delete this program?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { Task { await deleteProgram() } }
-            Button("Cancel", role: .cancel) {}
+        .nunaDialog("Delete this program?", isPresented: $confirmDelete) {
+            NunaDialogButton("Delete", role: .destructive) { Task { await deleteProgram() } }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("Sessions you already logged from it are kept.") }
     }
 
@@ -797,9 +797,9 @@ struct NunaProgramItemView: View {
         }
         .preferredColorScheme(NunaTheme.colorScheme)
         .task { await loadIfNeeded() }
-        .confirmationDialog(forgetting.map { Text(verbatim: String(localized: "Forget \($0.name)?")) } ?? Text(verbatim: ""), isPresented: Binding(get: { forgetting != nil }, set: { if !$0 { forgetting = nil } }), titleVisibility: .visible) {
-            Button("Forget", role: .destructive) { Task { await forget() } }
-            Button("Cancel", role: .cancel) { forgetting = nil }
+        .nunaDialog(forgetting.map { Text(verbatim: String(localized: "Forget \($0.name)?")) } ?? Text(verbatim: ""), isPresented: Binding(get: { forgetting != nil }, set: { if !$0 { forgetting = nil } })) {
+            NunaDialogButton("Forget", role: .destructive) { Task { await forget() } }
+            NunaDialogButton("Cancel", role: .cancel) { forgetting = nil }
         } message: { Text("It stops being offered here. Sessions you already logged with it are kept exactly as they are.") }
         .alert("You've saved the most exercises NOOP remembers", isPresented: $vocabularyFull) {
             Button("OK", role: .cancel) {}
