@@ -216,6 +216,14 @@ struct StrandiOSApp: App {
     var body: some Scene {
         WindowGroup {
             iOSRootView()
+                #if DEBUG
+                .task {
+                    // `--backup-selftest`: writes and restores a backup between scratch folders and logs the result as PHMNBACKUP.
+                    guard CommandLine.arguments.contains("--backup-selftest") else { return }
+                    for line in await PHMNBackupSelfTest.run() { NSLog("PHMNBACKUP %@", line) }
+                    NSLog("PHMNBACKUP done")
+                }
+                #endif
                 .environmentObject(model)
                 .environmentObject(model.ble)   // #334: Today pull-to-sync reads BLEManager (no HR churn)
                 .environmentObject(model.live)
