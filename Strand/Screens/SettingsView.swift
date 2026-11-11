@@ -79,7 +79,7 @@ struct SettingsView: View {
     /// #1545 opt-in: score Effort with Banister's exponential TRIMP instead of Edwards' heart-rate zones.
     /// Default OFF — it re-scores the whole window against a different recipe. See
     /// [PuffinExperiment.banisterEffortKey].
-    @AppStorage(PuffinExperiment.banisterEffortKey) private var banisterEffortEnabled = false
+    @AppStorage(PuffinExperiment.banisterEffortKey) private var banisterEffortEnabled = PuffinExperiment.banisterEffortDefault
 
     /// True when the connected strap has positively attested itself a WHOOP MG. The variant is published as
     /// its label string (`LiveState.whoop5Variant`); "MG" is `Whoop5Variant.mg.label`. nil / not-yet-
@@ -1133,7 +1133,7 @@ struct SettingsView: View {
                     // candidate and HRV-window toggles (analyzeRecent → refresh).
                     Task { await model.intelligence.analyzeRecent(); await model.repo.refresh() }
                 }
-                Text("Scores Strain on an exponential intensity curve (Banister TRIMP) instead of the default heart-rate zones (Edwards). The default earns nothing below half of your heart-rate reserve, so an hour of lifting — where hard sets average out against the rests — can score close to zero. The exponential curve has no floor and weights short, hard efforts far more heavily. Re-scores your history, and both scales reach the same maximum. Off by default.")
+                Text("Scores Strain on an exponential intensity curve (Banister TRIMP), which also counts light and intermittent effort. The alternative, heart-rate zones (Edwards), earns nothing below half of your heart-rate reserve, so a day of walking and lifting can score close to zero. Turning it off re-scores your history, and both scales reach the same maximum. On by default.")
                     .font(StrandFont.caption)
                     .foregroundStyle(StrandPalette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)

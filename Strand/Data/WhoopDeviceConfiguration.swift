@@ -34,7 +34,7 @@ struct WhoopDeviceConfiguration: Equatable {
             motionAwareWake: family == .whoop5,
             // Keep NOOP's native axis as the honest default; the WHOOP 0-21 scale is display-only.
             effortScaleRaw: EffortScale.hundred.rawValue,
-            banisterEffort: false,
+            banisterEffort: PuffinExperiment.banisterEffortDefault,
             stressPersonalBaseline: false,
             // WHOOP 4.0 has materially less battery headroom than 5.0/MG, so protect its last
             // charge without slowing normal sync on the longer-lived generation.
