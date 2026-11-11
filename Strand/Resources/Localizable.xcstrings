@@ -20,6 +20,7 @@
  "Find workouts on Strava": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cari workout di Strava"}}}},
  "A workout on Strava that PHMN does not have, and the strap has heart rate for, shows in Today's activities to process": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Workout di Strava yang belum ada di PHMN dan punya HR strap akan muncul di aktivitas Hari Ini untuk diproses"}}}},
  "This workout is on Strava and your strap recorded heart rate during it. Check it and save it, or delete it if you do not want it here.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Workout ini ada di Strava dan strap-mu merekam detak jantung selama itu. Periksa lalu simpan, atau hapus kalau tidak ingin ada di sini."}}}},
+ "Today with Anya": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hari ini bersama Anya"}}}},
  "Save to my programs": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Simpan ke program saya"}}}},
  "Saved to your programs": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tersimpan di programmu"}}}},
  "Muscle groups": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kelompok otot"}}}},

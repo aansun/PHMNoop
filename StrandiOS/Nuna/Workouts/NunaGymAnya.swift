@@ -146,6 +146,19 @@ final class NunaGymAnyaModel: ObservableObject {
 
 // MARK: - The card on the Gym tab
 
+extension View {
+    /// The card Anya speaks from on the Gym tab: a violet-to-teal wash with a violet-to-teal outline.
+    func nunaAnyaGradientCard() -> some View {
+        let shape = RoundedRectangle(cornerRadius: 22, style: .continuous)
+        return self
+            .background(LinearGradient(colors: [Color(red: 0.17, green: 0.15, blue: 0.33).opacity(0.9), Color(red: 0.11, green: 0.2, blue: 0.26).opacity(0.9)],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing), in: shape)
+            .overlay(shape.strokeBorder(LinearGradient(colors: [Color(red: 0.47, green: 0.4, blue: 0.9), Color(red: 0.25, green: 0.6, blue: 0.72)],
+                                                       startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5))
+            .contentShape(shape)
+    }
+}
+
 /// Anya at the top of the Gym tab. She reads when the wearer usually trains and how the last 30 days went, weighs today's Charge and
 /// readiness, and says whether to go as planned or lighter. A lighter day changes only the session that is started, never the program.
 struct NunaGymAnyaCard: View {
@@ -158,21 +171,21 @@ struct NunaGymAnyaCard: View {
     var body: some View {
         Group {
             if coachEnabled, !session.isActive, let r = model.reading {
-                // Kept short: two lines of Anya's read and one button; the whole read and the plan are in the sheet the button opens.
-                VStack(alignment: .leading, spacing: 14) {
-                    Text(verbatim: headline(r)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .lineLimit(2).multilineTextAlignment(.leading).textCase(nil)
+                // The same card as Generate with Anya had: a title, Anya's read of the day in a line or two, and the way into the plan, which has the whole read.
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Today with Anya").font(.nuna(size: 16.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    Text(verbatim: headline(r)).font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                        .lineSpacing(3).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading).textCase(nil)
                     if r.proposal != nil {
-                        Button { sheet = true } label: {
-                            Text(buttonTitle(r)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                                .padding(.horizontal, 20).frame(height: 44)
-                                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                        HStack(spacing: 8) {
+                            Text(buttonTitle(r)).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            Image(systemName: "arrow.right").font(.nuna(size: 15, weight: .bold))
                         }
-                        .buttonStyle(.plain)
+                        .foregroundStyle(Color(red: 0.49, green: 0.46, blue: 0.94)).padding(.top, 2)
                     }
                 }
-                .nunaAnyaOutline()
-                .contentShape(Rectangle())
+                .padding(.horizontal, 18).padding(.vertical, 16).frame(maxWidth: .infinity, alignment: .leading)
+                .nunaAnyaGradientCard()
                 .onTapGesture { if r.proposal != nil { sheet = true } }
             }
         }
