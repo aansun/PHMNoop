@@ -261,7 +261,8 @@ struct NunaGymView: View {
     @State private var loaded = false
     @State private var picking = false
     @State private var choosingStart = false
-    @State private var buildChoiceOpen = false
+    @State private var choosingBuild = false
+    @Environment(\.nunaPushWorkout) private var pushWorkout
     @State private var buildingWithAnya = false
     @State private var groupListOpen = false
     @ObservedObject private var groupsModel = NunaProgramGroupsModel.shared
@@ -457,30 +458,40 @@ struct NunaGymView: View {
         .buttonStyle(.plain)
     }
 
-    /// The same, by hand, or from a ready-made workout: the button opens the two ways in under it.
+    /// The same, by hand, or from a ready-made workout or Anya: the button raises a sheet from the bottom with the three ways in.
     private var buildButton: some View {
-        VStack(spacing: 10) {
-            Button { withAnimation(.easeOut(duration: 0.2)) { buildChoiceOpen.toggle() } } label: {
-                HStack(spacing: 8) {
-                    Text("Build a workout").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    Image(systemName: buildChoiceOpen ? "chevron.up" : "chevron.down").font(.nuna(size: 13, weight: .bold))
-                }
+        Button { choosingBuild = true } label: {
+            Text("Build a workout").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                 .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54)
                 .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            if buildChoiceOpen {
-                Button { buildChoiceOpen = false; tab = 2 } label: {
-                    optionLabel("From Explore", "safari", "Pick a ready-made workout and save it to a group.")
-                }
-                .buttonStyle(.plain)
-                NavigationLink(value: NunaWorkoutRoute.program("new")) {
-                    optionLabel("Build my own", "square.and.pencil", "Choose the exercises, sets and reps yourself.")
-                }
-                .buttonStyle(.plain)
-            }
         }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $choosingBuild) { buildSheet }
+    }
+
+    /// The sheet's choice is acted on once it has gone: a page cannot be pushed, or a second sheet raised, while it is still on its way down.
+    private var buildSheet: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Build a workout").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).padding(.top, 22).padding(.bottom, 8)
+            startOption("From Explore", "safari", "Pick a ready-made workout and save it to a group.") {
+                choosingBuild = false
+                tab = 2
+            }
+            startOption("Generate with Anya", "sparkles", "Describe your goal and Anya builds the program.") {
+                choosingBuild = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { buildingWithAnya = true }
+            }
+            startOption("Build my own", "square.and.pencil", "Choose the exercises, sets and reps yourself.") {
+                choosingBuild = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { pushWorkout(.program("new")) }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, NunaSpacing.screenH)
+        .preferredColorScheme(NunaTheme.colorScheme)
+        .nunaSheetChrome(detents: [.height(360)])
     }
 
     /// A bare icon at the right end of the My Program title.

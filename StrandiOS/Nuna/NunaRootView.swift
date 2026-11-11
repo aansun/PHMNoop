@@ -213,7 +213,7 @@ struct NunaRootView: View {
         .toolbar(.hidden, for: .tabBar)
         .environment(\.nunaPushToday) { paths[Tab.today.rawValue].append($0) }
         .environment(\.nunaPushMe) { paths[Tab.today.rawValue].append($0) }
-        .environment(\.nunaPushWorkout) { paths[Tab.today.rawValue].append($0) }
+        .environment(\.nunaPushWorkout) { paths[tab.rawValue].append($0) }
         // Pushed screens live in UIKit hosting; they need the choice stated again to resolve the adaptive palette.
         .preferredColorScheme(NunaTheme.colorScheme)
         .tag(tab.rawValue)
