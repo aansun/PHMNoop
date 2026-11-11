@@ -193,6 +193,7 @@ struct NunaTodayView: View {
     /// The saved session the Anya card opens straight to.
     @State private var showBreath = false
     @Environment(\.nunaPushToday) private var pushToday
+    @Environment(\.nunaPushMe) private var pushMe
     @AppStorage("nuna.keyMetricsLayout") private var metricsLayoutRaw = NunaMetricsLayout.cards.rawValue
     @State private var showAddCard = false
     /// 0 when Today is at the top, 1 once the pinned score rings have shrunk to their small size.
@@ -517,7 +518,8 @@ struct NunaTodayView: View {
                 HStack(spacing: 8) {
                 NunaTodayProfileBadge()
                 Spacer(minLength: 0)
-                Button { router.openDevices() } label: {
+                // Pushed into the page's own stack like every other page, so the way back and the tab bar behave as they do elsewhere.
+                Button { pushMe(.devices) } label: {
                     NunaLiveStrapChip()
                 }
                 .buttonStyle(.plain)
