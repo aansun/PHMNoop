@@ -98,6 +98,7 @@ err.txt
 
 # Oura OAuth app credentials (BYO; never committed)
 Strand/Oura/OuraSecrets.xcconfig
+Strand/Luciq/LuciqSecrets.xcconfig
 
 # Personal bundle id prefix (BYO; never committed)
 Config/BundleIdSecrets.xcconfig

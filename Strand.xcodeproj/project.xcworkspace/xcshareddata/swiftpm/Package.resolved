@@ -10,6 +10,15 @@
       }
     },
     {
+      "identity" : "luciq-ios-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/luciqai/luciq-ios-sdk",
+      "state" : {
+        "revision" : "bed7bcfc3bb7df53845501444d8edbaa2d3cdbf6",
+        "version" : "19.14.0"
+      }
+    },
+    {
       "identity" : "musclemap",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/melihcolpan/MuscleMap",
