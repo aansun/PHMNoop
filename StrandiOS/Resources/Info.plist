@@ -55,6 +55,8 @@
 	<string>public.app-category.healthcare-fitness</string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<key>LUCIQ_APP_TOKEN</key>
+	<string>$(LUCIQ_APP_TOKEN)</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
@@ -74,6 +76,8 @@
 	<string>PHMN uses the microphone to let you ask the coach a question by voice. The audio is transcribed on-device and never leaves your iPhone.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>PHMN reads your iPhone's step count for a walking or running workout to show steps in the activity summary. It stays on your device. Nothing leaves it.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>PHMN lets you attach a picture to the feedback or problem report you choose to send. Nothing is sent until you send it.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>PHMN transcribes your question on-device so you can ask the coach out loud instead of typing. Audio never leaves your iPhone.</string>
 	<key>NSSupportsLiveActivities</key>

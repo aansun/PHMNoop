@@ -30,6 +30,7 @@ struct NunaMeView: View {
                 VStack(spacing: 10) {
                     NunaSettingsLink(route: .howItWorks, icon: "questionmark.circle", title: "How it works", subtitle: "How your scores are worked out")
                     NunaSettingsLink(route: .whatsNew, icon: "graduationcap", title: "What's new")
+                    NunaSettingsLink(route: .feedback, icon: "bubble.left.and.bubble.right", title: "Feedback", subtitle: "Tell us what you think")
                     NunaSettingsLink(route: .about, icon: NunaIcons.about, title: "About")
                 }
             }
@@ -51,7 +52,7 @@ enum NunaMeRoute: Hashable {
     case search
     case applications
     /// The new Settings structure: the profile page, the App Settings list, the levels, and the two Support pages.
-    case profile, appSettings, levels, howItWorks, whatsNew, dayStreak
+    case profile, appSettings, levels, howItWorks, whatsNew, dayStreak, feedback
     /// The Settings list, pushed from the profile page.
     case settings
 }
@@ -99,6 +100,7 @@ extension View {
             case .levels: NunaLevelsView()
             case .howItWorks: NunaHowItWorksView()
             case .whatsNew: NunaWhatsNewView()
+            case .feedback: NunaFeedbackView()
             case .dayStreak: NunaDayStreakView()
             case .settings: NunaMeView(pushed: true)
             }

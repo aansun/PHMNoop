@@ -174,6 +174,8 @@ enum NunaMeSettingsIndex {
         .init(route: .howItWorks, title: "How scores are worked out", note: "Recovery, Strain and Sleep"),
         .init(route: .devices, title: "Models and support", note: "WHOOP 4.0, 5.0 and MG"),
         .init(route: .devices, title: "Connection help", note: "Strap not found"),
+        .init(route: .feedback, title: "Share feedback", note: "An idea, a request or a word of thanks"),
+        .init(route: .feedback, title: "Report a problem", note: "Something broke or looks wrong"),
         .init(route: .about, title: "Report a problem", note: "Open on GitHub"),
         .init(route: .about, title: "Open-source notices", note: "MuscleMap, free-exercise-db, openGym and fonts"),
         .init(route: .persona, title: "Date of birth", note: "Age, used for your heart-rate zones"),
