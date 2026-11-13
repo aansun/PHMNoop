@@ -3400,8 +3400,16 @@ final class Repository: ObservableObject {
         var noStrapData = 0
         /// Rows used that are `manualBeforeLog`: made before the suggestion log began, so a few may be saved suggestions.
         var beforeLogUsed = 0
+        /// Used rows that came from Strava (their sport was named by Strava or the device that recorded it, not by PHMN).
+        var stravaUsed = 0
         var windows: [LabelledWorkoutWindow] = []
+        /// The used windows split by what stood behind their features. Heart-rate-only windows (no motion from the strap) are scored on their own: without
+        /// gait or movement the classifier is guessing from heart rate, and averaging that with the rest would flatter or punish it unfairly.
+        var fullWindows: [LabelledWorkoutWindow] = []
+        var heartRateOnlyWindows: [LabelledWorkoutWindow] = []
         var report = WorkoutClassReplay.evaluate([])
+        var fullReport = WorkoutClassReplay.evaluate([])
+        var heartRateOnlyReport = WorkoutClassReplay.evaluate([])
     }
 
     /// Run the shape classifier over every saved workout that carries the person's own label and has strap data, and report how often it named them right.
@@ -3426,9 +3434,13 @@ final class Repository: ObservableObject {
             case .lifting: source = .lifting
             case .activityFile: source = .activityFile
             }
-            let origin = WorkoutLabelProvenance.origin(source: source, sport: row.sport, startTs: row.startTs, suggestions: logged, logStartedAt: logStart)
+            let origin = WorkoutLabelProvenance.origin(source: source, sport: row.sport, startTs: row.startTs, suggestions: logged, logStartedAt: logStart,
+                                                       notes: row.notes)
             guard origin.isLabel(includeBeforeLog: true) else { result.notTheirLabel[origin, default: 0] += 1; continue }
-            guard let cls = WorkoutSportMap.coarseClass(forSport: row.sport) else { result.unusableName += 1; continue }
+            // A workout from Strava keeps Strava's own sport type in its notes, which says more than PHMN's coarser name (NordicSki is saved as "Skiing").
+            guard let cls = WorkoutSportMap.labelClass(sport: row.sport, stravaType: WorkoutSportMap.stravaType(fromNotes: row.notes)) else {
+                result.unusableName += 1; continue
+            }
             async let hrTask = hrSamples(from: row.startTs, to: row.endTs, limit: 50_000)
             async let gravityTask = gravitySamplesUnion(from: row.startTs, to: row.endTs)
             async let stepsTask = stepSamplesUnion(from: row.startTs, to: row.endTs)
@@ -3438,10 +3450,18 @@ final class Repository: ObservableObject {
                 result.noStrapData += 1; continue
             }
             if origin == .manualBeforeLog { result.beforeLogUsed += 1 }
-            windows.append(LabelledWorkoutWindow(id: "\(row.startTs)", label: cls, features: features))
+            if origin == .stravaImported { result.stravaUsed += 1 }
+            let window = LabelledWorkoutWindow(id: "\(row.startTs)", label: cls, features: features)
+            windows.append(window)
+            switch WorkoutWindowEvidence.of(tickCoverage: features.tickCoverage, gravitySamples: gravity.count) {
+            case .full: result.fullWindows.append(window)
+            case .heartRateOnly: result.heartRateOnlyWindows.append(window)
+            }
         }
         result.windows = windows
         result.report = WorkoutClassReplay.evaluate(windows)
+        result.fullReport = WorkoutClassReplay.evaluate(result.fullWindows)
+        result.heartRateOnlyReport = WorkoutClassReplay.evaluate(result.heartRateOnlyWindows)
         return result
     }
 

@@ -15,6 +15,7 @@ import WhoopStore
 //   typedByPerson          a manual row with no matching saved suggestion               label
 //   editedAfterSuggestion  saved under another name than offered, or renamed later      label (the change is a correction, the strongest kind)
 //   imported               Apple Health, a Hevy/Liftosaur session, a GPX/TCX/FIT file    label (named by another app or by the person there)
+//   stravaImported         a workout brought in from Strava (notes start "Strava")      label (named by Strava or the device that recorded it, never by PHMN)
 //   manualBeforeLog        a manual row made before the log began                        label WITH A CAVEAT: some may be saved suggestions
 //   savedFromSuggestion    saved from a suggestion and left as offered                   NOT a label (it is the detector's own guess)
 //   strapOwn               a workout the WHOOP strap or its app named                    NOT a label (not the person's word, and not independent)
@@ -30,6 +31,7 @@ public enum WorkoutLabelOrigin: String, Sendable, CaseIterable {
     case typedByPerson
     case editedAfterSuggestion
     case imported
+    case stravaImported
     case manualBeforeLog
     case savedFromSuggestion
     case strapOwn
@@ -39,7 +41,7 @@ public enum WorkoutLabelOrigin: String, Sendable, CaseIterable {
     /// `manualBeforeLog` is included only when the caller says it accepts the caveat.
     public func isLabel(includeBeforeLog: Bool) -> Bool {
         switch self {
-        case .typedByPerson, .editedAfterSuggestion, .imported: return true
+        case .typedByPerson, .editedAfterSuggestion, .imported, .stravaImported: return true
         case .manualBeforeLog: return includeBeforeLog
         case .savedFromSuggestion, .strapOwn, .legacyDetected: return false
         }
@@ -59,13 +61,16 @@ public enum WorkoutLabelProvenance {
     ///   - suggestions: the logged suggestions for the same device (any outcome; only `saved` ones matter here).
     ///   - logStartedAt: when the suggestion log began on this device (unix seconds), or nil if it has not. A manual row that starts before it
     ///     cannot be told apart from a saved suggestion, so it is `manualBeforeLog`.
+    ///   - notes: the row's notes. A manual row whose notes mark it as brought in from Strava is `stravaImported`: its sport came from Strava, not from PHMN's
+    ///     detector, so it is a label whether or not the suggestion log existed yet.
     public static func origin(source: WorkoutLabelSource, sport: String, startTs: Int,
-                              suggestions: [WorkoutSuggestionRow], logStartedAt: Int?) -> WorkoutLabelOrigin {
+                              suggestions: [WorkoutSuggestionRow], logStartedAt: Int?, notes: String? = nil) -> WorkoutLabelOrigin {
         switch source {
         case .detected: return .legacyDetected
         case .whoop: return .strapOwn
         case .apple, .lifting, .activityFile: return .imported
         case .manual:
+            if WorkoutSportMap.isStravaNotes(notes) { return .stravaImported }
             guard let logStartedAt, startTs >= logStartedAt else { return .manualBeforeLog }
             let match = suggestions
                 .filter { $0.outcome == WorkoutSuggestionOutcome.saved.rawValue && abs($0.startSec - startTs) <= startToleranceSec }

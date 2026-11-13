@@ -157,10 +157,9 @@ struct NunaTodayActivities: View {
                         // A workout from Strava keeps its title and, when the sheet had none, its distance.
                         var row = row
                         if s.stravaId != nil {
-                            let title = (s.stravaName ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                             row = WorkoutRow(startTs: row.startTs, endTs: row.endTs, sport: row.sport, source: row.source, durationS: row.durationS, energyKcal: row.energyKcal,
                                              avgHr: row.avgHr, maxHr: row.maxHr, strain: row.strain, distanceM: row.distanceM ?? s.distanceM, zonesJSON: row.zonesJSON,
-                                             notes: title.isEmpty ? "Strava" : "Strava · " + title, steps: row.steps)
+                                             notes: WorkoutSportMap.stravaNotes(title: s.stravaName, stravaType: s.stravaType), steps: row.steps)
                             if let id = s.stravaId { StravaHandled.add(id) }
                         }
                         await repo.saveManualWorkout(row)

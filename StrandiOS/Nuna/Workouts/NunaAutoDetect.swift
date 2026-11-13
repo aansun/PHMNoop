@@ -90,16 +90,26 @@ struct NunaAutoDetectView: View {
         }
     }
 
-    /// The result as plain lines: where the workouts went (used, or left out and why), then the classifier's numbers.
+    /// The result as plain lines: where the workouts went (used, or left out and why), then the classifier's numbers, with and without motion apart.
     static func checkLines(_ c: Repository.WorkoutReplayResult) -> [String] {
         func n(_ o: WorkoutLabelOrigin) -> Int { c.notTheirLabel[o] ?? 0 }
-        var lines = ["Saved workouts: \(c.savedWorkouts)", "Used (your own label, with strap data): \(c.windows.count)"]
+        var lines = ["Saved workouts: \(c.savedWorkouts)",
+                     "Used (your own label, with strap data): \(c.windows.count), of which from Strava: \(c.stravaUsed)"]
         lines.append("Left out: saved from a suggestion \(n(.savedFromSuggestion)), named by the strap \(n(.strapOwn)), old detected \(n(.legacyDetected)), "
                      + "name too vague \(c.unusableName), no strap data \(c.noStrapData)")
         if c.beforeLogUsed > 0 {
             lines.append("\(c.beforeLogUsed) used workouts were saved before this log began; a few may have been saved suggestions.")
         }
-        return lines + WorkoutClassReplay.summaryLines(c.report)
+        lines.append("")
+        lines.append("With motion data (\(c.fullWindows.count) windows)")
+        lines += WorkoutClassReplay.summaryLines(c.fullReport)
+        lines.append("")
+        lines.append("Heart rate only, no motion from the strap (\(c.heartRateOnlyWindows.count) windows)")
+        lines += WorkoutClassReplay.summaryLines(c.heartRateOnlyReport)
+        if !c.heartRateOnlyWindows.isEmpty {
+            lines.append("Heart-rate-only windows are a weaker kind of evidence. Do not learn from them as if they carried gait.")
+        }
+        return lines
     }
 
     private func value(_ t: String) -> some View {
