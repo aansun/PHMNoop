@@ -28,32 +28,36 @@ struct NunaTestCentreView: View {
                     Text("Each mode records more detail about one part of the app, then bundles it for a bug report. Turn them off when you are done.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
-            NunaSettingsGroup("Test modes") {
+            NunaSettingsSection("Test modes") {
                 let modes = TestCentreLayout.visibleModes(is5MG: is5MG)
-                ForEach(Array(modes.enumerated()), id: \.element.id) { i, m in
-                    if i > 0 { NunaDivider() }
-                    NunaModeRow(mode: m) { tick += 1 }
+                ForEach(modes) { m in
+                    NunaSettingsCard { NunaModeRow(mode: m) { tick += 1 } }
                 }
             }
-            NunaSettingsGroup("Diagnostics") {
-                NavigationLink(value: NunaDeviceRoute.log) { NunaListRow("Strap log", description: "Connection and sync notes", systemImage: "doc.text", showsChevron: true) }.buttonStyle(.plain)
-                NunaDivider()
-                Button { confirmRecalibrate = true } label: { NunaListRow("Recalibrate", subtitle: LocalizedStringKey(recalibrated ? String(localized: "Restarted from tonight") : String(localized: "Restart the baseline from scratch")), systemImage: "arrow.triangle.2.circlepath", showsChevron: true) }.buttonStyle(.plain)
-                NunaDivider()
-                NunaToggleRow("Scheduled export", subtitle: "Off until you turn it on", systemImage: "square.and.arrow.up", isOn: Binding(get: { exportOn }, set: { exportOn = $0; ScheduledDebugExport.setEnabled($0) })).padding(.vertical, 8)
+            NunaSettingsSection("Diagnostics") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaDeviceRoute.log) { NunaListRow("Strap log", description: "Connection and sync notes", systemImage: "doc.text", showsChevron: true) }.buttonStyle(.plain)
+                }
+                NunaSettingsCard {
+                    Button { confirmRecalibrate = true } label: { NunaListRow("Recalibrate", subtitle: LocalizedStringKey(recalibrated ? String(localized: "Restarted from tonight") : String(localized: "Restart the baseline from scratch")), systemImage: "arrow.triangle.2.circlepath", showsChevron: true) }.buttonStyle(.plain)
+                }
+                NunaSettingsSwitch("Scheduled export", subtitle: "Off until you turn it on", systemImage: "square.and.arrow.up", isOn: Binding(get: { exportOn }, set: { exportOn = $0; ScheduledDebugExport.setEnabled($0) }))
                 if exportOn {
-                    NunaDivider()
-                    HStack {
-                        Text("Time").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Spacer()
-                        DatePicker("", selection: Binding(get: { Calendar.current.date(from: DateComponents(hour: exportMinutes / 60, minute: exportMinutes % 60)) ?? Date() },
-                                                           set: { let c = Calendar.current.dateComponents([.hour, .minute], from: $0); exportMinutes = (c.hour ?? 7) * 60 + (c.minute ?? 0); ScheduledDebugExport.setTimeMinutes(exportMinutes) }),
-                                   displayedComponents: .hourAndMinute).labelsHidden()
-                    }.padding(.vertical, 10)
+                    NunaSettingsCard {
+                        HStack {
+                            Text("Time").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Spacer()
+                            DatePicker("", selection: Binding(get: { Calendar.current.date(from: DateComponents(hour: exportMinutes / 60, minute: exportMinutes % 60)) ?? Date() },
+                                                               set: { let c = Calendar.current.dateComponents([.hour, .minute], from: $0); exportMinutes = (c.hour ?? 7) * 60 + (c.minute ?? 0); ScheduledDebugExport.setTimeMinutes(exportMinutes) }),
+                                       displayedComponents: .hourAndMinute).labelsHidden()
+                        }.padding(.vertical, 12)
+                    }
                 }
             }
-            NunaSettingsGroup("Report a problem") {
-                NavigationLink { TestCentreView() } label: { NunaListRow("Report and strap probes", description: "The bug-report bundle with its review step, and the probes that talk to the strap", systemImage: "ladybug", showsChevron: true) }.buttonStyle(.plain)
+            NunaSettingsSection("Report a problem") {
+                NunaSettingsCard {
+                    NavigationLink { TestCentreView() } label: { NunaListRow("Report and strap probes", description: "The bug-report bundle with its review step, and the probes that talk to the strap", systemImage: "ladybug", showsChevron: true) }.buttonStyle(.plain)
+                }
             }
             nunaFootnote("Switch on one test, wear the strap, then open Report and strap probes to bundle it. The probes that write to the strap keep their own confirmation there.")
         }

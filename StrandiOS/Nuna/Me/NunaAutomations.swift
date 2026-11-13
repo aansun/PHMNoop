@@ -26,31 +26,39 @@ struct NunaAutomationsView: View {
                 NunaToggleRow("Wrist alerts", subtitle: "The master switch for all vibrations, the wake alarm included. Off means the strap stays silent", systemImage: "applewatch.radiowaves.left.and.right", isOn: $wrist).padding(.vertical, 8)
             }
             .onChange(of: wrist) { _, _ in model.applySmartAlarm() }
-            NunaSettingsGroup("Gestures and presence") {
-                NavigationLink(value: NunaMeRoute.doubleTap) { NunaListRow("Double tap", subtitle: LocalizedStringKey(behavior.doubleTapAction.label), systemImage: "hand.tap", showsChevron: true) }.buttonStyle(.plain)
-                NunaDivider()
-                NavigationLink(value: NunaMeRoute.presence) {
-                    NunaListRow("Strap on and off", description: "Run a Shortcut when it is put on or taken off", systemImage: "figure.walk.motion", showsChevron: true) {
-                        NunaChip(!behavior.wristOnShortcut.isEmpty || !behavior.wristOffShortcut.isEmpty ? "On" : "Off")
-                    }
-                }.buttonStyle(.plain)
+            NunaSettingsSection("Gestures and presence") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaMeRoute.doubleTap) { NunaListRow("Double tap", subtitle: LocalizedStringKey(behavior.doubleTapAction.label), systemImage: "hand.tap", showsChevron: true) }.buttonStyle(.plain)
+                }
+                NunaSettingsCard {
+                    NavigationLink(value: NunaMeRoute.presence) {
+                        NunaListRow("Strap on and off", description: "Run a Shortcut when it is put on or taken off", systemImage: "figure.walk.motion", showsChevron: true) {
+                            NunaChip(!behavior.wristOnShortcut.isEmpty || !behavior.wristOffShortcut.isEmpty ? "On" : "Off")
+                        }
+                    }.buttonStyle(.plain)
+                }
             }
-            NunaSettingsGroup("Vibration during activity") {
-                NavigationLink(value: NunaMeRoute.sessionCues) { NunaListRow("Session cues", description: "Breathing, intervals, live session, workout start and end", systemImage: "waveform.path", showsChevron: true) { NunaChip(verbatim: String(localized: "\(sessionCues) on")) } }.buttonStyle(.plain)
-                NunaDivider()
-                NunaToggleRow("Heart-rate zone coaching", subtitle: "Vibrates in the top zone and when you recover", systemImage: NunaIcons.heartRate, isOn: $behavior.zoneCoaching).padding(.vertical, 8)
-                NunaDivider()
-                NunaToggleRow("Stress check with vibration", subtitle: "A minute of guided breathing when HRV drops while you are still", systemImage: NunaIcons.breathing, isOn: $behavior.stressCheckIn).padding(.vertical, 8)
+            NunaSettingsSection("Vibration during activity") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaMeRoute.sessionCues) { NunaListRow("Session cues", description: "Breathing, intervals, live session, workout start and end", systemImage: "waveform.path", showsChevron: true) { NunaChip(verbatim: String(localized: "\(sessionCues) on")) } }.buttonStyle(.plain)
+                }
+                NunaSettingsSwitch("Heart-rate zone coaching", subtitle: "Vibrates in the top zone and when you recover", systemImage: NunaIcons.heartRate, isOn: $behavior.zoneCoaching)
+                NunaSettingsSwitch("Stress check with vibration", subtitle: "A minute of guided breathing when HRV drops while you are still", systemImage: NunaIcons.breathing, isOn: $behavior.stressCheckIn)
             }
-            NunaSettingsGroup("Reminders") {
-                NavigationLink(value: NunaMeRoute.sedentary) {
-                    NunaListRow("Sitting too long", subtitle: LocalizedStringKey(inactivity.enabled ? String(localized: "Vibrates after \(inactivity.thresholdMinutes) minutes") : String(localized: "Off")), systemImage: "chair", showsChevron: true)
-                }.buttonStyle(.plain)
-                NunaDivider()
-                NavigationLink(value: NunaMeRoute.notifications) { NunaListRow("Battery, Strain target and reports", description: "Under Notifications", systemImage: "bell", showsChevron: true) }.buttonStyle(.plain)
+            NunaSettingsSection("Reminders") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaMeRoute.sedentary) {
+                        NunaListRow("Sitting too long", subtitle: LocalizedStringKey(inactivity.enabled ? String(localized: "Vibrates after \(inactivity.thresholdMinutes) minutes") : String(localized: "Off")), systemImage: "chair", showsChevron: true)
+                    }.buttonStyle(.plain)
+                }
+                NunaSettingsCard {
+                    NavigationLink(value: NunaMeRoute.notifications) { NunaListRow("Battery, Strain target and reports", description: "Under Notifications", systemImage: "bell", showsChevron: true) }.buttonStyle(.plain)
+                }
             }
-            NunaSettingsGroup("Siri and Shortcuts") {
-                NavigationLink(value: NunaMeRoute.shortcuts) { NunaListRow("Available shortcuts", description: "Sync Strap, breathe, mark a moment, export", systemImage: "square.stack.3d.up", showsChevron: true) }.buttonStyle(.plain)
+            NunaSettingsSection("Siri and Shortcuts") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaMeRoute.shortcuts) { NunaListRow("Available shortcuts", description: "Sync Strap, breathe, mark a moment, export", systemImage: "square.stack.3d.up", showsChevron: true) }.buttonStyle(.plain)
+                }
             }
             nunaFootnote("Every vibration is off until you turn it on. Locking the screen when the strap comes off exists only on Mac, because iPhone does not allow it.")
         }
@@ -81,17 +89,10 @@ struct NunaDoubleTapView: View {
                     NunaChip(live.bonded ? "Connected" : "Not connected", color: live.bonded ? NunaPalette.charge : nil)
                 }
             }
-            NunaSettingsGroup("Action") {
-                ForEach(Array(options.enumerated()), id: \.element.id) { i, o in
-                    if i > 0 { NunaDivider() }
-                    Button { behavior.doubleTapAction = o } label: {
-                        HStack(spacing: 12) {
-                            NunaIconTile(o.symbol)
-                            Text(verbatim: o.label).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Spacer()
-                            Image(systemName: behavior.doubleTapAction == o ? "checkmark.circle.fill" : "circle").font(.nuna(size: 21)).foregroundStyle(behavior.doubleTapAction == o ? NunaPalette.textPrimary : NunaPalette.textMuted)
-                        }.padding(.vertical, 10).contentShape(Rectangle())
-                    }.buttonStyle(.plain)
+            NunaSettingsSection("Action") {
+                NunaSettingsCard {
+                    NunaChoiceRow("Tap the strap twice", systemImage: behavior.doubleTapAction.symbol,
+                                  options: options.map { (value: $0, title: LocalizedStringKey($0.label)) }, selection: $behavior.doubleTapAction)
                 }
             }
             if behavior.doubleTapAction == .runShortcut {
@@ -139,14 +140,11 @@ struct NunaSessionCuesView: View {
     var body: some View {
         NunaDetailScreen("Session cues") {
             Text("Choose which cues vibrate the strap during a session you start.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            NunaSettingsGroup {
-                NunaToggleRow("Breathing pacer", subtitle: "Each breath in and out", systemImage: NunaIcons.breathing, isOn: $breathing).padding(.vertical, 8)
-                NunaDivider()
-                NunaToggleRow("Interval timer", subtitle: "Each change of interval", systemImage: "timer", isOn: $intervals).padding(.vertical, 8)
-                NunaDivider()
-                NunaToggleRow("Live session cues", subtitle: "Coaching during a live workout", systemImage: "figure.run", isOn: $liveSession).padding(.vertical, 8)
-                NunaDivider()
-                NunaToggleRow("Workout start and end", subtitle: "Confirms a workout starting and saving", systemImage: "play.circle", isOn: $workout).padding(.vertical, 8)
+            NunaSettingsSection("Vibration during activity") {
+                NunaSettingsSwitch("Breathing pacer", subtitle: "Each breath in and out", systemImage: NunaIcons.breathing, isOn: $breathing)
+                NunaSettingsSwitch("Interval timer", subtitle: "Each change of interval", systemImage: "timer", isOn: $intervals)
+                NunaSettingsSwitch("Live session cues", subtitle: "Coaching during a live workout", systemImage: "figure.run", isOn: $liveSession)
+                NunaSettingsSwitch("Workout start and end", subtitle: "Confirms a workout starting and saving", systemImage: "play.circle", isOn: $workout)
             }
             nunaFootnote("They only vibrate when Wrist alerts is on in Strap automations.")
         }
@@ -173,27 +171,32 @@ struct NunaSedentaryView: View {
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
-                NunaSettingsGroup {
-                    NunaStepRow(label: "Sitting for", value: "\(p.thresholdMinutes) min", note: "Minutes seated before the first vibration", canDecrement: p.thresholdMinutes > 15,
-                                onMinus: { p.thresholdMinutes = max(15, p.thresholdMinutes - 15) }, onPlus: { p.thresholdMinutes = min(120, p.thresholdMinutes + 15) })
-                    NunaDivider()
-                    NunaStepRow(label: "Repeat every", value: "\(p.reNudgeMinutes) min", note: "If you are still sitting, vibrate again", canDecrement: p.reNudgeMinutes > 15,
-                                onMinus: { p.reNudgeMinutes = max(15, p.reNudgeMinutes - 15) }, onPlus: { p.reNudgeMinutes = min(120, p.reNudgeMinutes + 15) })
-                    NunaDivider()
-                    NunaStepRow(label: "Strength", value: "\(p.buzzLoops)×", note: "How strong the vibration is", canDecrement: p.buzzLoops > 1,
-                                onMinus: { p.buzzLoops = max(1, p.buzzLoops - 1) }, onPlus: { p.buzzLoops = min(4, p.buzzLoops + 1) })
+                NunaSettingsSection("Sitting for") {
+                    NunaSettingsCard {
+                        NunaStepRow(label: "Sitting for", value: "\(p.thresholdMinutes) min", note: "Minutes seated before the first vibration", canDecrement: p.thresholdMinutes > 15,
+                                    onMinus: { p.thresholdMinutes = max(15, p.thresholdMinutes - 15) }, onPlus: { p.thresholdMinutes = min(120, p.thresholdMinutes + 15) })
+                    }
+                    NunaSettingsCard {
+                        NunaStepRow(label: "Repeat every", value: "\(p.reNudgeMinutes) min", note: "If you are still sitting, vibrate again", canDecrement: p.reNudgeMinutes > 15,
+                                    onMinus: { p.reNudgeMinutes = max(15, p.reNudgeMinutes - 15) }, onPlus: { p.reNudgeMinutes = min(120, p.reNudgeMinutes + 15) })
+                    }
+                    NunaSettingsCard {
+                        NunaStepRow(label: "Strength", value: "\(p.buzzLoops)×", note: "How strong the vibration is", canDecrement: p.buzzLoops > 1,
+                                    onMinus: { p.buzzLoops = max(1, p.buzzLoops - 1) }, onPlus: { p.buzzLoops = min(4, p.buzzLoops + 1) })
+                    }
                 }
-                NunaSettingsGroup("Active hours") {
-                    NunaToggleRow("Only in active hours", subtitle: "No vibration outside this range", systemImage: "clock", isOn: $p.activeHoursEnabled).padding(.vertical, 8)
+                NunaSettingsSection("Active hours") {
+                    NunaSettingsSwitch("Only in active hours", subtitle: "No vibration outside this range", systemImage: "clock", isOn: $p.activeHoursEnabled)
                     if p.activeHoursEnabled {
-                        NunaDivider()
-                        HStack {
-                            Text("From").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            DatePicker("", selection: bind($p.activeStartMinutes), displayedComponents: .hourAndMinute).labelsHidden().colorScheme(.dark)
-                            Spacer()
-                            Text("Until").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            DatePicker("", selection: bind($p.activeEndMinutes), displayedComponents: .hourAndMinute).labelsHidden().colorScheme(.dark)
-                        }.padding(.vertical, 10)
+                        NunaSettingsCard {
+                            HStack {
+                                Text("From").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                DatePicker("", selection: bind($p.activeStartMinutes), displayedComponents: .hourAndMinute).labelsHidden().colorScheme(.dark)
+                                Spacer()
+                                Text("Until").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                DatePicker("", selection: bind($p.activeEndMinutes), displayedComponents: .hourAndMinute).labelsHidden().colorScheme(.dark)
+                            }.padding(.vertical, 12)
+                        }
                     }
                 }
             }

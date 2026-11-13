@@ -11,26 +11,31 @@ struct NunaWorkoutSettingsView: View {
 
     var body: some View {
         NunaDetailScreen("Workout settings") {
-            NunaSettingsGroup("Detection") {
-                NunaToggleRow("Auto-detect workouts", subtitle: "Only suggests, never saves on its own", systemImage: "sparkles", isOn: $autoDetect).padding(.vertical, 8)
-                NunaDivider()
-                NavigationLink(value: NunaWorkoutRoute.autoDetect) {
-                    NunaListRow("How detection works", description: "Rules, thresholds and the latest suggestion", systemImage: "info.circle", showsChevron: true)
-                }.buttonStyle(.plain)
+            NunaSettingsSection("Detection") {
+                NunaSettingsSwitch("Auto-detect workouts", subtitle: "Only suggests, never saves on its own", systemImage: "sparkles", isOn: $autoDetect)
+                NunaSettingsCard {
+                    NavigationLink(value: NunaWorkoutRoute.autoDetect) {
+                        NunaListRow("How detection works", description: "Rules, thresholds and the latest suggestion", systemImage: "info.circle", showsChevron: true)
+                    }.buttonStyle(.plain)
+                }
             }
-            NunaSettingsGroup("Audio") {
-                NavigationLink(value: NunaAnyaRoute.voiceCoach) {
-                    NunaListRow("Audio coach", description: "Spoken cues in workouts and gym sessions: heart-rate zones, distance, rest", systemImage: "speaker.wave.2", showsChevron: true) {
-                        NunaChip(audioCoach ? "On" : "Off", color: audioCoach ? NunaPalette.charge : nil)
-                    }
-                }.buttonStyle(.plain)
+            NunaSettingsSection("Audio") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaAnyaRoute.voiceCoach) {
+                        NunaListRow("Audio coach", description: "Spoken cues in workouts and gym sessions: heart-rate zones, distance, rest", systemImage: "speaker.wave.2", showsChevron: true) {
+                            NunaChip(audioCoach ? "On" : "Off", color: audioCoach ? NunaPalette.charge : nil)
+                        }
+                    }.buttonStyle(.plain)
+                }
             }
-            NunaSettingsGroup("Share") {
-                NavigationLink(value: NunaMeRoute.strava) {
-                    NunaListRow("Strava", subtitle: "Upload GPS, treadmill and gym workouts. Off by default", systemImage: "figure.run.circle", showsChevron: true) {
-                        NunaChip(strava ? "On" : "Off", color: strava ? NunaPalette.charge : nil)
-                    }
-                }.buttonStyle(.plain)
+            NunaSettingsSection("Share") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaMeRoute.strava) {
+                        NunaListRow("Strava", subtitle: "Upload GPS, treadmill and gym workouts. Off by default", systemImage: "figure.run.circle", showsChevron: true) {
+                            NunaChip(strava ? "On" : "Off", color: strava ? NunaPalette.charge : nil)
+                        }
+                    }.buttonStyle(.plain)
+                }
             }
             nunaFootnote("These are the same settings as in Me. Detection only suggests a workout; you decide whether to save it.")
         }

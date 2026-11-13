@@ -161,20 +161,23 @@ struct NunaBackupView: View {
                     }.buttonStyle(.plain).disabled(busy || !FolderBackup.hasFolder).opacity(FolderBackup.hasFolder ? 1 : 0.4)
                 }
             }
-            NunaSettingsGroup("Folder") {
-                NunaListRow("Backup folder", subtitle: LocalizedStringKey(folder ?? String(localized: "Not chosen")), systemImage: "folder")
-                NunaDivider()
-                Button { chooseFolder() } label: { NunaListRow("Change folder", description: "Pick one in Files or iCloud Drive", systemImage: "folder.badge.gearshape", showsChevron: true) }.buttonStyle(.plain)
+            NunaSettingsSection("Folder") {
+                NunaSettingsCard { NunaListRow("Backup folder", subtitle: LocalizedStringKey(folder ?? String(localized: "Not chosen")), systemImage: "folder") }
+                NunaSettingsCard {
+                    Button { chooseFolder() } label: { NunaListRow("Change folder", description: "Pick one in Files or iCloud Drive", systemImage: "folder.badge.gearshape", showsChevron: true) }.buttonStyle(.plain)
+                }
                 if !FolderBackup.useInternalFolder {
-                    NunaDivider()
-                    Button { _ = FolderBackup.useNoopFolder(); folder = FolderBackup.folderLabel() } label: { NunaListRow("Use NOOP's own folder", description: "Inside Files > On My iPhone > NOOP", systemImage: "iphone", showsChevron: true) }.buttonStyle(.plain)
+                    NunaSettingsCard {
+                        Button { _ = FolderBackup.useNoopFolder(); folder = FolderBackup.folderLabel() } label: { NunaListRow("Use NOOP's own folder", description: "Inside Files > On My iPhone > NOOP", systemImage: "iphone", showsChevron: true) }.buttonStyle(.plain)
+                    }
                 }
             }
-            NunaSettingsGroup("Schedule") {
-                NunaToggleRow("Daily backup", subtitle: "Once a day when NOOP is opened", systemImage: "calendar.badge.clock", isOn: Binding(get: { auto }, set: { auto = $0; FolderBackup.autoEnabled = $0 })).padding(.vertical, 8)
-                NunaDivider()
-                NunaStepRow(label: "Keep the last", value: "\(keep)", note: "Older ones are deleted, oldest first", canDecrement: keep > (FolderBackup.keepOptions.first ?? 1),
-                            onMinus: { step(-1) }, onPlus: { step(1) })
+            NunaSettingsSection("Schedule") {
+                NunaSettingsSwitch("Daily backup", subtitle: "Once a day when NOOP is opened", systemImage: "calendar.badge.clock", isOn: Binding(get: { auto }, set: { auto = $0; FolderBackup.autoEnabled = $0 }))
+                NunaSettingsCard {
+                    NunaStepRow(label: "Keep the last", value: "\(keep)", note: "Older ones are deleted, oldest first", canDecrement: keep > (FolderBackup.keepOptions.first ?? 1),
+                                onMinus: { step(-1) }, onPlus: { step(1) })
+                }
             }
             if !snapshots.isEmpty {
                 NunaSettingsGroup("Saved backups") {

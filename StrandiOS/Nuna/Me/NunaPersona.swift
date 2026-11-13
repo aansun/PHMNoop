@@ -116,49 +116,54 @@ struct NunaPersonaView: View {
                     Spacer(minLength: 0)
                 }
             }
-            NunaSettingsGroup("About you") {
-                HStack(spacing: 12) {
-                    Text("Name").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    TextField("", text: $profile.displayName, prompt: Text("What should we call you?").foregroundStyle(NunaPalette.textMuted))
-                        .multilineTextAlignment(.trailing).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .textInputAutocapitalization(.words).autocorrectionDisabled()
-                }.padding(.vertical, 12)
-                NunaDivider()
-                HStack {
-                    Text("Date of birth").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Spacer()
-                    Text(verbatim: String(localized: "\(profile.age) years")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    DatePicker("", selection: $profile.dateOfBirth, in: ProfileStore.dateOfBirthRange, displayedComponents: .date).labelsHidden().colorScheme(.dark)
-                }.padding(.vertical, 8)
-                NunaDivider()
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Sex").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    NunaSegmented([(value: "male", title: "Male"), (value: "female", title: "Female"), (value: "nonbinary", title: "Non-binary")], selection: Binding(get: { let v = profile.sex.lowercased().replacingOccurrences(of: "-", with: ""); return ["male", "female", "nonbinary"].contains(v) ? v : "male" }, set: { profile.sex = $0 }))
-                }.padding(.vertical, 12)
-                NunaDivider()
-                NunaStepRow(label: "Waist (optional)", value: profile.waistCm > 0 ? (imperial ? String(format: "%.0f in", profile.waistCm / 2.54) : String(format: "%.0f cm", profile.waistCm)) : "–",
-                            note: "Unlocks the VO₂max estimate", canDecrement: profile.waistCm > 0,
-                            onMinus: { profile.waistCm = profile.waistCm <= 50 ? 0 : profile.waistCm - (imperial ? 2.54 : 1) },
-                            onPlus: { profile.waistCm = profile.waistCm <= 0 ? 80 : min(200, profile.waistCm + (imperial ? 2.54 : 1)) })
+            NunaSettingsSection("About you") {
+                NunaSettingsCard {
+                    HStack(spacing: 12) {
+                        Text("Name").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        TextField("", text: $profile.displayName, prompt: Text("What should we call you?").foregroundStyle(NunaPalette.textMuted))
+                            .multilineTextAlignment(.trailing).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                            .textInputAutocapitalization(.words).autocorrectionDisabled()
+                    }.padding(.vertical, 12)
+                }
+                NunaSettingsCard {
+                    HStack {
+                        Text("Date of birth").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        Text(verbatim: String(localized: "\(profile.age) years")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        DatePicker("", selection: $profile.dateOfBirth, in: ProfileStore.dateOfBirthRange, displayedComponents: .date).labelsHidden().colorScheme(.dark)
+                    }.padding(.vertical, 8)
+                }
+                NunaSettingsCard {
+                    NunaChoiceRow("Sex", options: [(value: "male", title: "Male"), (value: "female", title: "Female"), (value: "nonbinary", title: "Non-binary")],
+                                  selection: Binding(get: { let v = profile.sex.lowercased().replacingOccurrences(of: "-", with: ""); return ["male", "female", "nonbinary"].contains(v) ? v : "male" }, set: { profile.sex = $0 }))
+                }
+                NunaSettingsCard {
+                    NunaStepRow(label: "Waist (optional)", value: profile.waistCm > 0 ? (imperial ? String(format: "%.0f in", profile.waistCm / 2.54) : String(format: "%.0f cm", profile.waistCm)) : "–",
+                                note: "Unlocks the VO₂max estimate", canDecrement: profile.waistCm > 0,
+                                onMinus: { profile.waistCm = profile.waistCm <= 50 ? 0 : profile.waistCm - (imperial ? 2.54 : 1) },
+                                onPlus: { profile.waistCm = profile.waistCm <= 0 ? 80 : min(200, profile.waistCm + (imperial ? 2.54 : 1)) })
+                }
             }
-            NunaSettingsGroup("Day and steps") {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("The day starts").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    NunaSegmented([(value: DayCycleMode.sleepOnset.rawValue, title: "With main sleep"), (value: DayCycleMode.midnight.rawValue, title: "At 00:00")], selection: $dayCycleRaw)
+            NunaSettingsSection("Day and steps") {
+                NunaSettingsCard {
+                    NunaChoiceRow("The day starts", options: [(value: DayCycleMode.sleepOnset.rawValue, title: "With main sleep"), (value: DayCycleMode.midnight.rawValue, title: "At 00:00")], selection: $dayCycleRaw)
                         .onChange(of: dayCycleRaw) { _, _ in Task { await model.intelligence.analyzeRecent(); await model.repo.refresh() } }
-                }.padding(.vertical, 12)
-                NunaDivider()
-                NunaStepRow(label: "Step calibration", value: String(format: "%.1f", locale: AppLanguage.activeLocale, profile.stepTicksPerStep), note: "Raise it if the step count runs too high",
-                            onMinus: { profile.stepTicksPerStep = ProfileStore.steppedStepScale(profile.stepTicksPerStep, up: false) },
-                            onPlus: { profile.stepTicksPerStep = ProfileStore.steppedStepScale(profile.stepTicksPerStep, up: true) })
+                }
+                NunaSettingsCard {
+                    NunaStepRow(label: "Step calibration", value: String(format: "%.1f", locale: AppLanguage.activeLocale, profile.stepTicksPerStep), note: "Raise it if the step count runs too high",
+                                onMinus: { profile.stepTicksPerStep = ProfileStore.steppedStepScale(profile.stepTicksPerStep, up: false) },
+                                onPlus: { profile.stepTicksPerStep = ProfileStore.steppedStepScale(profile.stepTicksPerStep, up: true) })
+                }
             }
-            NunaSettingsGroup("Recovery baseline") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Built from your first 4 nights. Restart it if the first week threw the baseline off.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    Button { confirmRecalibrate = true } label: {
-                        Text(recalibrated ? "Restarted from tonight" : "Restart the baseline").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    }.buttonStyle(.plain).disabled(recalibrated)
-                }.padding(.vertical, 14)
+            NunaSettingsSection("Recovery baseline") {
+                NunaSettingsCard {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Built from your first 4 nights. Restart it if the first week threw the baseline off.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                        Button { confirmRecalibrate = true } label: {
+                            Text(recalibrated ? "Restarted from tonight" : "Restart the baseline").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                        }.buttonStyle(.plain).disabled(recalibrated)
+                    }.padding(.vertical, 14)
+                }
             }
             nunaFootnote("Weight, height and waist are read from Apple Health. Heart-rate zones have their own page, under Activity Settings.")
         }

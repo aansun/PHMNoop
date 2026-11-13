@@ -98,35 +98,4 @@ struct NunaBreathSettingsView: View {
         NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) { content() }
     }
 }
-
-/// A choice among several as one row: the name, the choice in force and an up-down arrow. It opens the app's bottom-sheet drop-down with the current
-/// option ticked, so the page stays short however many options there are.
-private struct NunaChoiceRow<Value: Hashable>: View {
-    let title: LocalizedStringKey
-    let systemImage: String
-    let options: [(value: Value, title: LocalizedStringKey)]
-    @Binding var selection: Value
-
-    init(_ title: LocalizedStringKey, systemImage: String, options: [(value: Value, title: LocalizedStringKey)], selection: Binding<Value>) {
-        self.title = title; self.systemImage = systemImage; self.options = options; self._selection = selection
-    }
-
-    private var current: LocalizedStringKey { options.first { $0.value == selection }?.title ?? options[0].title }
-
-    var body: some View {
-        NunaMenu {
-            ForEach(options.indices, id: \.self) { i in
-                NunaMenuItem(options[i].title, selected: options[i].value == selection) { selection = options[i].value }
-            }
-        } label: {
-            NunaListRow(title, systemImage: systemImage) {
-                HStack(spacing: 6) {
-                    Text(current).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                }
-            }
-        }
-        .accessibilityElement(children: .combine)
-    }
-}
 #endif
