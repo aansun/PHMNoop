@@ -8,6 +8,8 @@ import Charts
 /// report, which is kept in the history. The settings button at the top right holds the module's options.
 
 struct NunaBreathView: View {
+    /// Shown as the root of the Breath tab: there is nothing to go back to, so the back chevron is left out.
+    var asTabRoot = false
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @EnvironmentObject private var model: AppModel
@@ -40,7 +42,7 @@ struct NunaBreathView: View {
     private var liveBpm: Int? { live.worn ? model.bpm : nil }
 
     var body: some View {
-        NunaDetailScreen("Breathing", trailing: AnyView(settingsButton), centersTitle: true) {
+        NunaDetailScreen("Breathing", trailing: AnyView(settingsButton), centersTitle: true, showsBack: !asTabRoot) {
             NunaPageTabs([(value: 0, title: "Progress"), (value: 1, title: "Breathe")], selection: $tab)
             tabContent
         }
