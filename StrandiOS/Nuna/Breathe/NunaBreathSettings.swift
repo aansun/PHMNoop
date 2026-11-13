@@ -3,6 +3,10 @@ import SwiftUI
 import StrandDesign
 
 /// The Breathing module's options, kept to what changes a session: its cues, its length, Anya's pick and the data.
+///
+/// Laid out like Appearance: one small heading for each thing the page does, and under it one card for each setting, so a card is one choice and nothing
+/// shares a card with something else. A switch stays a switch. A choice among several (the audio cues, the session length) is a single row that shows the
+/// choice in force and opens the same bottom sheet the app's other drop-downs use, instead of laying every option out on the page.
 struct NunaBreathSettingsView: View {
     let onClose: () -> Void
     @AppStorage(NunaBreathPrefs.hapticsKey) private var haptics = true
@@ -18,43 +22,39 @@ struct NunaBreathSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
-                HStack {
-                    Text("Breathing settings").font(.nuna(size: NunaTypeSize.h2, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Spacer()
-                    Button(action: onClose) {
-                        Text("Done").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 38)
-                            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    }.buttonStyle(.plain)
+                header
+                section("Haptics") {
+                    card { NunaToggleRow("Strap haptics", systemImage: "applewatch.radiowaves.left.and.right", isOn: $haptics).padding(.vertical, 4) }
                 }
-                NunaSettingsGroup("Cues") {
-                    NunaToggleRow("Strap haptics", systemImage: "applewatch.radiowaves.left.and.right", isOn: $haptics).padding(.vertical, 8)
-                    NunaDivider()
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "speaker.wave.2").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 24)
-                            Text("Audio cues").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        }
-                        NunaSegmented(NunaBreathAudioMode.allCases.map { (value: $0.rawValue, title: $0.title) }, selection: Binding(
-                            get: { NunaBreathAudioMode.stored.rawValue }, set: { audioModeRaw = $0 }))
-                    }.padding(.vertical, 10)
-                    NunaDivider()
-                    NunaToggleRow("Countdown", systemImage: "timer", isOn: $countdown).padding(.vertical, 8)
+                section("Audio") {
+                    card {
+                        NunaChoiceRow("Audio cues", systemImage: "speaker.wave.2",
+                                      options: NunaBreathAudioMode.allCases.map { (value: $0.rawValue, title: $0.title) },
+                                      selection: Binding(get: { NunaBreathAudioMode.stored.rawValue }, set: { audioModeRaw = $0 }))
+                    }
                 }
-                VStack(alignment: .leading, spacing: 10) {
-                    nunaRuledHeader("Session length")
-                    NunaSegmented([(value: 0, title: "Default"), (value: 5, title: "5 min"), (value: 10, title: "10 min"), (value: 15, title: "15 min")], selection: $length)
+                section("Session") {
+                    card { NunaToggleRow("Countdown", systemImage: "timer", isOn: $countdown).padding(.vertical, 4) }
+                    card {
+                        NunaChoiceRow("Session length", systemImage: "clock",
+                                      options: [(value: 0, title: "Default"), (value: 5, title: "5 min"), (value: 10, title: "10 min"), (value: 15, title: "15 min")],
+                                      selection: $length)
+                    }
                 }
-                NunaSettingsGroup("Anya") {
-                    NunaToggleRow("Suggest an exercise", systemImage: NunaGlyph.anya, isOn: $anya).padding(.vertical, 8)
+                section("Anya") {
+                    card { NunaToggleRow("Suggest an exercise", systemImage: NunaGlyph.anya, isOn: $anya).padding(.vertical, 4) }
                 }
-                NunaSettingsGroup("Data") {
-                    Button { confirmForget = true } label: {
-                        NunaListRow("Forget Anya's notes", subtitle: LocalizedStringKey(String(localized: "\(memoryCount) notes")), systemImage: "brain", showsChevron: false)
-                    }.buttonStyle(.plain).disabled(memoryCount == 0).opacity(memoryCount == 0 ? 0.5 : 1)
-                    NunaDivider()
-                    Button { confirmClear = true } label: {
-                        NunaListRow("Clear history", subtitle: LocalizedStringKey(String(localized: "\(sessionCount) sessions")), systemImage: "trash", showsChevron: false)
-                    }.buttonStyle(.plain).disabled(sessionCount == 0).opacity(sessionCount == 0 ? 0.5 : 1)
+                section("Data") {
+                    card {
+                        Button { confirmForget = true } label: {
+                            NunaListRow("Forget Anya's notes", subtitle: LocalizedStringKey(String(localized: "\(memoryCount) notes")), systemImage: "brain", showsChevron: false)
+                        }.buttonStyle(.plain).disabled(memoryCount == 0).opacity(memoryCount == 0 ? 0.5 : 1)
+                    }
+                    card {
+                        Button { confirmClear = true } label: {
+                            NunaListRow("Clear history", subtitle: LocalizedStringKey(String(localized: "\(sessionCount) sessions")), systemImage: "trash", showsChevron: false)
+                        }.buttonStyle(.plain).disabled(sessionCount == 0).opacity(sessionCount == 0 ? 0.5 : 1)
+                    }
                 }
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 22).padding(.bottom, 32)
@@ -70,6 +70,63 @@ struct NunaBreathSettingsView: View {
             Button("Clear", role: .destructive) { NunaBreathLog.clear(); sessionCount = 0 }
             Button("Cancel", role: .cancel) {}
         } message: { Text("This cannot be undone.") }
+    }
+
+    // MARK: Pieces
+
+    private var header: some View {
+        HStack {
+            Text("Breathing settings").font(.nuna(size: NunaTypeSize.h2, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            Spacer()
+            Button(action: onClose) {
+                Text("Done").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 38)
+                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            }.buttonStyle(.plain)
+        }
+    }
+
+    /// A heading and the cards under it, one card to a setting.
+    private func section<Content: View>(_ title: LocalizedStringKey, @ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            nunaRuledHeader(title)
+            content()
+        }
+    }
+
+    /// The card every setting sits in, inset like the cards on the Appearance page.
+    private func card<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) { content() }
+    }
+}
+
+/// A choice among several as one row: the name, the choice in force and an up-down arrow. It opens the app's bottom-sheet drop-down with the current
+/// option ticked, so the page stays short however many options there are.
+private struct NunaChoiceRow<Value: Hashable>: View {
+    let title: LocalizedStringKey
+    let systemImage: String
+    let options: [(value: Value, title: LocalizedStringKey)]
+    @Binding var selection: Value
+
+    init(_ title: LocalizedStringKey, systemImage: String, options: [(value: Value, title: LocalizedStringKey)], selection: Binding<Value>) {
+        self.title = title; self.systemImage = systemImage; self.options = options; self._selection = selection
+    }
+
+    private var current: LocalizedStringKey { options.first { $0.value == selection }?.title ?? options[0].title }
+
+    var body: some View {
+        NunaMenu {
+            ForEach(options.indices, id: \.self) { i in
+                NunaMenuItem(options[i].title, selected: options[i].value == selection) { selection = options[i].value }
+            }
+        } label: {
+            NunaListRow(title, systemImage: systemImage) {
+                HStack(spacing: 6) {
+                    Text(current).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 #endif
