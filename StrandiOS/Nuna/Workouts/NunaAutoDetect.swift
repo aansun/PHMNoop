@@ -52,8 +52,54 @@ struct NunaAutoDetectView: View {
                     }
                 }
             }
+            detectionCheck
         }
         .task(id: "\(on)|\(repo.refreshSeq)") { suggestion = on ? await repo.autoDetectSuggestion() : nil }
+    }
+
+    // MARK: Detection check (diagnostic)
+
+    @State private var check: Repository.WorkoutReplayResult?
+    @State private var checking = false
+
+    /// A read-only diagnostic: how often the shape classifier would have named the workouts you saved yourself. It is English only on purpose, like
+    /// the Test Centre, and it changes nothing about what is detected.
+    @ViewBuilder private var detectionCheck: some View {
+        Text(verbatim: "Detection check").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+            .foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
+        NunaCard(small: true) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(verbatim: "Runs the sport naming over the workouts you saved and shows how often it was right. Read only: nothing here changes what is detected.")
+                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                Button {
+                    guard !checking else { return }
+                    checking = true
+                    Task { check = await repo.workoutClassReplay(); checking = false }
+                } label: {
+                    Text(verbatim: checking ? "Checking..." : "Check against my workouts").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        .frame(maxWidth: .infinity).frame(height: 46)
+                        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                }.buttonStyle(.plain).disabled(checking)
+                if let c = check {
+                    ForEach(Array(Self.checkLines(c).enumerated()), id: \.offset) { _, line in
+                        Text(verbatim: line).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    }
+                }
+            }.frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// The result as plain lines: where the workouts went (used, or left out and why), then the classifier's numbers.
+    static func checkLines(_ c: Repository.WorkoutReplayResult) -> [String] {
+        func n(_ o: WorkoutLabelOrigin) -> Int { c.notTheirLabel[o] ?? 0 }
+        var lines = ["Saved workouts: \(c.savedWorkouts)", "Used (your own label, with strap data): \(c.windows.count)"]
+        lines.append("Left out: saved from a suggestion \(n(.savedFromSuggestion)), named by the strap \(n(.strapOwn)), old detected \(n(.legacyDetected)), "
+                     + "name too vague \(c.unusableName), no strap data \(c.noStrapData)")
+        if c.beforeLogUsed > 0 {
+            lines.append("\(c.beforeLogUsed) used workouts were saved before this log began; a few may have been saved suggestions.")
+        }
+        return lines + WorkoutClassReplay.summaryLines(c.report)
     }
 
     private func value(_ t: String) -> some View {
