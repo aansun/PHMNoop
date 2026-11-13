@@ -83,10 +83,11 @@ enum StravaImporter {
     static func row(for activity: StravaActivitySummary, startTs: Int, endTs: Int, sport: String, distanceM: Double?) -> WorkoutRow? {
         guard let built = WorkoutSource.buildManualRowFromSpan(start: Date(timeIntervalSince1970: TimeInterval(startTs)), end: Date(timeIntervalSince1970: TimeInterval(endTs)),
                                                                sport: sport, avgHr: nil, energyKcal: nil, distanceM: distanceM) else { return nil }
-        let title = (activity.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        // The notes keep Strava's own sport type next to the title: PHMN's name for it can be coarser (NordicSki is saved as "Skiing"), and the learning
+        // prep reads the type back from here.
         return WorkoutRow(startTs: built.startTs, endTs: built.endTs, sport: built.sport, source: built.source, durationS: built.durationS,
                           energyKcal: nil, avgHr: nil, maxHr: nil, strain: nil, distanceM: built.distanceM, zonesJSON: nil,
-                          notes: title.isEmpty ? "Strava" : "Strava · " + title, steps: nil)
+                          notes: WorkoutSportMap.stravaNotes(title: activity.name, stravaType: activity.sportType), steps: nil)
     }
 
     /// PHMN's name for a Strava `sport_type`; one PHMN has no name for keeps Strava's own, spaced out ("Kitesurf", "Ice Skate").
@@ -178,7 +179,7 @@ enum StravaDetector {
             guard case .candidate(let a, let startTs, let endTs, let avg, let peak) = await StravaImporter.judge(activity, now: now, existing: existing, hrIds: hrIds, store: store, honourHandled: true) else { continue }
             let w = DetectedWorkout(startSec: startTs, endSec: endTs, avgBpm: avg, peakBpm: peak, durationMin: max(1, (endTs - startTs) / 60))
             let s = AutoWorkoutSuggestion(workout: w, sport: StravaImporter.sport(for: a.sportType), confidence: 1,
-                                          stravaId: a.id, stravaName: a.name, distanceM: a.distance.flatMap { $0 > 0 ? $0 : nil })
+                                          stravaId: a.id, stravaName: a.name, distanceM: a.distance.flatMap { $0 > 0 ? $0 : nil }, stravaType: a.sportType)
             if repo.isAutoDetectDismissed(s) { continue }
             if best == nil || s.startSec > best!.startSec { best = s }
         }

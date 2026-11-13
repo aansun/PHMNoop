@@ -12,6 +12,21 @@ import Foundation
 // Pure and deterministic. The classifier is a parameter, so a future learned classifier is measured by the same code, on the same windows, and the two can be
 // compared directly.
 
+/// How much of the strap's motion a window had behind its features. Without motion the classifier falls back to heart rate alone, which is a different
+/// (and weaker) kind of evidence: a steady, still, elevated heart rate is true of a bike, an elliptical, a class or housework. The two must not be averaged
+/// into one accuracy figure, and a learner must not be taught from heart-rate-only windows as if they carried gait.
+public enum WorkoutWindowEvidence: String, Sendable, CaseIterable {
+    case full
+    case heartRateOnly
+
+    /// Fewest gravity samples in a window (about a minute at 1 Hz) that count as motion data being there.
+    public static let minGravitySamples = 60
+
+    public static func of(tickCoverage: Double, gravitySamples: Int) -> WorkoutWindowEvidence {
+        tickCoverage >= WorkoutTypeClassifier.minTickCoverage || gravitySamples >= minGravitySamples ? .full : .heartRateOnly
+    }
+}
+
 /// One window with a class the person chose and the features the classifier sees.
 public struct LabelledWorkoutWindow: Equatable, Sendable {
     public let id: String

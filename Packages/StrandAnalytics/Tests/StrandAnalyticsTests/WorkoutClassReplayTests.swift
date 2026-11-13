@@ -151,7 +151,7 @@ final class WorkoutClassReplayTests: XCTestCase {
 
     func testEveryOriginIsDecidedForAndOnlyTheListedOnesAreLabels() {
         let labels = WorkoutLabelOrigin.allCases.filter { $0.isLabel(includeBeforeLog: false) }
-        XCTAssertEqual(Set(labels), [.typedByPerson, .editedAfterSuggestion, .imported])
+        XCTAssertEqual(Set(labels), [.typedByPerson, .editedAfterSuggestion, .imported, .stravaImported])
     }
 
     // MARK: - Replay
