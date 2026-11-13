@@ -82,10 +82,10 @@ struct NunaBreathView: View {
                 .nunaSheetChrome(detents: [.large])
         }
         .onChange(of: filter.groups) { _, g in if g.count == 1, let one = g.first { group = one; pickedGoal = true } }
-        .sheet(item: $opened) { r in
+        .sheet(item: $opened, onDismiss: { history = NunaBreathLog.all() }) { r in
             NunaBreathReportView(record: r, readOnly: true, onDone: { opened = nil }).nunaSheetChrome(detents: [.large])
         }
-        .sheet(isPresented: $showHistory) { NunaBreathHistoryView { showHistory = false }.nunaSheetChrome(detents: [.large]) }
+        .sheet(isPresented: $showHistory, onDismiss: { history = NunaBreathLog.all() }) { NunaBreathHistoryView { showHistory = false }.nunaSheetChrome(detents: [.large]) }
         .sheet(isPresented: $showMake, onDismiss: { mine = NunaCustomBreath.all() }) {
             ScrollView {
                 NunaBreathAskAnya(inputs: suggestion?.inputs)
