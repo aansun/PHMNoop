@@ -32,6 +32,7 @@ struct NunaAnyaCardLine: Equatable {
         case "today": return ["Recovery", "Strain", "Sleep"] + outdoors
         case "workouts": return ["Strain", "Distance", "Steps", "Heart rate zones"] + outdoors
         case "trends": return ["Recovery", "Strain"]
+        case "Breathing": return ["Heart rate", "HRV"]
         default: return []
         }
     }

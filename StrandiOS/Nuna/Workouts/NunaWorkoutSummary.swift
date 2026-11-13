@@ -83,6 +83,8 @@ struct NunaWorkoutSummaryView: View {
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
         .environment(\.nunaAnyaCardContext, "workouts")
+        // Anya as one slim row, as on Today; what she says beyond the headline is in the sheet it opens.
+        .environment(\.nunaAnyaRow, true)
         .nunaDialog("Delete this workout?", isPresented: $confirmDelete) {
             NunaDialogButton("Delete", role: .destructive) {
                 if let r = m.row(key) { Task { NunaWorkoutReviewStore.remove(startTs: r.startTs, sport: r.sport); await repo.deleteWorkout(r); await repo.refresh(); dismiss() } }
