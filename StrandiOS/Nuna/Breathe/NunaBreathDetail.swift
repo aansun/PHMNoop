@@ -99,6 +99,12 @@ struct NunaBreathPickRow: View {
 
 // MARK: Detail page
 
+/// The heart of a technique's page: whether it is a favourite, and what touching it does.
+struct NunaBreathFavoriteControl {
+    let isOn: Bool
+    let toggle: () -> Void
+}
+
 /// The page of a technique, laid out like WHOOP's workout details: a photograph behind a close button, the page name, the name of the technique and three
 /// plain figures; under it the text, the steps and one outlined Start button. Nothing moves here: the animation begins with the session.
 private struct NunaBreathDetailShell<Content: View>: View {
@@ -108,6 +114,8 @@ private struct NunaBreathDetailShell<Content: View>: View {
     let subtitle: String
     let stats: [(value: String, unit: String, label: LocalizedStringKey)]
     let startNote: String?
+    /// The heart at the top right: nil leaves it out, otherwise whether the technique is a favourite and what touching it does.
+    var favorite: NunaBreathFavoriteControl?
     let onStart: () -> Void
     let onClose: () -> Void
     @ViewBuilder let content: Content
@@ -148,6 +156,14 @@ private struct NunaBreathDetailShell<Content: View>: View {
                         Image(systemName: "xmark").font(.nuna(size: 17, weight: .bold)).foregroundStyle(.white).frame(width: 44, height: 44).contentShape(Rectangle())
                     }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
                     Spacer()
+                    if let favorite {
+                        // The heart alone: filled and red when it is a favourite (touch to take it out), an outline when it is not.
+                        Button(action: favorite.toggle) {
+                            Image(systemName: favorite.isOn ? "heart.fill" : "heart").font(.nuna(size: 17, weight: .semibold))
+                                .foregroundStyle(favorite.isOn ? NunaPalette.alert : .white)
+                                .frame(width: 40, height: 40).background(.ultraThinMaterial, in: Circle()).contentShape(Circle())
+                        }.buttonStyle(.plain).accessibilityLabel(Text(favorite.isOn ? "Unfavourite" : "Favourite"))
+                    }
                 }
             }
             Spacer(minLength: 150)
@@ -286,6 +302,7 @@ enum NunaBreathTool: String, Identifiable {
 struct NunaBreathTemplateDetail: View {
     let template: BreathTemplate
     let minutes: Int
+    var favorite: NunaBreathFavoriteControl?
     let onStart: () -> Void
     let onClose: () -> Void
 
@@ -302,7 +319,7 @@ struct NunaBreathTemplateDetail: View {
             icon: NunaBreathIcon.name(for: template), background: NunaBreathItem.template(template).photo,
             title: template.title, subtitle: template.blurb,
             stats: [("\(minutes)", String(localized: "min"), "Duration"), (pattern.value, pattern.unit, "Pace"), (NunaBreathLevel.of(template.protocolId).title, "", "Level")],
-            startNote: nil, onStart: onStart, onClose: onClose) {
+            startNote: nil, favorite: favorite, onStart: onStart, onClose: onClose) {
             if let p { NunaBreathSteps(steps: NunaBreathGuide.steps(for: p)) }
             Text(verbatim: p.map { String(localized: String.LocalizationValue($0.edu)) } ?? template.goal.about)
                 .font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil).fixedSize(horizontal: false, vertical: true)
@@ -326,6 +343,7 @@ struct NunaBreathTemplateDetail: View {
 /// Resonance or Calm me: a page like any technique's, and Start opens the older screen on that tab.
 struct NunaBreathToolDetail: View {
     let tool: NunaBreathTool
+    var favorite: NunaBreathFavoriteControl?
     let onStart: () -> Void
     let onClose: () -> Void
     var body: some View {
@@ -334,7 +352,7 @@ struct NunaBreathToolDetail: View {
             stats: [(tool.duration, String(localized: "min"), "Duration"),
                     (tool == .resonance ? "5.5" : String(localized: "Below HR"), tool == .resonance ? String(localized: "br/min") : "", "Pace"),
                     (NunaBreathLevel.gentle.title, "", "Level")],
-            startNote: nil, onStart: onStart, onClose: onClose) {
+            startNote: nil, favorite: favorite, onStart: onStart, onClose: onClose) {
             NunaBreathSteps(steps: tool.steps)
             Text(verbatim: tool.about).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil).fixedSize(horizontal: false, vertical: true)
             NunaDivider()
