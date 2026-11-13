@@ -25,78 +25,87 @@ struct NunaAnyaSettingsView: View {
     var body: some View {
         NunaDetailScreen("Anya settings") {
             Text("What Anya may read, how it answers and when it writes to you.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            NunaCard(small: true) {
+            NunaSettingsCard {
                 NunaToggleRow("Show Anya", subtitle: "The tab, the cards and the buttons", systemImage: NunaGlyph.anya, isOn: $coachEnabled).padding(.vertical, 8)
             }
             .onChange(of: coachEnabled) { _, on in CoachBriefScheduler.applyMasterSwitch(on) }
 
-            section("Provider") {
-                NavigationLink(value: NunaAnyaRoute.connect) {
-                    NunaListRow(LocalizedStringKey(coach.isConfigured ? coach.provider.displayName : "Not connected"),
-                                subtitle: LocalizedStringKey(coach.isConfigured ? coach.provider.nunaSubtitle(model: coach.model) : String(localized: "Choose a provider")),
-                                systemImage: "cpu", showsChevron: true)
-                }.buttonStyle(.plain)
-                if coach.isConfigured, coach.provider != .appleIntelligence {
-                    NunaDivider()
-                    NavigationLink(value: coach.provider == .custom ? NunaAnyaRoute.custom : (coach.provider == .chatGPT ? .chatGPT : .apiKey(coach.provider.rawValue))) {
-                        NunaListRow("Model and key", subtitle: LocalizedStringKey(coach.model.isEmpty ? String(localized: "Default") : coach.model), systemImage: "key", showsChevron: true)
+            NunaSettingsSection("Provider") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaAnyaRoute.connect) {
+                        NunaListRow(LocalizedStringKey(coach.isConfigured ? coach.provider.displayName : "Not connected"),
+                                    subtitle: LocalizedStringKey(coach.isConfigured ? coach.provider.nunaSubtitle(model: coach.model) : String(localized: "Choose a provider")),
+                                    systemImage: "cpu", showsChevron: true)
                     }.buttonStyle(.plain)
+                }
+                if coach.isConfigured, coach.provider != .appleIntelligence {
+                    NunaSettingsCard {
+                        NavigationLink(value: coach.provider == .custom ? NunaAnyaRoute.custom : (coach.provider == .chatGPT ? .chatGPT : .apiKey(coach.provider.rawValue))) {
+                            NunaListRow("Model and key", subtitle: LocalizedStringKey(coach.model.isEmpty ? String(localized: "Default") : coach.model), systemImage: "key", showsChevron: true)
+                        }.buttonStyle(.plain)
+                    }
                 }
             }
 
-            section("Data access") {
-                NunaToggleRow("Let Anya use my numbers", subtitle: "Summaries of computed scores", systemImage: "lock.open", isOn: $coach.dataConsent).padding(.vertical, 8)
-                NunaDivider()
-                NunaToggleRow("Share patterns and Lab Book", subtitle: "Correlations and lab markers. Off by default", systemImage: "chart.xyaxis.line", isOn: $coach.includeOnDeviceSignals).padding(.vertical, 8).disabled(!coach.dataConsent)
+            NunaSettingsSection("Data access") {
+                NunaSettingsSwitch("Let Anya use my numbers", subtitle: "Summaries of computed scores", systemImage: "lock.open", isOn: $coach.dataConsent)
+                NunaSettingsSwitch("Share patterns and Lab Book", subtitle: "Correlations and lab markers. Off by default", systemImage: "chart.xyaxis.line", isOn: $coach.includeOnDeviceSignals).disabled(!coach.dataConsent)
                 if coach.provider == .gemini {
-                    NunaDivider()
-                    NunaToggleRow("Send chart images to Gemini", subtitle: "Only with the Gemini provider", systemImage: "photo", isOn: $coach.multimodalChartEnabled).padding(.vertical, 8).disabled(!coach.dataConsent)
+                    NunaSettingsSwitch("Send chart images to Gemini", subtitle: "Only with the Gemini provider", systemImage: "photo", isOn: $coach.multimodalChartEnabled).disabled(!coach.dataConsent)
                 }
             }
             Text("Anya names the figures it reads in every answer. Raw heartbeat intervals, PPG and motion are never sent.")
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
 
-            VStack(alignment: .leading, spacing: 10) {
-                nunaRuledHeader("How Anya answers")
-                NunaCard {
-                    VStack(alignment: .leading, spacing: 16) {
-                        labelled("Language") { NunaSegmented([(value: "id", title: "Indonesian"), (value: "en", title: "English"), (value: "app", title: "Follow app")], selection: $language) }
-                        labelled("Style") { NunaSegmented([(value: "short", title: "Short"), (value: "balanced", title: "Balanced"), (value: "detailed", title: "Detailed")], selection: $style) }
-                    }
+            NunaSettingsSection("How Anya answers") {
+                NunaSettingsCard {
+                    NunaChoiceRow("Language", systemImage: "globe",
+                                  options: [(value: "id", title: "Indonesian"), (value: "en", title: "English"), (value: "app", title: "Follow app")], selection: $language)
                 }
-                NunaCard(small: true) {
+                NunaSettingsCard {
+                    NunaChoiceRow("Style", systemImage: "text.alignleft",
+                                  options: [(value: "short", title: "Short"), (value: "balanced", title: "Balanced"), (value: "detailed", title: "Detailed")], selection: $style)
+                }
+                NunaSettingsCard {
                     NavigationLink(value: NunaAnyaRoute.instructions) {
                         NunaListRow("Anya's instructions", description: "Shape how it thinks and talks", systemImage: "text.alignleft", showsChevron: true)
                     }.buttonStyle(.plain)
                 }
             }
 
-            section("Anya writes to you") {
-                NavigationLink(value: NunaAnyaRoute.brief) {
-                    NunaListRow("Morning brief", subtitle: LocalizedStringKey(briefOn ? String(localized: "Every day at \(Self.clock(CoachBriefScheduler.timeMinutes))") : String(localized: "Off")), systemImage: "sunrise", showsChevron: true)
-                }.buttonStyle(.plain)
-                NunaDivider()
-                NavigationLink(value: NunaAnyaRoute.voiceCoach) {
-                    NunaListRow("Audio coach during sessions", subtitle: LocalizedStringKey(voiceOn ? String(localized: "On") : String(localized: "Off")), systemImage: "speaker.wave.2", showsChevron: true)
-                }.buttonStyle(.plain)
-                NunaDivider()
-                NunaToggleRow("Suggestion cards on each screen", subtitle: "One short card per module, always with figures", systemImage: "rectangle.on.rectangle", isOn: $cards).padding(.vertical, 8)
+            NunaSettingsSection("Anya writes to you") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaAnyaRoute.brief) {
+                        NunaListRow("Morning brief", subtitle: LocalizedStringKey(briefOn ? String(localized: "Every day at \(Self.clock(CoachBriefScheduler.timeMinutes))") : String(localized: "Off")), systemImage: "sunrise", showsChevron: true)
+                    }.buttonStyle(.plain)
+                }
+                NunaSettingsCard {
+                    NavigationLink(value: NunaAnyaRoute.voiceCoach) {
+                        NunaListRow("Audio coach during sessions", subtitle: LocalizedStringKey(voiceOn ? String(localized: "On") : String(localized: "Off")), systemImage: "speaker.wave.2", showsChevron: true)
+                    }.buttonStyle(.plain)
+                }
+                NunaSettingsSwitch("Suggestion cards on each screen", subtitle: "One short card per module, always with figures", systemImage: "rectangle.on.rectangle", isOn: $cards)
             }
 
-            section("What Anya reads") {
-                NavigationLink(value: NunaAnyaRoute.environment) {
-                    NunaListRow("Weather and air", subtitle: LocalizedStringKey(EnvironmentExperiment.isEnabled && EnvironmentKeyStore.hasAny ? String(localized: "On") : String(localized: "Off")), systemImage: "cloud.sun", showsChevron: true)
-                }.buttonStyle(.plain)
+            NunaSettingsSection("What Anya reads") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaAnyaRoute.environment) {
+                        NunaListRow("Weather and air", subtitle: LocalizedStringKey(EnvironmentExperiment.isEnabled && EnvironmentKeyStore.hasAny ? String(localized: "On") : String(localized: "Off")), systemImage: "cloud.sun", showsChevron: true)
+                    }.buttonStyle(.plain)
+                }
             }
 
-            section("Memory and history") {
-                NavigationLink(value: NunaAnyaRoute.memory) {
-                    NunaListRow("Memory", subtitle: LocalizedStringKey(String(localized: "\(memory.memories.filter(\.isActive).count) active")), systemImage: "brain", showsChevron: true)
-                }.buttonStyle(.plain)
-                NunaDivider()
-                NavigationLink(value: NunaAnyaRoute.history) {
-                    NunaListRow("Conversation history", subtitle: LocalizedStringKey(String(localized: "\(historyCount) conversations, kept on this iPhone")), systemImage: "clock.arrow.circlepath", showsChevron: true)
-                }.buttonStyle(.plain)
+            NunaSettingsSection("Memory and history") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaAnyaRoute.memory) {
+                        NunaListRow("Memory", subtitle: LocalizedStringKey(String(localized: "\(memory.memories.filter(\.isActive).count) active")), systemImage: "brain", showsChevron: true)
+                    }.buttonStyle(.plain)
+                }
+                NunaSettingsCard {
+                    NavigationLink(value: NunaAnyaRoute.history) {
+                        NunaListRow("Conversation history", subtitle: LocalizedStringKey(String(localized: "\(historyCount) conversations, kept on this iPhone")), systemImage: "clock.arrow.circlepath", showsChevron: true)
+                    }.buttonStyle(.plain)
+                }
             }
             Button(role: .destructive) { confirmDeleteAll = true } label: {
                 Text("Delete all conversations").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -111,20 +120,6 @@ struct NunaAnyaSettingsView: View {
     }
 
     static func clock(_ minutes: Int) -> String { String(format: "%02d:%02d", minutes / 60, minutes % 60) }
-
-    private func section<C: View>(_ title: LocalizedStringKey, @ViewBuilder _ content: () -> C) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            nunaTrendsCap(title)
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) { VStack(spacing: 0) { content() } }
-        }
-    }
-
-    private func labelled<C: View>(_ title: LocalizedStringKey, @ViewBuilder _ content: () -> C) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            content()
-        }
-    }
 }
 
 // MARK: - Instructions (AnyaInstructions.dc)

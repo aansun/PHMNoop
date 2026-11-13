@@ -33,8 +33,12 @@ struct NunaUnitsView: View {
                 NunaSegmented<String>([(value: UnitSystem.metric.rawValue, title: "Kilometres"), (value: UnitSystem.imperial.rawValue, title: "Miles")],
                                       selection: Binding<String>(get: { distance.isEmpty ? system : distance }, set: { distance = $0 }))
             }
-            group("Temperature", "Follow the body setting or pick one") {
-                NunaSegmented([(value: "", title: "Follow body"), (value: TemperatureUnit.celsius.rawValue, title: "°C"), (value: TemperatureUnit.fahrenheit.rawValue, title: "°F")], selection: $temperature)
+            NunaSettingsSection("Temperature") {
+                NunaSettingsCard {
+                    NunaChoiceRow("Follow the body setting or pick one", systemImage: "thermometer.medium",
+                                  options: [(value: "", title: "Follow body"), (value: TemperatureUnit.celsius.rawValue, title: "°C"), (value: TemperatureUnit.fahrenheit.rawValue, title: "°F")],
+                                  selection: $temperature)
+                }
             }
             group("Skin temperature", "How Health shows it") {
                 NunaSegmented([(value: "", title: "Temperature"), (value: SkinTempDisplay.Kind.deviation.rawValue, title: "Vs baseline")], selection: $skinTemp)
@@ -42,28 +46,27 @@ struct NunaUnitsView: View {
             group("Strain scale", "The 0 to 21 scale is like WHOOP's") {
                 NunaSegmented([(value: EffortScale.hundred.rawValue, title: "0 to 100"), (value: EffortScale.whoop.rawValue, title: "0 to 21")], selection: $effortScale)
             }
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    nunaTrendsCap("Preview")
+            NunaSettingsSection("Preview") {
+                NunaSettingsCard {
                     HStack {
                         preview("Weight", bodyUnits == .imperial ? String(format: "%.1f lb", locale: AppLanguage.activeLocale, profile.weightKg * 2.20462) : String(format: "%.1f kg", locale: AppLanguage.activeLocale, profile.weightKg))
                         preview("Run", distUnits == .imperial ? "3.2 mi" : "5.2 km")
                         preview("Strain", UnitFormatter.effortDisplay(12.4, scale: scale))
-                    }
+                    }.padding(.vertical, 12)
                 }
             }
             nunaFootnote("Only the display changes. Your data is always stored the same way.")
         }
     }
 
+    /// A heading, and under it one card holding what the setting is for and its choice.
     private func group<C: View>(_ title: LocalizedStringKey, _ note: LocalizedStringKey, @ViewBuilder _ c: () -> C) -> some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+        NunaSettingsSection(title) {
+            NunaSettingsCard {
+                VStack(alignment: .leading, spacing: 10) {
                     Text(note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                c()
+                    c()
+                }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12)
             }
         }
     }
@@ -87,13 +90,15 @@ struct NunaFeaturesView: View {
     var body: some View {
         NunaDetailScreen("Optional features") {
             Text("Turn on what you use. What is off does not appear in Today.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            NunaSettingsGroup {
-                NunaToggleRow("Water tracker", subtitle: "A drink log with a daily target", systemImage: "drop", isOn: $hydration).padding(.vertical, 8)
-                NunaDivider()
-                NunaToggleRow("Screen on while syncing", subtitle: "So a long sync finishes without locking", systemImage: "arrow.triangle.2.circlepath", isOn: $syncKeepOn).padding(.vertical, 8)
-                if profile.cycleAwarenessApplies {
-                    NunaDivider()
-                    NunaToggleRow("Cycle awareness", subtitle: "Optional, only on this iPhone", systemImage: "circle.dotted", isOn: $cycle).padding(.vertical, 8)
+            NunaSettingsSection("Water") {
+                NunaSettingsSwitch("Water tracker", subtitle: "A drink log with a daily target", systemImage: "drop", isOn: $hydration)
+            }
+            NunaSettingsSection("Strap sync") {
+                NunaSettingsSwitch("Screen on while syncing", subtitle: "So a long sync finishes without locking", systemImage: "arrow.triangle.2.circlepath", isOn: $syncKeepOn)
+            }
+            if profile.cycleAwarenessApplies {
+                NunaSettingsSection("Menstrual cycle") {
+                    NunaSettingsSwitch("Cycle awareness", subtitle: "Optional, only on this iPhone", systemImage: "circle.dotted", isOn: $cycle)
                 }
             }
             nunaFootnote("Everything here stays on this iPhone.")
@@ -112,28 +117,31 @@ struct NunaActivitySettingsView: View {
 
     var body: some View {
         NunaDetailScreen("Activity Settings", centersTitle: true) {
-            NunaSettingsGroup("Detection") {
-                NunaToggleRow("Activity detection", subtitle: "Suggests a workout when your heart rate stays up. Never saves on its own", systemImage: "figure.run", isOn: $autoDetect).padding(.vertical, 8)
+            NunaSettingsSection("Detection") {
+                NunaSettingsSwitch("Activity detection", subtitle: "Suggests a workout when your heart rate stays up. Never saves on its own", systemImage: "figure.run", isOn: $autoDetect)
             }
-            NunaSettingsGroup("Heart rate") {
-                NavigationLink(value: NunaMeRoute.zones) { NunaListRow("Heart rate settings", description: "Maximum heart rate and zones", systemImage: NunaIcons.heartRate, showsChevron: true) }.buttonStyle(.plain)
+            NunaSettingsSection("Heart rate") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaMeRoute.zones) { NunaListRow("Heart rate settings", subtitle: "Maximum heart rate and zones", systemImage: NunaIcons.heartRate, showsChevron: true) }.buttonStyle(.plain)
+                }
             }
-            NunaSettingsGroup("During a workout") {
-                NunaToggleRow("Screen on during workouts", subtitle: "Heart rate stays visible while recording", systemImage: "sun.max", isOn: $keepOn).padding(.vertical, 8)
-                NunaDivider()
-                NunaToggleRow("Live Activity", subtitle: "Heart rate and your session on the Lock Screen and Dynamic Island", systemImage: "iphone.gen3", isOn: $liveActivity).padding(.vertical, 8)
-                // The workout's own Live Activity does not depend on the switch above, so its design is always here to choose.
-                NunaDivider()
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Lock Screen design").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                    NunaSegmented([(value: "standard", title: "Default"), (value: "banner", title: "Banner")], selection: $liveDesign)
-                    // The Banner as it will look on the Lock Screen, with made-up figures, at the height the system allows.
-                    NOOPBannerLockScreen(state: .bannerDemo())
-                        .frame(height: 156).clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                        .opacity(liveDesign == "banner" ? 1 : 0.55)
-                    Text("Banner: the heart rate and the clock on top; the five zones and two figures below.")
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                }.padding(.vertical, 10)
+            NunaSettingsSection("During a workout") {
+                NunaSettingsSwitch("Screen on during workouts", subtitle: "Heart rate stays visible while recording", systemImage: "sun.max", isOn: $keepOn)
+                NunaSettingsSwitch("Live Activity", subtitle: "Heart rate and your session on the Lock Screen and Dynamic Island", systemImage: "iphone.gen3", isOn: $liveActivity)
+            }
+            // The workout's own Live Activity does not depend on the switch above, so its design is always here to choose.
+            NunaSettingsSection("Lock Screen design") {
+                NunaSettingsCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        NunaSegmented([(value: "standard", title: "Default"), (value: "banner", title: "Banner")], selection: $liveDesign)
+                        // The Banner as it will look on the Lock Screen, with made-up figures, at the height the system allows.
+                        NOOPBannerLockScreen(state: .bannerDemo())
+                            .frame(height: 156).clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            .opacity(liveDesign == "banner" ? 1 : 0.55)
+                        Text("Banner: the heart rate and the clock on top; the five zones and two figures below.")
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    }.padding(.vertical, 14)
+                }
             }
         }
     }
@@ -166,29 +174,31 @@ struct NunaNotificationsView: View {
                 }
             }
             Text("Choose which alerts PHMN sends. If the iOS permission is off, none of them arrive.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-            NunaSettingsGroup {
-                NavigationLink(value: NunaAnyaRoute.brief) { NunaListRow("Morning brief", subtitle: LocalizedStringKey(brief ? String(localized: "Every day at \(NunaAnyaSettingsView.clock(CoachBriefScheduler.timeMinutes))") : String(localized: "Off")), systemImage: "sunrise", showsChevron: true) }.buttonStyle(.plain)
-                NunaDivider()
-                NunaToggleRow("Early-illness warning", subtitle: "When two signals drift together", systemImage: NunaIcons.earlyWarning, isOn: Binding(get: { behavior.illnessWatch }, set: { behavior.illnessWatch = $0; if $0 { IllnessNotifier.requestAuthorization() } })).padding(.vertical, 8)
-                NunaDivider()
-                NunaToggleRow("Strain target reached", subtitle: "Once a day, after the strap syncs", systemImage: "target", isOn: Binding(get: { behavior.strainTargetNudge }, set: { behavior.strainTargetNudge = $0; if $0 { StrainTargetNotifier.requestAuthorization(); model.evaluateStrainTarget() } })).padding(.vertical, 8)
-                NunaDivider()
-                NunaToggleRow("Summary after a workout", subtitle: "Strain, duration and heart rate", systemImage: "list.bullet.clipboard", isOn: Binding(get: { workoutReport }, set: { workoutReport = $0; if $0 { WorkoutReportNotifier.requestAuthorization() } })).padding(.vertical, 8)
-                NunaDivider()
-                NunaToggleRow("Journal reminder", subtitle: "A notification in the evening and a card in Today", systemImage: NunaIcons.journal, isOn: $journal).padding(.vertical, 8)
-                if journal {
-                    NunaDivider()
-                    HStack {
-                        Text("Reminder time").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        Spacer()
-                        DatePicker("", selection: Binding(
-                            get: { Calendar.current.date(bySettingHour: journalMinute / 60, minute: journalMinute % 60, second: 0, of: Date()) ?? Date() },
-                            set: { let c = Calendar.current.dateComponents([.hour, .minute], from: $0); journalMinute = (c.hour ?? 21) * 60 + (c.minute ?? 0) }),
-                                   displayedComponents: .hourAndMinute).labelsHidden()
-                    }.padding(.vertical, 8)
+            NunaSettingsSection("Reminders") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaAnyaRoute.brief) { NunaListRow("Morning brief", subtitle: LocalizedStringKey(brief ? String(localized: "Every day at \(NunaAnyaSettingsView.clock(CoachBriefScheduler.timeMinutes))") : String(localized: "Off")), systemImage: "sunrise", showsChevron: true) }.buttonStyle(.plain)
                 }
-                NunaDivider()
-                NunaToggleRow("Strap battery", subtitle: "Low and full, plus the estimate", systemImage: "battery.25percent", isOn: Binding(get: { behavior.batteryAlerts }, set: { behavior.batteryAlerts = $0; if $0 { BatteryNotifier.requestAuthorization() } })).padding(.vertical, 8)
+            }
+            NunaSettingsSection("Alerts") {
+                NunaSettingsSwitch("Early-illness warning", subtitle: "When two signals drift together", systemImage: NunaIcons.earlyWarning, isOn: Binding(get: { behavior.illnessWatch }, set: { behavior.illnessWatch = $0; if $0 { IllnessNotifier.requestAuthorization() } }))
+                NunaSettingsSwitch("Strain target reached", subtitle: "Once a day, after the strap syncs", systemImage: "target", isOn: Binding(get: { behavior.strainTargetNudge }, set: { behavior.strainTargetNudge = $0; if $0 { StrainTargetNotifier.requestAuthorization(); model.evaluateStrainTarget() } }))
+                NunaSettingsSwitch("Summary after a workout", subtitle: "Strain, duration and heart rate", systemImage: "list.bullet.clipboard", isOn: Binding(get: { workoutReport }, set: { workoutReport = $0; if $0 { WorkoutReportNotifier.requestAuthorization() } }))
+                NunaSettingsSwitch("Strap battery", subtitle: "Low and full, plus the estimate", systemImage: "battery.25percent", isOn: Binding(get: { behavior.batteryAlerts }, set: { behavior.batteryAlerts = $0; if $0 { BatteryNotifier.requestAuthorization() } }))
+            }
+            NunaSettingsSection("Journal") {
+                NunaSettingsSwitch("Journal reminder", subtitle: "A notification in the evening and a card in Today", systemImage: NunaIcons.journal, isOn: $journal)
+                if journal {
+                    NunaSettingsCard {
+                        HStack {
+                            Text("Reminder time").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                            Spacer()
+                            DatePicker("", selection: Binding(
+                                get: { Calendar.current.date(bySettingHour: journalMinute / 60, minute: journalMinute % 60, second: 0, of: Date()) ?? Date() },
+                                set: { let c = Calendar.current.dateComponents([.hour, .minute], from: $0); journalMinute = (c.hour ?? 21) * 60 + (c.minute ?? 0) }),
+                                       displayedComponents: .hourAndMinute).labelsHidden()
+                        }.padding(.vertical, 14)
+                    }
+                }
             }
             nunaFootnote("Vibration on the strap, with its quiet hours, is under Strap automations. The alarm is set from Tonight's sleep in Today.")
         }

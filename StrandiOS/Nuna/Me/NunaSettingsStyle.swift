@@ -43,6 +43,78 @@ func nunaOpenIOSSettings() {
     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
 }
 
+// MARK: - One card per setting
+
+/// A heading and the cards under it. The page-wide shape of the Settings pages: one small ruled heading for each thing the page does, and under it one
+/// card for each setting, so a card is one choice and nothing shares a card with something else (Appearance is the model).
+struct NunaSettingsSection<Content: View>: View {
+    let title: LocalizedStringKey
+    let content: Content
+    init(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) { self.title = title; self.content = content() }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            nunaRuledHeader(title)
+            content
+        }
+    }
+}
+
+/// The card one setting sits in, inset like the cards on the Appearance page.
+struct NunaSettingsCard<Content: View>: View {
+    let content: Content
+    init(@ViewBuilder content: () -> Content) { self.content = content() }
+    var body: some View {
+        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) { VStack(spacing: 0) { content } }
+    }
+}
+
+/// A switch on a card of its own.
+struct NunaSettingsSwitch: View {
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey?
+    var systemImage: String?
+    @Binding var isOn: Bool
+    init(_ title: LocalizedStringKey, subtitle: LocalizedStringKey? = nil, systemImage: String? = nil, isOn: Binding<Bool>) {
+        self.title = title; self.subtitle = subtitle; self.systemImage = systemImage; self._isOn = isOn
+    }
+    var body: some View {
+        NunaSettingsCard { NunaToggleRow(title, subtitle: subtitle, systemImage: systemImage, isOn: $isOn).padding(.vertical, 8) }
+    }
+}
+
+/// A choice among several as one row (put it in a `NunaSettingsCard`): the name, the choice in force and an up-down arrow. It opens the app's bottom-sheet
+/// drop-down with the current option ticked, so the page stays short however many options there are.
+struct NunaChoiceRow<Value: Hashable>: View {
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey?
+    let systemImage: String?
+    let options: [(value: Value, title: LocalizedStringKey)]
+    @Binding var selection: Value
+
+    init(_ title: LocalizedStringKey, subtitle: LocalizedStringKey? = nil, systemImage: String? = nil,
+         options: [(value: Value, title: LocalizedStringKey)], selection: Binding<Value>) {
+        self.title = title; self.subtitle = subtitle; self.systemImage = systemImage; self.options = options; self._selection = selection
+    }
+
+    private var current: LocalizedStringKey { options.first { $0.value == selection }?.title ?? options[0].title }
+
+    var body: some View {
+        NunaMenu {
+            ForEach(options.indices, id: \.self) { i in
+                NunaMenuItem(options[i].title, selected: options[i].value == selection) { selection = options[i].value }
+            }
+        } label: {
+            NunaListRow(title, subtitle: subtitle, systemImage: systemImage) {
+                HStack(spacing: 6) {
+                    Text(current).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
 /// A link to a Me route. Language has no page of its own in the app: it goes straight to iOS Settings, so every place that lists a route
 /// opens it through here.
 @ViewBuilder func nunaMeLink<Label: View>(_ route: NunaMeRoute, @ViewBuilder label: () -> Label) -> some View {
