@@ -3081,6 +3081,7 @@
  "Search signals": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cari sinyal"}}}},
  "Favourites": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Favorit"}}}},
  "Favourite": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Favorit"}}}},
+ "Unfavourite": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Batal favorit"}}}},
  "Scores": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Skor"}}}},
  "Breathing and oxygen": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Napas dan oksigen"}}}},
  "No signals match.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak ada sinyal yang cocok."}}}},

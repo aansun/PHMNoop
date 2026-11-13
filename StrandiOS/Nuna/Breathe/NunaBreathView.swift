@@ -198,28 +198,19 @@ struct NunaBreathView: View {
         }
     }
 
-    /// A ready exercise (or tool) hearted in Explore: play it from here, or take the heart off to drop it from the list.
+    /// A ready exercise (or tool) hearted in Explore. It opens its page, as in Explore; Start and Unfavourite are on the page.
     private func favoriteRow(_ item: NunaBreathItem) -> some View {
-        HStack(spacing: 12) {
-            Button { startFavorite(item) } label: {
-                HStack(spacing: 12) {
-                    NunaActivityGlyph(name: item.icon, size: 26).foregroundStyle(NunaPalette.textPrimary).frame(width: 32)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: item.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).textCase(nil)
-                        Text(verbatim: "\(item.minutesText(lengthPref: lengthPref)) \(String(localized: "min")) · \(item.levelTitle)").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(2).textCase(nil)
-                    }
-                    Spacer(minLength: 6)
-                    Image(systemName: "play.circle.fill").font(.nuna(size: 28, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                }.contentShape(Rectangle())
-            }.buttonStyle(.plain)
-            Button { toggleFavorite(item) } label: {
-                Image(systemName: "heart.fill").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.alert).frame(width: 36, height: 44)
-            }.buttonStyle(.plain).accessibilityLabel(Text("Favourite"))
-        }.padding(.vertical, 10)
-    }
-
-    private func startFavorite(_ item: NunaBreathItem) {
-        switch item { case .template(let t): start(t); case .tool(let k): toolRun = k }
+        Button { open(item) } label: {
+            HStack(spacing: 12) {
+                NunaActivityGlyph(name: item.icon, size: 26).foregroundStyle(NunaPalette.textPrimary).frame(width: 32)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: item.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).textCase(nil)
+                    Text(verbatim: "\(item.minutesText(lengthPref: lengthPref)) \(String(localized: "min")) · \(item.levelTitle)").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(2).textCase(nil)
+                }
+                Spacer(minLength: 6)
+                Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+            }.padding(.vertical, 10).contentShape(Rectangle())
+        }.buttonStyle(.plain)
     }
 
     private func toggleFavorite(_ item: NunaBreathItem) {
@@ -298,6 +289,11 @@ struct NunaBreathView: View {
         .accessibilityLabel(Text("Favourite")).accessibilityAddTraits(on ? .isSelected : [])
     }
 
+    /// The heart on a technique's page: Favourite when it is not one yet, Unfavourite when it is.
+    private func favoriteControl(_ item: NunaBreathItem) -> NunaBreathFavoriteControl {
+        NunaBreathFavoriteControl(isOn: favorites.contains { $0.id == item.id }, toggle: { toggleFavorite(item) })
+    }
+
     private func open(_ item: NunaBreathItem) {
         switch item { case .template(let t): route = .template(t); case .tool(let k): route = .tool(k) }
     }
@@ -310,10 +306,10 @@ struct NunaBreathView: View {
                                   onStart: { startFromDetail($0) }, onOpen: { open($0) }, onClose: { route = nil })
                 .nunaSheetChrome(detents: [.large])
         case .tool(let tool):
-            NunaBreathToolDetail(tool: tool, onStart: { openTool(tool) }, onClose: { route = nil })
+            NunaBreathToolDetail(tool: tool, favorite: favoriteControl(.tool(tool)), onStart: { openTool(tool) }, onClose: { route = nil })
                 .nunaSheetChrome(detents: [.large])
         case .template(let t):
-            NunaBreathTemplateDetail(template: t, minutes: lengthPref > 0 ? lengthPref : t.minutes,
+            NunaBreathTemplateDetail(template: t, minutes: lengthPref > 0 ? lengthPref : t.minutes, favorite: favoriteControl(.template(t)),
                                      onStart: { startFromDetail(t) }, onClose: { route = nil })
                 .nunaSheetChrome(detents: [.large])
         }
