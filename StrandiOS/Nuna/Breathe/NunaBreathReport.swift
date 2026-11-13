@@ -89,17 +89,19 @@ struct NunaBreathReportView: View {
     private var stats: [Stat] {
         let a = NunaBreathAverages(for: record, in: NunaBreathLog.all())
         func whole(_ v: Double?) -> String { v.map { String(format: "%.0f", $0) } ?? "–" }
-        var out: [Stat] = [Stat(id: "breaths", icon: NunaIcons.breathing, label: "Breaths", value: "\(record.breaths)", unit: "")]
+        // Grouped by what they measure, three to a row: the heart rate (start, end, average), the HRV (start, peak, average), and last what belongs to neither.
+        var out: [Stat] = []
+        if record.hrStart != nil { out.append(Stat(id: "hrStart", icon: NunaIcons.heartRate, label: "Start HR", value: whole(record.hrStart), unit: "bpm")) }
+        if record.hrEnd != nil { out.append(Stat(id: "hrEnd", icon: NunaIcons.heartRate, label: "End HR", value: whole(record.hrEnd), unit: "bpm")) }
+        if record.hrAvg != nil { out.append(Stat(id: "hrAvg", icon: NunaIcons.avgHr, label: "Avg HR", value: whole(record.hrAvg), unit: "bpm", pill: pill(record.hrAvg, a?.hrAvg, "bpm"))) }
+        if record.rmssdStart != nil { out.append(Stat(id: "hrvStart", icon: NunaIcons.hrv, label: "Start HRV", value: whole(record.rmssdStart), unit: "ms")) }
+        if record.rmssdPeak != nil { out.append(Stat(id: "hrvPeak", icon: NunaIcons.hrv, label: "Peak HRV", value: whole(record.rmssdPeak), unit: "ms")) }
+        if record.rmssdAvg != nil { out.append(Stat(id: "hrvAvg", icon: NunaIcons.hrv, label: "Avg HRV", value: whole(record.rmssdAvg), unit: "ms", pill: pill(record.rmssdAvg, a?.rmssdAvg, "ms"))) }
+        out.append(Stat(id: "breaths", icon: NunaIcons.breathing, label: "Breaths", value: "\(record.breaths)", unit: ""))
         if let pace = record.pace {
             out.append(Stat(id: "pace", icon: "speedometer", label: "Pace", value: String(format: "%.1f", locale: AppLanguage.activeLocale, pace), unit: "/min",
                             pill: pill(pace, a?.pace, "br/min", decimals: 1)))
         }
-        if record.hrAvg != nil { out.append(Stat(id: "hrAvg", icon: NunaIcons.avgHr, label: "Avg HR", value: whole(record.hrAvg), unit: "bpm", pill: pill(record.hrAvg, a?.hrAvg, "bpm"))) }
-        if record.hrStart != nil { out.append(Stat(id: "hrStart", icon: NunaIcons.heartRate, label: "Start HR", value: whole(record.hrStart), unit: "bpm")) }
-        if record.hrEnd != nil { out.append(Stat(id: "hrEnd", icon: NunaIcons.heartRate, label: "End HR", value: whole(record.hrEnd), unit: "bpm")) }
-        if record.rmssdAvg != nil { out.append(Stat(id: "hrvAvg", icon: NunaIcons.hrv, label: "Avg HRV", value: whole(record.rmssdAvg), unit: "ms", pill: pill(record.rmssdAvg, a?.rmssdAvg, "ms"))) }
-        if record.rmssdStart != nil { out.append(Stat(id: "hrvStart", icon: NunaIcons.hrv, label: "Start HRV", value: whole(record.rmssdStart), unit: "ms")) }
-        if record.rmssdPeak != nil { out.append(Stat(id: "hrvPeak", icon: NunaIcons.hrv, label: "Peak HRV", value: whole(record.rmssdPeak), unit: "ms")) }
         return out
     }
 
