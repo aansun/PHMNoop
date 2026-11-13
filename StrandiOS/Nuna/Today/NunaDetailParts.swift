@@ -19,6 +19,8 @@ struct NunaDetailHeader: View {
     var trailing: AnyView?
     /// The title small and in the middle of the bar, between the way back and the controls, instead of large at the left.
     var centersTitle = false
+    /// False on the root of a tab: there is nothing to go back to, so the chevron is left out.
+    var showsBack = true
     @Environment(\.dismiss) private var dismiss
     @Environment(\.nunaSettingsPage) private var settingsPage
     /// With the metric dropdown below, it already names the screen, so the title is left out rather than said twice.
@@ -37,7 +39,7 @@ struct NunaDetailHeader: View {
         if centersTitle || settingsPage {
             ZStack {
                 HStack(spacing: 10) {
-                    backButton
+                    if showsBack { backButton }
                     Spacer(minLength: 8)
                     if let trailing { trailing }
                     if let onAnya {
@@ -54,7 +56,7 @@ struct NunaDetailHeader: View {
 
     private var leadingTitleBar: some View {
         HStack(spacing: 10) {
-            backButton
+            if showsBack { backButton }
             if switcher == nil {
                 if let subtitle {
                     if let titleActivity, NunaActivityIcons.has(titleActivity) {
@@ -98,14 +100,15 @@ struct NunaDetailScreen<Content: View>: View {
     var onAnya: (() -> Void)?
     var trailing: AnyView?
     var centersTitle = false
+    var showsBack = true
     let content: Content
-    init(_ title: LocalizedStringKey, titleSymbol: String? = nil, subtitle: String? = nil, titleActivity: String? = nil, onAnya: (() -> Void)? = nil, trailing: AnyView? = nil, centersTitle: Bool = false, @ViewBuilder content: () -> Content) {
-        self.title = title; self.titleSymbol = titleSymbol; self.subtitle = subtitle; self.titleActivity = titleActivity; self.onAnya = onAnya; self.trailing = trailing; self.centersTitle = centersTitle; self.content = content()
+    init(_ title: LocalizedStringKey, titleSymbol: String? = nil, subtitle: String? = nil, titleActivity: String? = nil, onAnya: (() -> Void)? = nil, trailing: AnyView? = nil, centersTitle: Bool = false, showsBack: Bool = true, @ViewBuilder content: () -> Content) {
+        self.title = title; self.titleSymbol = titleSymbol; self.subtitle = subtitle; self.titleActivity = titleActivity; self.onAnya = onAnya; self.trailing = trailing; self.centersTitle = centersTitle; self.showsBack = showsBack; self.content = content()
     }
     var body: some View {
         // The header stays at the top while the page scrolls, so the way back is always in reach however long the page is.
         VStack(spacing: 0) {
-            NunaDetailHeader(title: title, titleSymbol: titleSymbol, subtitle: subtitle, titleActivity: titleActivity, onAnya: onAnya, trailing: trailing, centersTitle: centersTitle)
+            NunaDetailHeader(title: title, titleSymbol: titleSymbol, subtitle: subtitle, titleActivity: titleActivity, onAnya: onAnya, trailing: trailing, centersTitle: centersTitle, showsBack: showsBack)
                 .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 4)
                 .background(NunaBackdrop(top: true))
             ScrollView {
