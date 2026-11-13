@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 import StrandDesign
 
-/// The Nuna navigation shell: four tabs (Home, Health, Breath, More) in one floating tab bar, with Anya as a floating button beside it.
+/// The Nuna navigation shell: four tabs (Home, Health, Breathing, More) in one floating tab bar, with Anya as a floating button beside it.
 ///
 /// Phase 0 of docs/nuna/IMPLEMENTATION_PLAN.md. The tab roots still host the existing screens; later
 /// phases replace them one by one. The shell is only used when `ExperienceMode` is `.nuna`; the default
@@ -49,12 +49,12 @@ struct NunaRootView: View {
     @AppStorage(NunaTabBarPrefs.autoHideKey) private var autoHide = false
     @State private var barHidden = false
 
-    /// One bar: Home, Health, Breath (Breathing) and More. Anya is the round button beside it.
+    /// One bar: Home, Health, Breathing and More. Anya is the round button beside it.
     private var items: [NunaTabItem] {
         [
             NunaTabItem(id: Tab.today.rawValue, title: "Home", systemImage: "tab:home"),
             NunaTabItem(id: Tab.health.rawValue, title: "Health", systemImage: "tab:health"),
-            NunaTabItem(id: Tab.breath.rawValue, title: "Breath", systemImage: NunaIcons.breathing),
+            NunaTabItem(id: Tab.breath.rawValue, title: "Breathing", systemImage: NunaIcons.breathing),
             NunaTabItem(id: Tab.me.rawValue, title: "More", systemImage: "tab:more"),
         ]
     }
