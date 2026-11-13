@@ -8,7 +8,7 @@ import Charts
 /// report, which is kept in the history. The settings button at the top right holds the module's options.
 
 struct NunaBreathView: View {
-    /// Shown as the root of the Breath tab: there is nothing to go back to, so the back chevron is left out.
+    /// Shown as the root of the Breathing tab: there is nothing to go back to, so the back chevron is left out.
     var asTabRoot = false
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
@@ -32,6 +32,8 @@ struct NunaBreathView: View {
     @State private var showMake = false
     @State private var tab = 1
     @State private var mine = NunaCustomBreath.all()
+    /// The ready exercises hearted in Explore, listed under My Exercises.
+    @State private var favorites = NunaBreathFavorites.items()
     @State private var rrBuffer: [Int] = []
     @State private var history = NunaBreathLog.all()
     @State private var chartRange = 30
@@ -43,10 +45,10 @@ struct NunaBreathView: View {
 
     var body: some View {
         NunaDetailScreen("Breathing", trailing: AnyView(settingsButton), centersTitle: true, showsBack: !asTabRoot) {
-            NunaPageTabs([(value: 0, title: "Progress"), (value: 1, title: "Breathe")], selection: $tab)
+            NunaPageTabs([(value: 0, title: "Progress"), (value: 1, title: "Breathe"), (value: 2, title: "Explore")], selection: $tab)
             tabContent
         }
-        .onAppear { model.startRealtimeHR(); mirrorLive(); mine = NunaCustomBreath.all() }
+        .onAppear { model.startRealtimeHR(); mirrorLive(); mine = NunaCustomBreath.all(); favorites = NunaBreathFavorites.items() }
 #if DEBUG
         // `--open-breath-detail tool:resonance | tool:calmMe | group:calm | template:<id>` opens that page, to look at it.
         .task {
@@ -99,10 +101,11 @@ struct NunaBreathView: View {
         }
     }
 
-    /// Two tabs: Progress (what you have done) and Breathe (start one, pick one by goal, make your own).
+    /// Three tabs: Progress (what you have done), Breathe (start one, and your own exercises) and Explore (every technique, to search and to heart).
     @ViewBuilder private var tabContent: some View {
         switch tab {
         case 0: progressTab
+        case 2: explore
         default: breatheTab
         }
     }
@@ -112,8 +115,6 @@ struct NunaBreathView: View {
     private var breatheTab: some View {
         VStack(spacing: NunaSpacing.section) {
             topActions
-            NunaDivider()
-            explore
             NunaDivider()
             myExercises
         }
@@ -177,7 +178,7 @@ struct NunaBreathView: View {
         VStack(alignment: .leading, spacing: 12) {
             NunaTitleRow(title: "My Exercises") { EmptyView() }
             NunaBreathGenerateCard(title: "Generate with Anya", text: "Say what you need and Anya will make a breathing exercise for you.") { showMake = true }
-            if mine.isEmpty {
+            if mine.isEmpty && favorites.isEmpty {
                 Text("No exercises yet. Ask Anya to make one and it is kept here.")
                     .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             } else {
@@ -187,10 +188,43 @@ struct NunaBreathView: View {
                             if i > 0 { NunaDivider() }
                             savedRow(e)
                         }
+                        ForEach(Array(favorites.enumerated()), id: \.element.id) { i, item in
+                            if i > 0 || !mine.isEmpty { NunaDivider() }
+                            favoriteRow(item)
+                        }
                     }
                 }
             }
         }
+    }
+
+    /// A ready exercise (or tool) hearted in Explore: play it from here, or take the heart off to drop it from the list.
+    private func favoriteRow(_ item: NunaBreathItem) -> some View {
+        HStack(spacing: 12) {
+            Button { startFavorite(item) } label: {
+                HStack(spacing: 12) {
+                    NunaActivityGlyph(name: item.icon, size: 26).foregroundStyle(NunaPalette.textPrimary).frame(width: 32)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(verbatim: item.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).textCase(nil)
+                        Text(verbatim: "\(item.minutesText(lengthPref: lengthPref)) \(String(localized: "min")) · \(item.levelTitle)").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(2).textCase(nil)
+                    }
+                    Spacer(minLength: 6)
+                    Image(systemName: "play.circle.fill").font(.nuna(size: 28, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                }.contentShape(Rectangle())
+            }.buttonStyle(.plain)
+            Button { toggleFavorite(item) } label: {
+                Image(systemName: "heart.fill").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.alert).frame(width: 36, height: 44)
+            }.buttonStyle(.plain).accessibilityLabel(Text("Favourite"))
+        }.padding(.vertical, 10)
+    }
+
+    private func startFavorite(_ item: NunaBreathItem) {
+        switch item { case .template(let t): start(t); case .tool(let k): toolRun = k }
+    }
+
+    private func toggleFavorite(_ item: NunaBreathItem) {
+        NunaBreathFavorites.toggle(item.id)
+        favorites = NunaBreathFavorites.items()
     }
 
     private func savedRow(_ e: NunaSavedBreath) -> some View {
@@ -221,7 +255,6 @@ struct NunaBreathView: View {
         let items = filter.apply(to: NunaBreathGroup.allItems)
         let single: NunaBreathGroup? = filter.groups.count == 1 ? filter.groups.first : nil
         return VStack(alignment: .leading, spacing: 14) {
-            NunaTitleRow(title: "Explore") { EmptyView() }
             NunaBreathSearchBar(query: $filter.query, filterCount: filter.count) { showFilters = true }
             if let g = single {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
@@ -247,10 +280,22 @@ struct NunaBreathView: View {
                             NunaPhotoCard(image: item.photo, badge: Text(verbatim: picked ? String(localized: "Anya's pick") : item.levelTitle), title: item.title,
                                           caption: Text(verbatim: "\(item.minutesText(lengthPref: lengthPref)) \(String(localized: "min"))"), lines: 2)
                         }.buttonStyle(.plain)
+                        // The heart keeps it under My Exercises (Breathe); touched again it takes it out.
+                        .overlay(alignment: .topLeading) { heart(item) }
                     }
                 }
             }
         }
+    }
+
+    private func heart(_ item: NunaBreathItem) -> some View {
+        let on = favorites.contains { $0.id == item.id }
+        return Button { toggleFavorite(item) } label: {
+            Image(systemName: on ? "heart.fill" : "heart").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(on ? NunaPalette.alert : NunaPalette.textPrimary)
+                .frame(width: 34, height: 34).background(.ultraThinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain).padding(8)
+        .accessibilityLabel(Text("Favourite")).accessibilityAddTraits(on ? .isSelected : [])
     }
 
     private func open(_ item: NunaBreathItem) {

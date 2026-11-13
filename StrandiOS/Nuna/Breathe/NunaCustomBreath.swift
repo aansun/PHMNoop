@@ -85,6 +85,29 @@ enum NunaCustomBreath {
     private static func trim(_ v: Double) -> String { v == v.rounded() ? String(Int(v)) : String(format: "%.1f", locale: AppLanguage.activeLocale, v) }
 }
 
+/// The ready exercises and tools the person has marked with a heart in Explore. They are listed under My Exercises beside the ones Anya made. Kept as the
+/// ids of `NunaBreathItem`, in the order they were added.
+enum NunaBreathFavorites {
+    private static let key = "nuna.breath.favorites.v1"
+
+    static func ids() -> [String] { UserDefaults.standard.stringArray(forKey: key) ?? [] }
+
+    static func contains(_ id: String) -> Bool { ids().contains(id) }
+
+    /// Adds the item when it is not a favourite, takes it out when it is.
+    static func toggle(_ id: String) {
+        var list = ids()
+        if let i = list.firstIndex(of: id) { list.remove(at: i) } else { list.append(id) }
+        UserDefaults.standard.set(list, forKey: key)
+    }
+
+    /// The favourites that are still in the library, in the order they were added.
+    static func items() -> [NunaBreathItem] {
+        let all = NunaBreathGroup.allItems
+        return ids().compactMap { id in all.first { $0.id == id } }
+    }
+}
+
 /// An exercise Anya made, to start now or keep. In the chat and in Breathing it is the same card.
 struct NunaAnyaBreathCard: View {
     let spec: AnyaBreathSpec
