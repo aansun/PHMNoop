@@ -2,84 +2,128 @@
 import SwiftUI
 import StrandDesign
 import StrandAnalytics
+import WhoopStore
 
-/// The report after a session: what the body did while the wearer breathed, in the strap's own numbers, with a short reading of it.
+/// The report after a session, laid out like a workout's log: the technique and when it ran in the header (the actions behind the three dots), the HRV
+/// move and the time as the two big figures, an Anya line that reads the session, the key statistics together (each against the wearer's 30-day average of
+/// the same technique), then the heart-rate and HRV curves in the strap's own numbers.
 struct NunaBreathReportView: View {
     let record: NunaBreathRecord
     var readOnly = false
     let onDone: () -> Void
     var onAgain: (() -> Void)?
     @State private var showAnya = false
+    @State private var confirmDelete = false
 
-    private var template: BreathTemplate? { record.templateId.flatMap(NunaBreathLibrary.template(id:)) }
-    private var title: String {
-        record.displayTitle
-    }
+    private var title: String { record.displayTitle }
     private var goal: BreathGoal { BreathGoal(rawValue: record.goal) ?? .calm }
+    private var end: Int { record.startTs + record.seconds }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: NunaSpacing.section) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(readOnly ? "Session" : "Session complete").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        Text(verbatim: title).font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: dateText).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    Spacer()
-                    Button(action: onDone) {
-                        Text(readOnly ? "Close" : "Done").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .padding(.horizontal, 16).frame(height: 38)
-                            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    }.buttonStyle(.plain)
-                }
-                verdictCard
-                HStack(spacing: 10) {
-                    stat("Time", clock(record.seconds), "")
-                    stat("Breaths", "\(record.breaths)", "")
-                    stat("Pace", pace, "br/min")
-                }
-                metricCard("Heart rate", series: record.hrSeries, color: NunaPalette.alertText, unit: "bpm",
-                           lines: [("Start", record.hrStart), ("End", record.hrEnd), ("Average", record.hrAvg)])
-                metricCard("HRV (RMSSD)", series: record.rmssdSeries, color: NunaPalette.restLight, unit: "ms",
-                           lines: [("Start", record.rmssdStart), ("Average", record.rmssdAvg), ("Peak", record.rmssdPeak)])
-                if !record.haptics {
-                    Text("This session ran without strap haptics, so the pace was followed by sight only.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                Button { showAnya = true } label: {
-                    HStack(spacing: 12) { AnyaIconTile(); NunaListRow("Ask Anya about this session", description: "She remembers your sessions in Breathing", showsChevron: true) }
-                }.buttonStyle(.plain)
-                if let onAgain {
-                    Button(action: onAgain) {
-                        HStack(spacing: 8) { Image(systemName: "arrow.clockwise").font(.nuna(size: 15, weight: .bold)); Text("Breathe again").font(.nuna(size: 17, weight: .bold)) }
-                            .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
-                            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-                    }.buttonStyle(.plain)
-                }
-                Text("An estimate for relaxation, not a medical reading.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+        let averages = NunaBreathAverages(for: record, in: NunaBreathLog.all())
+        NunaDetailScreen(LocalizedStringKey(title), titleSymbol: "lungs.fill", subtitle: NunaWorkoutFormat.span(record.startTs, end), titleActivity: goal.activity,
+                         trailing: AnyView(actionsMenu), onBack: onDone) {
+            figures(averages)
+            let v = Self.verdict(record)
+            NunaAnyaCard(verbatim: v.headline, detail: v.detail) { showAnya = true }
+            keyStatistics(averages)
+            charts
+            if !record.haptics {
+                Text("This session ran without strap haptics, so the pace was followed by sight only.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
-            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 22).padding(.bottom, 32)
+            if let onAgain {
+                Button(action: onAgain) {
+                    HStack(spacing: 8) { Image(systemName: "arrow.clockwise").font(.nuna(size: 15, weight: .bold)); Text("Breathe again").font(.nuna(size: 17, weight: .bold)) }
+                        .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
+                        .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                }.buttonStyle(.plain)
+            }
+            Text("An estimate for relaxation, not a medical reading.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
-        .scrollIndicators(.hidden)
-        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .sheet(isPresented: $showAnya) { NunaAnyaSheet(context: "Breathing") }
+        .nunaDialog("Delete this session?", isPresented: $confirmDelete) {
+            NunaDialogButton("Delete", role: .destructive) { NunaBreathLog.delete(record.id); onDone() }
+            NunaDialogButton("Cancel", role: .cancel) {}
+        }
     }
 
     // MARK: Parts
 
-    private var verdictCard: some View {
-        let v = Self.verdict(record)
-        return NunaAnyaNote {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Anya's reading").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    if let p = record.rmssdChangePct { NunaChip(verbatim: String(format: "%+.0f%% HRV", locale: AppLanguage.activeLocale, p), color: p >= 5 ? NunaPalette.charge : nil) }
-                }
-                Text(verbatim: v.headline).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                if let d = v.detail { Text(verbatim: d).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil) }
+    private var actionsMenu: some View {
+        NunaActionsButton(items: [
+            NunaActionItem(title: "Ask Anya about this session", symbol: "sparkles") { showAnya = true },
+            NunaActionItem(title: "Delete", symbol: "trash", destructive: true) { confirmDelete = true },
+        ])
+    }
+
+    /// The two figures the report opens with: how far HRV moved and how long the session ran, the time with the 30-day average beside it.
+    private func figures(_ averages: NunaBreathAverages?) -> some View {
+        let p = record.rmssdChangePct
+        return HStack(alignment: .top, spacing: 16) {
+            NunaLogFigure(label: "HRV move", value: p.map { String(format: "%+.0f%%", locale: AppLanguage.activeLocale, $0) } ?? "–",
+                          color: (p ?? 0) >= 5 ? NunaPalette.charge : NunaPalette.textPrimary)
+            NunaLogFigure(label: "Time", value: NunaWorkoutLogFigures.clock(Double(record.seconds)),
+                          pill: averages?.seconds.map { NunaAveragePill(value: Double(record.seconds), average: $0, text: NunaWorkoutLogFigures.clock($0)) })
+        }
+    }
+
+    private struct Stat: Identifiable {
+        let id: String; let icon: String; let label: LocalizedStringKey; let value: String; let unit: String
+        var pill: (value: Double, average: Double, text: String)?
+    }
+
+    private func pill(_ value: Double?, _ average: Double?, _ unit: String, decimals: Int = 0) -> (value: Double, average: Double, text: String)? {
+        guard let value, let average else { return nil }
+        return (value, average, String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, average) + " " + unit)
+    }
+
+    private var stats: [Stat] {
+        let a = NunaBreathAverages(for: record, in: NunaBreathLog.all())
+        func whole(_ v: Double?) -> String { v.map { String(format: "%.0f", $0) } ?? "–" }
+        var out: [Stat] = [Stat(id: "breaths", icon: NunaIcons.breathing, label: "Breaths", value: "\(record.breaths)", unit: "")]
+        if let pace = record.pace {
+            out.append(Stat(id: "pace", icon: "speedometer", label: "Pace", value: String(format: "%.1f", locale: AppLanguage.activeLocale, pace), unit: "/min",
+                            pill: pill(pace, a?.pace, "br/min", decimals: 1)))
+        }
+        if record.hrAvg != nil { out.append(Stat(id: "hrAvg", icon: NunaIcons.avgHr, label: "Avg HR", value: whole(record.hrAvg), unit: "bpm", pill: pill(record.hrAvg, a?.hrAvg, "bpm"))) }
+        if record.hrStart != nil { out.append(Stat(id: "hrStart", icon: NunaIcons.heartRate, label: "Start HR", value: whole(record.hrStart), unit: "bpm")) }
+        if record.hrEnd != nil { out.append(Stat(id: "hrEnd", icon: NunaIcons.heartRate, label: "End HR", value: whole(record.hrEnd), unit: "bpm")) }
+        if record.rmssdAvg != nil { out.append(Stat(id: "hrvAvg", icon: NunaIcons.hrv, label: "Avg HRV", value: whole(record.rmssdAvg), unit: "ms", pill: pill(record.rmssdAvg, a?.rmssdAvg, "ms"))) }
+        if record.rmssdStart != nil { out.append(Stat(id: "hrvStart", icon: NunaIcons.hrv, label: "Start HRV", value: whole(record.rmssdStart), unit: "ms")) }
+        if record.rmssdPeak != nil { out.append(Stat(id: "hrvPeak", icon: NunaIcons.hrv, label: "Peak HRV", value: whole(record.rmssdPeak), unit: "ms")) }
+        return out
+    }
+
+    private func keyStatistics(_ averages: NunaBreathAverages?) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            NunaLogSectionTitle(title: "Key statistics", trailing: averages != nil ? "vs. 30 day average" : nil)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                ForEach(stats) { NunaLogStatTile(icon: $0.icon, label: $0.label, value: $0.value, unit: $0.unit, pill: $0.pill) }
             }
+        }
+    }
+
+    /// The readings of a series as points on the session's own clock; a stretch the strap missed is left out.
+    private func points(_ series: [Double]) -> [HRBucket] {
+        series.enumerated().compactMap { i, v in v > 0 ? HRBucket(ts: record.startTs + i * record.step, bpm: v, minBpm: v, maxBpm: v) : nil }
+    }
+
+    /// The strap's two curves through the session, each between the marks of its start and end. A curve with too few readings is left out, and when
+    /// both are, one line says so.
+    @ViewBuilder private var charts: some View {
+        let hr = points(record.hrSeries), hrv = points(record.rmssdSeries)
+        if hr.count >= 3 { chart("Heart rate", points: hr, tint: NunaWorkoutLogZones.hrBlue, step: 25) }
+        if hrv.count >= 3 { chart("HRV (RMSSD)", points: hrv, tint: NunaPalette.restLight, step: 20) }
+        if hr.count < 3 && hrv.count < 3 {
+            Text("Not enough readings from the strap in this session.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+        }
+    }
+
+    private func chart(_ title: LocalizedStringKey, points: [HRBucket], tint: Color, step: Double) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            NunaLogSectionTitle(title: title)
+            NunaWorkoutHRArea(buckets: points, start: record.startTs, end: max(end, record.startTs + 1), step: step, tint: tint)
         }
     }
 
@@ -101,53 +145,27 @@ struct NunaBreathReportView: View {
         return (String(localized: "Your HRV stayed close to where it began."),
                 ([String(localized: "Short sessions often change little. Try ten minutes at a slower pace.")] + detail).joined(separator: " "))
     }
+}
 
-    private func stat(_ label: LocalizedStringKey, _ value: String, _ unit: String) -> some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12)) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-                    if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
-                }
-            }
-        }
-    }
+/// The wearer's own 30-day average of one technique, from their other sessions of it. nil under two sessions: an average of one is the session itself.
+private struct NunaBreathAverages {
+    let seconds: Double?, hrAvg: Double?, rmssdAvg: Double?, pace: Double?
 
-    private func metricCard(_ title: LocalizedStringKey, series: [Double], color: Color, unit: String, lines: [(LocalizedStringKey, Double?)]) -> some View {
-        let vals = series.filter { $0 > 0 }
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                if vals.count >= 3 {
-                    NunaSpark(values: vals, color: color).frame(height: 70)
-                    HStack {
-                        Text(verbatim: "0:00"); Spacer(); Text(verbatim: clock(record.seconds))
-                    }.font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
-                    NunaDivider()
-                    HStack(alignment: .top, spacing: 0) {
-                        ForEach(Array(lines.enumerated()), id: \.offset) { _, l in
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(l.0).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                                Text(verbatim: l.1.map { String(format: "%.0f", $0) } ?? "–").font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            }.frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    }
-                } else {
-                    Text("Not enough readings from the strap in this session.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-            }
-        }
+    init?(for r: NunaBreathRecord, in all: [NunaBreathRecord]) {
+        let from = r.startTs - 30 * 86_400
+        let others = all.filter { $0.id != r.id && $0.displayTitle == r.displayTitle && $0.startTs >= from && $0.startTs < r.startTs }
+        guard others.count >= 2 else { return nil }
+        func mean(_ v: [Double]) -> Double? { v.isEmpty ? nil : v.reduce(0, +) / Double(v.count) }
+        seconds = mean(others.map { Double($0.seconds) })
+        hrAvg = mean(others.compactMap(\.hrAvg))
+        rmssdAvg = mean(others.compactMap(\.rmssdAvg))
+        pace = mean(others.compactMap(\.pace))
     }
+}
 
-    private var pace: String {
-        record.seconds > 0 && record.breaths > 0 ? String(format: "%.1f", locale: AppLanguage.activeLocale, Double(record.breaths) / (Double(record.seconds) / 60)) : "–"
-    }
-    private var dateText: String {
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.dateStyle = .medium; f.timeStyle = .short
-        return f.string(from: record.date) + " · " + goal.shortTitle
-    }
-    private func clock(_ s: Int) -> String { String(format: "%d:%02d", s / 60, s % 60) }
+private extension NunaBreathRecord {
+    /// Breaths a minute over the whole session.
+    var pace: Double? { seconds > 0 && breaths > 0 ? Double(breaths) / (Double(seconds) / 60) : nil }
 }
 
 /// Every session, newest first, with the week at a glance.
@@ -193,7 +211,7 @@ struct NunaBreathHistoryView: View {
         .scrollIndicators(.hidden)
         .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
-        .sheet(item: $opened) { r in
+        .sheet(item: $opened, onDismiss: { records = NunaBreathLog.all() }) { r in
             NunaBreathReportView(record: r, readOnly: true, onDone: { opened = nil }).nunaSheetChrome(detents: [.large])
         }
     }

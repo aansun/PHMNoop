@@ -95,6 +95,23 @@ struct NunaWorkoutLogFigures: View {
     }
 
     private func figure(label: LocalizedStringKey, value: String, color: Color, pill: NunaAveragePill?) -> some View {
+        NunaLogFigure(label: label, value: value, color: color, pill: pill)
+    }
+
+    static func clock(_ seconds: Double) -> String {
+        let t = Int(seconds.rounded())
+        return t >= 3600 ? String(format: "%d:%02d:%02d", t / 3600, (t % 3600) / 60, t % 60) : String(format: "%d:%02d", t / 60, t % 60)
+    }
+}
+
+/// One of the big figures a log opens with: the value large, the average pill beside it, the label under it.
+struct NunaLogFigure: View {
+    let label: LocalizedStringKey
+    let value: String
+    var color: Color = NunaPalette.textPrimary
+    var pill: NunaAveragePill?
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .center, spacing: 8) {
                 Text(verbatim: value).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40))
@@ -104,11 +121,6 @@ struct NunaWorkoutLogFigures: View {
             Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    static func clock(_ seconds: Double) -> String {
-        let t = Int(seconds.rounded())
-        return t >= 3600 ? String(format: "%d:%02d:%02d", t / 3600, (t % 3600) / 60, t % 60) : String(format: "%d:%02d", t / 60, t % 60)
     }
 }
 
@@ -133,14 +145,17 @@ struct NunaWorkoutHRArea: View {
 
     /// The height of the plot itself (the gym session, which has more under it, draws it lower).
     var plotHeight: CGFloat = 150
+    /// The distance between the grid lines and the colour of the curve; the heart rate's own by default (a session's HRV uses a finer step).
+    var step: Double = 25
+    var tint: Color = NunaWorkoutLogZones.hrBlue
     /// The room either side of the dashed marks: the scale at the left, the minutes around the session at both.
     private static let inset: CGFloat = 28
 
     var body: some View {
         let session = buckets.sorted { $0.ts < $1.ts }
         let pts = (around.count >= 2 ? around : buckets).sorted { $0.ts < $1.ts }
-        let lo = floor((pts.map(\.bpm).min() ?? 0) / 25) * 25
-        let hi = max(ceil((pts.map(\.bpm).max() ?? 25) / 25) * 25, lo + 25)
+        let lo = floor((pts.map(\.bpm).min() ?? 0) / step) * step
+        let hi = max(ceil((pts.map(\.bpm).max() ?? 25) / step) * step, lo + step)
         let span = max(Double(end - start), 1)
         let lit = (highlightZone != nil && zoneSet != nil) || !rangeHighlight.isEmpty
         VStack(spacing: 6) {
@@ -151,7 +166,7 @@ struct NunaWorkoutHRArea: View {
                         CGPoint(x: left + width * CGFloat(Double(b.ts - start) / span), y: size.height * CGFloat(1 - (b.bpm - lo) / (hi - lo)))
                     }
                     let grid = NunaPalette.ink.opacity(0.07)
-                    for v in stride(from: lo, through: hi, by: 25) {
+                    for v in stride(from: lo, through: hi, by: step) {
                         var g = Path(); let y = size.height * CGFloat(1 - (v - lo) / (hi - lo))
                         g.move(to: CGPoint(x: 0, y: y)); g.addLine(to: CGPoint(x: size.width, y: y))
                         ctx.stroke(g, with: .color(grid), lineWidth: 1)
@@ -173,9 +188,9 @@ struct NunaWorkoutHRArea: View {
                         area.addLine(to: CGPoint(x: pt(pts[pts.count - 1]).x, y: size.height))
                         area.addLine(to: CGPoint(x: pt(pts[0]).x, y: size.height))
                         area.closeSubpath()
-                        inner.fill(area, with: .linearGradient(Gradient(colors: [NunaWorkoutLogZones.hrBlue.opacity(lit ? 0.10 : 0.36), NunaPalette.effortMinimal.opacity(lit ? 0.02 : 0.05)]),
+                        inner.fill(area, with: .linearGradient(Gradient(colors: [tint.opacity(lit ? 0.10 : 0.36), NunaPalette.effortMinimal.opacity(lit ? 0.02 : 0.05)]),
                                                                startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
-                        inner.stroke(line, with: .color(lit ? NunaPalette.textSecondary.opacity(0.55) : NunaWorkoutLogZones.hrBlue),
+                        inner.stroke(line, with: .color(lit ? NunaPalette.textSecondary.opacity(0.55) : tint),
                                      style: StrokeStyle(lineWidth: lit ? 1.6 : 2.2, lineCap: .round, lineJoin: .round))
                         if let zone = highlightZone, let zoneSet {
                             let color = NunaWorkoutLogZones.color(zone)
@@ -233,7 +248,7 @@ struct NunaWorkoutHRArea: View {
                         ctx.fill(Path(ellipseIn: CGRect(x: x - 3, y: size.height - 3, width: 6, height: 6)), with: .color(NunaPalette.textPrimary))
                     }
                 }
-                ForEach(Array(stride(from: lo, through: hi, by: 25)), id: \.self) { v in
+                ForEach(Array(stride(from: lo, through: hi, by: step)), id: \.self) { v in
                     Text(verbatim: "\(Int(v))").font(.nuna(size: 10.5, weight: .bold)).foregroundStyle(NunaPalette.textMuted).monospacedDigit()
                         .position(x: 14, y: plotHeight * CGFloat(1 - (v - lo) / (hi - lo)) - 8)
                 }
@@ -580,21 +595,36 @@ struct NunaWorkoutLogStats: View {
     }
 
     private func tile(_ t: Tile) -> some View {
+        NunaLogStatTile(icon: t.icon, label: t.label, value: t.value, unit: t.unit, small: t.small, pill: t.pill)
+    }
+}
+
+/// One tile of a block of key statistics: its icon and name, the value large, and the pill with the 30-day average when there is one.
+struct NunaLogStatTile: View {
+    let icon: String
+    let label: LocalizedStringKey
+    let value: String
+    var unit = ""
+    /// Shown after the value, smaller (the seconds of a duration).
+    var small = ""
+    var pill: (value: Double, average: Double, text: String)?
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
-                NunaIcon(name: t.icon, size: 16).foregroundStyle(NunaPalette.textSecondary)
-                Text(t.label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingHead(0.4)).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                NunaIcon(name: icon, size: 16).foregroundStyle(NunaPalette.textSecondary)
+                Text(label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingHead(0.4)).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
             .padding(.bottom, 8)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                (Text(verbatim: t.value).font(.nuna(size: 36, weight: .bold, design: NunaType.design))
-                    + Text(verbatim: t.small).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary))
+                (Text(verbatim: value).font(.nuna(size: 36, weight: .bold, design: NunaType.design))
+                    + Text(verbatim: small).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary))
                     .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                if !t.unit.isEmpty && t.value != "–" { Text(verbatim: t.unit).font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1) }
+                if !unit.isEmpty && value != "–" { Text(verbatim: unit).font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1) }
             }
             .padding(.bottom, 6)
-            if let p = t.pill { NunaAveragePill(value: p.value, average: p.average, text: p.text) }
+            if let p = pill { NunaAveragePill(value: p.value, average: p.average, text: p.text) }
             else { Color.clear.frame(height: 28) }
         }
         .padding(16).frame(maxWidth: .infinity, alignment: .leading)
