@@ -138,6 +138,8 @@ final class Repository: ObservableObject {
     /// read side follows the same active id the write side does. NOT a `let` for that reason; `private(set)`
     /// so only `adoptActiveDeviceId` can move it.
     private(set) var deviceId: String
+    /// Suggestions already written to the suggestion log this session (window, sport and confidence), so a card that refreshes does not rewrite them.
+    private var loggedSuggestionKeys: Set<String> = []
     /// Source id for on-device computed scores (recovery/strain/sleep derived from the raw strap
     /// streams by IntelligenceEngine). Merged UNDER the imported `deviceId` rows at read time, so a
     /// real WHOOP import always wins and the strap-only user still gets a populated dashboard.
@@ -814,7 +816,7 @@ final class Repository: ObservableObject {
         }
         storeOpenTask = task
         let opened = await task.value
-        if let opened { store = opened }
+        if let opened { store = opened; Self.markSuggestionLogStartedIfNeeded() }
         storeOpenTask = nil
         return opened
     }
@@ -3294,10 +3296,12 @@ final class Repository: ObservableObject {
         let suggestions = IOSAutoWorkoutDetector.detect(
             hr: samples, gravity: gravity, steps: steps,
             restingBpm: restingBpm, maxBpm: strainProfile.map { Int($0.hrMax.rounded()) }, userSports: userSports, savedSpans: savedSpans)
-        return Self.selectAutoDetectSuggestion(
+        let picked = Self.selectAutoDetectSuggestion(
             suggestions,
             autoDismissedTokens: autoDetectDismissedSpans,
             detectedDismissedTokens: dismissedDetectedSpans)
+        if let picked { await logSuggestionOffered(picked) }
+        return picked
 #else
         let hr = samples.map { (ts: $0.ts, bpm: $0.bpm) }
 
@@ -3339,6 +3343,108 @@ final class Repository: ObservableObject {
 #endif
     }
 
+    // MARK: - Auto-detect learning prep (v48)
+    //
+    // Instrumentation only. Nothing here changes what is detected, shown or scored. The suggestion log records what the detector offered and what the
+    // person did; `workoutClassReplay` measures how well the shape classifier names the workouts the person has labelled. See WorkoutLabelProvenance.
+
+    private static let suggestionLogStartKey = "workouts.suggestionLogStartedAt"
+
+    /// When the suggestion log began on this install (unix seconds), or nil before the store has ever opened with it. A manual workout from before this
+    /// instant cannot be told apart from a saved suggestion, so it is labelled `manualBeforeLog`.
+    nonisolated static var suggestionLogStartedAt: Int? {
+        let v = UserDefaults.standard.integer(forKey: suggestionLogStartKey)
+        return v > 0 ? v : nil
+    }
+
+    nonisolated static func markSuggestionLogStartedIfNeeded(now: Int = Int(Date().timeIntervalSince1970)) {
+        if suggestionLogStartedAt == nil { UserDefaults.standard.set(now, forKey: suggestionLogStartKey) }
+    }
+
+    private static func jsonString<T: Encodable>(_ value: T) -> String? {
+        let enc = JSONEncoder(); enc.outputFormatting = [.sortedKeys]
+        return (try? enc.encode(value)).flatMap { String(data: $0, encoding: .utf8) }
+    }
+
+    /// Record the window the card is showing. Only the heart-rate detector's suggestions are logged (a Strava one has no classifier features).
+    /// Offering the same window again is skipped in memory, so a screen that refreshes often does not write each time.
+    private func logSuggestionOffered(_ s: AutoWorkoutSuggestion) async {
+        guard s.stravaId == nil, let features = s.features else { return }
+        let seen = "\(s.startSec):\(s.endSec):\(s.sport):\(Int((s.confidence * 1000).rounded()))"
+        guard !loggedSuggestionKeys.contains(seen), let store = await ensureStore() else { return }
+        let scores = s.scores.map { Dictionary(uniqueKeysWithValues: $0.map { ($0.key.rawValue, $0.value) }) }
+        let row = WorkoutSuggestionRow(
+            id: WorkoutSuggestionRow.key(deviceId: deviceId, startSec: s.startSec), deviceId: deviceId,
+            startSec: s.startSec, endSec: s.endSec, createdAt: Int(Date().timeIntervalSince1970),
+            predictedSport: s.sport, predictedClass: s.predictedClass?.rawValue, confidence: s.confidence,
+            scoresJSON: scores.flatMap { Self.jsonString($0) }, featuresJSON: Self.jsonString(features),
+            outcome: WorkoutSuggestionOutcome.pending.rawValue, outcomeAt: nil, savedSport: nil)
+        if (try? await store.recordWorkoutSuggestion(row)) != nil { loggedSuggestionKeys.insert(seen) }
+    }
+
+    /// Settle a window as saved or dismissed. A window that was never logged (a Strava one, or one offered before the log existed) changes nothing.
+    private func settleSuggestion(startSec: Int, outcome: WorkoutSuggestionOutcome, savedSport: String?) async {
+        guard let store = await ensureStore() else { return }
+        _ = try? await store.settleWorkoutSuggestion(deviceId: deviceId, startSec: startSec, outcome: outcome,
+                                                     at: Int(Date().timeIntervalSince1970), savedSport: savedSport)
+    }
+
+    /// What `workoutClassReplay` found: how many saved workouts there were, why the unusable ones were left out, and how the classifier did on the rest.
+    struct WorkoutReplayResult: Equatable {
+        var savedWorkouts = 0
+        /// Rows whose sport is the detector's own guess, the strap's own name, or an old detected bout: not the person's label.
+        var notTheirLabel: [WorkoutLabelOrigin: Int] = [:]
+        /// Rows named "Workout", "Other" and the like, or naming two sports at once.
+        var unusableName = 0
+        /// Labelled rows with no heart rate from the strap in their window (imported from before the strap, or worn off).
+        var noStrapData = 0
+        /// Rows used that are `manualBeforeLog`: made before the suggestion log began, so a few may be saved suggestions.
+        var beforeLogUsed = 0
+        var windows: [LabelledWorkoutWindow] = []
+        var report = WorkoutClassReplay.evaluate([])
+    }
+
+    /// Run the shape classifier over every saved workout that carries the person's own label and has strap data, and report how often it named them right.
+    /// Read-only. Features are rebuilt from the stored streams, so nothing has to have been logged for old workouts.
+    func workoutClassReplay(lookbackDays: Int = 730) async -> WorkoutReplayResult {
+        var result = WorkoutReplayResult()
+        guard let store = await ensureStore() else { return result }
+        let rows = await workoutRows(days: lookbackDays)
+        result.savedWorkouts = rows.count
+        let logged = (try? await store.workoutSuggestions(deviceId: deviceId)) ?? []
+        let logStart = Self.suggestionLogStartedAt
+        let resting = days.last(where: { $0.restingHr != nil })?.restingHr.map(Double.init)
+        let maxHR = strainProfile.map(\.hrMax)
+        var windows: [LabelledWorkoutWindow] = []
+        for row in rows where row.endTs > row.startTs {
+            let source: WorkoutLabelSource
+            switch WorkoutSource.classify(row.source) {
+            case .whoop: source = .whoop
+            case .apple: source = .apple
+            case .detected: source = .detected
+            case .manual: source = .manual
+            case .lifting: source = .lifting
+            case .activityFile: source = .activityFile
+            }
+            let origin = WorkoutLabelProvenance.origin(source: source, sport: row.sport, startTs: row.startTs, suggestions: logged, logStartedAt: logStart)
+            guard origin.isLabel(includeBeforeLog: true) else { result.notTheirLabel[origin, default: 0] += 1; continue }
+            guard let cls = WorkoutSportMap.coarseClass(forSport: row.sport) else { result.unusableName += 1; continue }
+            async let hrTask = hrSamples(from: row.startTs, to: row.endTs, limit: 50_000)
+            async let gravityTask = gravitySamplesUnion(from: row.startTs, to: row.endTs)
+            async let stepsTask = stepSamplesUnion(from: row.startTs, to: row.endTs)
+            let (hr, gravity, steps) = await (hrTask, gravityTask, stepsTask)
+            guard let features = WorkoutTypeFeatureExtractor.extract(hr: hr, gravity: gravity, steps: steps, start: row.startTs, end: row.endTs,
+                                                                      restingHR: resting, maxHR: maxHR, caloriesKcal: row.energyKcal) else {
+                result.noStrapData += 1; continue
+            }
+            if origin == .manualBeforeLog { result.beforeLogUsed += 1 }
+            windows.append(LabelledWorkoutWindow(id: "\(row.startTs)", label: cls, features: features))
+        }
+        result.windows = windows
+        result.report = WorkoutClassReplay.evaluate(windows)
+        return result
+    }
+
     /// Backward-compatible generic read for existing macOS/test callers. The iOS card uses the
     /// sport-aware `autoDetectSuggestion` above so saving preserves Walking/Running/Cycling.
     func autoDetectCandidate(daysBack: Int = 2) async -> DetectedWorkout? {
@@ -3377,6 +3483,7 @@ final class Repository: ObservableObject {
                                                      sport: suggestion.sport, avgHr: w.avgBpm,
                                                      energyKcal: nil) else { return false }
         await saveManualWorkout(row)
+        await settleSuggestion(startSec: w.startSec, outcome: .saved, savedSport: suggestion.sport)
         return true
     }
 
@@ -3384,6 +3491,9 @@ final class Repository: ObservableObject {
     /// Prunes the stored list on every add (drop spans older than ~30 days + hard-cap to 200 most-recent)
     /// so it can never grow unbounded. Byte-mirrored in the Android `AutoWorkoutPrefs.dismiss`.
     func dismissDetectedSuggestion(_ w: DetectedWorkout) {
+        // The UserDefaults list below forgets a span after ~30 days. The suggestion log keeps the decision, as the one true "not a workout" label.
+        let startSec = w.startSec
+        Task { await settleSuggestion(startSec: startSec, outcome: .dismissed, savedSport: nil) }
         let token = Self.autoDetectToken(w)
         var spans = autoDetectDismissedSpans
         guard !spans.contains(token) else { return }

@@ -18,10 +18,16 @@ struct AutoWorkoutSuggestion: Equatable, Sendable {
     var stravaId: Int? = nil
     var stravaName: String? = nil
     var distanceM: Double? = nil
+    /// What the shape classifier saw and said for this window. Kept only so the suggestion log can record it; nothing reads these to decide
+    /// what to show. nil for a suggestion that did not come from the classifier (Strava, or the macOS detector).
+    var features: WorkoutClassFeatures? = nil
+    var predictedClass: CoarseWorkoutClass? = nil
+    var scores: [CoarseWorkoutClass: Double]? = nil
 
     /// The same window saved under another sport (one of `alternatives`, chosen by the person).
     func withSport(_ name: String) -> AutoWorkoutSuggestion {
-        AutoWorkoutSuggestion(workout: workout, sport: name, confidence: confidence, stravaId: stravaId, stravaName: stravaName, distanceM: distanceM)
+        AutoWorkoutSuggestion(workout: workout, sport: name, confidence: confidence, stravaId: stravaId, stravaName: stravaName, distanceM: distanceM,
+                              features: features, predictedClass: predictedClass, scores: scores)
     }
 
     var startSec: Int { workout.startSec }
@@ -188,7 +194,8 @@ enum IOSAutoWorkoutDetector {
             suggestions.append(AutoWorkoutSuggestion(
                 workout: detected, sport: selected.map { sportName($0, userSports: userSports) } ?? genericSport,
                 confidence: max(0, min(1, prediction.confidence)),
-                alternatives: selected == nil ? topAlternatives(prediction, features: features, userSports: userSports) : []))
+                alternatives: selected == nil ? topAlternatives(prediction, features: features, userSports: userSports) : [],
+                features: features, predictedClass: prediction.predictedClass, scores: prediction.scores))
         }
 
         // One suggestion per overlapping activity window. Preserve the strongest/latest candidate so a

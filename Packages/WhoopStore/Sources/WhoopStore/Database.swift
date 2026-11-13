@@ -1136,6 +1136,37 @@ extension WhoopStore {
             try db.create(index: "idx_savedFood_natural", on: "savedFood",
                           columns: ["deviceId", "name"], options: [.unique, .ifNotExists])
         }
+        // v48-workout-suggestion-log: what the auto-detector offered and what the person did with it.
+        //
+        //   • WHY: a detector that is ever to learn from the workouts a person logs needs to know which of those rows are THEIR
+        //     label and which are the detector's own guess saved with one tap (`saveDetectedWorkout` writes the suggested sport as
+        //     an ordinary `manual` row). It also needs the features and the scores the detector saw, so accuracy can be measured later
+        //     without re-deriving them, and it needs the "Not a workout" decisions kept: the UserDefaults list drops spans after ~30 days.
+        //   • One row per workout, keyed by its start (the detector offers a running workout again with a later end). While `pending` the latest offer
+        //     refreshes the prediction fields; once the person decides, the row is frozen and `outcome`, `outcomeAt` and `savedSport` are set
+        //     (`pending` -> `saved` or `dismissed`) and never change again.
+        //   • No behaviour reads this table yet. It is instrumentation, additive, and pinned in schema_oracle.json as `ios_only`.
+        //   • `deviceId` keyed like every other per-person table so "delete this device's data" clears it
+        //     (DeviceRegistryStore.deviceScopedTables).
+        migrator.registerMigration("v48-workout-suggestion-log") { db in
+            try db.create(table: "workoutSuggestion", options: [.ifNotExists]) { t in
+                t.column("id", .text).primaryKey()           // "<deviceId>:<startSec>"
+                t.column("deviceId", .text).notNull()
+                t.column("startSec", .integer).notNull()
+                t.column("endSec", .integer).notNull()
+                t.column("createdAt", .integer).notNull()    // unix seconds, when it was first offered
+                t.column("predictedSport", .text).notNull()  // the name on the card ("Workout" when the detector could not name it)
+                t.column("predictedClass", .text)            // CoarseWorkoutClass raw value, nil when none
+                t.column("confidence", .double).notNull()
+                t.column("scoresJSON", .text)                // {"walk":0.8,...}
+                t.column("featuresJSON", .text)              // WorkoutClassFeatures as JSON
+                t.column("outcome", .text).notNull()         // pending | saved | dismissed
+                t.column("outcomeAt", .integer)
+                t.column("savedSport", .text)                // the sport written when saved
+            }
+            try db.create(index: "idx_workoutSuggestion_device_start", on: "workoutSuggestion",
+                          columns: ["deviceId", "startSec"], options: [.ifNotExists])
+        }
         return migrator
     }
 }

@@ -145,6 +145,8 @@ public struct DeviceRegistryStore: Sendable {
         "rawBatch", "labMarker", "sleepStateSample", "liveSession",
         // v47-food-log: the nutrition diary and the foods kept to reuse are deviceId-keyed, so a delete clears them too.
         "foodEntry", "savedFood",
+        // v48-workout-suggestion-log: what the auto-detector offered this person and what they did with it is deviceId-keyed, so a delete clears it.
+        "workoutSuggestion",
         // v25-oura-raw: the opt-in Oura cloud-import raw archive is deviceId-keyed too, so "delete this
         // device's data" must clear it — else an imported Oura source's payloads would survive deletion.
         "ouraRaw",
