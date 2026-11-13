@@ -44,8 +44,9 @@ struct NunaAnyaSheet: View {
     var cardLine: NunaAnyaCardLine?
     /// Set by a single-metric screen, so the read and the questions are about that metric.
     var metric: NunaAnyaMetric?
-    /// The floating style: a dark sheet with the line, suggestion chips and one box to ask in (the one the floating Anya button opens).
-    var floating = false
+    /// The floating style: a dark sheet with the line, suggestion chips and one box to ask in (the one the floating Anya button opens). Every sheet
+    /// of Anya has it, so a card, a menu and the button all open the same one; the older Read and Ask sheet is only kept for a caller that asks for it.
+    var floating = true
     /// The provider's analysis the floating pill already fetched, so the sheet opens on it.
     var seed: String?
     /// Set by the Daily Outlook card: the sheet opens on the Outlook (the read of the day, ideas and cards to commit to).
@@ -339,6 +340,7 @@ extension NunaAnyaSheet {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 22) {
                         floatingMessage
+                        floatingCardExtras
                         floatingTurns
                         connectNote
                         Color.clear.frame(height: 1).id("end")
@@ -375,6 +377,38 @@ extension NunaAnyaSheet {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 20).padding(.top, 22)
+    }
+
+    /// What a card carried besides its line: its buttons (which close the sheet and then act), and "Explain" for the provider's own words when
+    /// she is connected. Only before the conversation starts, and never on the Outlook.
+    @ViewBuilder private var floatingCardExtras: some View {
+        if !outlook, turns.isEmpty, let card = cardLine {
+            if !card.actions.isEmpty {
+                HStack(spacing: 8) {
+                    ForEach(card.actions) { a in
+                        Button {
+                            dismiss()
+                            // Let the sheet go before the screen behind it moves on.
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { a.perform() }
+                        } label: {
+                            Text(a.title).font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaAnyaWing.ink).padding(.horizontal, 20).frame(height: 42)
+                                .background(NunaAnyaWing.gradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }.buttonStyle(.plain)
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+            if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
+                Button { Task { await explain() } } label: {
+                    HStack(spacing: 8) {
+                        Text("Explain").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        Image(systemName: "arrow.right").font(.nuna(size: 13, weight: .bold))
+                    }
+                    .foregroundStyle(LinearGradient(colors: NunaAnyaWing.colors, startPoint: .leading, endPoint: .trailing))
+                    .frame(minHeight: 44).contentShape(Rectangle())
+                }.buttonStyle(.plain)
+            }
+        }
     }
 
     @ViewBuilder private var floatingMessage: some View {
