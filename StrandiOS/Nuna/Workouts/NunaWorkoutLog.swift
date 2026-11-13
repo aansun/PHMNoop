@@ -611,11 +611,13 @@ struct NunaLogStatTile: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // The rows have set heights, so a value that is scaled down to fit (or a glyph taller than the rest) cannot make one tile shorter than its neighbours.
             HStack(spacing: 8) {
                 NunaIcon(name: icon, size: 16).foregroundStyle(NunaPalette.textSecondary)
                 Text(label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingHead(0.4)).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
+            .frame(height: 20, alignment: .leading)
             .padding(.bottom, 8)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 (Text(verbatim: value).font(.nuna(size: 36, weight: .bold, design: NunaType.design))
@@ -623,6 +625,7 @@ struct NunaLogStatTile: View {
                     .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                 if !unit.isEmpty && value != "–" { Text(verbatim: unit).font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1) }
             }
+            .frame(height: 46, alignment: .leading)
             .padding(.bottom, 6)
             if let p = pill { NunaAveragePill(value: p.value, average: p.average, text: p.text) }
             else { Color.clear.frame(height: 28) }
