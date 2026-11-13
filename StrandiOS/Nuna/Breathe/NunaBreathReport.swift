@@ -14,6 +14,9 @@ struct NunaBreathReportView: View {
     var onAgain: (() -> Void)?
     @State private var showAnya = false
     @State private var confirmDelete = false
+    /// The two halves of the detail: the key statistics, and the strap's curves.
+    @State private var tab = Tab.stats
+    private enum Tab: Hashable { case stats, curves }
 
     private var title: String { record.displayTitle }
     private var goal: BreathGoal { BreathGoal(rawValue: record.goal) ?? .calm }
@@ -26,8 +29,13 @@ struct NunaBreathReportView: View {
             figures(averages)
             let v = Self.verdict(record)
             NunaAnyaCard(verbatim: v.headline, detail: v.detail) { showAnya = true }
-            keyStatistics(averages)
-            charts
+            if hasCurves {
+                NunaCapsuleTabs(options: [(value: Tab.stats, title: "Key statistics"), (value: Tab.curves, title: "Heart rate")], selection: $tab)
+                if tab == .stats { keyStatistics(averages) } else { charts }
+            } else {
+                keyStatistics(averages)
+                charts
+            }
             if !record.haptics {
                 Text("This session ran without strap haptics, so the pace was followed by sight only.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
@@ -97,7 +105,15 @@ struct NunaBreathReportView: View {
 
     private func keyStatistics(_ averages: NunaBreathAverages?) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            NunaLogSectionTitle(title: "Key statistics", trailing: averages != nil ? "vs. 30 day average" : nil)
+            // Under the tabs the tab already names the block; only the comparison is left to say.
+            if hasCurves {
+                if averages != nil {
+                    Text("vs. 30 day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingHead(0.4)).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .trailing)
+                }
+            } else {
+                NunaLogSectionTitle(title: "Key statistics", trailing: averages != nil ? "vs. 30 day average" : nil)
+            }
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                 ForEach(stats) { NunaLogStatTile(icon: $0.icon, label: $0.label, value: $0.value, unit: $0.unit, pill: $0.pill) }
             }
@@ -109,20 +125,26 @@ struct NunaBreathReportView: View {
         series.enumerated().compactMap { i, v in v > 0 ? HRBucket(ts: record.startTs + i * record.step, bpm: v, minBpm: v, maxBpm: v) : nil }
     }
 
-    /// The strap's two curves through the session, each between the marks of its start and end. A curve with too few readings is left out, and when
-    /// both are, one line says so.
+    private var hr: [HRBucket] { points(record.hrSeries) }
+    private var hrv: [HRBucket] { points(record.rmssdSeries) }
+    /// The strap read enough of either curve to draw it; without, the report is the figures and the statistics alone.
+    private var hasCurves: Bool { hr.count >= 3 || hrv.count >= 3 }
+
+    /// The strap's two curves through the session, each between the marks of its start and end (the heart rate is the tab's own name; the HRV is named
+    /// when both are there). A curve with too few
+    /// readings is left out, and when both are, one line says so.
     @ViewBuilder private var charts: some View {
-        let hr = points(record.hrSeries), hrv = points(record.rmssdSeries)
-        if hr.count >= 3 { chart("Heart rate", points: hr, tint: NunaWorkoutLogZones.hrBlue, step: 25) }
-        if hrv.count >= 3 { chart("HRV (RMSSD)", points: hrv, tint: NunaPalette.restLight, step: 20) }
-        if hr.count < 3 && hrv.count < 3 {
+        let both = hr.count >= 3 && hrv.count >= 3
+        if hr.count >= 3 { chart(nil, points: hr, tint: NunaWorkoutLogZones.hrBlue, step: 25) }
+        if hrv.count >= 3 { chart(both ? "HRV (RMSSD)" : nil, points: hrv, tint: NunaPalette.restLight, step: 20) }
+        if !hasCurves {
             Text("Not enough readings from the strap in this session.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
     }
 
-    private func chart(_ title: LocalizedStringKey, points: [HRBucket], tint: Color, step: Double) -> some View {
+    private func chart(_ title: LocalizedStringKey?, points: [HRBucket], tint: Color, step: Double) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            NunaLogSectionTitle(title: title)
+            if let title { NunaLogSectionTitle(title: title) }
             NunaWorkoutHRArea(buckets: points, start: record.startTs, end: max(end, record.startTs + 1), step: step, tint: tint)
         }
     }
