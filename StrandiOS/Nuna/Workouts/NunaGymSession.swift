@@ -55,6 +55,8 @@ struct NunaGymSessionView: View {
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
         .environment(\.nunaAnyaCardContext, "workouts")
+        // Anya as one slim row, as on Today; what she says beyond the headline is in the sheet it opens.
+        .environment(\.nunaAnyaRow, true)
         .alert(stravaMessage ?? "", isPresented: Binding(get: { stravaMessage != nil }, set: { if !$0 { stravaMessage = nil } })) {
             Button("OK", role: .cancel) {}
         }

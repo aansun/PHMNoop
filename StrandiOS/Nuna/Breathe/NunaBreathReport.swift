@@ -50,6 +50,9 @@ struct NunaBreathReportView: View {
         }
         .preferredColorScheme(NunaTheme.colorScheme)
         .sheet(isPresented: $showAnya) { NunaAnyaSheet(context: "Breathing") }
+        // Anya as one slim row, as on Today; the rest of her reading is in the sheet it opens.
+        .environment(\.nunaAnyaCardContext, "Breathing")
+        .environment(\.nunaAnyaRow, true)
         .nunaDialog("Delete this session?", isPresented: $confirmDelete) {
             NunaDialogButton("Delete", role: .destructive) { NunaBreathLog.delete(record.id); onDone() }
             NunaDialogButton("Cancel", role: .cancel) {}
