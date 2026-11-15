@@ -102,6 +102,8 @@ extension NunaTrendPage {
         case .stressTotal: return String(localized: "Total day stress")
         case .stressNonActivity: return String(localized: "Non activity stress")
         case .stressSleep: return String(localized: "Sleep stress")
+        case .fitnessAge: return String(localized: "Fitness age")
+        case .paceOfAging: return String(localized: "Pace of aging")
         }
     }
 }
@@ -112,6 +114,7 @@ extension NunaTrendPage.Section {
         case .effort: return String(localized: "Strain")
         case .charge: return String(localized: "Recovery")
         case .rest: return String(localized: "Sleep")
+        case .health: return String(localized: "Health")
         case .other: return String(localized: "Other")
         }
     }
@@ -193,7 +196,7 @@ extension NunaTodayView {
         case .vitality: figure = fig(model.extras["vitality"], model.previous["vitality"], good: true)
         // Not measured every day, or kept in a history this screen does not load: these open their page without a figure.
         case .hrZonesLow, .hrZonesHigh, .hrZonesAll, .strengthTime, .avgHr, .totalVolumeLoad, .vo2max, .leanBodyMass,
-             .stressTotal, .stressNonActivity, .stressSleep: break
+             .stressTotal, .stressNonActivity, .stressSleep, .fitnessAge, .paceOfAging: break
         }
         return NunaLinkRow(id: "page." + page.rawValue, title: page.titleText, subtitle: page.section.titleText, value: figure.0,
                            icon: page.icon, tint: nil, target: NunaRowTarget(kind: .nuna(.trend(page))), trend: figure.1)

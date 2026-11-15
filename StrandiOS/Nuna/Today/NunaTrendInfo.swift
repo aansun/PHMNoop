@@ -4,7 +4,7 @@ import StrandDesign
 
 /// The explanation card under a trend page: what the reading is and how to read it. Generated from one table so the catalog keys match.
 enum NunaTrendInfoKind: String {
-    case calories, stressNonActivity, stressSleep, stressTotal, weight, leanBodyMass, debt, efficiency, restorative, consistency, hoursNeeded, timeInBed, restPerformance, respiratory, rhr, hrv, charge
+    case calories, stressNonActivity, stressSleep, stressTotal, weight, leanBodyMass, debt, efficiency, restorative, consistency, hoursNeeded, timeInBed, restPerformance, respiratory, rhr, hrv, charge, fitnessAge, paceOfAging
 }
 
 struct NunaTrendInfo: View {
@@ -101,6 +101,18 @@ struct NunaTrendInfo: View {
                 .paragraph("Respiratory rate (RR) is how many breaths you take per minute while asleep."),
                 .paragraph("It is your median rate across the night, worked out from the rhythmic rise and fall in your heart rate as you breathe in and out."),
                 .paragraph("RR is normally very steady from night to night, so a sharp change is likely meaningful. Illness, fatigue, allergies or a change in altitude can move it, and an unusually high or low rate can sometimes point to an underlying health issue."),
+            ])
+        case .fitnessAge:
+            return ("What is Fitness age?", [
+                .paragraph("Fitness age compares your cardiorespiratory fitness with the average person of your sex and age. A fitness age below your calendar age means you are fitter than average for your age."),
+                .paragraph("PHMN works it out once a week from your age, sex, the median resting heart rate of the last 7 days and a physical activity index built from your recent training (the Nes 2011 non-exercise model)."),
+                .paragraph("A lower resting heart rate and regular training bring it down. It moves slowly, so read it over weeks, not days."),
+            ])
+        case .paceOfAging:
+            return ("What is Pace of aging?", [
+                .paragraph("Pace of aging shows how quickly your fitness age is changing against the calendar, on a scale from -1.0x to 3.0x. At 1.0x your fitness age moves one year for each year that passes."),
+                .paragraph("Below 1.0x you are aging more slowly than the calendar, above it faster. A negative pace means your fitness age is getting younger."),
+                .paragraph("It is worked out from your weekly fitness age readings, at least six of them over five weeks."),
             ])
         case .rhr:
             return ("What is Resting Heart Rate?", [
