@@ -238,23 +238,25 @@ private enum NunaOrbField {
 struct NunaFitnessOrb<Center: View>: View {
     let tint: Color
     var size: CGFloat = 270
+    /// How far the outline strays from a circle, 0 to 1: a ring for a slow pace of aging, a loose amoeba for a fast one (see `NunaFitnessAgeTone.irregularity`).
+    var irregularity: Double = 0.5
     @ViewBuilder var center: () -> Center
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var scheme
     @ObservedObject private var motion = NoopMotionState.shared
 
-    /// How far the outline is pushed out or in at an angle, a handful of slow waves running at their own speeds.
-    private static func wobble(_ t: Double, _ time: Double) -> Double {
-        0.050 * sin(2 * t + time * 0.45) + 0.042 * sin(3 * t - time * 0.60 + 1.1) + 0.034 * sin(4 * t + time * 0.38 + 2.3)
-            + 0.026 * sin(5 * t - time * 0.52 + 0.7) + 0.016 * sin(7 * t + time * 0.70)
+    /// How far the outline is pushed out or in at an angle, a handful of slow waves running at their own speeds, all of them scaled by `shape`.
+    private static func wobble(_ t: Double, _ time: Double, _ shape: Double) -> Double {
+        shape * (0.060 * sin(2 * t + time * 0.45) + 0.050 * sin(3 * t - time * 0.60 + 1.1) + 0.040 * sin(4 * t + time * 0.38 + 2.3)
+                 + 0.030 * sin(5 * t - time * 0.52 + 0.7) + 0.018 * sin(7 * t + time * 0.70))
     }
 
-    private static func outline(center c: CGPoint, radius: CGFloat, time: Double) -> Path {
+    private static func outline(center c: CGPoint, radius: CGFloat, time: Double, shape: Double) -> Path {
         var p = Path()
         let steps = 160
         for i in 0...steps {
             let t = Double(i) / Double(steps) * 2 * .pi
-            let r = radius * (1 + wobble(t, time))
+            let r = radius * (1 + wobble(t, time, shape))
             let pt = CGPoint(x: c.x + CGFloat(cos(t) * r), y: c.y + CGFloat(sin(t) * r))
             if i == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
         }
@@ -266,21 +268,23 @@ struct NunaFitnessOrb<Center: View>: View {
         let still = motion.poseStill(reduceMotion)
         TimelineView(.animation(minimumInterval: 1 / 30, paused: still)) { tl in
             let time = still ? 1.4 : tl.date.timeIntervalSinceReferenceDate
+            // Almost a circle at 0, the full wobble past 1.
+            let shape = 0.08 + 1.1 * min(max(irregularity, 0), 1)
             ZStack {
                 Canvas { ctx, sz in
                     let c = CGPoint(x: sz.width / 2, y: sz.height / 2)
                     // The blob fills most of the room; the glow takes the rest.
                     let base = min(sz.width, sz.height) / 2 * 0.78
-                    let shape = Self.outline(center: c, radius: base, time: time)
+                    let shapePath = Self.outline(center: c, radius: base, time: time, shape: shape)
                     ctx.drawLayer { l in
                         l.addFilter(.blur(radius: base * 0.07))
-                        l.stroke(shape, with: .color(tint.opacity(0.55)), lineWidth: base * 0.05)
-                        l.fill(shape, with: .color(tint.opacity(0.10)))
+                        l.stroke(shapePath, with: .color(tint.opacity(0.55)), lineWidth: base * 0.05)
+                        l.fill(shapePath, with: .color(tint.opacity(0.10)))
                     }
                     // The heart carries the figure in the text colour, so it is dark on a dark theme and light on a light one. The colour only gathers
                     // towards the rim, where it is brightest along the outline.
                     let core = scheme == .dark ? Color.black : NunaPalette.card
-                    ctx.fill(shape, with: .radialGradient(Gradient(stops: [
+                    ctx.fill(shapePath, with: .radialGradient(Gradient(stops: [
                         .init(color: core, location: 0.0),
                         .init(color: core.opacity(0.97), location: 0.50),
                         .init(color: tint.opacity(0.12), location: 0.64),
@@ -288,10 +292,10 @@ struct NunaFitnessOrb<Center: View>: View {
                         .init(color: tint.opacity(0.62), location: 0.94),
                         .init(color: tint.opacity(0.86), location: 1.0)]),
                         center: c, startRadius: 0, endRadius: base * 1.08))
-                    ctx.stroke(shape, with: .color(tint.opacity(0.95)), lineWidth: 1.8)
+                    ctx.stroke(shapePath, with: .color(tint.opacity(0.95)), lineWidth: 1.8)
                     for sp in NunaOrbField.sparks {
                         let a = sp.angle + time * sp.drift
-                        let edge = base * (1 + Self.wobble(a, time))
+                        let edge = base * (1 + Self.wobble(a, time, shape))
                         let r = edge * (0.34 + 0.63 * sp.depth)
                         let pt = CGPoint(x: c.x + CGFloat(cos(a) * r), y: c.y + CGFloat(sin(a) * r))
                         let twinkle = still ? 0.85 : 0.5 + 0.5 * sin(time * sp.speed + sp.phase)
@@ -310,6 +314,36 @@ struct NunaFitnessOrb<Center: View>: View {
         }
         .frame(width: size, height: size)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// An amoeba: a closed outline whose radius is pushed in and out by a few waves.
+private struct NunaAmoebaShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let c = CGPoint(x: rect.midX, y: rect.midY), r = min(rect.width, rect.height) / 2
+        var p = Path()
+        for i in 0...60 {
+            let t = Double(i) / 60 * 2 * .pi
+            let k = r * (0.80 + 0.13 * sin(2 * t + 0.4) + 0.09 * sin(3 * t + 1.9) + 0.05 * sin(5 * t))
+            let pt = CGPoint(x: c.x + CGFloat(cos(t) * k), y: c.y + CGFloat(sin(t) * k))
+            if i == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
+        }
+        p.closeSubpath()
+        return p
+    }
+}
+
+/// The two ends of the pace scale, drawn instead of named: a plain ring for slow, an amoeba for fast.
+struct NunaPaceGlyph: View {
+    let fast: Bool
+    var size: CGFloat = 18
+
+    var body: some View {
+        Group {
+            if fast { NunaAmoebaShape().fill(NunaPalette.textSecondary) }
+            else { Circle().strokeBorder(NunaPalette.textSecondary, lineWidth: size * 0.28) }
+        }
+        .frame(width: size, height: size).accessibilityHidden(true)
     }
 }
 
@@ -338,6 +372,12 @@ struct NunaFitnessOrbCenter: View {
 /// The colour of the comparison, shared by every place that shows it: amber when the fitness age is older than the calendar age, green when younger, blue when about
 /// the same.
 enum NunaFitnessAgeTone {
+    /// The orb's outline for a pace of aging: a ring at -1.0x and below, a little wobbly near 1.0x, a loose amoeba at 3.0x. Without a pace it sits in the middle.
+    static func irregularity(pace: Double?) -> Double {
+        guard let pace else { return 0.5 }
+        return min(max((pace + 1) / 4, 0), 1)
+    }
+
     static func tint(gap: Int?) -> Color {
         guard let gap else { return NunaPalette.textSecondary }
         return gap > 0 ? NunaPalette.charge : (gap < 0 ? NunaPalette.caution : NunaPalette.recoveryBlue)
@@ -358,13 +398,13 @@ struct NunaPaceDial: View {
         VStack(spacing: 8) {
             HStack {
                 HStack(spacing: 6) {
-                    Image(systemName: "tortoise.fill").font(.nuna(size: 14))
+                    NunaPaceGlyph(fast: false)
                     Text("Slow").font(.nuna(size: 14, weight: .medium)).textCase(nil)
                 }
                 Spacer()
                 HStack(spacing: 6) {
                     Text("Fast").font(.nuna(size: 14, weight: .medium)).textCase(nil)
-                    Image(systemName: "hare.fill").font(.nuna(size: 14))
+                    NunaPaceGlyph(fast: true)
                 }
             }
             .foregroundStyle(NunaPalette.textSecondary)
