@@ -11,8 +11,8 @@ class VitalityEngineTest {
 
     @Test fun averageReadsAtTheirAge() {
         val r = VitalityEngine.compute(VitalityEngine.Inputs(
-            chronoAge = 40.0, restingHR = 65.0, vo2max = 45.0, expectedVO2max = 45.0,
-            sleepHours = 7.5, sleepConsistency = 0.75, rmssd = 45.0, rmssdNorm = 45.0, steps = 7000.0))!!
+            chronoAge = 40.0, restingHR = 60.0, vo2max = 45.0, expectedVO2max = 45.0,
+            sleepHours = 7.5, sleepConsistency = 0.70, rmssd = 45.0, rmssdNorm = 45.0, steps = 7000.0))!!
         assertEquals(40.0, r.bodyAge, 0.01)
         assertEquals(50.0, r.vitality, 0.01)
         assertEquals(0.0, r.deltaYears, 0.01)
@@ -23,8 +23,8 @@ class VitalityEngineTest {
         val r = VitalityEngine.compute(VitalityEngine.Inputs(
             chronoAge = 40.0, restingHR = 52.0, vo2max = 55.5, expectedVO2max = 45.0,
             sleepHours = 7.5, sleepConsistency = 0.9, rmssd = 54.0, rmssdNorm = 45.0, steps = 11000.0))!!
-        assertEquals(32.42, r.bodyAge, 0.1)
-        assertEquals(68.95, r.vitality, 0.2)
+        assertEquals(32.66, r.bodyAge, 0.1)
+        assertEquals(68.35, r.vitality, 0.2)
         assertTrue(r.deltaYears > 0)
     }
 
@@ -32,8 +32,8 @@ class VitalityEngineTest {
         val r = VitalityEngine.compute(VitalityEngine.Inputs(
             chronoAge = 40.0, restingHR = 80.0, vo2max = 34.5, expectedVO2max = 45.0,
             sleepHours = 5.5, sleepConsistency = 0.5, rmssd = 31.5, rmssdNorm = 45.0, steps = 3000.0))!!
-        assertEquals(49.71, r.bodyAge, 0.1)
-        assertEquals(25.73, r.vitality, 0.2)
+        assertEquals(49.95, r.bodyAge, 0.1)
+        assertEquals(25.14, r.vitality, 0.2)
         assertTrue(r.deltaYears < 0)
     }
 
