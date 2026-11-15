@@ -107,6 +107,31 @@ final class VitalityEngineTests: XCTestCase {
         XCTAssertEqual(r.bodyAge, 40 + total, accuracy: 1e-9)
     }
 
+    /// Lean body mass is neutral from its break-even up and reads +5.6 years at the 60.2% WHOOP's page showed, with the ceiling at 60%.
+    func testLeanBodyMass() {
+        func years(_ pct: Double) -> Double {
+            let c = VitalityEngine.contributions(.init(chronoAge: 40, leanMassPct: pct)).first { $0.key == "leanMass" }!
+            return VitalityEngine.years(of: c)
+        }
+        XCTAssertEqual(years(78), 0, accuracy: 1e-9)
+        XCTAssertEqual(years(85), 0, accuracy: 1e-9)
+        XCTAssertEqual(years(60.2), 5.6, accuracy: 0.05)
+        XCTAssertEqual(years(60), years(45), accuracy: 1e-9)
+        XCTAssertLessThan(years(70), years(65))
+    }
+
+    /// The VO₂ reference follows the two verified FRIEND medians at ages 25 and 75, by sex, and the clamp holds outside 20 to 80.
+    func testExpectedVO2max() {
+        XCTAssertEqual(VitalityEngine.expectedVO2max(age: 25, sex: "male"), 48.0, accuracy: 1e-9)
+        XCTAssertEqual(VitalityEngine.expectedVO2max(age: 75, sex: "male"), 24.4, accuracy: 1e-9)
+        XCTAssertEqual(VitalityEngine.expectedVO2max(age: 25, sex: "female"), 37.6, accuracy: 1e-9)
+        XCTAssertEqual(VitalityEngine.expectedVO2max(age: 75, sex: "female"), 18.3, accuracy: 1e-9)
+        XCTAssertEqual(VitalityEngine.expectedVO2max(age: 36.6, sex: "male"), 42.5, accuracy: 0.05)
+        XCTAssertEqual(VitalityEngine.expectedVO2max(age: 36.6, sex: "female"), 33.1, accuracy: 0.05)
+        XCTAssertEqual(VitalityEngine.expectedVO2max(age: 36.6, sex: "other"), (42.5 + 33.1) / 2, accuracy: 0.05)
+        XCTAssertEqual(VitalityEngine.expectedVO2max(age: 10, sex: "male"), VitalityEngine.expectedVO2max(age: 20, sex: "male"), accuracy: 1e-9)
+    }
+
     func testRmssdNormByAge() {
         XCTAssertEqual(VitalityEngine.rmssdNorm(forAge: 20), 47, accuracy: 0.01)
         XCTAssertEqual(VitalityEngine.rmssdNorm(forAge: 40), 33, accuracy: 0.01)
