@@ -116,7 +116,7 @@ struct NunaFitnessAgeSummary: View {
         let gap: Int? = profile.age > 0 ? Int((Double(profile.age) - latest.value).rounded()) : nil
         // Over a room as wide as the card, so an orb a little wider than the card does not widen it.
         return Color.clear.frame(maxWidth: .infinity).frame(height: 320)
-            .overlay { NunaFitnessOrb(tint: tint, size: 360) { NunaFitnessOrbCenter(value: latest.value, gap: gap, numberSize: 48) } }
+            .overlay { NunaFitnessOrb(tint: tint, size: 360, irregularity: NunaFitnessAgeTone.irregularity(pace: PaceOfAging.compute(readings)?.pace)) { NunaFitnessOrbCenter(value: latest.value, gap: gap, numberSize: 48) } }
     }
 
     /// The note while the pace is still firming up; it can be closed and stays closed.
@@ -198,7 +198,7 @@ struct NunaPaceRuler: View {
                     Spacer()
                     HStack(spacing: 6) {
                         Text("Fast").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        Image(systemName: "hare.fill").font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                        NunaPaceGlyph(fast: true)
                     }
                     .opacity(f > 0.7 ? 0 : 1)
                 }
