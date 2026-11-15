@@ -93,8 +93,8 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .efficiency: return "met:sleep-efficiency"
         case .vo2max: return "met:vo2-max"
         case .skinTemp: return "vital:temp"
-        case .fitnessAge: return "vital:fitness-age"
-        case .paceOfAging: return "vital:pace"
+        case .fitnessAge: return NunaIcons.fitnessAge
+        case .paceOfAging: return NunaIcons.paceOfAging
         case .weight: return "met:weight"
         case .leanBodyMass: return "met:lean-body-mass"
         case .vitality: return "sparkles"

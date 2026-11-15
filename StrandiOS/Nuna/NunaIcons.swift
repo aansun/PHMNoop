@@ -19,6 +19,9 @@ enum NunaIcons {
     static let calories = "met:calories"
     static let weight = "met:weight"
     static let stress = "met:total-day-stress"
+    /// Fitness age and the pace of aging: the drawn pictures of the trend pages, so every place that names either carries the same mark.
+    static let fitnessAge = "vital:fitness-age"
+    static let paceOfAging = "vital:pace"
 
     // Sleep and breathing
     static let sleep = "moon.zzz.fill"
