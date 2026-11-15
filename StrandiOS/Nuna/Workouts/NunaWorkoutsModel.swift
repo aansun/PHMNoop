@@ -42,11 +42,7 @@ enum NunaWorkoutKind {
         return s.contains("strength") || s.contains("lift") || s.contains("weight") || s.contains("gym") || s.contains("crossfit") || s.contains("bodybuilding")
     }
 
-    static func isStrength(_ r: WorkoutRow) -> Bool {
-        if WorkoutSource.classify(r.source) == .lifting { return true }
-        let s = r.sport.lowercased()
-        return s.contains("strength") || s.contains("lift") || s.contains("weight") || s.contains("gym") || s.contains("crossfit")
-    }
+    static func isStrength(_ r: WorkoutRow) -> Bool { WorkoutSource.isStrength(r) }
 }
 
 /// Everything the Latihan screens read: saved workouts, daily Effort, lifting sessions. One load, shared by the hub and

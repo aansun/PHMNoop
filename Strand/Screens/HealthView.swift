@@ -1432,27 +1432,8 @@ private struct VitalitySection: View {
     @State private var bodyAge: Double?
     @State private var loaded = false
 
-    private var contributions: [VitalityEngine.Contribution] {
-        let last7 = repo.days.suffix(7)
-        let nights = last7.compactMap { $0.totalSleepMin }.map { Double($0) / 60.0 }.filter { $0 > 0 }
-        let hrvs = last7.compactMap { $0.avgHrv }
-        let rhrs = last7.compactMap { $0.restingHr }.map(Double.init)
-        let steps = last7.compactMap { $0.steps }.map(Double.init)
-        func mean(_ a: [Double]) -> Double? { a.isEmpty ? nil : a.reduce(0, +) / Double(a.count) }
-        // Aggregate EXACTLY as the stored headline does (IntelligenceEngine), so this "what's driving it"
-        // breakdown reconciles with the Vitality / Body Age number it explains rather than being recomputed
-        // on different statistics: resting HR + HRV are MEDIANED (robust to one outlier night), sleep +
-        // steps are MEANED. Using the mean for all four let a single bad RHR/HRV reading drift the breakdown
-        // out of step with the median-based headline (code review).
-        return VitalityEngine.contributions(.init(
-            chronoAge: Double(profile.age),
-            restingHR: rhrs.isEmpty ? nil : IntelligenceEngine.medianOf(rhrs),
-            sleepHours: mean(nights),
-            sleepConsistency: VitalityEngine.sleepConsistency(nightlyHours: nights),
-            rmssd: hrvs.isEmpty ? nil : IntelligenceEngine.medianOf(hrvs),
-            rmssdNorm: VitalityEngine.rmssdNorm(forAge: Double(profile.age)),
-            steps: mean(steps)))
-    }
+    /// The factors behind the headline, worked out from the same week the same way the weekly job stores it (`VitalityWeekReader`), so they add up to it.
+    @State private var contributions: [VitalityEngine.Contribution] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: NoopMetrics.gap) {
@@ -1581,6 +1562,10 @@ private struct VitalitySection: View {
     private func load() async {
         vitality = (await repo.exploreSeries(key: "vitality", source: "my-whoop")).last?.value
         bodyAge = (await repo.exploreSeries(key: "body_age", source: "my-whoop")).last?.value
+        let week = await VitalityWeekReader.read(
+            repo: repo, days: Array(repo.days.suffix(7)), age: profile.age, sex: profile.sex, waistCm: profile.waistCm,
+            vo2Estimate: (await repo.exploreSeries(key: "vo2max_est", source: "my-whoop")).last?.value)
+        contributions = VitalityEngine.contributions(VitalityEngine.weeklyInputs(week))
         loaded = true
     }
 }

@@ -16,28 +16,7 @@ enum NunaZoneMinutes {
 
     /// Every day's five zone totals, read one day at a time so a long window is never cut short by the sample limit of a single read.
     @MainActor static func perDay(repo: Repository, age: Int, days: [Date]) async -> [Date: [Double]] {
-        let cal = Calendar.current
-        let now = Int(Date().timeIntervalSince1970)
-        let (maxHR, restingByDay, latestResting) = reserve(repo: repo, age: age)
-        var out: [Date: [Double]] = [:]
-        await withTaskGroup(of: (Date, [Double]).self) { group in
-            var running = 0
-            for day in days {
-                if running >= 4, let done = await group.next() { out[done.0] = done.1; running -= 1 }
-                let from = Int(day.timeIntervalSince1970)
-                let nextDay = Int((cal.date(byAdding: .day, value: 1, to: day) ?? day).timeIntervalSince1970)
-                guard from < now else { out[day] = [Double](repeating: 0, count: 5); continue }
-                let resting = restingByDay[Repository.localDayKey(day)] ?? latestResting
-                group.addTask { [repo] in
-                    let samples = await repo.hrSamples(from: from, to: min(nextDay - 1, now), limit: 200_000)
-                    let minutes = HRZones.timeInZone(samples, zoneSet: .reserveBands(maxHR: maxHR, restingHR: resting)).seconds.map { $0 / 60 }
-                    return (day, minutes)
-                }
-                running += 1
-            }
-            for await done in group { out[done.0] = done.1 }
-        }
-        return out
+        await ZoneMinutes.perDay(repo: repo, age: age, days: days)
     }
 
     /// The five zone totals inside one window (a workout), against the resting heart rate of the day it belongs to.

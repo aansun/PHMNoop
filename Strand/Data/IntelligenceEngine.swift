@@ -2538,22 +2538,15 @@ final class IntelligenceEngine: ObservableObject {
         }
 
         // ── Vitality / Body Age (Phase 7) , weekly, keyed to the week's Saturday ────────────────────
-        // Roll the last 7 days' wearable signals into the mortality-hazard model and upsert a weekly
-        // Vitality (0–100) + Body Age. VitalityEngine gates on ≥3 inputs, so a sparse week writes nothing.
-        // (VO₂max is omitted here , fitness is already its own Fitness Age headline; Vitality leans on
-        // resting HR, sleep duration + regularity, HRV-vs-age-norm, and steps.)
-        let vNights = fa7.compactMap { $0.totalSleepMin }.map { Double($0) / 60.0 }.filter { $0 > 0 }
-        let vHRVs = fa7.compactMap { $0.avgHrv }
-        let vSteps = fa7.compactMap { $0.steps }.map(Double.init)
-        let vInputs = VitalityEngine.Inputs(
-            chronoAge: Double(profile.age),
-            restingHR: faRHRs.isEmpty ? nil : IntelligenceEngine.medianOf(faRHRs),
-            sleepHours: vNights.isEmpty ? nil : vNights.reduce(0, +) / Double(vNights.count),
-            sleepConsistency: VitalityEngine.sleepConsistency(nightlyHours: vNights),
-            rmssd: vHRVs.isEmpty ? nil : IntelligenceEngine.medianOf(vHRVs),
-            rmssdNorm: VitalityEngine.rmssdNorm(forAge: Double(profile.age)),
-            steps: vSteps.isEmpty ? nil : vSteps.reduce(0, +) / Double(vSteps.count))
-        if let vRes = VitalityEngine.compute(vInputs) {
+        // Roll the last 7 days into the mortality-hazard model and upsert a weekly Vitality (0–100) + Body Age.
+        // VitalityEngine gates on ≥3 inputs, so a sparse week writes nothing. The week is read by the same
+        // VitalityWeekReader the Health screen's breakdown and the fitness age card use, so the number stored,
+        // the factors listed beside it and the figure drawn cannot differ: the nine inputs of the WHOOP Healthspan
+        // page (resting HR, cardio fitness, sleep duration + regularity, steps, zones 1–3 and 4–5, strength, lean body mass).
+        let vWeek = await VitalityWeekReader.read(
+            repo: repo, days: Array(fa7), age: profile.age, sex: profile.sex, waistCm: profile.waistCm,
+            vo2Estimate: faPts.first(where: { $0.key == "vo2max_est" })?.value)
+        if let vRes = VitalityEngine.compute(VitalityEngine.weeklyInputs(vWeek)) {
             let satKey = IntelligenceEngine.saturdayKey(onOrBefore: newestDay)
             _ = try? await store.upsertMetricSeries([
                 MetricPoint(day: satKey, key: "vitality", value: vRes.vitality),

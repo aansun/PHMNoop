@@ -248,6 +248,66 @@ public enum VitalityEngine {
         }
     }
 
+    // MARK: A week of data, as the Body Age reads it
+
+    /// What a week of wearing the strap hands the Body Age, before any of it is averaged: the one description every reader of it (the weekly job that stores
+    /// `body_age`, the Health screen's breakdown, the fitness age page's card) builds, so the figure stored, the one listed and the one drawn cannot differ.
+    public struct WeekData: Equatable, Sendable {
+        public var chronoAge: Double
+        public var sex: String
+        /// Resting heart rate of each night with one.
+        public var restingHRs: [Double]
+        /// Hours asleep, one per night.
+        public var sleepNights: [Double]
+        /// The sleep consistency (percent, 0–100) the app stored from the timing of sleep, for the days that have it.
+        public var storedConsistency: [Double]
+        /// Steps of each day with a count.
+        public var steps: [Double]
+        /// A VO₂ max worth reading against the reference: one the wearer entered, or one worked out with their waist. Never the estimate that needs neither.
+        public var cardioVO2: Double?
+        /// Minutes in heart-rate zones 1–3 and 4–5 over the week; nil when there were no heart-rate samples left to read (a worn week always has some zone 1).
+        public var zonesLowMin: Double?
+        public var zonesHighMin: Double?
+        /// Minutes of strength training over the week.
+        public var strengthMin: Double
+        /// Lean body mass as a percentage of body weight (100 minus body fat), when a body fat reading exists.
+        public var leanMassPct: Double?
+
+        public init(chronoAge: Double, sex: String, restingHRs: [Double] = [], sleepNights: [Double] = [], storedConsistency: [Double] = [],
+                    steps: [Double] = [], cardioVO2: Double? = nil, zonesLowMin: Double? = nil, zonesHighMin: Double? = nil,
+                    strengthMin: Double = 0, leanMassPct: Double? = nil) {
+            self.chronoAge = chronoAge; self.sex = sex; self.restingHRs = restingHRs; self.sleepNights = sleepNights
+            self.storedConsistency = storedConsistency; self.steps = steps; self.cardioVO2 = cardioVO2
+            self.zonesLowMin = zonesLowMin; self.zonesHighMin = zonesHighMin; self.strengthMin = strengthMin; self.leanMassPct = leanMassPct
+        }
+    }
+
+    /// The median of a list, nil when it is empty.
+    public static func median(_ xs: [Double]) -> Double? {
+        let s = xs.sorted()
+        guard !s.isEmpty else { return nil }
+        return s.count % 2 == 1 ? s[s.count / 2] : (s[s.count / 2 - 1] + s[s.count / 2]) / 2
+    }
+
+    /// The nine inputs of a week (heart-rate variability, which `contributions` can also read, is left out so they are the nine the WHOOP Healthspan page lists):
+    /// resting heart rate by median, sleep and steps by mean, regularity from the stored consistency when three days have it (else from the nights' spread),
+    /// steps only from three days up, and the strength minutes only when the week was worn (zones read) or some strength was done.
+    public static func weeklyInputs(_ w: WeekData) -> Inputs {
+        func mean(_ xs: [Double]) -> Double? { xs.isEmpty ? nil : xs.reduce(0, +) / Double(xs.count) }
+        let consistency: Double? = w.storedConsistency.count >= 3
+            ? clamp((mean(w.storedConsistency) ?? 0) / 100, 0, 1)
+            : sleepConsistency(nightlyHours: w.sleepNights)
+        let hasZones = w.zonesLowMin != nil && w.zonesHighMin != nil
+        return Inputs(
+            chronoAge: w.chronoAge, restingHR: median(w.restingHRs),
+            vo2max: w.cardioVO2, expectedVO2max: w.cardioVO2 == nil ? nil : expectedVO2max(age: w.chronoAge, sex: w.sex),
+            sleepHours: mean(w.sleepNights), sleepConsistency: consistency,
+            steps: w.steps.count >= 3 ? mean(w.steps) : nil,
+            zonesLowMin: w.zonesLowMin, zonesHighMin: w.zonesHighMin,
+            strengthMin: hasZones || w.strengthMin > 0 ? w.strengthMin : nil,
+            leanMassPct: w.leanMassPct)
+    }
+
     /// Full Vitality + Body Age. Returns nil until at least `minFactors` inputs are present.
     public static func compute(_ inputs: Inputs) -> Result? {
         guard inputs.chronoAge > 0 else { return nil }

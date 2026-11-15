@@ -131,6 +131,44 @@ final class VitalityEngineTests: XCTestCase {
         XCTAssertEqual(VitalityEngine.expectedVO2max(age: 10, sex: "male"), VitalityEngine.expectedVO2max(age: 20, sex: "male"), accuracy: 1e-9)
     }
 
+    /// The WHOOP-week the comparison used builds the inputs the card read: medians and means as described, no HRV, VO₂ against the male reference.
+    func testWeeklyInputsFromAWeek() {
+        let w = VitalityEngine.WeekData(
+            chronoAge: 36.6, sex: "male", restingHRs: [60, 62, 61, 59, 63], sleepNights: [6, 6.1, 6, 6.05],
+            storedConsistency: [70, 72, 71], steps: [4900, 5000, 4930], cardioVO2: 36,
+            zonesLowMin: 38, zonesHighMin: 0, strengthMin: 34, leanMassPct: 60.2)
+        let i = VitalityEngine.weeklyInputs(w)
+        XCTAssertEqual(i.restingHR!, 61, accuracy: 1e-9)
+        XCTAssertEqual(i.sleepHours!, 6.0375, accuracy: 1e-9)
+        XCTAssertEqual(i.sleepConsistency!, 0.71, accuracy: 1e-9)
+        XCTAssertEqual(i.steps!, 4943.333333, accuracy: 1e-3)
+        XCTAssertEqual(i.expectedVO2max!, VitalityEngine.expectedVO2max(age: 36.6, sex: "male"), accuracy: 1e-9)
+        XCTAssertNil(i.rmssd)
+        XCTAssertEqual(i.strengthMin, 34)
+        XCTAssertEqual(VitalityEngine.compute(i)!.factorsUsed, 9)
+    }
+
+    /// Thin weeks leave inputs out instead of counting them as zero: under three step days, no zones read, and no strength done.
+    func testWeeklyInputsLeaveOutWhatIsMissing() {
+        let thin = VitalityEngine.weeklyInputs(.init(chronoAge: 40, sex: "female", restingHRs: [60], sleepNights: [7, 7, 7], steps: [5000, 6000]))
+        XCTAssertNil(thin.steps)
+        XCTAssertNil(thin.zonesLowMin)
+        XCTAssertNil(thin.strengthMin)
+        XCTAssertNil(thin.vo2max)
+        XCTAssertNil(thin.expectedVO2max)
+        XCTAssertNil(thin.leanMassPct)
+        XCTAssertEqual(thin.sleepConsistency!, 1.0, accuracy: 1e-9)   // from the spread of three equal nights
+        // No zones but some strength done: the strength counts; zones read with none done: a zero counts.
+        XCTAssertEqual(VitalityEngine.weeklyInputs(.init(chronoAge: 40, sex: "male", strengthMin: 30)).strengthMin, 30)
+        XCTAssertEqual(VitalityEngine.weeklyInputs(.init(chronoAge: 40, sex: "male", zonesLowMin: 10, zonesHighMin: 0, strengthMin: 0)).strengthMin, 0)
+    }
+
+    func testMedian() {
+        XCTAssertNil(VitalityEngine.median([]))
+        XCTAssertEqual(VitalityEngine.median([3, 1, 2])!, 2)
+        XCTAssertEqual(VitalityEngine.median([4, 1, 2, 3])!, 2.5)
+    }
+
     func testRmssdNormByAge() {
         XCTAssertEqual(VitalityEngine.rmssdNorm(forAge: 20), 47, accuracy: 0.01)
         XCTAssertEqual(VitalityEngine.rmssdNorm(forAge: 40), 33, accuracy: 0.01)
