@@ -316,6 +316,9 @@ enum NunaVO2Level {
         return last.1
     }
 
+    /// The VO₂ max an average person of this age has (the middle of the normative curve), the reference the Body Age reads a wearer's figure against.
+    static func expected(age: Int) -> Double { at(NunaVO2MaxInfo.average, Double(age)) }
+
     static func assess(vo2: Double, age: Int) -> Result {
         let a = Double(age)
         let low = at(NunaVO2MaxInfo.low, a), mid = at(NunaVO2MaxInfo.average, a), high = at(NunaVO2MaxInfo.high, a)
