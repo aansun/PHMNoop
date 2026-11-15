@@ -289,7 +289,7 @@ struct NunaProfileView: View {
         .task(id: repo.refreshSeq) {
             workouts = await repo.workoutRows()
             let m = NunaTodayModel(); await m.load(repo: repo, profile: profile)
-            fitnessAge = m.extras["fitness_age"]
+            fitnessAge = m.extras["body_age"]
         }
     }
 
@@ -366,7 +366,7 @@ struct NunaProfileView: View {
                     NunaLevelBadge(level: level, size: 66).frame(height: 78)
                 }
             }.buttonStyle(.plain)
-            Button { router.pendingMetricKey = "fitness_age" } label: {
+            Button { router.pendingMetricKey = "body_age" } label: {
                 profileCard(title: "Fitness age", subtitle: fitnessAge.map { String(localized: "\(Int($0.rounded())) years") } ?? String(localized: "Needs a few more days of data before it can be worked out."),
                             chevron: true) {
                     Circle().fill(RadialGradient(colors: [Color(red: 0.2, green: 0.2, blue: 0.22), Color(red: 0.62, green: 0.28, blue: 0.75).opacity(0.85)], center: .center, startRadius: 12, endRadius: 36))
