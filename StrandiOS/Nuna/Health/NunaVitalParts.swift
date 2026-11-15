@@ -202,6 +202,20 @@ private enum NunaOrbField {
         return (0..<90).map { _ in (g.next() * 2 * .pi, 0.18 + 0.8 * g.next().squareRoot(), 1 + 3.2 * g.next() * g.next(), 0.35 + 0.65 * g.next()) }
     }()
 
+    struct Spark { let angle: Double, depth: Double, size: Double, alpha: Double, speed: Double, phase: Double, drift: Double, bright: Bool }
+
+    /// Deterministic, so the field does not flicker between redraws. Most sparks sit in the rim, a few stray into the dark heart.
+    static let sparks: [Spark] = {
+        var g = SplitMix(seed: 41)
+        return (0..<340).map { _ in
+            let u = g.next()
+            let big = g.next()
+            return Spark(angle: g.next() * 2 * .pi, depth: u < 0.09 ? g.next() * 0.3 : 0.3 + 0.7 * g.next().squareRoot(),
+                         size: 1.4 + 3.0 * big * big + (big > 0.93 ? 2.2 : 0), alpha: 0.5 + 0.5 * g.next(),
+                         speed: 0.6 + 2.2 * g.next(), phase: g.next() * 2 * .pi, drift: (g.next() - 0.5) * 0.12, bright: g.next() > 0.82)
+        }
+    }()
+
     struct SplitMix {
         var state: UInt64
         init(seed: UInt64) { state = seed }
@@ -218,9 +232,9 @@ private enum NunaOrbField {
 
 }
 
-/// The fitness-age orb: an organic blob with a soft glow and a field of small particles, the number in its middle. The colour
-/// says which way the comparison goes (green younger, amber older, neutral about the same). The shape drifts slowly and stands
-/// still when Reduce Motion is on. Pure decoration around one stored number.
+/// The fitness-age orb, as on the reference: an amorphous blob that slowly changes shape, a black heart with the colour gathering towards a thin bright rim, and a
+/// field of small sparks along the rim that drift and twinkle, the number in its middle. The colour says which way the comparison goes (amber older, blue about the
+/// same, green younger). The shape and the sparks stand still when Reduce Motion is on. Pure decoration around one stored number.
 struct NunaFitnessOrb<Center: View>: View {
     let tint: Color
     var size: CGFloat = 270
@@ -229,16 +243,18 @@ struct NunaFitnessOrb<Center: View>: View {
     @Environment(\.colorScheme) private var scheme
     @ObservedObject private var motion = NoopMotionState.shared
 
-    /// Closed smooth blob: a circle whose radius is nudged by a few low harmonics.
-    private static func blob(in rect: CGRect, phase: Double, grow: Double = 1) -> Path {
-        let c = CGPoint(x: rect.midX, y: rect.midY)
-        let base = min(rect.width, rect.height) / 2 * 0.74 * grow
-        let steps = 120
+    /// How far the outline is pushed out or in at an angle, a handful of slow waves running at their own speeds.
+    private static func wobble(_ t: Double, _ time: Double) -> Double {
+        0.050 * sin(2 * t + time * 0.45) + 0.042 * sin(3 * t - time * 0.60 + 1.1) + 0.034 * sin(4 * t + time * 0.38 + 2.3)
+            + 0.026 * sin(5 * t - time * 0.52 + 0.7) + 0.016 * sin(7 * t + time * 0.70)
+    }
+
+    private static func outline(center c: CGPoint, radius: CGFloat, time: Double) -> Path {
         var p = Path()
+        let steps = 160
         for i in 0...steps {
             let t = Double(i) / Double(steps) * 2 * .pi
-            let wob = 0.055 * sin(2 * t + phase) + 0.04 * sin(3 * t - phase * 1.3) + 0.025 * sin(5 * t + phase * 0.7)
-            let r = base * (1 + wob)
+            let r = radius * (1 + wobble(t, time))
             let pt = CGPoint(x: c.x + CGFloat(cos(t) * r), y: c.y + CGFloat(sin(t) * r))
             if i == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
         }
@@ -247,36 +263,46 @@ struct NunaFitnessOrb<Center: View>: View {
     }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 24, paused: motion.poseStill(reduceMotion))) { tl in
-            let phase = motion.poseStill(reduceMotion) ? 0.6 : tl.date.timeIntervalSinceReferenceDate * 0.35
+        let still = motion.poseStill(reduceMotion)
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: still)) { tl in
+            let time = still ? 1.4 : tl.date.timeIntervalSinceReferenceDate
             ZStack {
                 Canvas { ctx, sz in
-                    let rect = CGRect(origin: .zero, size: sz)
-                    // Outer glow
+                    let c = CGPoint(x: sz.width / 2, y: sz.height / 2)
+                    // The blob fills most of the room; the glow takes the rest.
+                    let base = min(sz.width, sz.height) / 2 * 0.78
+                    let shape = Self.outline(center: c, radius: base, time: time)
                     ctx.drawLayer { l in
-                        l.addFilter(.blur(radius: 18))
-                        l.fill(Self.blob(in: rect, phase: phase, grow: 1.02), with: .color(tint.opacity(0.38)))
+                        l.addFilter(.blur(radius: base * 0.07))
+                        l.stroke(shape, with: .color(tint.opacity(0.55)), lineWidth: base * 0.05)
+                        l.fill(shape, with: .color(tint.opacity(0.10)))
                     }
-                    let shape = Self.blob(in: rect, phase: phase)
-                    // The core carries the figure in the text colour, so it is dark on a dark theme and light on a light one: a black core under
-                    // dark text on the light theme hid the number and its caption.
+                    // The heart carries the figure in the text colour, so it is dark on a dark theme and light on a light one. The colour only gathers
+                    // towards the rim, where it is brightest along the outline.
                     let core = scheme == .dark ? Color.black : NunaPalette.card
                     ctx.fill(shape, with: .radialGradient(Gradient(stops: [
-                        .init(color: core.opacity(0.92), location: 0.0),
-                        .init(color: core.opacity(0.85), location: 0.45),
-                        .init(color: tint.opacity(0.55), location: 0.9),
-                        .init(color: tint.opacity(0.85), location: 1.0)]),
-                        center: CGPoint(x: rect.midX, y: rect.midY), startRadius: 0, endRadius: min(sz.width, sz.height) / 2 * 0.9))
-                    ctx.stroke(shape, with: .color(tint.opacity(0.9)), lineWidth: 1.6)
-                    // Particles, drifting a little
-                    let rad = min(sz.width, sz.height) / 2 * 0.68
-                    for p in NunaOrbField.particles {
-                        let a = p.a + phase * 0.12 * (p.r > 0.6 ? 1 : -1)
-                        let r = rad * p.r
-                        let pt = CGPoint(x: rect.midX + CGFloat(cos(a) * r), y: rect.midY + CGFloat(sin(a) * r))
-                        // brighter near the rim
-                        let alpha = p.o * (0.35 + 0.65 * p.r)
-                        ctx.fill(Path(ellipseIn: CGRect(x: pt.x - p.s / 2, y: pt.y - p.s / 2, width: p.s, height: p.s)), with: .color(tint.opacity(alpha)))
+                        .init(color: core, location: 0.0),
+                        .init(color: core.opacity(0.97), location: 0.50),
+                        .init(color: tint.opacity(0.12), location: 0.64),
+                        .init(color: tint.opacity(0.34), location: 0.82),
+                        .init(color: tint.opacity(0.62), location: 0.94),
+                        .init(color: tint.opacity(0.86), location: 1.0)]),
+                        center: c, startRadius: 0, endRadius: base * 1.08))
+                    ctx.stroke(shape, with: .color(tint.opacity(0.95)), lineWidth: 1.8)
+                    for sp in NunaOrbField.sparks {
+                        let a = sp.angle + time * sp.drift
+                        let edge = base * (1 + Self.wobble(a, time))
+                        let r = edge * (0.34 + 0.63 * sp.depth)
+                        let pt = CGPoint(x: c.x + CGFloat(cos(a) * r), y: c.y + CGFloat(sin(a) * r))
+                        let twinkle = still ? 0.85 : 0.5 + 0.5 * sin(time * sp.speed + sp.phase)
+                        let alpha = min(sp.alpha * twinkle * (0.45 + 0.55 * sp.depth), 1)
+                        let d = CGFloat(sp.size) * min(sz.width, 330) / 330
+                        if sp.size > 2.6 {
+                            let h = d * 2.8
+                            ctx.fill(Path(ellipseIn: CGRect(x: pt.x - h / 2, y: pt.y - h / 2, width: h, height: h)), with: .color(tint.opacity(alpha * 0.32)))
+                        }
+                        ctx.fill(Path(ellipseIn: CGRect(x: pt.x - d / 2, y: pt.y - d / 2, width: d, height: d)),
+                                 with: .color((sp.bright ? NunaPalette.textPrimary : tint).opacity(alpha)))
                     }
                 }
                 center()
@@ -284,6 +310,37 @@ struct NunaFitnessOrb<Center: View>: View {
         }
         .frame(width: size, height: size)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// What the orb says in its middle: the fitness age large, its name small and grey, and how far it is from the calendar age in the pale blue of the reference.
+struct NunaFitnessOrbCenter: View {
+    let value: Double?
+    /// Calendar age minus fitness age, in whole years; positive is younger. nil leaves the line out.
+    let gap: Int?
+    var numberSize: CGFloat = 46
+    var captionSize: CGFloat = 13
+    var showsGap = true
+
+    var body: some View {
+        VStack(spacing: numberSize > 40 ? 5 : 1) {
+            Text(verbatim: value.map { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) } ?? "–")
+                .font(.nuna(size: numberSize, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(numberSize)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            Text("Fitness age").font(.nuna(size: captionSize, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            if showsGap, let gap {
+                Group { if gap == 0 { Text("About your age") } else { Text(nunaYearsGap(gap)) } }
+                    .font(.nuna(size: 16, weight: .medium)).foregroundStyle(NunaPalette.restLight).textCase(nil).padding(.top, 2)
+            }
+        }
+    }
+}
+
+/// The colour of the comparison, shared by every place that shows it: amber when the fitness age is older than the calendar age, green when younger, blue when about
+/// the same.
+enum NunaFitnessAgeTone {
+    static func tint(gap: Int?) -> Color {
+        guard let gap else { return NunaPalette.textSecondary }
+        return gap > 0 ? NunaPalette.charge : (gap < 0 ? NunaPalette.caution : NunaPalette.recoveryBlue)
     }
 }
 #endif
@@ -300,19 +357,27 @@ struct NunaPaceDial: View {
     var body: some View {
         VStack(spacing: 8) {
             HStack {
-                Text("Slow").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                HStack(spacing: 6) {
+                    Image(systemName: "tortoise.fill").font(.nuna(size: 14))
+                    Text("Slow").font(.nuna(size: 14, weight: .medium)).textCase(nil)
+                }
                 Spacer()
-                Text("Fast").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                HStack(spacing: 6) {
+                    Text("Fast").font(.nuna(size: 14, weight: .medium)).textCase(nil)
+                    Image(systemName: "hare.fill").font(.nuna(size: 14))
+                }
             }
+            .foregroundStyle(NunaPalette.textSecondary)
+            // The reading has a row of its own over its mark, so it can sit at either end of the scale without covering Slow or Fast.
             if showsValue, let value {
                 GeometryReader { geo in
                     let w = geo.size.width
                     let px = CGFloat((value - lo) / (hi - lo)) * w
                     Text(verbatim: String(format: "%.1fx", locale: AppLanguage.activeLocale, value))
-                        .font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize()
-                        .position(x: min(max(px, 30), max(w - 30, 30)), y: 16)
+                        .font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize()
+                        .position(x: min(max(px, 30), max(w - 30, 30)), y: 18)
                 }
-                .frame(height: 30)
+                .frame(height: 36)
             }
             GeometryReader { geo in
                 let w = geo.size.width
