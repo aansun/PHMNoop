@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// The two vital-sign pictures that the WHOOP metric set does not carry, drawn in the same thin outline: blood oxygen (a drop with two bubbles)
-/// and temperature (a thermometer). Named `vital:spo2` and `vital:temp` wherever an icon name is taken (see `NunaGlyph`).
+/// The pictures that the WHOOP metric set does not carry, drawn in the same thin outline: blood oxygen (a drop with two bubbles), temperature (a thermometer),
+/// fitness age (a flower of overlapping petals) and pace of aging (a row of upright ticks that shorten, with a dot beneath). Named `vital:spo2`, `vital:temp`,
+/// `vital:fitness-age` and `vital:pace` wherever an icon name is taken (see `NunaGlyph`).
 public struct NunaVitalGlyph: View {
-    public enum Kind { case spo2, temp }
+    public enum Kind { case spo2, temp, fitnessAge, pace }
     let kind: Kind
     let size: CGFloat
     public init(_ kind: Kind, size: CGFloat) { self.kind = kind; self.size = size }
@@ -12,6 +13,8 @@ public struct NunaVitalGlyph: View {
         switch name {
         case "vital:spo2": self.init(.spo2, size: size)
         case "vital:temp": self.init(.temp, size: size)
+        case "vital:fitness-age": self.init(.fitnessAge, size: size)
+        case "vital:pace": self.init(.pace, size: size)
         default: return nil
         }
     }
@@ -60,6 +63,23 @@ struct NunaVitalShape: Shape {
             arc(&p, 12, 19, 4.5, from: -41, to: 221)
             p.closeSubpath()
             circle(&p, 12, 19, 1.8)
+        case .fitnessAge:
+            // Eight petals round a small centre, each a circle that overlaps its neighbours.
+            for i in 0..<8 {
+                let a = Double(i) * 45 * .pi / 180
+                circle(&p, 12 + 5.4 * cos(a), 12 + 5.4 * sin(a), 3.9)
+            }
+            circle(&p, 12, 12, 2.2)
+        case .pace:
+            // Upright ticks that shorten from left to right, and a dot under the first.
+            let heights: [Double] = [16, 16, 14, 12, 10, 8, 7, 6]
+            for (i, h) in heights.enumerated() {
+                let x = 3 + Double(i) * 2.5
+                p.move(to: pt(x, 10.5 - h / 2))
+                p.addLine(to: pt(x, 10.5 + h / 2))
+            }
+            p.move(to: pt(3, 21.5))
+            p.addLine(to: pt(3.05, 21.5))
         }
         return p
     }

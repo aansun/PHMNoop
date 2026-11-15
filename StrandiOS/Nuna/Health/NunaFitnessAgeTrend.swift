@@ -80,7 +80,7 @@ struct NunaFitnessAgeTrendView: View {
         let pts = inWindow
         let average: Double? = pts.isEmpty ? nil : pts.map(\.value).reduce(0, +) / Double(pts.count)
         NunaDetailScreen("Trend view", centersTitle: true) {
-            NunaTrendNameBox(icon: isPace ? "speedometer" : "figure.run", title: isPace ? "Pace of aging" : "Fitness age")
+            NunaTrendNameBox(icon: isPace ? "vital:pace" : "vital:fitness-age", title: isPace ? "Pace of aging" : "Fitness age")
             header(pts, average)
             Text(verbatim: sentence(pts, average)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                 .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
