@@ -475,7 +475,7 @@ struct NunaFitnessAgeView: View {
             heading("Trend view")
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
-                    cap("Fitness age trend")
+                    trendHead("Fitness age trend", .fitnessAge)
                     HStack(spacing: 18) {
                         legend(RoundedRectangle(cornerRadius: 2, style: .continuous).fill(tint).frame(width: 14, height: 14), "Your fitness age")
                         legend(RoundedRectangle(cornerRadius: 2, style: .continuous).fill(NunaPalette.textPrimary).frame(width: 14, height: 14), "Calendar age")
@@ -487,13 +487,22 @@ struct NunaFitnessAgeView: View {
             if paces.count >= 2 {
                 NunaCard {
                     VStack(alignment: .leading, spacing: 12) {
-                        cap("Pace of aging trend")
+                        trendHead("Pace of aging trend", .paceOfAging)
                         NunaLine2Chart(points: paces, color: NunaPalette.recoveryBlue, decimals: 1, reference: paces.map { (date: $0.date, value: 1.0) },
                                        referenceColor: NunaPalette.textPrimary, labelsReference: false, marksReference: false, lastValueOnly: true, weekdayAxis: false, height: 200)
                     }
                 }
             }
         }
+    }
+
+    /// The title of a trend card, with the arrow that opens that reading's own Trend view.
+    private func trendHead(_ title: LocalizedStringKey, _ page: NunaTrendPage) -> some View {
+        NavigationLink(value: NunaTodayRoute.trend(page)) {
+            HStack { cap(title); Spacer(minLength: 0); Image(systemName: "chevron.right").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private func legend<S: View>(_ mark: S, _ text: LocalizedStringKey) -> some View {

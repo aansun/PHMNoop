@@ -7,15 +7,16 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
     case effort, steps, hrZonesLow, hrZonesHigh, hrZonesAll, strengthTime, avgHr, totalVolumeLoad, calories, vo2max
     case charge, hrv, rhr, respiratory, skinTemp
     case restPerformance, timeInBed, hoursNeededHours, hoursNeededPct, consistency, restorative, efficiency, debt
+    case fitnessAge, paceOfAging
     case weight, leanBodyMass, vitality, spo2, stressTotal, stressNonActivity, stressSleep
 
     var id: String { rawValue }
 
     enum Section: CaseIterable {
-        case effort, charge, rest, other
+        case effort, charge, rest, health, other
 
         var title: LocalizedStringKey {
-            switch self { case .effort: return "Strain"; case .charge: return "Recovery"; case .rest: return "Sleep"; case .other: return "Other" }
+            switch self { case .effort: return "Strain"; case .charge: return "Recovery"; case .rest: return "Sleep"; case .health: return "Health"; case .other: return "Other" }
         }
         var pages: [NunaTrendPage] { NunaTrendPage.allCases.filter { $0.section == self } }
     }
@@ -24,6 +25,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         switch self {
         case .effort, .steps, .calories, .hrZonesLow, .hrZonesHigh, .hrZonesAll, .strengthTime, .avgHr, .totalVolumeLoad, .vo2max: return .effort
         case .charge, .hrv, .rhr, .respiratory, .skinTemp: return .charge
+        case .fitnessAge, .paceOfAging: return .health
         case .weight, .leanBodyMass, .vitality, .spo2, .stressTotal, .stressNonActivity, .stressSleep: return .other
         default: return .rest
         }
@@ -54,6 +56,8 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .debt: return "Sleep debt"
         case .vo2max: return "VO₂ max"
         case .skinTemp: return "Skin temperature"
+        case .fitnessAge: return "Fitness age"
+        case .paceOfAging: return "Pace of aging"
         case .weight: return "Weight"
         case .leanBodyMass: return "Lean body mass"
         case .vitality: return "Vitality"
@@ -89,6 +93,8 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .efficiency: return "met:sleep-efficiency"
         case .vo2max: return "met:vo2-max"
         case .skinTemp: return "vital:temp"
+        case .fitnessAge: return "figure.run"
+        case .paceOfAging: return "speedometer"
         case .weight: return "met:weight"
         case .leanBodyMass: return "met:lean-body-mass"
         case .vitality: return "sparkles"
@@ -146,6 +152,8 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .debt: NunaSleepDebtTrendView(endingDaysAgo: endingDaysAgo)
         case .vo2max: NunaLineTrendView.forMetric("vo2max_est", endingDaysAgo: endingDaysAgo)
         case .skinTemp: NunaLineTrendView.forMetric("skin_temp", endingDaysAgo: endingDaysAgo)
+        case .fitnessAge: NunaFitnessAgeTrendView(kind: .fitnessAge)
+        case .paceOfAging: NunaFitnessAgeTrendView(kind: .pace)
         case .weight: NunaLineTrendView.forMetric("weight", endingDaysAgo: endingDaysAgo)
         case .leanBodyMass: NunaLeanMassTrendView()
         case .vitality: NunaLineTrendView.forMetric("vitality", endingDaysAgo: endingDaysAgo)
@@ -195,7 +203,7 @@ struct NunaTrendHost: View {
 }
 
 /// The box that names the reading at the top of a trend page. Inside a `NunaTrendHost` it is a button with a chevron that opens the list of every
-/// trend page, grouped as Effort, Charge, Rest and Other, the page on show lit; on its own it is only the name.
+/// trend page, grouped as Effort, Charge, Rest, Health and Other, the page on show lit; on its own it is only the name.
 struct NunaTrendNameBox: View {
     let icon: String
     let title: LocalizedStringKey
