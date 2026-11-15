@@ -98,6 +98,15 @@ final class VitalityEngineTests: XCTestCase {
         XCTAssertEqual(r.factorsUsed, 6)
     }
 
+    /// The per-factor years add up to the Body Age's distance from the calendar age (apart from the clamp).
+    func testFactorYearsSumToTheBodyAge() {
+        let inputs = VitalityEngine.Inputs(chronoAge: 40, restingHR: 60, sleepHours: 6, sleepConsistency: 0.7, rmssd: 60, rmssdNorm: 33,
+                                           zonesLowMin: 40, zonesHighMin: 0, strengthMin: 30)
+        let r = VitalityEngine.compute(inputs)!
+        let total = r.contributions.reduce(0) { $0 + VitalityEngine.years(of: $1) }
+        XCTAssertEqual(r.bodyAge, 40 + total, accuracy: 1e-9)
+    }
+
     func testRmssdNormByAge() {
         XCTAssertEqual(VitalityEngine.rmssdNorm(forAge: 20), 47, accuracy: 0.01)
         XCTAssertEqual(VitalityEngine.rmssdNorm(forAge: 40), 33, accuracy: 0.01)

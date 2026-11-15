@@ -48,6 +48,7 @@ struct NunaFitnessAgeView: View {
     @State private var opened: Set<String> = []
     @State private var showInfo = false
     @State private var showWaist = false
+    @State private var healthspan: NunaHealthspanResult?
 
     // MARK: Weeks
 
@@ -127,6 +128,7 @@ struct NunaFitnessAgeView: View {
                             hero
                             paceSection
                             factors
+                            NunaHealthspanCard(computed: healthspan)
                             trends
                         } else {
                             notReady
@@ -149,6 +151,10 @@ struct NunaFitnessAgeView: View {
             series = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 400)
             vo2Series = await repo.exploreSeries(key: "vo2max_est", source: "my-whoop", days: 400)
             loaded = true
+        }
+        // The Body Age of the week on show: read again when the week, the stored days or the profile change.
+        .task(id: "\(current?.day ?? "")-\(days.count)-\(repo.refreshSeq)-\(profile.age)-\(vo2Series.count)") {
+            healthspan = await NunaHealthspan.compute(days: days, vo2: vo2, repo: repo, profile: profile)
         }
         .sheet(isPresented: $showWaist) { NunaWaistSheet() }
         .sheet(isPresented: $showInfo) { NunaFitnessAgeInfoSheet(pace: pace?.pace).nunaSheetChrome(detents: [.large]) }

@@ -200,6 +200,12 @@ public enum VitalityEngine {
         -0.12 * min(clamp(minutesPerWeek, 0, 600), 60) / 60
     }
 
+    /// The years of age a factor adds (positive, older) or takes away (negative, younger) as `compute` counts it, after the overlap shrink, so a screen
+    /// that lists the factors shows figures that add up to the Body Age.
+    public static func years(of contribution: Contribution) -> Double {
+        contribution.lnHazard * overlapShrink / lnHazardPerYear
+    }
+
     /// Full Vitality + Body Age. Returns nil until at least `minFactors` inputs are present.
     public static func compute(_ inputs: Inputs) -> Result? {
         guard inputs.chronoAge > 0 else { return nil }
