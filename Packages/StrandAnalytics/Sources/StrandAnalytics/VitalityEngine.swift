@@ -38,14 +38,19 @@ public enum VitalityEngine {
         public var rmssd: Double?              // ms, nocturnal HRV
         public var rmssdNorm: Double?          // age/sex-normative RMSSD (the reference)
         public var steps: Double?              // mean daily steps
+        public var zonesLowMin: Double?        // minutes per week in heart-rate zones 1–3
+        public var zonesHighMin: Double?       // minutes per week in heart-rate zones 4–5
+        public var strengthMin: Double?        // minutes per week of strength training
         public init(chronoAge: Double, restingHR: Double? = nil, vo2max: Double? = nil,
                     expectedVO2max: Double? = nil, sleepHours: Double? = nil,
                     sleepConsistency: Double? = nil, rmssd: Double? = nil,
-                    rmssdNorm: Double? = nil, steps: Double? = nil) {
+                    rmssdNorm: Double? = nil, steps: Double? = nil,
+                    zonesLowMin: Double? = nil, zonesHighMin: Double? = nil, strengthMin: Double? = nil) {
             self.chronoAge = chronoAge; self.restingHR = restingHR; self.vo2max = vo2max
             self.expectedVO2max = expectedVO2max; self.sleepHours = sleepHours
             self.sleepConsistency = sleepConsistency; self.rmssd = rmssd
             self.rmssdNorm = rmssdNorm; self.steps = steps
+            self.zonesLowMin = zonesLowMin; self.zonesHighMin = zonesHighMin; self.strengthMin = strengthMin
         }
     }
 
@@ -117,6 +122,9 @@ public enum VitalityEngine {
     ///   • Sleep regularity: most-regular vs least ≈ HR 0.70 (UK Biobank SRI). ref 0.75 of the 0–1 range.
     ///   • HRV (RMSSD): ~16% per relative SD below the age norm (lower HRV = higher hazard).
     ///   • Steps: ~12% per 1,000 steps/day up to ~7k, diminishing to ~11k (pooled step-mortality meta).
+    ///   • Zones 1–3 minutes/week: see `lowZoneEffect`, break-even 150 min (the WHO moderate-activity guideline).
+    ///   • Zones 4–5 minutes/week: see `highZoneEffect`, break-even 30 min.
+    ///   • Strength minutes/week: see `strengthEffect`, break-even 60 min.
     public static func contributions(_ inputs: Inputs) -> [Contribution] {
         var out: [Contribution] = []
         if let rhr = inputs.restingHR {
@@ -147,7 +155,49 @@ public enum VitalityEngine {
             out.append(Contribution(key: "steps", label: "Daily steps",
                                     lnHazard: clamp(deficit, -4, 4) * 0.064))
         }
+        if let m = inputs.zonesLowMin {
+            out.append(Contribution(key: "zonesLow", label: "Heart rate zones 1–3",
+                                    lnHazard: lowZoneEffect(m) - lowZoneEffect(lowZoneBreakEven)))
+        }
+        if let m = inputs.zonesHighMin {
+            out.append(Contribution(key: "zonesHigh", label: "Heart rate zones 4–5",
+                                    lnHazard: highZoneEffect(m) - highZoneEffect(highZoneBreakEven)))
+        }
+        if let m = inputs.strengthMin {
+            out.append(Contribution(key: "strength", label: "Strength activity",
+                                    lnHazard: strengthEffect(m) - strengthEffect(strengthBreakEven)))
+        }
         return out
+    }
+
+    // MARK: Activity-time factors (the three WHOOP inputs beyond the six above)
+    //
+    // Each is an absolute log-hazard curve over minutes per week; a factor's contribution is the curve at the wearer's
+    // minutes minus the curve at the break-even, so someone exactly at the break-even adds nothing. The curves are a
+    // CONSERVATIVE reading of the cited work, not a re-fit: the sources measure self-reported minutes of moderate or vigorous
+    // activity, while these inputs are minutes in heart-rate zones, so the match is approximate. They are the least certain
+    // factors of the model; the overlap shrink below also keeps them from counting the same activity twice with steps.
+
+    /// Weekly minutes at which the activity factors read as neutral.
+    public static let lowZoneBreakEven = 150.0, highZoneBreakEven = 30.0, strengthBreakEven = 60.0
+
+    /// Zones 1–3: Wen et al. 2011 (Lancet): the first ~92 min/week of moderate activity lowers all-cause mortality ~14%, every
+    /// further ~92 min a further ~4%. Flat beyond ~10 h/week.
+    public static func lowZoneEffect(_ minutesPerWeek: Double) -> Double {
+        let m = clamp(minutesPerWeek, 0, 600)
+        return -0.151 * min(m, 92) / 92 - 0.040 * max(0, m - 92) / 92
+    }
+
+    /// Zones 4–5: an extra ~10% lower hazard by two hours a week of vigorous activity on top of the moderate curve
+    /// (the direction of Arem 2015 and Stamatakis 2022; the size is a deliberately small reading of them).
+    public static func highZoneEffect(_ minutesPerWeek: Double) -> Double {
+        -0.0012 * clamp(minutesPerWeek, 0, 120)
+    }
+
+    /// Strength: Momma et al. 2022 (BJSM): 30–60 min/week of muscle-strengthening is linked to roughly 10–17% lower all-cause
+    /// mortality, with no further gain past about an hour.
+    public static func strengthEffect(_ minutesPerWeek: Double) -> Double {
+        -0.12 * min(clamp(minutesPerWeek, 0, 600), 60) / 60
     }
 
     /// Full Vitality + Body Age. Returns nil until at least `minFactors` inputs are present.

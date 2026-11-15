@@ -57,6 +57,47 @@ final class VitalityEngineTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(old.vitality, 0)
     }
 
+    /// Someone exactly at each activity break-even adds no hazard, so the three new factors leave an average person at their age.
+    func testActivityFactorsAtBreakEvenAreNeutral() {
+        let r = VitalityEngine.compute(.init(
+            chronoAge: 40, restingHR: 65, sleepHours: 7.5, sleepConsistency: 0.75,
+            zonesLowMin: 150, zonesHighMin: 30, strengthMin: 60))!
+        XCTAssertEqual(r.bodyAge, 40, accuracy: 0.01)
+        XCTAssertEqual(r.factorsUsed, 6)
+    }
+
+    /// No activity at all ages the wearer: each factor adds hazard against its break-even, in the order the curves give
+    /// (zones 1–3 +0.1757, zones 4–5 +0.036, strength +0.12, hand-computed), and the years follow from the shrink and the Gompertz slope.
+    func testNoActivityAgesTheWearer() {
+        let c = VitalityEngine.contributions(.init(chronoAge: 40, zonesLowMin: 0, zonesHighMin: 0, strengthMin: 0))
+        XCTAssertEqual(c.first { $0.key == "zonesLow" }!.lnHazard, 0.17565, accuracy: 0.001)
+        XCTAssertEqual(c.first { $0.key == "zonesHigh" }!.lnHazard, 0.036, accuracy: 1e-9)
+        XCTAssertEqual(c.first { $0.key == "strength" }!.lnHazard, 0.12, accuracy: 1e-9)
+        let r = VitalityEngine.compute(.init(chronoAge: 40, zonesLowMin: 0, zonesHighMin: 0, strengthMin: 0))!
+        XCTAssertEqual(r.bodyAge, 40 + (0.17565 + 0.036 + 0.12) * 0.75 / VitalityEngine.lnHazardPerYear, accuracy: 0.05)
+    }
+
+    /// More activity than the break-even reads younger (strength is the exception: its break-even already sits at the top of its
+    /// curve, so more than an hour adds nothing), and each curve stops giving at its ceiling.
+    func testActivityBeyondBreakEvenIsProtectiveAndSaturates() {
+        let more = VitalityEngine.contributions(.init(chronoAge: 40, zonesLowMin: 300, zonesHighMin: 90, strengthMin: 120))
+        XCTAssertLessThan(more.first { $0.key == "zonesLow" }!.lnHazard, 0)
+        XCTAssertLessThan(more.first { $0.key == "zonesHigh" }!.lnHazard, 0)
+        XCTAssertEqual(more.first { $0.key == "strength" }!.lnHazard, 0, accuracy: 1e-12)
+        XCTAssertEqual(VitalityEngine.strengthEffect(60), VitalityEngine.strengthEffect(600), accuracy: 1e-12)
+        XCTAssertEqual(VitalityEngine.highZoneEffect(120), VitalityEngine.highZoneEffect(900), accuracy: 1e-12)
+        XCTAssertEqual(VitalityEngine.lowZoneEffect(600), VitalityEngine.lowZoneEffect(5000), accuracy: 1e-12)
+    }
+
+    /// The inputs that existed before are unchanged by the new ones being absent (the old callers read the same).
+    func testExistingInputsUnchangedWithoutActivity() {
+        let r = VitalityEngine.compute(.init(
+            chronoAge: 40, restingHR: 52, vo2max: 55.5, expectedVO2max: 45,
+            sleepHours: 7.5, sleepConsistency: 0.9, rmssd: 54, rmssdNorm: 45, steps: 11000))!
+        XCTAssertEqual(r.bodyAge, 32.42, accuracy: 0.1)
+        XCTAssertEqual(r.factorsUsed, 6)
+    }
+
     func testRmssdNormByAge() {
         XCTAssertEqual(VitalityEngine.rmssdNorm(forAge: 20), 47, accuracy: 0.01)
         XCTAssertEqual(VitalityEngine.rmssdNorm(forAge: 40), 33, accuracy: 0.01)
