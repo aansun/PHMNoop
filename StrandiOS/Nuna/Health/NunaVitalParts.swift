@@ -293,6 +293,8 @@ struct NunaFitnessOrb<Center: View>: View {
 /// in the middle of the useful range. With no reading it shows the empty ruler.
 struct NunaPaceDial: View {
     let value: Double?
+    /// The reading written large above its mark, as on the fitness age page; without it the figure is said somewhere else.
+    var showsValue = false
     private let lo = PaceOfAging.range.lowerBound, hi = PaceOfAging.range.upperBound
 
     var body: some View {
@@ -301,6 +303,16 @@ struct NunaPaceDial: View {
                 Text("Slow").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 Spacer()
                 Text("Fast").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+            if showsValue, let value {
+                GeometryReader { geo in
+                    let w = geo.size.width
+                    let px = CGFloat((value - lo) / (hi - lo)) * w
+                    Text(verbatim: String(format: "%.1fx", locale: AppLanguage.activeLocale, value))
+                        .font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize()
+                        .position(x: min(max(px, 30), max(w - 30, 30)), y: 16)
+                }
+                .frame(height: 30)
             }
             GeometryReader { geo in
                 let w = geo.size.width

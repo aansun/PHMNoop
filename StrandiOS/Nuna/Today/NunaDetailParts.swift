@@ -640,6 +640,8 @@ struct NunaLine2Chart: View {
     var color: Color = NunaPalette.textPrimary
     var decimals = 0
     var baseline: Double?
+    /// Widens the scale to take in the baseline, for one that is the point of the chart (the calendar age beside the fitness age) and not just a mark.
+    var baselineInRange = false
     /// The wearer's typical range for this metric (their own baseline band), shaded behind the line.
     var band: ClosedRange<Double>?
     /// Which way is better, for colouring the move between monthly averages.
@@ -685,7 +687,8 @@ struct NunaLine2Chart: View {
             let segments = monthlyAverages
             let long = !segments.isEmpty
             let week = points.count <= 8
-            let floor = min(lo, band?.lowerBound ?? lo), ceil = max(hi, band?.upperBound ?? hi)
+            let widened: Double? = baselineInRange ? baseline : nil
+            let floor = min(lo, band?.lowerBound ?? lo, widened ?? lo), ceil = max(hi, band?.upperBound ?? hi, widened ?? hi)
             let pad = max((ceil - floor) * 0.15, 0.5)
             VStack(alignment: .leading, spacing: 8) {
                 if band != nil {
