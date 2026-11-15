@@ -117,23 +117,27 @@ public enum VitalityEngine {
         return clamp(1 - cv, 0, 1)
     }
 
+    /// Where the resting heart rate and sleep regularity factors turn neutral. Both were 65 bpm and 0.75 until the colour bars of the WHOOP Healthspan page
+    /// were read for them: neutral at the middle of the 40–80 bpm bar (60) and of the 40–100% consistency bar (70%).
+    public static let restingHRBreakEven = 60.0, consistencyBreakEven = 0.70
+
     /// Compute the per-factor log-hazard contributions present in `inputs`. Each references a population
     /// value, so an average person nets ~0. Published per-unit hazard ratios (conservative, clamped):
-    ///   • Resting HR: +~10.5% all-cause mortality per +10 bpm (UK Biobank / meta-analyses). ref 65.
+    ///   • Resting HR: +~10.5% all-cause mortality per +10 bpm (UK Biobank / meta-analyses). ref `restingHRBreakEven` (60).
     ///   • VO₂max: ~14% per MET (3.5 ml/kg/min) vs the age/sex-expected value (FRIEND). fitter = protective.
     ///   • Sleep duration: U-shaped, optimum ~7.5 h; only deviation beyond ±0.5 h adds hazard (~12%/h).
-    ///   • Sleep regularity: most-regular vs least ≈ HR 0.70 (UK Biobank SRI). ref 0.75 of the 0–1 range.
+    ///   • Sleep regularity: most-regular vs least ≈ HR 0.70 (UK Biobank SRI). ref `consistencyBreakEven` (0.70 of the 0–1 range).
     ///   • HRV (RMSSD): ~16% per relative SD below the age norm (lower HRV = higher hazard).
     ///   • Steps: ~12% per 1,000 steps/day up to ~7k, diminishing to ~11k (pooled step-mortality meta).
-    ///   • Zones 1–3 minutes/week: see `lowZoneEffect`, break-even 150 min (the WHO moderate-activity guideline).
-    ///   • Zones 4–5 minutes/week: see `highZoneEffect`, break-even 30 min.
-    ///   • Strength minutes/week: see `strengthEffect`, break-even 60 min.
+    ///   • Zones 1–3 minutes/week: see `lowZoneEffect`, break-even 92 min (where the Wen et al. curve first bends).
+    ///   • Zones 4–5 minutes/week: see `highZoneEffect`, break-even 10 min.
+    ///   • Strength minutes/week: see `strengthEffect`, break-even 45 min (the middle of the 30–60 min the studies cover).
     ///   • Lean body mass %: see `leanMassEffect`, neutral from 78% up.
     public static func contributions(_ inputs: Inputs) -> [Contribution] {
         var out: [Contribution] = []
         if let rhr = inputs.restingHR {
             out.append(Contribution(key: "rhr", label: "Resting heart rate",
-                                    lnHazard: ((rhr - 65) / 10) * 0.100))
+                                    lnHazard: ((rhr - restingHRBreakEven) / 10) * 0.100))
         }
         if let vo2 = inputs.vo2max, let exp = inputs.expectedVO2max, exp > 0 {
             // (expected − vo2): if fitter than expected this is negative → protective.
@@ -147,7 +151,7 @@ public enum VitalityEngine {
         }
         if let c = inputs.sleepConsistency {
             out.append(Contribution(key: "consistency", label: "Sleep regularity",
-                                    lnHazard: (0.75 - clamp(c, 0, 1)) * 0.450))
+                                    lnHazard: (consistencyBreakEven - clamp(c, 0, 1)) * 0.450))
         }
         if let h = inputs.rmssd, let norm = inputs.rmssdNorm, norm > 0 {
             out.append(Contribution(key: "hrv", label: "Heart-rate variability",
@@ -185,8 +189,9 @@ public enum VitalityEngine {
     // activity, while these inputs are minutes in heart-rate zones, so the match is approximate. They are the least certain
     // factors of the model; the overlap shrink below also keeps them from counting the same activity twice with steps.
 
-    /// Weekly minutes at which the activity factors read as neutral.
-    public static let lowZoneBreakEven = 150.0, highZoneBreakEven = 30.0, strengthBreakEven = 60.0
+    /// Weekly minutes at which the activity factors read as neutral. Zones 1–3 sit where the Wen curve first bends (about 15 min a day). The zones 4–5 and strength
+    /// figures were first 30 and 60 min; the neutral bands of the WHOOP Healthspan bars (a few minutes of zones 4–5, 36–48 min of strength) moved them to 10 and 45.
+    public static let lowZoneBreakEven = 92.0, highZoneBreakEven = 10.0, strengthBreakEven = 45.0
 
     /// Zones 1–3: Wen et al. 2011 (Lancet): the first ~92 min/week of moderate activity lowers all-cause mortality ~14%, every
     /// further ~92 min a further ~4%. Flat beyond ~10 h/week.

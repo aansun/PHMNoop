@@ -15,6 +15,9 @@ object VitalityEngine {
 
     private const val lnHazardPerYear = 0.6931471805599453 / 8.0   // ln(2)/8 ≈ 0.0866
     private const val overlapShrink = 0.75
+    /** Where the resting heart rate and sleep regularity factors turn neutral (twin of the Swift constants; they were 65 and 0.75 before). */
+    const val restingHRBreakEven = 60.0
+    const val consistencyBreakEven = 0.70
     const val minBodyAge = 20.0
     const val maxBodyAge = 90.0
     private const val vitalityPerYear = 2.5
@@ -77,7 +80,7 @@ object VitalityEngine {
     fun contributions(inputs: Inputs): List<Contribution> {
         val out = ArrayList<Contribution>()
         inputs.restingHR?.let {
-            out.add(Contribution("rhr", "Resting heart rate", ((it - 65) / 10) * 0.100))
+            out.add(Contribution("rhr", "Resting heart rate", ((it - restingHRBreakEven) / 10) * 0.100))
         }
         val vo2 = inputs.vo2max; val exp = inputs.expectedVO2max
         if (vo2 != null && exp != null && exp > 0) {
@@ -88,7 +91,7 @@ object VitalityEngine {
             out.add(Contribution("sleep", "Sleep duration", dev.coerceIn(0.0, 3.0) * 0.110))
         }
         inputs.sleepConsistency?.let {
-            out.add(Contribution("consistency", "Sleep regularity", (0.75 - it.coerceIn(0.0, 1.0)) * 0.450))
+            out.add(Contribution("consistency", "Sleep regularity", (consistencyBreakEven - it.coerceIn(0.0, 1.0)) * 0.450))
         }
         val h = inputs.rmssd; val norm = inputs.rmssdNorm
         if (h != null && norm != null && norm > 0) {
