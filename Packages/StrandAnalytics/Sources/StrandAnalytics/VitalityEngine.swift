@@ -41,16 +41,19 @@ public enum VitalityEngine {
         public var zonesLowMin: Double?        // minutes per week in heart-rate zones 1–3
         public var zonesHighMin: Double?       // minutes per week in heart-rate zones 4–5
         public var strengthMin: Double?        // minutes per week of strength training
+        public var leanMassPct: Double?        // lean body mass as a percentage of body weight (100 minus body fat)
         public init(chronoAge: Double, restingHR: Double? = nil, vo2max: Double? = nil,
                     expectedVO2max: Double? = nil, sleepHours: Double? = nil,
                     sleepConsistency: Double? = nil, rmssd: Double? = nil,
                     rmssdNorm: Double? = nil, steps: Double? = nil,
-                    zonesLowMin: Double? = nil, zonesHighMin: Double? = nil, strengthMin: Double? = nil) {
+                    zonesLowMin: Double? = nil, zonesHighMin: Double? = nil, strengthMin: Double? = nil,
+                    leanMassPct: Double? = nil) {
             self.chronoAge = chronoAge; self.restingHR = restingHR; self.vo2max = vo2max
             self.expectedVO2max = expectedVO2max; self.sleepHours = sleepHours
             self.sleepConsistency = sleepConsistency; self.rmssd = rmssd
             self.rmssdNorm = rmssdNorm; self.steps = steps
             self.zonesLowMin = zonesLowMin; self.zonesHighMin = zonesHighMin; self.strengthMin = strengthMin
+            self.leanMassPct = leanMassPct
         }
     }
 
@@ -125,6 +128,7 @@ public enum VitalityEngine {
     ///   • Zones 1–3 minutes/week: see `lowZoneEffect`, break-even 150 min (the WHO moderate-activity guideline).
     ///   • Zones 4–5 minutes/week: see `highZoneEffect`, break-even 30 min.
     ///   • Strength minutes/week: see `strengthEffect`, break-even 60 min.
+    ///   • Lean body mass %: see `leanMassEffect`, neutral from 78% up.
     public static func contributions(_ inputs: Inputs) -> [Contribution] {
         var out: [Contribution] = []
         if let rhr = inputs.restingHR {
@@ -167,6 +171,9 @@ public enum VitalityEngine {
             out.append(Contribution(key: "strength", label: "Strength activity",
                                     lnHazard: strengthEffect(m) - strengthEffect(strengthBreakEven)))
         }
+        if let l = inputs.leanMassPct {
+            out.append(Contribution(key: "leanMass", label: "Lean body mass", lnHazard: leanMassEffect(l)))
+        }
         return out
     }
 
@@ -204,6 +211,36 @@ public enum VitalityEngine {
     /// that lists the factors shows figures that add up to the Body Age.
     public static func years(of contribution: Contribution) -> Double {
         contribution.lnHazard * overlapShrink / lnHazardPerYear
+    }
+
+    // MARK: Lean body mass and the age/sex VO₂ reference
+
+    /// Lean body mass as a share of body weight at which the factor turns neutral, and the lowest share it distinguishes (below it the factor stays at its ceiling).
+    public static let leanMassBreakEven = 78.0, leanMassFloor = 60.0
+
+    /// Log-hazard of a low lean body mass: zero from the break-even up, rising in a straight line to the floor (a body that is 40% fat or more).
+    ///
+    /// UNLIKE THE OTHER CURVES THIS ONE IS NOT FROM A COHORT: it was read off the colour bar of WHOOP's Healthspan page for lean body mass (neutral grey from about 78%,
+    /// +5.6 years at 60.2% lean), so it carries one reading's worth of evidence. The slope is sized so a lean body mass of 60.2% reads +5.6 years after the
+    /// overlap shrink. It treats men and women alike, as that bar appears to; women carry less lean mass on average, so for them it reads older. Replace it
+    /// with a curve from body-composition and mortality studies when one is chosen.
+    public static func leanMassEffect(_ percent: Double) -> Double {
+        0.0363 * clamp(leanMassBreakEven - percent, 0, leanMassBreakEven - leanMassFloor)
+    }
+
+    /// The median VO₂ max (ml/kg/min) for an age and sex, the reference the cardio-fitness factor reads a wearer's figure against.
+    /// A straight line between the two decades the FRIEND registry's treadmill reference values (Kaminsky et al. 2015, Mayo Clin Proc) state in their
+    /// abstract: the 50th percentile at 20–29 (men 48.0, women 37.6, taken at age 25) and at 70–79 (men 24.4, women 18.3, at age 75), about 10% a
+    /// decade. Any other sex reads the mean of the two.
+    public static func expectedVO2max(age: Double, sex: String) -> Double {
+        let a = clamp(age, 20, 80)
+        func line(_ at25: Double, _ at75: Double) -> Double { at25 + (at75 - at25) * (a - 25) / 50 }
+        let men = line(48.0, 24.4), women = line(37.6, 18.3)
+        switch sex.lowercased() {
+        case "male": return men
+        case "female": return women
+        default: return (men + women) / 2
+        }
     }
 
     /// Full Vitality + Body Age. Returns nil until at least `minFactors` inputs are present.

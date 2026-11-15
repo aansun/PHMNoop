@@ -4,10 +4,11 @@ import StrandAnalytics
 import StrandDesign
 import WhoopStore
 
-/// The card on the fitness age page that lists what moves the wearer's Body Age: the nine inputs of `VitalityEngine` (resting heart rate, cardio fitness, sleep
-/// duration and regularity, heart-rate variability, steps, time in heart-rate zones 1–3 and 4–5, strength training), each as the years it adds or takes away
-/// against its break-even. An input with no data for the week is left out, never counted as zero, and the card stays away when fewer than three are there.
-/// It is a wellness estimate from published mortality studies and sits beside the fitness age without changing it.
+/// The card on the fitness age page that lists what moves the wearer's Body Age: nine inputs of `VitalityEngine` (resting heart rate, cardio fitness, sleep
+/// duration and regularity, steps, time in heart-rate zones 1–3 and 4–5, strength training, lean body mass), each as the years it adds or takes away
+/// against its break-even. Heart-rate variability, which the engine also reads, is left out here so the nine are the nine the WHOOP Healthspan page lists.
+/// An input with no data for the week is left out, never counted as zero, and the card stays away when fewer than three are there. It is a wellness estimate
+/// from published mortality studies and sits beside the fitness age without changing it.
 struct NunaHealthspanCard: View {
     /// What `NunaHealthspan.compute` made for the week on show; nil draws nothing.
     let computed: NunaHealthspanResult?
@@ -133,25 +134,38 @@ enum NunaHealthspan {
         let strength = await repo.workoutRows().filter { $0.startTs >= from && $0.startTs < to && NunaWorkoutKind.isStrength($0) }
             .reduce(0.0) { $0 + (($1.durationS ?? Double($1.endTs - $1.startTs)) / 60) }
 
+        // Cardio fitness: a figure the wearer entered (the latest one up to the end of the week), or the estimate when it was worked out with their waist. The estimate
+        // without a waist (15.3 × max heart rate ÷ resting heart rate) runs about 10 ml/kg/min high for a low resting heart rate and ignores sex, so it is not used here.
+        let weekEnd = days.last?.day ?? ""
+        let entered = await NunaVO2Manual.entries(repo: repo).first { $0.day <= weekEnd }?.value
+        let cardio: Double? = entered ?? (profile.waistCm > 0 ? vo2 : nil)
+
+        // Lean body mass: what the body fat of the last 30 days up to the week's end leaves of 100%, from Apple Health or a hand entry.
+        let fat = NunaSeriesModel()
+        await fat.load(repo: repo, key: "body_fat", source: "apple-health", days: 400, also: nunaManualSource)
+        let lastDate = dates.last ?? Date()
+        let fatFrom = Repository.localDayKey(cal.date(byAdding: .day, value: -29, to: lastDate) ?? lastDate)
+        let recentFat = fat.byDay.filter { $0.key >= fatFrom && $0.key <= weekEnd }.map(\.value)
+        let lean: Double? = recentFat.isEmpty ? nil : 100 - (mean(recentFat) ?? 0)
+
         let rhr = median(rhrs)
-        let hrv = median(days.compactMap { $0.avgHrv })
-        let expected = NunaVO2Level.expected(age: age)
         let inputs = VitalityEngine.Inputs(
-            chronoAge: Double(age), restingHR: rhr, vo2max: vo2, expectedVO2max: vo2 == nil ? nil : expected,
+            chronoAge: Double(age), restingHR: rhr, vo2max: cardio,
+            expectedVO2max: cardio == nil ? nil : VitalityEngine.expectedVO2max(age: Double(age), sex: profile.sex),
             sleepHours: mean(nights), sleepConsistency: consistency,
-            rmssd: hrv, rmssdNorm: VitalityEngine.rmssdNorm(forAge: Double(age)),
             steps: steps.count >= 3 ? mean(steps) : nil,
-            zonesLowMin: hasZones ? low : nil, zonesHighMin: hasZones ? high : nil, strengthMin: hasZones || strength > 0 ? strength : nil)
+            zonesLowMin: hasZones ? low : nil, zonesHighMin: hasZones ? high : nil, strengthMin: hasZones || strength > 0 ? strength : nil,
+            leanMassPct: lean)
         guard let result = VitalityEngine.compute(inputs) else { return nil }
 
         func text(_ key: String) -> String {
             let f = AppLanguage.activeLocale
             switch key {
             case "rhr": return String(format: "%.0f bpm", locale: f, rhr ?? 0)
-            case "vo2max": return String(format: "%.0f", locale: f, vo2 ?? 0)
+            case "vo2max": return String(format: "%.0f", locale: f, cardio ?? 0)
             case "sleep": return String(format: "%.1f h", locale: f, mean(nights) ?? 0)
             case "consistency": return String(format: "%.0f%%", locale: f, (consistency ?? 0) * 100)
-            case "hrv": return String(format: "%.0f ms", locale: f, hrv ?? 0)
+            case "leanMass": return String(format: "%.1f%%", locale: f, lean ?? 0)
             case "steps": return String(format: "%.0f", locale: f, mean(steps) ?? 0)
             case "zonesLow": return String(format: "%.0f ", locale: f, low) + String(localized: "min/wk")
             case "zonesHigh": return String(format: "%.0f ", locale: f, high) + String(localized: "min/wk")
