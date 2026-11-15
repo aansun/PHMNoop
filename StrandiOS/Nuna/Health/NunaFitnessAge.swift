@@ -456,6 +456,12 @@ struct NunaFitnessAgeView: View {
 
     // MARK: Trends
 
+    /// The calendar age on a day, in years and tenths from the date of birth, so the line beside the fitness age rises as the weeks go.
+    private func calendarAge(on day: Date) -> Double {
+        let days = Calendar.current.dateComponents([.day], from: profile.dateOfBirth, to: day).day ?? 0
+        return Double(days) / 365.25
+    }
+
     private var trends: some View {
         let fitness: [(date: Date, value: Double)] = series.suffix(7).compactMap { r in date(r.day).map { (date: $0, value: r.value) } }
         var paces: [(date: Date, value: Double)] = []
@@ -474,14 +480,16 @@ struct NunaFitnessAgeView: View {
                         legend(RoundedRectangle(cornerRadius: 2, style: .continuous).fill(tint).frame(width: 14, height: 14), "Your fitness age")
                         legend(RoundedRectangle(cornerRadius: 2, style: .continuous).fill(NunaPalette.textPrimary).frame(width: 14, height: 14), "Calendar age")
                     }
-                    NunaLine2Chart(points: fitness, color: tint, decimals: 0, baseline: profile.age > 0 ? Double(profile.age) : nil, baselineInRange: true, weekdayAxis: false, height: 200)
+                    NunaLine2Chart(points: fitness, color: tint, decimals: 1, reference: profile.age > 0 ? fitness.map { (date: $0.date, value: calendarAge(on: $0.date)) } : [],
+                                   referenceColor: NunaPalette.textPrimary, referenceDecimals: 1, lastValueOnly: true, weekdayAxis: false, height: 200)
                 }
             }
             if paces.count >= 2 {
                 NunaCard {
                     VStack(alignment: .leading, spacing: 12) {
                         cap("Pace of aging trend")
-                        NunaLine2Chart(points: paces, color: NunaPalette.textPrimary, decimals: 1, baseline: 1.0, weekdayAxis: false, height: 200)
+                        NunaLine2Chart(points: paces, color: NunaPalette.recoveryBlue, decimals: 1, reference: paces.map { (date: $0.date, value: 1.0) },
+                                       referenceColor: NunaPalette.textPrimary, labelsReference: false, marksReference: false, lastValueOnly: true, weekdayAxis: false, height: 200)
                     }
                 }
             }

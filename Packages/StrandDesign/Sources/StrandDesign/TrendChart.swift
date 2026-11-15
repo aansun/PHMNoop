@@ -141,6 +141,15 @@ public struct TrendChart: View {
     /// (the default) draws nothing, and the rule rides the chart's own y domain, so a value outside the
     /// plotted range simply falls off it rather than being clamped to an edge it does not sit on.
     public var baselineValue: Double?
+    /// A second series drawn beside the first in a colour of its own, as the calendar age is beside the fitness age: a line with a ring on each reading. Its
+    /// last reading carries its value under the ring when `labelsReference` is on. Empty (the default) draws nothing.
+    public var referencePoints: [TrendPoint] = []
+    public var referenceColor: Color = .white
+    public var labelsReference = true
+    /// Rings on the reference readings; off draws the line alone (a constant guide such as 1.0x).
+    public var marksReference = true
+    /// Formats the value under the last reference ring; the chart's own `valueFormat` when nil.
+    public var referenceValueFormat: ((Double) -> String)?
     public var height: CGFloat
     /// Whether hovering reveals a crosshair + tooltip for the nearest point.
     public var showsHover: Bool
@@ -346,6 +355,21 @@ public struct TrendChart: View {
         return (resolvedYDomain.lowerBound - lowerHeadroom)...resolvedYDomain.upperBound
     }
 
+    /// Whole-number ticks across `domain`, about four of them, on a step of 1, 2, 5 or 10 times a power of ten.
+    private static func roundTicks(in domain: ClosedRange<Double>) -> [Double] {
+        let span = domain.upperBound - domain.lowerBound
+        guard span > 0 else { return [domain.lowerBound] }
+        let raw = span / 4
+        let mag = pow(10, floor(log10(raw)))
+        var step: Double = 10 * mag
+        for m in [1.0, 2.0, 5.0] where m * mag * 1.25 >= raw { step = m * mag; break }
+        step = max(1, step)
+        var out: [Double] = []
+        var t = (domain.lowerBound / step).rounded(.up) * step
+        while t <= domain.upperBound { out.append(t); t += step }
+        return out
+    }
+
     /// The x axis: grid lines, and the date labels unless the caller draws its own row of dates.
     @AxisContentBuilder
     private func xAxisMarks(desiredCount: Int) -> some AxisContent {
@@ -479,23 +503,34 @@ public struct TrendChart: View {
                     .foregroundStyle(valueGradient)
                     .opacity(lineOpacity)
                 }
-                ForEach(segmentAverages) { seg in
-                    RuleMark(xStart: .value("From", seg.start), xEnd: .value("To", seg.end), y: .value("Average", seg.value))
-                        .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
-                        .foregroundStyle(seg.deltaText == nil ? StrandPalette.textPrimary : seg.deltaColor)
-                        .annotation(position: .top, spacing: 2) {
-                            Text(seg.valueText).font(.system(size: 11, weight: .bold)).monospacedDigit()
-                                .foregroundStyle(StrandPalette.textPrimary).fixedSize()
-                        }
-                        .annotation(position: .bottom, spacing: 2) {
-                            if let d = seg.deltaText {
-                                Text(d).font(.system(size: 10, weight: .bold)).monospacedDigit().foregroundStyle(seg.deltaColor).fixedSize()
+                if !referencePoints.isEmpty {
+                    ForEach(referencePoints) { p in
+                        LineMark(x: .value("Date", p.date), y: .value("Reference", p.value), series: .value("Series", "reference"))
+                            .interpolationMethod(.catmullRom)
+                            .lineStyle(StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
+                            .foregroundStyle(referenceColor)
+                    }
+                    if marksReference {
+                        // The label goes on the side away from the main line, so the two numbers never sit on top of each other.
+                        let labelAbove = (referencePoints.last?.value ?? 0) >= (points.last?.value ?? 0)
+                        ForEach(referencePoints) { p in
+                            PointMark(x: .value("Date", p.date), y: .value("Reference", p.value))
+                                .symbolSize(showsPointValues ? 96 : 18)
+                                .foregroundStyle(referenceColor)
+                                .annotation(position: labelAbove ? .top : .bottom, spacing: 3) {
+                                    if labelsReference, showsPointValues, p.date == referencePoints.last?.date {
+                                        Text((referenceValueFormat ?? valueFormat)(p.value))
+                                            .font(StrandFont.captionNumber).foregroundStyle(referenceColor).fixedSize()
+                                    }
+                                }
+                            if let fill = hollowPointFill {
+                                PointMark(x: .value("Date", p.date), y: .value("Reference", p.value))
+                                    .symbolSize(showsPointValues ? 40 : 4)
+                                    .foregroundStyle(fill)
                             }
                         }
+                    }
                 }
-                // 18pt dots are invisible on dense series (e.g. a 365-day year) but still cost the
-                // GPU a mark each — hide them past a threshold; the line carries the data there. The gate
-                // stays on the full `points.count` (≤60 is never downsampled, so displayPoints == points).
                 if points.count <= 60 && !hidesPoints {
                     let labelled: Set<Date> = {
                         let stride = max(1, pointValueStride)
@@ -553,7 +588,8 @@ public struct TrendChart: View {
             let axisBottomPadding: CGFloat = xAxisDateFormat == nil ? 8 : ((showsBars || reservesAxisBand) ? 28 : 0)
             if showsBarValues {
                 plotArea.padding(.top, 18).padding(.bottom, axisBottomPadding).clipped()
-            } else if showsPointValues {
+            } else if showsPointValues && referencePoints.isEmpty {
+                // (A two-line chart is read against its axis, and this padding would slide the lines off their grid; the caller's domain carries the headroom there.)
                 // Reserve headroom for the value above the highest Line2 point; otherwise Swift Charts
                 // clips the annotation against the plot's top edge on compact cards.
                 plotArea.padding(.top, 24).padding(.bottom, axisBottomPadding).clipped()
@@ -575,6 +611,17 @@ public struct TrendChart: View {
                             Text(usesCompactYAxis
                                 ? Self.line2ValueString(number, formattedValue: formatted)
                                 : formatted)
+                                .font(StrandFont.footnote).foregroundStyle(StrandPalette.textTertiary)
+                        }
+                    }
+                }
+            } else if !referencePoints.isEmpty {
+                // With a second line the two are read against each other, so the ticks sit on round numbers and the lines land where their labels say.
+                AxisMarks(position: .leading, values: Self.roundTicks(in: plotYDomain)) { value in
+                    AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
+                    AxisValueLabel {
+                        if let number = value.as(Double.self) {
+                            Text(number.formatted(.number.precision(.fractionLength(0))))
                                 .font(StrandFont.footnote).foregroundStyle(StrandPalette.textTertiary)
                         }
                     }
@@ -852,6 +899,17 @@ public extension TrendChart {
     func typicalRange(_ range: ClosedRange<Double>?) -> TrendChart {
         var copy = self
         copy.typicalRange = range
+        return copy
+    }
+
+    /// A second line beside the first (the calendar age beside the fitness age): its points as rings in `color`, and under the last one its value when `labelled`.
+    func referenceSeries(_ points: [TrendPoint], color: Color, labelled: Bool = true, marks: Bool = true, format: ((Double) -> String)? = nil) -> TrendChart {
+        var copy = self
+        copy.referencePoints = points.sorted { $0.date < $1.date }
+        copy.referenceColor = color
+        copy.labelsReference = labelled
+        copy.marksReference = marks
+        copy.referenceValueFormat = format
         return copy
     }
 

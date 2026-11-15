@@ -642,6 +642,16 @@ struct NunaLine2Chart: View {
     var baseline: Double?
     /// Widens the scale to take in the baseline, for one that is the point of the chart (the calendar age beside the fitness age) and not just a mark.
     var baselineInRange = false
+    /// A second line drawn beside the readings in `referenceColor` (the calendar age beside the fitness age, or 1.0x beside the pace), and the number of decimals of
+    /// the value under its last ring; `labelsReference` off leaves that value out.
+    var reference: [(date: Date, value: Double)] = []
+    var referenceColor: Color = NunaPalette.textPrimary
+    var referenceDecimals = 0
+    var labelsReference = true
+    /// Rings on the reference readings; false draws its line alone.
+    var marksReference = true
+    /// Only the latest reading carries its number, and no area is filled under the line (the fitness age and pace trends).
+    var lastValueOnly = false
     /// A short run of points is drawn as the days of a week (Mon over 5); false for a run of weekly or monthly readings, which are named by their dates.
     var weekdayAxis = true
     /// The wearer's typical range for this metric (their own baseline band), shaded behind the line.
@@ -690,7 +700,8 @@ struct NunaLine2Chart: View {
             let long = !segments.isEmpty
             let week = points.count <= 8 && weekdayAxis
             let widened: Double? = baselineInRange ? baseline : nil
-            let floor = min(lo, band?.lowerBound ?? lo, widened ?? lo), ceil = max(hi, band?.upperBound ?? hi, widened ?? hi)
+            let ref = reference.map(\.value)
+            let floor = min(lo, band?.lowerBound ?? lo, widened ?? lo, ref.min() ?? lo), ceil = max(hi, band?.upperBound ?? hi, widened ?? hi, ref.max() ?? hi)
             let pad = max((ceil - floor) * 0.15, 0.5)
             VStack(alignment: .leading, spacing: 8) {
                 if band != nil {
@@ -705,7 +716,7 @@ struct NunaLine2Chart: View {
                     points: points.map { TrendPoint(date: $0.date, value: $0.value) },
                     gradient: Gradient(colors: [color, color]),
                     valueRange: (floor - pad)...(ceil + pad * (long ? 2.4 : 1.6)),
-                    showsArea: !long,
+                    showsArea: !long && !lastValueOnly,
                     showsPointValues: !long,
                     baselineValue: baseline,
                     height: height,
@@ -713,9 +724,11 @@ struct NunaLine2Chart: View {
                     dateFormat: { TrendChart.defaultDateString($0) },
                     xAxisDateFormat: { week ? Self.weekdayOverDay($0) : TrendChart.line2AxisDateString($0) }
                 )
-                .pointValueStride(max(1, Int((Double(vals.count) / 12).rounded(.up))))
+                .pointValueStride(lastValueOnly ? vals.count + 1 : max(1, Int((Double(vals.count) / 12).rounded(.up))))
                 .typicalRange(band)
                 .hollowPoints(fill: long ? nil : NunaPalette.card, labelColor: color)
+                .referenceSeries(reference.map { TrendPoint(date: $0.date, value: $0.value) }, color: referenceColor, labelled: labelsReference, marks: marksReference,
+                                 format: { String(format: "%.\(referenceDecimals)f", locale: AppLanguage.activeLocale, $0) })
                 .line(width: long ? 1 : 2.5, opacity: long ? 0.6 : 1)
                 .segmentAverages(segments)
                 .perWeekAxis(week ? points.map(\.date) : nil)
