@@ -71,9 +71,8 @@ struct NunaFitnessAgeSummary: View {
     }
 
     private var tint: Color {
-        guard let latest = series.last, profile.age > 0 else { return NunaPalette.textSecondary }
-        let diff = Int((Double(profile.age) - latest.value).rounded())
-        return diff > 0 ? NunaPalette.charge : (diff < 0 ? NunaPalette.warning : NunaPalette.textSecondary)
+        guard let latest = series.last, profile.age > 0 else { return NunaFitnessAgeTone.tint(gap: nil) }
+        return NunaFitnessAgeTone.tint(gap: Int((Double(profile.age) - latest.value).rounded()))
     }
 
     var body: some View {
@@ -114,21 +113,10 @@ struct NunaFitnessAgeSummary: View {
     }
 
     private func orb(_ latest: (day: String, value: Double)) -> some View {
-        let age = Double(profile.age)
-        let diff = age > 0 ? Int((age - latest.value).rounded()) : nil
-        return NunaFitnessOrb(tint: tint, size: 260) {
-            VStack(spacing: 6) {
-                Text(verbatim: String(format: "%.0f", locale: AppLanguage.activeLocale, latest.value))
-                    .font(.nuna(size: 60, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(60)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Fitness age").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                if let diff, diff != 0 {
-                    Text(nunaYearsGap(diff))
-                        .font(.nuna(size: 15, weight: .bold)).foregroundStyle(tint)
-                } else if diff == 0 {
-                    Text("About your age").font(.nuna(size: 15, weight: .bold)).foregroundStyle(tint)
-                }
-            }
-        }
+        let gap: Int? = profile.age > 0 ? Int((Double(profile.age) - latest.value).rounded()) : nil
+        // Over a room as wide as the card, so an orb a little wider than the card does not widen it.
+        return Color.clear.frame(maxWidth: .infinity).frame(height: 320)
+            .overlay { NunaFitnessOrb(tint: tint, size: 360) { NunaFitnessOrbCenter(value: latest.value, gap: gap, numberSize: 48) } }
     }
 
     /// The note while the pace is still firming up; it can be closed and stays closed.

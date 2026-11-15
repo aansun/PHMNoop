@@ -3081,6 +3081,7 @@
  "Search signals": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cari sinyal"}}}},
  "Favourites": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Favorit"}}}},
  "Favourite": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Favorit"}}}},
+ "Your age, sex, the median resting heart rate of the last 7 days and a physical activity index built from your recent training are compared with an average person of your age. The gap is turned into years. Non-exercise model (Nes 2011, HUNT), updated every Saturday.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Usia, jenis kelamin, median detak jantung istirahat 7 hari terakhir, dan indeks aktivitas fisik dari latihan terbarumu dibandingkan dengan rata-rata orang seusiamu. Selisihnya diubah menjadi tahun. Model tanpa uji latihan (Nes 2011, HUNT), diperbarui setiap Sabtu."}}}},
  "years younger": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "tahun lebih muda"}}}},
  "years older": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "tahun lebih tua"}}}},
  "Average person": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rata-rata orang"}}}},

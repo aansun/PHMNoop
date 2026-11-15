@@ -4,7 +4,7 @@ import StrandDesign
 import StrandAnalytics
 import WhoopStore
 
-/// How far the page has been scrolled, read from the content's own position.
+/// The measuring view's place on the screen, for iOS 17.
 private struct NunaFitnessScrollKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
@@ -28,7 +28,7 @@ private struct NunaFitnessScrollOffset: ViewModifier {
 ///
 /// It is a comparison, not a biological age, and it says only what the model uses. The model has four inputs: age, sex, the median resting heart rate of the
 /// last 7 days and a physical activity index built from the week's training. So the page has two things that move the number (resting heart rate and
-/// activity, each in years against an average person of the same age) and one that does not (the VO₂max estimate, shown as information).
+/// activity, each in years against an average person of the same age) and one that does not (the VO₂max estimate, shown for reference).
 /// A week is the Sunday to Saturday the stored reading belongs to; the arrows at the top step through the weeks that were stored.
 struct NunaFitnessAgeView: View {
     private static let dayParser: DateFormatter = {
@@ -38,7 +38,6 @@ struct NunaFitnessAgeView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @State private var series: [(day: String, value: Double)] = []
     @State private var vo2Series: [(day: String, value: Double)] = []
     @State private var loaded = false
@@ -96,50 +95,46 @@ struct NunaFitnessAgeView: View {
         return abs((a + b) - (current.value - Double(profile.age))) <= 1.5
     }
 
+    /// Calendar age minus fitness age in whole years; positive is younger.
     private var gap: Int? {
         guard let current, profile.age > 0 else { return nil }
         return Int((Double(profile.age) - current.value).rounded())
     }
-    private var tint: Color { (gap ?? 0) > 0 ? NunaPalette.charge : ((gap ?? 0) < 0 ? NunaPalette.warning : NunaPalette.textSecondary) }
+    private var tint: Color { NunaFitnessAgeTone.tint(gap: gap) }
 
     private var readings: [PaceOfAging.Reading] {
         series.compactMap { r in date(r.day).map { PaceOfAging.Reading(time: $0.timeIntervalSince1970, fitnessAge: r.value) } }
     }
     /// The pace as it stood at the week on show, from the readings up to and including it.
     private var pace: PaceOfAging.Result? { PaceOfAging.compute(Array(readings.prefix(index + 1))) }
-    private var paceBefore: PaceOfAging.Result? { index >= 1 ? PaceOfAging.compute(Array(readings.prefix(index))) : nil }
 
     // MARK: Body
 
     /// How much of the page's own header has taken over from the big one: 0 at the top, 1 once the big figure has scrolled away.
-    private var collapse: Double { min(max(Double((scrollY - 190) / 150), 0), 1) }
+    private var collapse: Double { min(max(Double((scrollY - 200) / 140), 0), 1) }
 
     var body: some View {
         ZStack(alignment: .top) {
             NunaBackdrop()
             ScrollView {
                 ZStack(alignment: .top) {
-                // Zero height, at the very top of the content: its place in the scroll view's own space is how far the page has gone up.
-                GeometryReader { g in Color.clear.preference(key: NunaFitnessScrollKey.self, value: g.frame(in: .global).minY) }.frame(height: 0)
-                VStack(spacing: NunaSpacing.section) {
-                    if current != nil {
-                        hero
-                        paceSection
-                        factors
-                        trends
-                        history
-                        lowerCard
-                    } else {
-                        notReady
+                    // Zero height, at the very top of the content: its place on the screen is how far the page has gone up (iOS 17).
+                    GeometryReader { g in Color.clear.preference(key: NunaFitnessScrollKey.self, value: g.frame(in: .global).minY) }.frame(height: 0)
+                    VStack(spacing: 30) {
+                        if current != nil {
+                            hero
+                            paceSection
+                            factors
+                            trends
+                        } else {
+                            notReady
+                        }
                     }
-                    footer
-                }
-                .padding(.horizontal, NunaSpacing.screenH).padding(.top, 62).padding(.bottom, 120)
+                    .padding(.horizontal, NunaSpacing.screenH).padding(.top, 60).padding(.bottom, 120)
                 }
             }
             .modifier(NunaFitnessScrollOffset(offset: $scrollY))
             .onPreferenceChange(NunaFitnessScrollKey.self) { y in
-                // The first reading is the page at rest; the page has gone up by how much it has fallen since.
                 if restY == nil { restY = y }
                 if #unavailable(iOS 18.0) { scrollY = (restY ?? y) - y }
             }
@@ -154,22 +149,26 @@ struct NunaFitnessAgeView: View {
             loaded = true
         }
         .sheet(isPresented: $showWaist) { NunaWaistSheet() }
-        .sheet(isPresented: $showInfo) { NunaFitnessAgeInfoSheet(age: profile.age, pace: pace?.pace).nunaSheetChrome(detents: [.large]) }
+        .sheet(isPresented: $showInfo) { NunaFitnessAgeInfoSheet(pace: pace?.pace).nunaSheetChrome(detents: [.large]) }
     }
 
     // MARK: Header
 
     private func cap(_ t: LocalizedStringKey) -> some View {
-        Text(t).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+        Text(t).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+    }
+
+    private func heading(_ t: LocalizedStringKey) -> some View {
+        Text(t).font(.nuna(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
     }
 
     /// The way back, the page's name with when it updates next, and the info page.
     private var topBar: some View {
         ZStack {
-            VStack(spacing: 2) {
+            VStack(spacing: 3) {
                 Text("Fitness age").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 if current != nil {
-                    Text(nextUpdate).font(.nuna(size: 11, weight: .bold)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text(nextUpdate).font(.nuna(size: 11.5, weight: .semibold)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
             .opacity(1 - collapse)
@@ -180,7 +179,7 @@ struct NunaFitnessAgeView: View {
                 Spacer()
                 Button { showInfo = true } label: {
                     Image(systemName: "info").font(.nuna(size: 15, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 34, height: 34).overlay(Circle().strokeBorder(NunaPalette.textPrimary.opacity(0.6), lineWidth: 1.5)).frame(width: 44, height: 44).contentShape(Rectangle())
+                        .frame(width: 34, height: 34).overlay(Circle().strokeBorder(NunaPalette.textSecondary, lineWidth: 1.5)).frame(width: 44, height: 44).contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityLabel(Text("About fitness age"))
             }
         }
@@ -198,18 +197,19 @@ struct NunaFitnessAgeView: View {
     /// The figure and the two statements, small, once the big one has scrolled off: the gap at the left, the pace at the right.
     private var compactHeader: some View {
         HStack(alignment: .center) {
-            VStack(spacing: 2) {
-                Text(verbatim: gap.map { String(abs($0)) } ?? "–").font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(tint)
-                Text(gapCaption).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            VStack(spacing: 3) {
+                Text(verbatim: gap.map { String(abs($0)) } ?? "–").font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.restLight).textCase(nil)
+                Text(gapCaption).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             }.frame(maxWidth: .infinity)
             // Drawn larger than the room it takes, so its glow is not cut off at the edge of the drawing.
-            orb(size: 210, number: 30, caption: false).frame(width: 150, height: 150)
-            VStack(spacing: 2) {
-                Text(verbatim: pace.map { String(format: "%.1fx", locale: AppLanguage.activeLocale, $0.pace) } ?? "–").font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                Text("Pace of aging").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            NunaFitnessOrb(tint: tint, size: 170) { NunaFitnessOrbCenter(value: current?.value, gap: nil, numberSize: 28, captionSize: 9.5, showsGap: false) }
+                .frame(width: 130, height: 130)
+            VStack(spacing: 3) {
+                Text(verbatim: pace.map { String(format: "%.1fx", locale: AppLanguage.activeLocale, $0.pace) } ?? "–").font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text("Pace of aging").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             }.frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, 16).padding(.top, 46).frame(height: 190, alignment: .top)
+        .padding(.horizontal, 16).padding(.top, 74).frame(height: 216, alignment: .top)
         // Solid behind the figures, so nothing of the page shows through them, and fading out only at the foot.
         .background(LinearGradient(stops: [.init(color: NunaPalette.canvas, location: 0), .init(color: NunaPalette.canvas, location: 0.8),
                                            .init(color: NunaPalette.canvas.opacity(0), location: 1)], startPoint: .top, endPoint: .bottom))
@@ -219,97 +219,43 @@ struct NunaFitnessAgeView: View {
 
     // MARK: Hero
 
-    private func orb(size: CGFloat, number: CGFloat, caption: Bool) -> some View {
-        NunaFitnessOrb(tint: tint, size: size) {
-            VStack(spacing: 6) {
-                Text(verbatim: current.map { String(format: "%.0f", locale: AppLanguage.activeLocale, $0.value) } ?? "–")
-                    .font(.nuna(size: number, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(number)).foregroundStyle(NunaPalette.textPrimary)
-                if caption {
-                    Text("Fitness age").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    if let gap, gap != 0 { Text(nunaYearsGap(gap)).font(.nuna(size: 15, weight: .bold)).foregroundStyle(tint) }
-                    else if gap == 0 { Text("About your age").font(.nuna(size: 15, weight: .bold)).foregroundStyle(tint) }
-                }
-            }
-        }
-    }
-
     private var weekRange: String {
         guard let current, let end = date(current.day), let start = Calendar.current.date(byAdding: .day, value: -6, to: end) else { return "" }
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("MMM d")
-        return f.string(from: start) + " – " + f.string(from: end)
+        return f.string(from: start) + " - " + f.string(from: end)
     }
 
     private func arrow(_ symbol: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle())
-        }.buttonStyle(.plain).disabled(!enabled).opacity(enabled ? 1 : 0.3)
+            Image(systemName: symbol).font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 44, height: 44).contentShape(Rectangle())
+        }.buttonStyle(.plain).disabled(!enabled).opacity(enabled ? 1 : 0.35)
     }
 
     private var hero: some View {
-        VStack(spacing: 8) {
-            HStack {
+        VStack(spacing: 0) {
+            HStack(spacing: 6) {
+                Spacer()
                 arrow("chevron.left", enabled: index > 0) { picked = index - 1 }.accessibilityLabel(Text("Earlier week"))
-                Spacer()
-                Text(verbatim: weekRange).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                Spacer()
+                Text(verbatim: weekRange).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 arrow("chevron.right", enabled: !isLatest) { picked = index + 1 }.accessibilityLabel(Text("Later week"))
+                Spacer()
             }
-            orb(size: 330, number: 64, caption: true)
-            weeklyMove
-            Text(verbatim: gap == nil ? "" : (gap == 0 ? String(localized: "Your heart and lung fitness is about the same as your age.")
-                 : String(localized: "Your heart and lung fitness matches someone aged \(Int((current?.value ?? 0).rounded())), while you are \(profile.age).")))
-                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true).textCase(nil)
-        }
-    }
-
-    /// The change since the reading before it: a pill, or "steady".
-    @ViewBuilder private var weeklyMove: some View {
-        if index >= 1 {
-            let weekly = Int((series[index].value - series[index - 1].value).rounded())
-            if weekly != 0 {
-                HStack(spacing: 6) {
-                    Image(systemName: weekly < 0 ? "arrowtriangle.down.fill" : "arrowtriangle.up.fill").font(.nuna(size: 10))
-                    Text(verbatim: weekly < 0 ? String(localized: "\(-weekly) yr younger than last week") : String(localized: "\(weekly) yr older than last week"))
-                        .font(.nuna(size: 13, weight: .bold))
-                }
-                .foregroundStyle(weekly < 0 ? NunaPalette.charge : NunaPalette.warning)
-                .padding(.horizontal, 14).frame(height: 32)
-                .background((weekly < 0 ? NunaPalette.charge : NunaPalette.warning).opacity(0.16), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-            } else {
-                Text("Steady since last week").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-            }
+            // Drawn over a room as wide as the page, so an orb a little wider than the page does not widen the page.
+            Color.clear.frame(maxWidth: .infinity).frame(height: 350)
+                .overlay { NunaFitnessOrb(tint: tint, size: 380) { NunaFitnessOrbCenter(value: current?.value, gap: gap, numberSize: 48) } }
+                .padding(.top, 4)
         }
     }
 
     // MARK: Pace of aging
 
     private var paceSection: some View {
-        let move: Double? = pace.flatMap { n in paceBefore.map { n.pace - $0.pace } }
-        return VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                cap("Pace of aging")
-                Spacer()
-                if let move, abs(move) >= 0.05 {
-                    HStack(spacing: 5) {
-                        Image(systemName: move < 0 ? "arrowtriangle.down.fill" : "arrowtriangle.up.fill").font(.nuna(size: 9))
-                        Text(move < 0 ? "slower vs last week" : "faster vs last week").font(.nuna(size: 12, weight: .bold))
-                    }
-                    .foregroundStyle(move < 0 ? NunaPalette.charge : NunaPalette.warning)
-                    .padding(.horizontal, 10).frame(height: 28)
-                    .background((move < 0 ? NunaPalette.charge : NunaPalette.warning).opacity(0.16), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }
-            }
+        VStack(alignment: .leading, spacing: 14) {
+            cap("Pace of aging")
             if let pace {
                 NunaPaceDial(value: pace.pace, showsValue: true)
-                Text(paceText(pace)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                Text(pace.confidence == .solid ? "Based on about six months of weekly readings."
-                     : (pace.confidence == .building ? "Still building: the pace firms up as weeks of readings add up."
-                        : "Early estimate: too few weeks to move far from 1.0x yet."))
-                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
             } else {
-                let weeks = index + 1
-                Text(verbatim: weeks <= 0 ? String(localized: "Pace of aging appears after 6 weekly readings.")
-                     : String(localized: "Pace of aging appears after 6 weekly readings. You have \(weeks) so far."))
+                Text(verbatim: String(localized: "Pace of aging appears after 6 weekly readings. You have \(index + 1) so far."))
                     .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 NunaPaceDial(value: nil)
             }
@@ -317,54 +263,36 @@ struct NunaFitnessAgeView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func paceText(_ r: PaceOfAging.Result) -> LocalizedStringKey {
-        switch r.band {
-        case .slow: return "Your fitness age is rising slower than the calendar, so you are ageing more slowly than time passes."
-        case .fast: return "Your fitness age is rising faster than the calendar. Better sleep, activity and resting heart rate can bring it back."
-        case .normal: return "1.0x means your fitness age moves at the same speed as the calendar. 0.0x means it holds still, and below that you are getting fitter."
-        }
-    }
-
     // MARK: What it is made of
 
     /// One thing on the page that is read against a scale: where it is, where an average person of the same age is, and what it adds to the age.
     private struct Factor: Identifiable {
         let id: String
-        let icon: String
         let title: LocalizedStringKey
         let value: Double
         let valueText: String
-        let unit: String
         let range: ClosedRange<Double>
         let reference: Double?
         let higherIsBetter: Bool
-        /// Years it adds (older, positive) or takes away (younger, negative); nil for a figure the age does not use.
+        /// Years it adds (older, positive) or takes away (younger, negative); nil for a figure the age does not use, or when the years would contradict the headline.
         let years: Double?
         let lowText: String
         let highText: String
         let note: LocalizedStringKey
-        var extras: [(label: LocalizedStringKey, value: String)] = []
     }
-
-    private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
     private var restingFactor: Factor? {
         guard let rhr = medianRHR, let rawYears = rhrYears else { return nil }
-        let years: Double? = yearsAgree ? rawYears : nil
-        return Factor(id: "rhr", icon: "met:resting-heart-rate", title: "Resting HR", value: rhr, valueText: String(format: "%.0f", rhr), unit: "bpm", range: 40...80,
-                      reference: FitnessAgeEngine.restingHRReference, higherIsBetter: false, years: years, lowText: "40 bpm", highText: "80 bpm",
-                      note: "The median of your resting heart rate over these 7 days, against 65 bpm for an average person of your age. A lower resting heart rate is the sign of a fitter heart.",
-                      extras: [("Nights read", "\(rhrValues.count) / 7")])
+        return Factor(id: "rhr", title: "Resting HR", value: rhr, valueText: String(format: "%.0f bpm", rhr), range: 40...80,
+                      reference: FitnessAgeEngine.restingHRReference, higherIsBetter: false, years: yearsAgree ? rawYears : nil, lowText: "40bpm", highText: "80bpm",
+                      note: "The median of your resting heart rate over these 7 days, against 65 bpm for an average person of your age. A lower resting heart rate is the sign of a fitter heart.")
     }
 
     private var activityFactor: Factor? {
         guard medianRHR != nil, let rawYears = activityYears else { return nil }
-        let years: Double? = yearsAgree ? rawYears : nil
-        let scaled = UnitFormatter.effortDisplay(meanActiveStrain, scale: effortScale)
-        return Factor(id: "activity", icon: "flame", title: "Physical activity", value: paIndex, valueText: String(format: "%.1f", locale: AppLanguage.activeLocale, paIndex), unit: "/ 15",
-                      range: 0...15, reference: FitnessAgeEngine.paiReference, higherIsBetter: true, years: years, lowText: "0", highText: "15",
-                      note: "An index from 0 to 15 built from how many days you trained this week and how hard. An average person of your age sits near 5.",
-                      extras: [("Active days", "\(activeStrains.count) / 7"), ("Average Strain", activeStrains.isEmpty ? "–" : scaled)])
+        return Factor(id: "activity", title: "Physical activity", value: paIndex, valueText: String(format: "%.1f", locale: AppLanguage.activeLocale, paIndex), range: 0...15,
+                      reference: FitnessAgeEngine.paiReference, higherIsBetter: true, years: yearsAgree ? rawYears : nil, lowText: "0", highText: "15",
+                      note: "An index from 0 to 15 built from how many days you trained this week and how hard. An average person of your age sits near 5.")
     }
 
     /// The VO₂max the weekly job stored for the week on show, or the latest before it.
@@ -375,129 +303,105 @@ struct NunaFitnessAgeView: View {
 
     private var vo2Factor: Factor? {
         guard let vo2 else { return nil }
-        let female = profile.sex.lowercased() == "female"
-        let see = female ? FitnessAgeEngine.seeWomen : FitnessAgeEngine.seeMen
-        return Factor(id: "vo2", icon: "lungs", title: "VO₂max", value: vo2, valueText: String(format: "%.0f", vo2), unit: "ml/kg/min", range: 15...70, reference: nil, higherIsBetter: true,
-                      years: nil, lowText: "15", highText: "70",
+        return Factor(id: "vo2", title: "VO₂max", value: vo2, valueText: String(format: "%.0f ml/kg/min", vo2), range: 15...70, reference: nil, higherIsBetter: true, years: nil,
+                      lowText: "15", highText: "70",
                       note: profile.waistCm > 0 ? "Worked out from your age, resting heart rate, activity and waist. It is shown for reference and does not change your fitness age."
-                                                 : "A rougher estimate from your heart rate. Add your waist for a sharper one. It is shown for reference and does not change your fitness age.",
-                      extras: [(profile.waistCm > 0 ? "Range" : "Method", profile.waistCm > 0 ? "±\(String(format: "%.1f", locale: AppLanguage.activeLocale, see))" : String(localized: "Estimated"))])
+                                                 : "A rougher estimate from your heart rate. Add your waist for a sharper one. It is shown for reference and does not change your fitness age.")
     }
 
     @ViewBuilder private var factors: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("What shapes it").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                Spacer()
-                legendMark("arrowtriangle.down.fill", "This week")
-                legendMark("arrowtriangle.up.fill", "Average person")
-            }
-            if let rhr = restingFactor, let activity = activityFactor {
-                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                    VStack(spacing: 0) {
-                        factorRow(rhr)
-                        NunaDivider()
-                        factorRow(activity)
-                        if yearsAgree, let a = rhrYears, let b = activityYears {
-                            NunaDivider()
-                            togetherRow(a + b)
-                        }
-                    }
-                }
-                if !yearsAgree {
-                    Text("The years are left out: the days stored now do not add up to the reading of this week.")
-                        .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                }
-            } else {
-                dataCard
-            }
-            if let v = vo2Factor {
-                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) { factorRow(v) }
-                if profile.waistCm <= 0 {
-                    Button { showWaist = true } label: {
-                        NunaCard(small: true) { NunaListRow("Unlock VO₂max", description: "Weight, height and waist. Does not change the fitness age.", systemImage: "ruler", showsChevron: true) }
-                    }.buttonStyle(.plain)
+        if let rhr = restingFactor, let activity = activityFactor {
+            VStack(alignment: .leading, spacing: 14) {
+                sectionHead("Fitness")
+                card {
+                    factorRow(rhr)
+                    if let v = vo2Factor { NunaDivider(); factorRow(v) }
                 }
             }
+            VStack(alignment: .leading, spacing: 14) {
+                sectionHead("Activity")
+                card { factorRow(activity) }
+            }
+        } else {
+            dataCard
+        }
+    }
+
+    /// A section's name large, and at its right what the two markers on the bars mean.
+    private func sectionHead(_ t: LocalizedStringKey) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            heading(t)
+            Spacer(minLength: 4)
+            legendMark("arrowtriangle.down.fill", "This week")
+            Rectangle().fill(NunaPalette.textMuted.opacity(0.5)).frame(width: 1, height: 18)
+            legendMark("arrowtriangle.up.fill", "Average person")
         }
     }
 
     private func legendMark(_ symbol: String, _ text: LocalizedStringKey) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: symbol).font(.nuna(size: 9))
-            Text(text).font(.nuna(size: 11.5, weight: .semibold)).textCase(nil)
+        HStack(spacing: 5) {
+            Image(systemName: symbol).font(.nuna(size: 10))
+            Text(text).font(.nuna(size: 13.5, weight: .regular)).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
         }.foregroundStyle(NunaPalette.textSecondary)
     }
 
-    private func yearsText(_ y: Double) -> String {
-        abs(y) < 0.05 ? "±0.0" : String(format: "%+.1f", locale: AppLanguage.activeLocale, y)
+    private func card<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) { VStack(spacing: 0) { content() } }
     }
-    private func yearsColor(_ y: Double) -> Color { y > 0.05 ? NunaPalette.warning : (y < -0.05 ? NunaPalette.charge : NunaPalette.textSecondary) }
+
+    private func yearsText(_ y: Double) -> String {
+        abs(y) < 0.05 ? "0.0" : String(format: "%+.1f", locale: AppLanguage.activeLocale, y)
+    }
+    private func yearsColor(_ y: Double) -> Color { y > 0.05 ? NunaPalette.caution : (y < -0.05 ? NunaPalette.charge : NunaPalette.textSecondary) }
 
     private func factorRow(_ f: Factor) -> some View {
         let open = opened.contains(f.id)
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 8) {
             Button { withAnimation(.easeInOut(duration: 0.2)) { if open { opened.remove(f.id) } else { opened.insert(f.id) } } } label: {
-                HStack(spacing: 10) {
-                    NunaIcon(name: f.icon, size: 16).foregroundStyle(NunaPalette.textSecondary)
-                    Text(f.title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                HStack {
+                    Text(f.title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
-                    Image(systemName: open ? "chevron.up" : "chevron.down").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    Image(systemName: open ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
-                .frame(minHeight: 44).contentShape(Rectangle())
+                .frame(minHeight: 48).contentShape(Rectangle())
             }.buttonStyle(.plain).accessibilityAddTraits(.isHeader)
-            HStack(alignment: .center, spacing: 16) {
-                NunaFitnessScale(value: f.value, reference: f.reference, range: f.range, higherIsBetter: f.higherIsBetter,
-                             label: f.valueText + (f.unit.isEmpty ? "" : " " + f.unit), low: f.lowText, high: f.highText)
+            HStack(alignment: .center, spacing: 14) {
+                NunaFitnessScale(value: f.value, reference: f.reference, range: f.range, higherIsBetter: f.higherIsBetter, label: f.valueText, low: f.lowText, high: f.highText)
                 VStack(spacing: 2) {
                     if let y = f.years {
-                        Text(verbatim: yearsText(y)).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(yearsColor(y)).lineLimit(1).minimumScaleFactor(0.7)
-                        Text("years").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    } else if f.id == "vo2" {
-                        Text("Not in the age").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).multilineTextAlignment(.center).textCase(nil)
+                        Text(verbatim: yearsText(y)).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(yearsColor(y)).lineLimit(1).minimumScaleFactor(0.7).textCase(nil)
+                        Text("years").font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                 }
-                .frame(width: 70)
+                .frame(width: 66)
             }
             if open {
                 VStack(alignment: .leading, spacing: 10) {
                     if let y = f.years {
                         Text(y < -0.05 ? "Outperforming" : (y > 0.05 ? "Underperforming" : "On par"))
-                            .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                            .font(.nuna(size: 20, weight: .medium)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     }
-                    Text(f.note).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    HStack(spacing: 10) {
-                        ForEach(Array(f.extras.enumerated()), id: \.offset) { _, e in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(e.label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                                Text(verbatim: e.value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+                    Text(f.note).font(.nuna(size: 15.5, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).lineSpacing(5).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    if f.id == "vo2", profile.waistCm <= 0 {
+                        Button { showWaist = true } label: {
+                            HStack(spacing: 8) {
+                                Text("Unlock VO₂max").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                Image(systemName: "arrow.right").font(.nuna(size: 13, weight: .bold))
                             }
-                            .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                            .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        }
+                            .foregroundStyle(NunaPalette.recoveryBlue).frame(minHeight: 44).contentShape(Rectangle())
+                        }.buttonStyle(.plain)
                     }
                 }
-                .padding(.bottom, 6)
+                .padding(.bottom, 10)
             }
         }
-        .padding(.vertical, 12)
-    }
-
-    /// The two rows added up: how far the age is from the calendar. The headline can differ a little at the ends of the scale, where it stops at 20 and 80.
-    private func togetherRow(_ total: Double) -> some View {
-        HStack {
-            Text("Together").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-            Spacer()
-            Text(verbatim: yearsText(total)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(yearsColor(total))
-            Text("years").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-        }
-        .frame(minHeight: 56)
+        .padding(.bottom, 6)
     }
 
     // MARK: Trends
 
     private var trends: some View {
-        let fitness: [(Date, Double)] = series.suffix(26).compactMap { r in date(r.day).map { ($0, r.value) } }
+        let fitness: [(date: Date, value: Double)] = series.suffix(26).compactMap { r in date(r.day).map { (date: $0, value: r.value) } }
         var paces: [(date: Date, value: Double)] = []
         let all = readings
         if all.count >= PaceOfAging.minReadings {
@@ -506,24 +410,22 @@ struct NunaFitnessAgeView: View {
             }
         }
         return VStack(alignment: .leading, spacing: 14) {
-            Text("Trend view").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            heading("Trend view")
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     cap("Fitness age trend")
                     HStack(spacing: 18) {
-                        legend(RoundedRectangle(cornerRadius: 2, style: .continuous).fill(tint).frame(width: 12, height: 12), "Your fitness age")
-                        legend(RoundedRectangle(cornerRadius: 2, style: .continuous).fill(NunaPalette.textPrimary).frame(width: 12, height: 12), "Calendar age")
+                        legend(RoundedRectangle(cornerRadius: 2, style: .continuous).fill(tint).frame(width: 14, height: 14), "Your fitness age")
+                        legend(RoundedRectangle(cornerRadius: 2, style: .continuous).fill(NunaPalette.textPrimary).frame(width: 14, height: 14), "Calendar age")
                     }
-                    NunaLine2Chart(points: fitness.map { (date: $0.0, value: $0.1) }, color: tint, decimals: 0, baseline: profile.age > 0 ? Double(profile.age) : nil, baselineInRange: true, height: 190)
+                    NunaLine2Chart(points: fitness, color: tint, decimals: 0, baseline: profile.age > 0 ? Double(profile.age) : nil, baselineInRange: true, height: 200)
                 }
             }
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    cap("Pace of aging trend")
-                    if paces.count >= 2 {
-                        NunaLine2Chart(points: paces, color: NunaPalette.textPrimary, decimals: 1, baseline: 1.0, height: 190)
-                    } else {
-                        Text("The trend appears once the pace has a few weeks behind it.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            if paces.count >= 2 {
+                NunaCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        cap("Pace of aging trend")
+                        NunaLine2Chart(points: paces, color: NunaPalette.textPrimary, decimals: 1, baseline: 1.0, height: 200)
                     }
                 }
             }
@@ -531,10 +433,10 @@ struct NunaFitnessAgeView: View {
     }
 
     private func legend<S: View>(_ mark: S, _ text: LocalizedStringKey) -> some View {
-        HStack(spacing: 6) { mark; Text(text).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary) }
+        HStack(spacing: 7) { mark; Text(text).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary) }
     }
 
-    // MARK: Data, history, tips
+    // MARK: Not ready
 
     private var dataCard: some View {
         let nights = rhrValues.count
@@ -547,46 +449,8 @@ struct NunaFitnessAgeView: View {
         }
     }
 
-    @ViewBuilder private var history: some View {
-        let rows = Array(series.prefix(index + 1).suffix(6).reversed())
-        if rows.count >= 2 {
-            VStack(alignment: .leading, spacing: 12) {
-                NunaTitleRow(title: "Weekly history") { EmptyView() }
-                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                    VStack(spacing: 0) {
-                        ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
-                            if i > 0 { NunaDivider() }
-                            HStack(spacing: 12) {
-                                Text(verbatim: date(r.day).map { nunaAxisDate($0) } ?? r.day).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(width: 56, alignment: .leading)
-                                NunaProgressBar(fraction: min(max(1 - (r.value - 20) / 60, 0.05), 1), color: i == 0 ? tint : NunaPalette.rest)
-                                Text(verbatim: String(format: "%.0f", r.value)).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
-                                    .foregroundStyle(NunaPalette.textPrimary).frame(width: 40, alignment: .trailing)
-                            }
-                            .frame(minHeight: 50)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private var lowerCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "How to lower it") { EmptyView() }
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                VStack(spacing: 0) {
-                    NunaListRow("Zone 2 runs", description: "3× per week, 30 minutes", systemImage: "figure.run")
-                    NunaDivider()
-                    NunaListRow("Short intervals", description: "1× per week, 4 × 4 minutes", systemImage: "bolt")
-                    NunaDivider()
-                    NunaListRow("Enough sleep", description: "Resting heart rate falls when Sleep is high", systemImage: NunaIcons.sleep)
-                }
-            }
-        }
-    }
-
     private var notReady: some View {
-        VStack(spacing: NunaSpacing.section) {
+        VStack(spacing: 20) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(loaded ? "Not ready yet" : " ").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -598,26 +462,13 @@ struct NunaFitnessAgeView: View {
             if loaded { dataCard }
         }
     }
-
-    private var footer: some View {
-        VStack(spacing: NunaSpacing.section) {
-            NunaCard(small: true) {
-                HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: "info.circle").foregroundStyle(NunaPalette.textMuted)
-                    Text("This is a fitness comparison in years, not a biological age or a medical assessment. The model uses no exercise test, so watch the direction rather than the exact number.")
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                }
-            }
-            NunaExpandRow(title: "How it's calculated", subtitle: "Non-exercise model (Nes 2011, HUNT), updated every Saturday", systemImage: "sparkles",
-                          text: "Your age, sex, the median resting heart rate of the last 7 days and a physical activity index built from your recent training are compared with an average person of your age. The gap is turned into years.")
-        }
-    }
 }
 
 // MARK: - The scale bar
 
-/// A reading on a scale of ten segments that run from the unfavourable end (amber) to the favourable one (green): the reading as a white marker above the bar with its
-/// value over it, the average person as a grey marker below it, and the ends of the scale named under the bar.
+/// A reading on a scale of ten blocks, as on the reference: each a dark block with a bright line along its top, the line running from the unfavourable end (amber)
+/// to the favourable one (green). The reading is a white marker above the bar with its value over it, the average person a grey marker below it, and the ends of the
+/// scale are named inside the bar in the colour of the block they sit in.
 private struct NunaFitnessScale: View {
     let value: Double
     let reference: Double?
@@ -629,40 +480,44 @@ private struct NunaFitnessScale: View {
 
     private func fraction(_ v: Double) -> CGFloat { CGFloat(min(max((v - range.lowerBound) / (range.upperBound - range.lowerBound), 0), 1)) }
 
-    /// Segment i from the left, with the favourable end at the right unless lower is better.
-    private func segmentColor(_ i: Int) -> Color {
+    /// Block i from the left, the favourable end at the right unless lower is better.
+    private func color(_ i: Int) -> Color {
         let good = higherIsBetter ? i : 9 - i
         switch good {
-        case 0...3: return NunaPalette.warning.opacity(1.0 - Double(3 - good) * 0.12)
-        case 4...5: return NunaPalette.textMuted.opacity(0.45)
-        default: return NunaPalette.charge.opacity(0.55 + Double(good - 6) * 0.15)
+        case 0...3: return NunaPalette.caution.opacity(1.0 - Double(3 - good) * 0.1)
+        case 4...5: return NunaPalette.textMuted.opacity(0.6)
+        default: return NunaPalette.charge.opacity(0.65 + Double(good - 6) * 0.12)
         }
     }
 
     var body: some View {
-        VStack(spacing: 4) {
-            GeometryReader { geo in
-                let w = geo.size.width
-                let x = min(max(w * fraction(value), 0), w)
-                ZStack(alignment: .topLeading) {
-                    Text(verbatim: label).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize()
-                        .position(x: min(max(x, 40), max(w - 40, 40)), y: 8)
-                    Image(systemName: "arrowtriangle.down.fill").font(.nuna(size: 13)).foregroundStyle(NunaPalette.textPrimary).position(x: x, y: 30)
-                    HStack(spacing: 2) {
-                        ForEach(0..<10, id: \.self) { i in RoundedRectangle(cornerRadius: 1.5, style: .continuous).fill(segmentColor(i)).frame(height: 6) }
-                    }
-                    .frame(width: w).offset(y: 40)
-                    if let reference {
-                        Image(systemName: "arrowtriangle.up.fill").font(.nuna(size: 12)).foregroundStyle(NunaPalette.textMuted).position(x: w * fraction(reference), y: 58)
+        GeometryReader { geo in
+            let w = geo.size.width
+            let x = min(max(w * fraction(value), 0), w)
+            ZStack(alignment: .topLeading) {
+                Text(verbatim: label).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize()
+                    .position(x: min(max(x, 56), max(w - 56, 56)), y: 10)
+                Image(systemName: "arrowtriangle.down.fill").font(.nuna(size: 14)).foregroundStyle(NunaPalette.textPrimary).position(x: x, y: 36)
+                HStack(spacing: 0) {
+                    ForEach(0..<10, id: \.self) { i in
+                        Rectangle().fill(color(i).opacity(0.14)).frame(height: 36)
+                            .overlay(alignment: .top) { Rectangle().fill(color(i)).frame(height: 3) }
                     }
                 }
+                .frame(width: w).clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous)).offset(y: 46)
+                HStack {
+                    Text(verbatim: low).foregroundStyle(color(0))
+                    Spacer()
+                    Text(verbatim: high).foregroundStyle(color(9))
+                }
+                .font(.nuna(size: 14, weight: .bold)).textCase(nil)
+                .padding(.horizontal, 7).padding(.bottom, 5).frame(width: w, height: 36, alignment: .bottom).offset(y: 46)
+                if let reference {
+                    Image(systemName: "arrowtriangle.up.fill").font(.nuna(size: 12)).foregroundStyle(NunaPalette.textSecondary).position(x: w * fraction(reference), y: 94)
+                }
             }
-            .frame(height: 66)
-            HStack {
-                Text(verbatim: low); Spacer(); Text(verbatim: high)
-            }
-            .font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
+        .frame(height: 104)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: label))
     }
@@ -670,23 +525,25 @@ private struct NunaFitnessScale: View {
 
 // MARK: - The info page
 
-/// What the orb's colour and the pace mean, one short page for each, the way the first time through would say it.
+/// What the orb's colour and the pace mean, one short page for each, and how the number is worked out.
 private struct NunaFitnessAgeInfoSheet: View {
-    let age: Int
     let pace: Double?
     @Environment(\.dismiss) private var dismiss
     @State private var page = 0
 
-    private struct Page { let tint: Color; let title: LocalizedStringKey; let text: LocalizedStringKey; let ruler: Double? }
+    private struct Page { let tint: Color; let title: LocalizedStringKey; let text: LocalizedStringKey; let ruler: Double?; var orb = true }
 
     private var pages: [Page] {
-        [Page(tint: NunaPalette.warning, title: "An older fitness age", text: "Your fitness age is above your calendar age. Small, consistent habits can bring it down.", ruler: nil),
-         Page(tint: NunaPalette.insightBlue, title: "On track", text: "Your fitness age is close to your calendar age, a sign of balanced fitness. Keep up your current habits.", ruler: nil),
+        [Page(tint: NunaPalette.caution, title: "An older fitness age", text: "Your fitness age is above your calendar age. Small, consistent habits can bring it down.", ruler: nil),
+         Page(tint: NunaPalette.recoveryBlue, title: "On track", text: "Your fitness age is close to your calendar age, a sign of balanced fitness. Keep up your current habits.", ruler: nil),
          Page(tint: NunaPalette.charge, title: "A younger fitness age", text: "Your fitness age is below your calendar age, reflecting good heart and lung fitness. Continue your healthy habits.", ruler: nil),
          Page(tint: NunaPalette.textSecondary, title: "Your pace of aging", text: "Pace of aging shows how quickly your fitness age is changing, so you can see how your recent habits shape it over time.", ruler: pace),
          Page(tint: NunaPalette.charge, title: "Trending slower", text: "Your pace is below 1.0x, or even negative. Your recent habits are lowering your fitness age.", ruler: -1),
-         Page(tint: NunaPalette.insightBlue, title: "Balanced", text: "Your pace is near 1.0x. Your fitness age rises steadily, at the same rate as your calendar age.", ruler: 1),
-         Page(tint: NunaPalette.warning, title: "Trending faster", text: "Your pace is above 1.0x. Your current habits may be pushing your fitness age up. Small, healthy habits can shift the trend.", ruler: 3)]
+         Page(tint: NunaPalette.recoveryBlue, title: "Balanced", text: "Your pace is near 1.0x. Your fitness age rises steadily, at the same rate as your calendar age.", ruler: 1),
+         Page(tint: NunaPalette.caution, title: "Trending faster", text: "Your pace is above 1.0x. Your current habits may be pushing your fitness age up. Small, healthy habits can shift the trend.", ruler: 3),
+         Page(tint: NunaPalette.textSecondary, title: "How it's calculated",
+              text: "Your age, sex, the median resting heart rate of the last 7 days and a physical activity index built from your recent training are compared with an average person of your age. The gap is turned into years. Non-exercise model (Nes 2011, HUNT), updated every Saturday.",
+              ruler: nil, orb: false)]
     }
 
     var body: some View {
@@ -702,10 +559,14 @@ private struct NunaFitnessAgeInfoSheet: View {
             TabView(selection: $page) {
                 ForEach(Array(pages.enumerated()), id: \.offset) { i, p in
                     VStack(alignment: .leading, spacing: 18) {
-                        NunaFitnessOrb(tint: p.tint, size: 280) { EmptyView() }.frame(maxWidth: .infinity)
-                        if i >= 3 { NunaPaceDial(value: p.ruler) } else { ageBar(i) }
+                        if p.orb {
+                            NunaFitnessOrb(tint: p.tint, size: 300) { EmptyView() }.frame(maxWidth: .infinity)
+                            if i >= 3 { NunaPaceDial(value: p.ruler) } else { ageBar(i) }
+                        } else {
+                            Spacer(minLength: 60)
+                        }
                         Text(p.title).font(.nuna(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                        Text(p.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineSpacing(4).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                        Text(p.text).font(.nuna(size: 15.5, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).lineSpacing(5).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         Spacer(minLength: 0)
                     }
                     .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 30)
@@ -725,7 +586,7 @@ private struct NunaFitnessAgeInfoSheet: View {
         let f: CGFloat = i == 2 ? 0.08 : (i == 1 ? 0.5 : 0.92)
         return GeometryReader { geo in
             ZStack(alignment: .topLeading) {
-                Capsule().fill(LinearGradient(colors: [NunaPalette.charge, NunaPalette.insightBlue, NunaPalette.warning], startPoint: .leading, endPoint: .trailing)).frame(height: 5).offset(y: 22)
+                Capsule().fill(LinearGradient(colors: [NunaPalette.charge, NunaPalette.recoveryBlue, NunaPalette.caution], startPoint: .leading, endPoint: .trailing)).frame(height: 4).offset(y: 22)
                 Image(systemName: "arrowtriangle.down.fill").font(.nuna(size: 14)).foregroundStyle(NunaPalette.textPrimary).position(x: geo.size.width * f, y: 10)
             }
         }
