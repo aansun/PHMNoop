@@ -55,7 +55,7 @@ enum NunaQuickActions {
         .init(id: "hrv", title: "Heart Rate Variability", icon: NunaIcons.hrv, group: "Read", kind: .metric("hrv")),
         .init(id: "stress", title: "Stress monitor", icon: NunaIcons.stress, group: "Read", kind: .metric("stress")),
         .init(id: "earlyWarning", title: "Early warning", icon: NunaIcons.earlyWarning, group: "Read", kind: .today(.earlyWarning)),
-        .init(id: "fitnessAge", title: "Fitness age", icon: "figure.run", group: "Read", kind: .today(.fitnessAge)),
+        .init(id: "fitnessAge", title: "Fitness age", icon: NunaIcons.fitnessAge, group: "Read", kind: .today(.fitnessAge)),
         .init(id: "trends", title: "Trends", icon: "chart.line.uptrend.xyaxis", group: "Read", kind: .route(.trends)),
         .init(id: "labBook", title: "Lab book", icon: "testtube.2", group: "Read", kind: .route(.labBook)),
         // App

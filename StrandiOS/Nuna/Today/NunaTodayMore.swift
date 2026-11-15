@@ -96,7 +96,7 @@ extension NunaTodayView {
             case .steps:       made = (num(model.steps), steps, "met:steps", nil)
             case .stepsAverage30: made = (nil, steps, "met:steps", nil)
             case .stress:      made = (num(model.stress, 1), NunaRowTarget(kind: .nuna(.trend(.stressTotal))), "met:total-day-stress", NunaPalette.charge)
-            case .fitnessAge:  made = (num(ex["body_age"]), desc("body_age"), "figure.run", nil)
+            case .fitnessAge:  made = (num(ex["body_age"]), desc("body_age"), NunaIcons.fitnessAge, nil)
             case .vo2max:      made = (num(ex["vo2max_est"], 1), desc("vo2max_est"), "met:vo2-max", nil)
             case .vitality:    made = (num(ex["vitality"]), desc("vitality"), "sparkles", nil)
             case .bloodOxygen: made = (num(model.spo2), desc("spo2"), "vital:spo2", nil)

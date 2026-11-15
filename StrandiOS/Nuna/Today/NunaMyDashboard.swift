@@ -53,7 +53,7 @@ extension DashboardCard {
         case .respiratory: return "met:respiratory-rate"
         case .steps, .stepsAverage30: return "met:steps"
         case .stress: return "met:total-day-stress"
-        case .fitnessAge: return "figure.run"
+        case .fitnessAge: return NunaIcons.fitnessAge
         case .vo2max: return "met:vo2-max"
         case .vitality: return "sparkles"
         case .bloodOxygen: return "vital:spo2"
