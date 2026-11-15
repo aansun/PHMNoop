@@ -286,6 +286,8 @@ struct NunaFitnessAgeView: View {
         let note: LocalizedStringKey
         /// The stored metric whose trend "View trend" opens, when there is one.
         var metricKey: String?
+        /// Decimals of the difference from the average person, which stands where the years would when they cannot be said.
+        var deltaDecimals = 0
     }
 
     private var restingFactor: Factor? {
@@ -294,7 +296,7 @@ struct NunaFitnessAgeView: View {
                       reference: FitnessAgeEngine.restingHRReference, referenceText: String(format: "%.0f bpm", FitnessAgeEngine.restingHRReference), higherIsBetter: false,
                       years: yearsAgree ? rawYears : nil, lowText: "40bpm", highText: "80bpm",
                       note: "The median of your resting heart rate over these 7 days, against 65 bpm for an average person of your age. A lower resting heart rate is the sign of a fitter heart.",
-                      metricKey: "rhr")
+                      metricKey: "rhr", deltaDecimals: 0)
     }
 
     private var activityFactor: Factor? {
@@ -302,7 +304,8 @@ struct NunaFitnessAgeView: View {
         return Factor(id: "activity", title: "Physical activity", value: paIndex, valueText: String(format: "%.1f", locale: AppLanguage.activeLocale, paIndex), unit: "", range: 0...15,
                       reference: FitnessAgeEngine.paiReference, referenceText: String(format: "%.1f", locale: AppLanguage.activeLocale, FitnessAgeEngine.paiReference), higherIsBetter: true,
                       years: yearsAgree ? rawYears : nil, lowText: "0", highText: "15",
-                      note: "An index from 0 to 15 built from how many days you trained this week and how hard. An average person of your age sits near 5.")
+                      note: "An index from 0 to 15 built from how many days you trained this week and how hard. An average person of your age sits near 5.",
+                      deltaDecimals: 1)
     }
 
     /// The VO₂max the weekly job stored for the week on show, or the latest before it.
@@ -368,6 +371,37 @@ struct NunaFitnessAgeView: View {
     }
     private func yearsColor(_ y: Double) -> Color { y > 0.05 ? NunaPalette.caution : (y < -0.05 ? NunaPalette.charge : NunaPalette.textSecondary) }
 
+    /// Better (1), worse (-1) or level (0) than an average person: from the years when they are said, otherwise from how far the reading is from the average
+    /// person's. nil for a figure with neither (VO₂max).
+    private func standing(_ f: Factor) -> Int? {
+        if let y = f.years { return y < -0.05 ? 1 : (y > 0.05 ? -1 : 0) }
+        guard let r = f.reference else { return nil }
+        let d = (f.value - r) * (f.higherIsBetter ? 1 : -1)
+        let level = (f.range.upperBound - f.range.lowerBound) * 0.03
+        return d > level ? 1 : (d < -level ? -1 : 0)
+    }
+
+    /// What stands at the right of the bar: the years the row adds to or takes off the fitness age, as on the reference. When those years do not add up to the week's
+    /// reading (see `yearsAgree`) it is how far the reading is from the average person's instead, so the right is never empty where there is something true to say. A
+    /// figure the age does not use has neither, and its bar takes the whole width.
+    @ViewBuilder private func sideFigure(_ f: Factor) -> some View {
+        if let y = f.years {
+            VStack(spacing: 2) {
+                Text(verbatim: yearsText(y)).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(yearsColor(y)).lineLimit(1).minimumScaleFactor(0.7).textCase(nil)
+                Text("years").font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+            .frame(width: 66)
+        } else if let r = f.reference, let better = standing(f) {
+            VStack(spacing: 2) {
+                Text(verbatim: abs(f.value - r) < 0.05 ? "0" : String(format: "%+.\(f.deltaDecimals)f", locale: AppLanguage.activeLocale, f.value - r))
+                    .font(.nuna(size: 26, weight: .bold, design: NunaType.design)).lineLimit(1).minimumScaleFactor(0.7).textCase(nil)
+                    .foregroundStyle(better > 0 ? NunaPalette.charge : (better < 0 ? NunaPalette.caution : NunaPalette.textSecondary))
+                Text("vs average").font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+            }
+            .frame(width: 66)
+        }
+    }
+
     /// Shut, a row is its name, the reading on a thin bar and the years. Open, the bar becomes tall blocks with the reading and the average person named at their
     /// markers, and under it come what it means for the age and the way to its trend.
     private func factorRow(_ f: Factor) -> some View {
@@ -384,18 +418,12 @@ struct NunaFitnessAgeView: View {
             HStack(alignment: .center, spacing: 14) {
                 NunaFitnessScale(value: f.value, valueText: f.valueText, unit: f.unit, reference: f.reference, referenceText: f.referenceText, range: f.range,
                                  higherIsBetter: f.higherIsBetter, low: f.lowText, high: f.highText, expanded: open)
-                VStack(spacing: 2) {
-                    if let y = f.years {
-                        Text(verbatim: yearsText(y)).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(yearsColor(y)).lineLimit(1).minimumScaleFactor(0.7).textCase(nil)
-                        Text("years").font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                }
-                .frame(width: 66)
+                sideFigure(f)
             }
             if open {
                 VStack(alignment: .leading, spacing: 12) {
-                    if let y = f.years {
-                        Text(y < -0.05 ? "Outperforming" : (y > 0.05 ? "Underperforming" : "On par"))
+                    if let better = standing(f) {
+                        Text(better > 0 ? "Outperforming" : (better < 0 ? "Underperforming" : "On par"))
                             .font(.nuna(size: 21, weight: .medium)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     }
                     Text(f.note).font(.nuna(size: 16.5, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).lineSpacing(6).fixedSize(horizontal: false, vertical: true).textCase(nil)
