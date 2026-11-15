@@ -52,7 +52,10 @@ struct NunaFitnessAgeSummary: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @AppStorage("nuna.fitnessAgeCalibratingHidden") private var calibratingHidden = false
+    /// The Body Age stored each week, which the pace is read from.
     @State private var series: [(day: String, value: Double)] = []
+    /// The age of the latest 7 days, the figure on the orb: the one the fitness age page shows.
+    @State private var live: NunaHealthspanResult?
     @State private var loaded = false
 
     private static let dayParser: DateFormatter = {
@@ -71,14 +74,14 @@ struct NunaFitnessAgeSummary: View {
     }
 
     private var tint: Color {
-        guard let latest = series.last, profile.age > 0 else { return NunaFitnessAgeTone.tint(gap: nil) }
-        return NunaFitnessAgeTone.tint(gap: Int((Double(profile.age) - latest.value).rounded()))
+        guard let age = live?.bodyAge, profile.age > 0 else { return NunaFitnessAgeTone.tint(gap: nil) }
+        return NunaFitnessAgeTone.tint(gap: Int((Double(profile.age) - age).rounded()))
     }
 
     var body: some View {
         VStack(spacing: 14) {
-            if let latest = series.last {
-                orb(latest)
+            if let age = live?.bodyAge {
+                orb(age)
                 if isCalibrating, !calibratingHidden { calibrating }
                 pace
             } else {
@@ -107,16 +110,17 @@ struct NunaFitnessAgeSummary: View {
                 .frame(width: 520, height: 420).offset(y: -140).allowsHitTesting(false)
         }
         .task(id: repo.refreshSeq) {
-            series = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 200)
+            series = await repo.exploreSeries(key: "body_age", source: "my-whoop", days: 200)
+            live = await NunaHealthspan.latest(repo: repo, profile: profile)
             loaded = true
         }
     }
 
-    private func orb(_ latest: (day: String, value: Double)) -> some View {
-        let gap: Int? = profile.age > 0 ? Int((Double(profile.age) - latest.value).rounded()) : nil
+    private func orb(_ age: Double) -> some View {
+        let gap: Int? = profile.age > 0 ? Int((Double(profile.age) - age).rounded()) : nil
         // Over a room as wide as the card, so an orb a little wider than the card does not widen it.
         return Color.clear.frame(maxWidth: .infinity).frame(height: 320)
-            .overlay { NunaFitnessOrb(tint: tint, size: 360, irregularity: NunaFitnessAgeTone.irregularity(pace: PaceOfAging.compute(readings)?.pace)) { NunaFitnessOrbCenter(value: latest.value, gap: gap, numberSize: 48) } }
+            .overlay { NunaFitnessOrb(tint: tint, size: 360, irregularity: NunaFitnessAgeTone.irregularity(pace: PaceOfAging.compute(readings)?.pace)) { NunaFitnessOrbCenter(value: age, gap: gap, numberSize: 48) } }
     }
 
     /// The note while the pace is still firming up; it can be closed and stays closed.
@@ -172,7 +176,7 @@ struct NunaFitnessAgeSummary: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Fitness age").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             Text(loaded ? "Not ready yet" : " ").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            Text("Fitness age needs your age, your sex and resting heart rate from at least 4 nights. It updates once a week.")
+            Text("Fitness age needs your age in your profile and at least 3 of its 9 inputs from the last 7 days.")
                 .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
         .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)

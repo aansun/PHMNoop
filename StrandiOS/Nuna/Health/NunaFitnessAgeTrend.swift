@@ -91,7 +91,7 @@ struct NunaFitnessAgeTrendView: View {
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) {
-            readings = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 400)
+            readings = await repo.exploreSeries(key: "body_age", source: "my-whoop", days: 400)
             loaded = true
         }
         .onChange(of: range) { _, _ in picked = nil }
