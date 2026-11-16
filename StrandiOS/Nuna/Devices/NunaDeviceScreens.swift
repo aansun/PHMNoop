@@ -248,28 +248,46 @@ struct NunaDeviceLogView: View {
 
     private var lines: [String] { Array(live.log.suffix(120)) }
 
+    /// Copy and share, the icons alone at the top right: the whole log goes, not only the lines on show.
+    private var logActions: some View {
+        HStack(spacing: 0) {
+            Button {
+                UIPasteboard.general.string = live.log.joined(separator: "\n"); copied = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false }
+            } label: { NunaBareIcon(copied ? "checkmark" : NunaIcons.copy) }
+                .buttonStyle(.plain).disabled(lines.isEmpty).opacity(lines.isEmpty ? 0.4 : 1)
+                .accessibilityLabel(Text(copied ? "Copied" : "Copy"))
+            ShareLink(item: live.log.joined(separator: "\n")) { NunaBareIcon(NunaIcons.share) }
+                .disabled(lines.isEmpty).opacity(lines.isEmpty ? 0.4 : 1)
+                .accessibilityLabel(Text("Share"))
+        }
+    }
+
     var body: some View {
-        NunaDetailScreen("Strap log") {
+        NunaDetailScreen("Strap log", trailing: AnyView(logActions)) {
             Text("Take this when reporting a problem. It holds what the app sees from the strap.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            // The log takes all the room the other parts leave and scrolls inside its card, from its newest line.
             NunaCard(small: true) {
                 if lines.isEmpty {
-                    Text("Nothing logged yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
+                    Text("Nothing logged yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 } else {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(Array(lines.enumerated()), id: \.offset) { _, l in
-                            Text(verbatim: l).font(.nuna(size: 12, weight: .medium, design: .monospaced)).foregroundStyle(NunaPalette.textPrimary).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(Array(lines.enumerated()), id: \.offset) { i, l in
+                                    Text(verbatim: l).font(.nuna(size: 12, weight: .medium, design: .monospaced)).foregroundStyle(NunaPalette.textPrimary).textSelection(.enabled)
+                                        .frame(maxWidth: .infinity, alignment: .leading).id(i)
+                                }
+                            }
                         }
+                        .scrollIndicators(.hidden)
+                        .onAppear { proxy.scrollTo(lines.count - 1, anchor: .bottom) }
+                        .onChange(of: lines.count) { _, n in proxy.scrollTo(n - 1, anchor: .bottom) }
                     }
                 }
             }
-            HStack(spacing: 10) {
-                Button { UIPasteboard.general.string = live.log.joined(separator: "\n"); copied = true; DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false } } label: {
-                    Text(copied ? "Copied" : "Copy").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain).disabled(lines.isEmpty)
-                ShareLink(item: live.log.joined(separator: "\n")) {
-                    Text("Share").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }
-            }
+            .frame(maxHeight: .infinity)
             VStack(alignment: .leading, spacing: 10) {
                 nunaRuledHeader("Test")
                 NunaCard(small: true) {
@@ -280,6 +298,7 @@ struct NunaDeviceLogView: View {
             }
             Text("The log only holds connection and sync events. No health data is in it.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
+        .fillsScreen()
     }
 }
 

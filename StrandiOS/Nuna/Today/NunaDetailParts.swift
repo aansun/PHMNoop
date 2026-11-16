@@ -106,6 +106,8 @@ struct NunaDetailScreen<Content: View>: View {
     var onBack: (() -> Void)?
     /// A band under the header that stays put while the page scrolls under it, such as the strap and its tabs on Device Settings.
     private var pinnedBand: AnyView?
+    /// False for a page that fills the screen and keeps its parts in place, one of which (a log) scrolls inside itself.
+    private var scrollsPage = true
     let content: Content
     init(_ title: LocalizedStringKey, titleSymbol: String? = nil, subtitle: String? = nil, titleActivity: String? = nil, onAnya: (() -> Void)? = nil, trailing: AnyView? = nil, centersTitle: Bool = false, showsBack: Bool = true, onBack: (() -> Void)? = nil, @ViewBuilder content: () -> Content) {
         self.title = title; self.titleSymbol = titleSymbol; self.subtitle = subtitle; self.titleActivity = titleActivity; self.onAnya = onAnya; self.trailing = trailing; self.centersTitle = centersTitle; self.showsBack = showsBack; self.onBack = onBack; self.content = content()
@@ -122,15 +124,25 @@ struct NunaDetailScreen<Content: View>: View {
                 }
             }
             .background(NunaBackdrop(top: true))
-            ScrollView {
+            if scrollsPage {
+                ScrollView {
+                    VStack(spacing: NunaSpacing.section) {
+                        content
+                    }
+                    .padding(.horizontal, NunaSpacing.screenH)
+                    .padding(.top, 8)
+                    .padding(.bottom, 120)
+                }
+                .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
+            } else {
                 VStack(spacing: NunaSpacing.section) {
                     content
                 }
                 .padding(.horizontal, NunaSpacing.screenH)
                 .padding(.top, 8)
-                .padding(.bottom, 120)
+                .padding(.bottom, 20)
+                .frame(maxHeight: .infinity, alignment: .top)
             }
-            .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
         }
         .background(NunaBackdrop())
         .toolbar(.hidden, for: .navigationBar)
@@ -138,6 +150,13 @@ struct NunaDetailScreen<Content: View>: View {
 }
 
 extension NunaDetailScreen {
+    /// Fills the screen with the page instead of scrolling it: the parts keep their place, and a part given `maxHeight: .infinity` takes what is left.
+    func fillsScreen() -> NunaDetailScreen {
+        var copy = self
+        copy.scrollsPage = false
+        return copy
+    }
+
     /// Keeps `band` under the header while the page scrolls under it.
     func pinned<Band: View>(@ViewBuilder _ band: () -> Band) -> NunaDetailScreen {
         var copy = self
