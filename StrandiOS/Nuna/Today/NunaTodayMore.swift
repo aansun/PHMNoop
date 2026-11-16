@@ -98,7 +98,7 @@ extension NunaTodayView {
             case .stress:      made = (num(model.stress, 1), NunaRowTarget(kind: .nuna(.trend(.stressTotal))), "met:total-day-stress", NunaPalette.charge)
             case .fitnessAge:  made = (num(ex["body_age"]), desc("body_age"), NunaIcons.fitnessAge, nil)
             case .vo2max:      made = (num(ex["vo2max_est"], 1), desc("vo2max_est"), "met:vo2-max", nil)
-            case .vitality:    made = (num(ex["vitality"]), desc("vitality"), "sparkles", nil)
+            case .vitality:    return nil   // Vitality is the Fitness age on another scale, so the app shows the age only.
             case .bloodOxygen: made = (num(model.spo2), desc("spo2"), "vital:spo2", nil)
             case .skinTemp:    made = (num(ex["skin_temp"], 1), desc("skin_temp"), "vital:temp", nil)
             case .sleep:
@@ -132,7 +132,7 @@ extension NunaTodayView {
             case .stress: trend = cmp(model.stress, model.previous["stress"], 1, good: false)
             case .fitnessAge: trend = cmp(ex["body_age"], model.previous["body_age"], good: false)
             case .vo2max: trend = cmp(ex["vo2max_est"], model.previous["vo2max_est"], 1, good: true)
-            case .vitality: trend = cmp(ex["vitality"], model.previous["vitality"], good: true)
+            case .vitality: trend = nil
             case .skinTemp: trend = cmp(ex["skin_temp"], model.previous["skin_temp"], 1, good: nil)
             case .calories: trend = cmp(model.calories, model.previous["calories"], good: nil)
             case .sleep:

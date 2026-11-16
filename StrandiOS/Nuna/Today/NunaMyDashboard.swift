@@ -16,9 +16,9 @@ enum NunaDashItem: Identifiable, Hashable {
     }
 
     /// The trend pages that are not already a card (HRV, resting heart rate, respiratory rate, steps and calories are cards of their own).
-    static let pages: [NunaTrendPage] = NunaTrendPage.allCases.filter { ![.hrv, .rhr, .respiratory, .steps, .calories, .vo2max, .skinTemp, .weight, .vitality, .spo2, .stressTotal, .stressNonActivity, .stressSleep].contains($0) }
+    static let pages: [NunaTrendPage] = NunaTrendPage.allCases.filter { ![.hrv, .rhr, .respiratory, .steps, .calories, .vo2max, .skinTemp, .weight, .spo2, .stressTotal, .stressNonActivity, .stressSleep].contains($0) }
 
-    static var canonicalOrder: [NunaDashItem] { DashboardCard.canonicalOrder.map(NunaDashItem.card) + pages.map(NunaDashItem.page) }
+    static var canonicalOrder: [NunaDashItem] { DashboardCard.canonicalOrder.filter { $0 != .vitality }.map(NunaDashItem.card) + pages.map(NunaDashItem.page) }
 
     var title: String {
         switch self {
@@ -97,7 +97,6 @@ extension NunaTrendPage {
         case .skinTemp: return String(localized: "Skin temperature")
         case .weight: return String(localized: "Weight")
         case .leanBodyMass: return String(localized: "Lean body mass")
-        case .vitality: return String(localized: "Vitality")
         case .spo2: return String(localized: "Blood oxygen")
         case .stressTotal: return String(localized: "Total day stress")
         case .stressNonActivity: return String(localized: "Non activity stress")
@@ -193,7 +192,6 @@ extension NunaTodayView {
         case .spo2: figure = fig(model.spo2, model.spo2Delta.flatMap { d in model.spo2.map { $0 - d } }, good: true)
         case .skinTemp: figure = fig(model.extras["skin_temp"], model.previous["skin_temp"], 1, good: nil)
         case .weight: figure = fig(model.extras["weight"], model.previous["weight"], 1, good: nil)
-        case .vitality: figure = fig(model.extras["vitality"], model.previous["vitality"], good: true)
         // Not measured every day, or kept in a history this screen does not load: these open their page without a figure.
         case .hrZonesLow, .hrZonesHigh, .hrZonesAll, .strengthTime, .avgHr, .totalVolumeLoad, .vo2max, .leanBodyMass,
              .stressTotal, .stressNonActivity, .stressSleep, .fitnessAge, .paceOfAging: break

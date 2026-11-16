@@ -51,8 +51,8 @@ final class NunaTodayModel: ObservableObject {
     @Published private(set) var respiratoryDelta: Double?
     @Published private(set) var spo2Delta: Double?
     /// The reading before the one shown, for the figures that compare with it (steps, calories, sleep, stress, weight, skin temperature and the
-    /// weekly Fitness Age, VO2max and Vitality), keyed `steps`, `calories`, `sleep`, `stress`, `weight`, `skin_temp`, `body_age`,
-    /// `vo2max_est`, `vitality`. A key is missing when there is no earlier reading. HRV, resting heart rate, respiratory rate and blood oxygen
+    /// weekly Fitness Age and VO2max), keyed `steps`, `calories`, `sleep`, `stress`, `weight`, `skin_temp`, `body_age`,
+    /// `vo2max_est`. A key is missing when there is no earlier reading. HRV, resting heart rate, respiratory rate and blood oxygen
     /// keep their deltas above.
     @Published private(set) var previous: [String: Double] = [:]
 
@@ -180,7 +180,7 @@ final class NunaTodayModel: ObservableObject {
 
         var ex: [String: Double] = [:]
         var prev: [String: Double] = [:]
-        for k in ["body_age", "vitality", "vo2max_est", "skin_temp"] {
+        for k in ["body_age", "vo2max_est", "skin_temp"] {
             let points = await repo.exploreSeries(key: k, source: "my-whoop", days: 60)
             if let v = points.last?.value { ex[k] = v }
             if points.count >= 2 { prev[k] = points[points.count - 2].value }

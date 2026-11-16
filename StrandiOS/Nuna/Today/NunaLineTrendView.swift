@@ -80,9 +80,6 @@ struct NunaLineTrendView: View {
             return NunaLineTrendView(name: "VO₂ max", icon: "met:vo2-max", noun: "average estimated VO₂ max", key: key, unit: "mL/kg/min", upIsGood: true,
                                      closing: String(localized: "It is worked out once a week from your resting heart rate and your profile."), footer: AnyView(NunaVO2MaxFooter()), endingDaysAgo: endingDaysAgo,
                                      vo2Layout: true, ranges: [30, 180])
-        case "vitality":
-            return NunaLineTrendView(name: "Vitality", icon: "sparkles", noun: "average Vitality", key: key, unit: "", upIsGood: true,
-                                     closing: String(localized: "It is worked out once a week from your sleep, activity and recovery."), endingDaysAgo: endingDaysAgo)
         case "weight":
             return NunaLineTrendView(name: "Weight", icon: "met:weight", noun: "average weight", key: key, unit: "kg", decimals: 1, source: "apple-health", also: nunaManualSource,
                                      closing: String(localized: "Keep tracking your weight to see how this changes over time."), averageTitle: String(localized: "Avg. weight"), footer: AnyView(NunaWeightFooter()), endingDaysAgo: endingDaysAgo)
