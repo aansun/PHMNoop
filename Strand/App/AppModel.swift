@@ -496,6 +496,9 @@ final class AppModel: ObservableObject {
             // history once, so any deep-history rows an older build left on the 0–21 axis regenerate on
             // the 0–100 axis. Guarded by a persisted flag, so this is a no-op on every subsequent launch.
             await self.intelligence.runEffortRescoreIfNeeded()
+            // One-shot on-upgrade rebuild of the stored Body Age history (version 3 model), so the pace of aging never reads a
+            // step between an older version's weeks and this one's. Guarded by a mark stored beside the history.
+            await self.intelligence.rebuildBodyAgeHistoryIfNeeded(newestDay: Repository.localDayKey(Date()))
             // WHOOP 5 steps are a strap counter, not an Apple Health import. Repair today's computed
             // total even when the long rescore was deferred or ran before the offload finished.
             if await self.intelligence.hydrateCurrentDeviceSteps() {

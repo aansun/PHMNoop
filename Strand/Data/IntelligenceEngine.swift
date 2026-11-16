@@ -568,6 +568,45 @@ final class IntelligenceEngine: ObservableObject {
         return !rows.isEmpty
     }
 
+    /// Rebuilds the stored Body Age history once for each version of the model. The weeks stored by an older version were made with other inputs and other
+    /// break-even points, so a pace of aging fitted across them and the weeks stored now would read the step between the two as a change in the wearer. The
+    /// completed weeks of the last 26 are worked out again with the model of this version, from the days and series the app holds for them, and the older
+    /// rows are dropped, those further back included: they are on the old scale and the pace never reads them. A week with too little recorded is left
+    /// out, never filled in, so a history may start later than the old one did. A mark stored beside the history says which model it is made with, so it
+    /// survives a restore that replaces the database (the older database has no mark, and is rebuilt).
+    /// - Returns: true when the history was rebuilt now.
+    @discardableResult
+    func rebuildBodyAgeHistoryIfNeeded(newestDay: String) async -> Bool {
+        guard profile.age > 0, !repo.days.isEmpty, let store = await repo.storeHandle() else { return false }
+        let computedId = deviceId + "-noop"
+        let marked = (try? await store.metricSeries(deviceId: computedId, key: BodyAgeHistory.markerKey, from: "0000-01-01", to: "9999-12-31")) ?? []
+        if let version = marked.map(\.value).max(), Int(version) >= BodyAgeHistory.modelVersion { return false }
+
+        let saturdays = BodyAgeHistory.saturdays(before: newestDay)
+        guard let first = saturdays.first, let last = saturdays.last, let from = BodyAgeHistory.addDays(first, -6) else { return false }
+        let dailies = Dictionary((await repo.dailyMetrics(fromDay: from, toDay: last)).map { ($0.day, $0) }, uniquingKeysWith: { _, l in l })
+        let estimates = Dictionary(((try? await store.metricSeries(deviceId: computedId, key: "vo2max_est", from: first, to: last)) ?? [])
+            .map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
+        var weeks: [(saturday: String, data: VitalityEngine.WeekData)] = []
+        for saturday in saturdays {
+            let days = BodyAgeHistory.weekDays(endingOn: saturday).compactMap { dailies[$0] }
+            guard days.count >= BodyAgeHistory.minDays else { continue }
+            let data = await VitalityWeekReader.read(
+                repo: repo, days: days, age: profile.age, sex: profile.sex, waistCm: profile.waistCm, vo2Estimate: estimates[saturday])
+            weeks.append((saturday, data))
+        }
+        let rows = BodyAgeHistory.points(weeks).flatMap {
+            [MetricPoint(day: $0.day, key: "body_age", value: $0.bodyAge), MetricPoint(day: $0.day, key: "vitality", value: $0.vitality)]
+        }
+        // The old rows go, then the rebuilt ones and last the mark: a pass cut short in between has no mark and runs again.
+        _ = try? await store.deleteMetricSeries(deviceId: computedId, key: "body_age")
+        _ = try? await store.deleteMetricSeries(deviceId: computedId, key: "vitality")
+        if !rows.isEmpty { _ = try? await store.upsertMetricSeries(rows, deviceId: computedId) }
+        _ = try? await store.upsertMetricSeries(
+            [MetricPoint(day: newestDay, key: BodyAgeHistory.markerKey, value: Double(BodyAgeHistory.modelVersion))], deviceId: computedId)
+        return true
+    }
+
     /// UserDefaults flag guarding the one-shot #313 full-history Effort rescore (below). Set once the
     /// pass completes so it never re-runs.
     static let effortRescoreFlagKey = "intelligence.effortRescore.v313.done"
@@ -2543,6 +2582,8 @@ final class IntelligenceEngine: ObservableObject {
         // VitalityWeekReader the Health screen's breakdown and the fitness age card use, so the number stored,
         // the factors listed beside it and the figure drawn cannot differ: the nine inputs of the WHOOP Healthspan
         // page (resting HR, cardio fitness, sleep duration + regularity, steps, zones 1–3 and 4–5, strength, lean body mass).
+        // Weeks stored by an older model are rebuilt first, once, so the week written below lands in a history of one scale.
+        await rebuildBodyAgeHistoryIfNeeded(newestDay: newestDay)
         let vWeek = await VitalityWeekReader.read(
             repo: repo, days: Array(fa7), age: profile.age, sex: profile.sex, waistCm: profile.waistCm,
             vo2Estimate: faPts.first(where: { $0.key == "vo2max_est" })?.value)
