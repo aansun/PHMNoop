@@ -104,6 +104,8 @@ struct NunaDetailScreen<Content: View>: View {
     var centersTitle = false
     var showsBack = true
     var onBack: (() -> Void)?
+    /// A band under the header that stays put while the page scrolls under it, such as the strap and its tabs on Device Settings.
+    private var pinnedBand: AnyView?
     let content: Content
     init(_ title: LocalizedStringKey, titleSymbol: String? = nil, subtitle: String? = nil, titleActivity: String? = nil, onAnya: (() -> Void)? = nil, trailing: AnyView? = nil, centersTitle: Bool = false, showsBack: Bool = true, onBack: (() -> Void)? = nil, @ViewBuilder content: () -> Content) {
         self.title = title; self.titleSymbol = titleSymbol; self.subtitle = subtitle; self.titleActivity = titleActivity; self.onAnya = onAnya; self.trailing = trailing; self.centersTitle = centersTitle; self.showsBack = showsBack; self.onBack = onBack; self.content = content()
@@ -111,9 +113,15 @@ struct NunaDetailScreen<Content: View>: View {
     var body: some View {
         // The header stays at the top while the page scrolls, so the way back is always in reach however long the page is.
         VStack(spacing: 0) {
-            NunaDetailHeader(title: title, titleSymbol: titleSymbol, subtitle: subtitle, titleActivity: titleActivity, onAnya: onAnya, trailing: trailing, centersTitle: centersTitle, showsBack: showsBack, onBack: onBack)
-                .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 4)
-                .background(NunaBackdrop(top: true))
+            // One bar for the header and the band under it, so the backdrop behind them is cut from the top of the screen in one piece.
+            VStack(spacing: 0) {
+                NunaDetailHeader(title: title, titleSymbol: titleSymbol, subtitle: subtitle, titleActivity: titleActivity, onAnya: onAnya, trailing: trailing, centersTitle: centersTitle, showsBack: showsBack, onBack: onBack)
+                    .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 4)
+                if let pinnedBand {
+                    pinnedBand.padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 6)
+                }
+            }
+            .background(NunaBackdrop(top: true))
             ScrollView {
                 VStack(spacing: NunaSpacing.section) {
                     content
@@ -126,6 +134,15 @@ struct NunaDetailScreen<Content: View>: View {
         }
         .background(NunaBackdrop())
         .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+extension NunaDetailScreen {
+    /// Keeps `band` under the header while the page scrolls under it.
+    func pinned<Band: View>(@ViewBuilder _ band: () -> Band) -> NunaDetailScreen {
+        var copy = self
+        copy.pinnedBand = AnyView(band())
+        return copy
     }
 }
 
