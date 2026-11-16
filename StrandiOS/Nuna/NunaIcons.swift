@@ -48,6 +48,9 @@ enum NunaIcons {
     static let data = "link"
     static let features = "square.and.pencil"
     static let advanced = "wrench.and.screwdriver"
+    /// Copy and share, drawn as the icon alone wherever a screen offers them without a button.
+    static let copy = "doc.on.doc"
+    static let share = "square.and.arrow.up"
     static let privacy = "lock.shield.fill"
     static let about = "info.circle"
     static let backup = "externaldrive"
