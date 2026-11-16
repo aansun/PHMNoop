@@ -67,6 +67,8 @@ private struct NunaDevicesContent: View {
     @State private var renaming = false
     @State private var nameDraft = ""
     @State private var confirmRestart = false
+    @State private var confirmRemove = false
+    @State private var confirmDeleteData = false
     @State private var buzzed = false
 
     private var devices: [PairedDevice] { registry.devices.filter { $0.status != .archived } }
@@ -101,6 +103,17 @@ private struct NunaDevicesContent: View {
             Button("Cancel", role: .cancel) {}
             Button("Restart") { model.rebootStrap() }
         } message: { Text("It disconnects for about 30 seconds, then reconnects on its own. Your recorded data is kept.") }
+        .alert("Remove this device?", isPresented: $confirmRemove) {
+            Button("Cancel", role: .cancel) {}
+            Button("Remove", role: .destructive) { if let d = active { registry.archive(d.id) } }
+        } message: { Text("NOOP stops connecting to it. Its recorded data is kept and you can add it back.") }
+        .alert("Delete all of this device's data?", isPresented: $confirmDeleteData) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete data", role: .destructive) {
+                guard let d = active else { return }
+                Task { guard let store = await model.repo.storeHandle() else { return }; await registry.deleteDeviceData(d.id, store: store) }
+            }
+        } message: { Text("This permanently deletes everything recorded from this device. It can't be undone.") }
     }
 
     // MARK: Status
@@ -197,7 +210,8 @@ private struct NunaDevicesContent: View {
                 idTile("Firmware", live.strapFirmware ?? "–", "cpu")
             }
             .padding(.top, 8)
-            Text(verbatim: NunaDeviceFormat.family(d) + (live.strapRange?.firmwareLayout.map { " · " + String(localized: "History format") + " v\($0)" } ?? ""))
+            Text(verbatim: NunaDeviceFormat.family(d) + (live.strapRange?.firmwareLayout.map { " · " + String(localized: "History format") + " v\($0)" } ?? "")
+                    + " · " + String(localized: "Added \(NunaDeviceDetailView.addedDate(d.addedAt))"))
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).frame(maxWidth: .infinity)
             VStack(alignment: .leading, spacing: 30) {
                 actionButton("Add a device", String(localized: "Pair another strap or device. The one you have now keeps its history."), "plus.circle") { showAdd = true }
@@ -215,9 +229,8 @@ private struct NunaDevicesContent: View {
                 NavigationLink(value: NunaDeviceRoute.log) {
                     actionLabel("Strap log", String(localized: "Copy it when reporting a problem."), "doc.text", enabled: true)
                 }.buttonStyle(.plain)
-                NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
-                    actionLabel("Manage this strap", String(localized: "Rename it, remove it from the list or delete its recorded data."), "gearshape", enabled: true)
-                }.buttonStyle(.plain)
+                actionButton("Remove from the list", String(localized: "Data stays and it can be added again."), "archivebox") { confirmRemove = true }
+                actionButton("Delete all data of this device", String(localized: "Permanent and cannot be undone."), "trash") { confirmDeleteData = true }
             }
             .padding(.top, 10).padding(.bottom, 10)
         } else {
@@ -526,5 +539,7 @@ struct NunaDeviceDetailView: View {
     private static func date(_ ts: Int) -> String {
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.dateStyle = .medium; return f.string(from: Date(timeIntervalSince1970: TimeInterval(ts)))
     }
+    /// The day a strap was added, as the detail rows and the Advanced tab write it.
+    static func addedDate(_ ts: Int) -> String { date(ts) }
 }
 #endif
