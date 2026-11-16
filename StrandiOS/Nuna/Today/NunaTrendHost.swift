@@ -8,7 +8,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
     case charge, hrv, rhr, respiratory, skinTemp
     case restPerformance, timeInBed, hoursNeededHours, hoursNeededPct, consistency, restorative, efficiency, debt
     case fitnessAge, paceOfAging
-    case weight, leanBodyMass, vitality, spo2, stressTotal, stressNonActivity, stressSleep
+    case weight, leanBodyMass, spo2, stressTotal, stressNonActivity, stressSleep
 
     var id: String { rawValue }
 
@@ -26,7 +26,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .effort, .steps, .calories, .hrZonesLow, .hrZonesHigh, .hrZonesAll, .strengthTime, .avgHr, .totalVolumeLoad, .vo2max: return .effort
         case .charge, .hrv, .rhr, .respiratory, .skinTemp: return .charge
         case .fitnessAge, .paceOfAging: return .health
-        case .weight, .leanBodyMass, .vitality, .spo2, .stressTotal, .stressNonActivity, .stressSleep: return .other
+        case .weight, .leanBodyMass, .spo2, .stressTotal, .stressNonActivity, .stressSleep: return .other
         default: return .rest
         }
     }
@@ -60,7 +60,6 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .paceOfAging: return "Pace of aging"
         case .weight: return "Weight"
         case .leanBodyMass: return "Lean body mass"
-        case .vitality: return "Vitality"
         case .spo2: return "Blood oxygen"
         case .stressTotal: return "Total day stress"
         case .stressNonActivity: return "Non activity stress"
@@ -97,7 +96,6 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .paceOfAging: return NunaIcons.paceOfAging
         case .weight: return "met:weight"
         case .leanBodyMass: return "met:lean-body-mass"
-        case .vitality: return "sparkles"
         case .spo2: return "vital:spo2"
         case .stressTotal: return NunaStressCategory.total.icon
         case .stressNonActivity: return NunaStressCategory.nonActivity.icon
@@ -121,7 +119,6 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case "spo2": return .spo2
         case "skin_temp": return .skinTemp
         case "vo2max_est": return .vo2max
-        case "vitality": return .vitality
         case "weight": return .weight
         default: return nil
         }
@@ -156,7 +153,6 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .paceOfAging: NunaFitnessAgeTrendView(kind: .pace)
         case .weight: NunaLineTrendView.forMetric("weight", endingDaysAgo: endingDaysAgo)
         case .leanBodyMass: NunaLeanMassTrendView()
-        case .vitality: NunaLineTrendView.forMetric("vitality", endingDaysAgo: endingDaysAgo)
         case .spo2: NunaLineTrendView.forMetric("spo2", endingDaysAgo: endingDaysAgo)
         case .stressTotal: NunaStressTrendView(category: .total)
         case .stressNonActivity: NunaStressTrendView(category: .nonActivity)

@@ -30,9 +30,9 @@ enum NunaTodayDefaults {
     ]
     static let hidden: [TodaySection] = [.stateChips, .keyMetrics, .heartRate, .liveSession, .menstrualCycle, .addedCards]
     /// What Your cards holds until the person chooses their own. The Default looks keep `DashboardCard.defaultSelection` for the same key.
-    static let yourCards: [DashboardCard] = [.steps, .fitnessAge, .vitality, .calories, .weight]
+    static let yourCards: [DashboardCard] = [.steps, .fitnessAge, .calories, .weight]
     static func yourCardsEnabled(_ raw: String) -> [DashboardCard] {
-        raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? yourCards : DashboardCardPrefs.decodeEnabled(raw)
+        raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? yourCards : DashboardCardPrefs.decodeEnabled(raw).filter { $0 != .vitality }
     }
     /// Set once the monitor pair has been hidden on a layout saved before it existed (it would otherwise appear on its own).
     static let monitorHiddenKey = "nuna.today.monitorHidden.v1"
