@@ -270,7 +270,7 @@ enum AppleDemoSeeder {
         var fitnessAge = 42.0
         var vo2 = 44.0
         var vitality = 55.0      // weekly Vitality (0–100) trending up as the demo habits improve (55 → ~75)
-        var bodyAgeDemo = 40.0   // Body Age (years) trending down (younger)
+        var bodyAgeDemo = 31.2   // Body Age (years) easing down to ~29, where the nine-factor reading of the demo week lands (a 30-year-old profile)
         for i in 0..<DAYS {
             let date = cal.date(byAdding: .day, value: i, to: startDay)!
             guard cal.component(.weekday, from: date) == 7 else { continue }  // 7 = Saturday
@@ -282,12 +282,12 @@ enum AppleDemoSeeder {
             series.append(MetricPoint(day: day, key: "vitality",
                 value: round1((vitality + gauss(&rng, 0.0, 1.0)).clamped(40.0, 80.0))))
             series.append(MetricPoint(day: day, key: "body_age",
-                value: round1((bodyAgeDemo + gauss(&rng, 0.0, 0.3)).clamped(30.0, 45.0))))
+                value: round1((bodyAgeDemo + gauss(&rng, 0.0, 0.2)).clamped(27.0, 34.0))))
             let weeks = Double(DAYS) / 7.0
             fitnessAge -= 6.0 / weeks  // ~6 yr younger across the Saturdays of the year
             vo2 += 6.0 / weeks
             vitality += 20.0 / weeks
-            bodyAgeDemo -= 5.0 / weeks
+            bodyAgeDemo -= 2.0 / weeks
         }
 
         _ = try await store.upsertDailyMetrics(daily, deviceId: whoop)
