@@ -76,9 +76,14 @@ private struct NunaDevicesContent: View {
 
     var body: some View {
         NunaDetailScreen("Device Settings", trailing: AnyView(NavigationLink(value: NunaDeviceRoute.helpHub) { NunaBareIcon("questionmark.circle") }.buttonStyle(.plain).accessibilityLabel(Text("Help")))) {
-            if let d = active { deviceHeader(d) }
-            NunaPageTabs([(value: 0, title: "Status"), (value: 1, title: "Advanced")], selection: $tab)
             if tab == 0 { statusTab } else { advancedTab }
+        }
+        // The strap and the two tabs stay under the header while the page scrolls under them.
+        .pinned {
+            VStack(spacing: 14) {
+                if let d = active { deviceHeader(d) }
+                NunaPageTabs([(value: 0, title: "Status"), (value: 1, title: "Advanced")], selection: $tab)
+            }
         }
         .sheet(isPresented: $showAdd) {
             NunaAddDeviceSheet { showAdd = false }.environmentObject(model).environmentObject(live).nunaSheetChrome(detents: [.large])
@@ -194,24 +199,24 @@ private struct NunaDevicesContent: View {
             .padding(.top, 8)
             Text(verbatim: NunaDeviceFormat.family(d) + (live.strapRange?.firmwareLayout.map { " · " + String(localized: "History format") + " v\($0)" } ?? ""))
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).frame(maxWidth: .infinity)
-            VStack(alignment: .leading, spacing: 22) {
-                actionButton("Add a device", nil, "plus.circle") { showAdd = true }
+            VStack(alignment: .leading, spacing: 30) {
+                actionButton("Add a device", String(localized: "Pair another strap or device. The one you have now keeps its history."), "plus.circle") { showAdd = true }
                 if SourceCoordinator.isWhoop(d) {
-                    actionButton("Reconnect", nil, "dot.radiowaves.left.and.right") { model.disconnect(); model.ble.connect() }
-                    actionButton("Test vibration", buzzed ? String(localized: "Sent") : nil, "waveform", enabled: live.connected && live.bonded) {
+                    actionButton("Reconnect", String(localized: "Close the Bluetooth link and open it again."), "dot.radiowaves.left.and.right") { model.disconnect(); model.ble.connect() }
+                    actionButton("Test vibration", buzzed ? String(localized: "Sent") : String(localized: "Makes the strap vibrate once, so you know it responds."), "waveform", enabled: live.connected && live.bonded) {
                         model.buzzStrapOnce(); buzzed = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { buzzed = false }
                     }
                     // A 4.0 has no safe restart frame, so the entry only exists for the 5/MG family (same rule as the strap's own detail screen).
                     if live.connected && !model.ble.isWhoop4 {
-                        actionButton("Restart strap", "Disconnects for about 30 seconds, then reconnects on its own.", "power") { confirmRestart = true }
+                        actionButton("Restart strap", String(localized: "Disconnects for about 30 seconds, then reconnects on its own."), "power") { confirmRestart = true }
                     }
                 }
                 NavigationLink(value: NunaDeviceRoute.log) {
-                    actionLabel("Strap log", String(localized: "Copy it when reporting a problem"), "doc.text", enabled: true)
+                    actionLabel("Strap log", String(localized: "Copy it when reporting a problem."), "doc.text", enabled: true)
                 }.buttonStyle(.plain)
                 NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
-                    actionLabel("Manage this strap", nil, "gearshape", enabled: true)
+                    actionLabel("Manage this strap", String(localized: "Rename it, remove it from the list or delete its recorded data."), "gearshape", enabled: true)
                 }.buttonStyle(.plain)
             }
             .padding(.top, 10).padding(.bottom, 10)
@@ -286,7 +291,7 @@ private struct NunaDevicesContent: View {
             .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
             if let subtitle {
                 Text(verbatim: subtitle).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    .fixedSize(horizontal: false, vertical: true).padding(.horizontal, 4)
+                    .fixedSize(horizontal: false, vertical: true).padding(.horizontal, 14)
             }
         }
         .opacity(enabled ? 1 : 0.4)
