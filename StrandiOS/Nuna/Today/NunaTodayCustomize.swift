@@ -248,7 +248,7 @@ struct NunaTodayCustomizeSheet: View {
 
     private var cardsPage: some View {
         NunaDashboardEditor(draft: $cards,
-                            onReset: { cards = EditableLayoutDraft(visible: DashboardCard.defaultSelection.map(NunaDashItem.card), allItems: NunaDashItem.canonicalOrder) })
+                            onReset: { cards = EditableLayoutDraft(visible: DashboardCard.defaultSelection.filter { $0 != .vitality }.map(NunaDashItem.card), allItems: NunaDashItem.canonicalOrder) })
     }
 
     private var hostedPage: some View {
