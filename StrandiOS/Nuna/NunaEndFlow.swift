@@ -163,6 +163,25 @@ struct NunaDialogButton: View {
     }
 }
 
+/// A line to type in, inside a `nunaDialog`: the answer a question asks for in words (a name), above the buttons that give it.
+struct NunaDialogField: View {
+    private let placeholder: LocalizedStringKey
+    @Binding private var text: String
+
+    init(_ placeholder: LocalizedStringKey, text: Binding<String>) {
+        self.placeholder = placeholder; self._text = text
+    }
+
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            .textInputAutocapitalization(.words).submitLabel(.done)
+            .frame(maxWidth: .infinity, alignment: .leading).frame(minHeight: 52).padding(.horizontal, 16)
+            // Sunk into the card, with its text to the left, so it reads as a place to type and not as one more button.
+            .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(NunaPalette.canvas.opacity(0.55)))
+    }
+}
+
 private struct NunaDialogModal<Actions: View, Message: View>: View {
     @Binding var isPresented: Bool
     let title: Text

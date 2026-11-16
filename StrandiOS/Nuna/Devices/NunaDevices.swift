@@ -90,29 +90,29 @@ private struct NunaDevicesContent: View {
         .sheet(isPresented: $showAdd) {
             NunaAddDeviceSheet { showAdd = false }.environmentObject(model).environmentObject(live).nunaSheetChrome(detents: [.large])
         }
-        .alert("Make this your active strap?", isPresented: Binding(get: { switchTarget != nil }, set: { if !$0 { switchTarget = nil } }), presenting: switchTarget) { d in
-            Button("Cancel", role: .cancel) { switchTarget = nil }
-            Button("Make active") { registry.setActive(d.id); switchTarget = nil }
-        } message: { d in Text("From now on \(d.displayName) provides your live data. The history of the other strap stays exactly as it is.") }
-        .alert("Rename device", isPresented: $renaming) {
-            TextField("Name", text: $nameDraft)
-            Button("Cancel", role: .cancel) {}
-            Button("Save") { if let d = active { registry.rename(d.id, to: nameDraft) } }
+        .nunaDialog("Make this your active strap?", isPresented: Binding(get: { switchTarget != nil }, set: { if !$0 { switchTarget = nil } })) {
+            NunaDialogButton("Make active") { if let d = switchTarget { registry.setActive(d.id) } }
+            NunaDialogButton("Cancel", role: .cancel) {}
+        } message: { Text("From now on \(switchTarget?.displayName ?? "") provides your live data. The history of the other strap stays exactly as it is.") }
+        .nunaDialog("Rename device", isPresented: $renaming) {
+            NunaDialogField("Name", text: $nameDraft)
+            NunaDialogButton("Save") { if let d = active { registry.rename(d.id, to: nameDraft) } }
+            NunaDialogButton("Cancel", role: .cancel) {}
         }
-        .alert("Restart this strap?", isPresented: $confirmRestart) {
-            Button("Cancel", role: .cancel) {}
-            Button("Restart") { model.rebootStrap() }
+        .nunaDialog("Restart this strap?", isPresented: $confirmRestart) {
+            NunaDialogButton("Restart", role: .destructive) { model.rebootStrap() }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("It disconnects for about 30 seconds, then reconnects on its own. Your recorded data is kept.") }
-        .alert("Remove this device?", isPresented: $confirmRemove) {
-            Button("Cancel", role: .cancel) {}
-            Button("Remove", role: .destructive) { if let d = active { registry.archive(d.id) } }
+        .nunaDialog("Remove this device?", isPresented: $confirmRemove) {
+            NunaDialogButton("Remove", role: .destructive) { if let d = active { registry.archive(d.id) } }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("NOOP stops connecting to it. Its recorded data is kept and you can add it back.") }
-        .alert("Delete all of this device's data?", isPresented: $confirmDeleteData) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete data", role: .destructive) {
+        .nunaDialog("Delete all of this device's data?", isPresented: $confirmDeleteData) {
+            NunaDialogButton("Delete data", role: .destructive) {
                 guard let d = active else { return }
                 Task { guard let store = await model.repo.storeHandle() else { return }; await registry.deleteDeviceData(d.id, store: store) }
             }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("This permanently deletes everything recorded from this device. It can't be undone.") }
     }
 
@@ -418,26 +418,26 @@ struct NunaDeviceDetailView: View {
                 NunaCard(small: true) { Text("This device is no longer in the list.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
             }
         }
-        .alert("Rename device", isPresented: $renaming) {
-            TextField("Name", text: $nameDraft)
-            Button("Cancel", role: .cancel) {}
-            Button("Save") { registry?.rename(deviceId, to: nameDraft) }
+        .nunaDialog("Rename device", isPresented: $renaming) {
+            NunaDialogField("Name", text: $nameDraft)
+            NunaDialogButton("Save") { registry?.rename(deviceId, to: nameDraft) }
+            NunaDialogButton("Cancel", role: .cancel) {}
         }
-        .alert("Remove this device?", isPresented: $confirmRemove) {
-            Button("Cancel", role: .cancel) {}
-            Button("Remove", role: .destructive) { registry?.archive(deviceId); dismiss() }
+        .nunaDialog("Remove this device?", isPresented: $confirmRemove) {
+            NunaDialogButton("Remove", role: .destructive) { registry?.archive(deviceId); dismiss() }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("NOOP stops connecting to it. Its recorded data is kept and you can add it back.") }
-        .alert("Delete all of this device's data?", isPresented: $confirmDeleteData) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete data", role: .destructive) {
+        .nunaDialog("Delete all of this device's data?", isPresented: $confirmDeleteData) {
+            NunaDialogButton("Delete data", role: .destructive) {
                 Task { guard let store = await model.repo.storeHandle() else { return }; await registry?.deleteDeviceData(deviceId, store: store) }
             }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("This permanently deletes everything recorded from this device. It can't be undone.") }
-        .alert("Remove it for good?", isPresented: $confirmForget) {
-            Button("Cancel", role: .cancel) {}
-            Button("Remove for good", role: .destructive) {
+        .nunaDialog("Remove it for good?", isPresented: $confirmForget) {
+            NunaDialogButton("Remove for good", role: .destructive) {
                 Task { guard let store = await model.repo.storeHandle() else { return }; await registry?.forget(deviceId, store: store); dismiss() }
             }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("The device leaves the list completely. Data already recorded is kept.") }
     }
 

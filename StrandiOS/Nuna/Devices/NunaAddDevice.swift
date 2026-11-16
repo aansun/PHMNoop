@@ -39,9 +39,9 @@ struct NunaAddDeviceSheet: View {
         .preferredColorScheme(NunaTheme.colorScheme)
         .animation(.easeInOut(duration: 0.18), value: step)
         .onDisappear { model.stopWhoopScan() }
-        .alert("Make this your active device?", isPresented: $askActive) {
-            Button("Not now", role: .cancel) { add(makeActive: false) }
-            Button("Make active") { add(makeActive: true) }
+        .nunaDialog("Make this your active device?", isPresented: $askActive) {
+            NunaDialogButton("Make active") { add(makeActive: true) }
+            NunaDialogButton("Not now", role: .cancel) { add(makeActive: false) }
         } message: { Text("It will provide your live data from now on. You can change this any time.") }
     }
 
