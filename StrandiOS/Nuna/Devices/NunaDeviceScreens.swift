@@ -168,9 +168,9 @@ struct NunaDeviceHelpView: View {
                 NunaCard(small: true) { NunaListRow("Still failing? Send the log", subtitle: "It records what the app sees from the strap", systemImage: "doc.text", showsChevron: true) }
             }.buttonStyle(.plain)
         }
-        .alert("Restart this strap?", isPresented: $confirmRestart) {
-            Button("Cancel", role: .cancel) {}
-            Button("Restart") { model.rebootStrap() }
+        .nunaDialog("Restart this strap?", isPresented: $confirmRestart) {
+            NunaDialogButton("Restart", role: .destructive) { model.rebootStrap() }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("It disconnects for about 30 seconds, then reconnects on its own. Your recorded data is kept.") }
     }
 
@@ -217,9 +217,9 @@ struct NunaDeviceRepairView: View {
             Text("The last 14 days are pulled from the strap again if they are still on it.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
         .sheet(isPresented: $showAdd) { NunaAddDeviceSheet { showAdd = false }.environmentObject(model).environmentObject(live).nunaSheetChrome(detents: [.large]) }
-        .alert("Remove this device?", isPresented: $confirmRemove) {
-            Button("Cancel", role: .cancel) {}
-            Button("Remove", role: .destructive) { if let id = model.deviceRegistry?.activeDeviceId { model.deviceRegistry?.archive(id) } }
+        .nunaDialog("Remove this device?", isPresented: $confirmRemove) {
+            NunaDialogButton("Remove", role: .destructive) { if let id = model.deviceRegistry?.activeDeviceId { model.deviceRegistry?.archive(id) } }
+            NunaDialogButton("Cancel", role: .cancel) {}
         } message: { Text("NOOP stops connecting to it. Its recorded data is kept and you can add it back.") }
     }
 
