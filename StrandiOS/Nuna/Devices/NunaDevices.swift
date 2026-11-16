@@ -207,6 +207,9 @@ private struct NunaDevicesContent: View {
                         actionButton("Restart strap", "Disconnects for about 30 seconds, then reconnects on its own.", "power") { confirmRestart = true }
                     }
                 }
+                NavigationLink(value: NunaDeviceRoute.log) {
+                    actionLabel("Strap log", String(localized: "Copy it when reporting a problem"), "doc.text", enabled: true)
+                }.buttonStyle(.plain)
                 NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
                     actionLabel("Manage this strap", nil, "gearshape", enabled: true)
                 }.buttonStyle(.plain)
