@@ -26,6 +26,9 @@ struct NunaJournalView: View {
     @State private var renaming: JournalCatalogItem?
     @State private var renameDraft = ""
     @AppStorage("journal.collapsedGroups") private var collapsedRaw = ""
+    /// Fill each day's unanswered questions with the answers of the day before.
+    @AppStorage("journal.usePrevious") private var usePrevious = false
+    @State private var showPreviousHelp = false
     /// The day's note, the Smart log sheet, what it just filled in, and a counter that redraws the follow-up answers after they change.
     @State private var note = ""
     @State private var showSmart = false
@@ -56,6 +59,7 @@ struct NunaJournalView: View {
                         heading
                         smartCard
                         moodLink
+                        if !editing { previousAnswersToggle }
                         behaviors
                         notesSection
                         if editing { addCard }
@@ -92,7 +96,13 @@ struct NunaJournalView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .overlay(alignment: .bottom) { if !editing { saveBar } }
-        .task(id: "\(repo.refreshSeq)-\(dayOffset)") { await load(); note = NunaJournalExtras.note(day: dayKey) }
+        .task(id: "\(repo.refreshSeq)-\(dayOffset)") { await load(); note = NunaJournalExtras.note(day: dayKey); await fillFromPrevious() }
+        .onChange(of: usePrevious) { _, on in Task { if on { await fillFromPrevious() } else { await takeBackCopied() } } }
+        .nunaDialog("Use previous answers", isPresented: $showPreviousHelp) {
+            NunaDialogButton("OK", role: .cancel) {}
+        } message: {
+            Text("Fills the questions you have not answered yet with the answers of the day before. You can change any of them. Turn it off to take back the ones it filled in.")
+        }
         .sheet(isPresented: $showSmart) { NunaJournalSmartSheet { text in applySmart(text) } }
         .onAppear {
             if let d = router.pendingJournalDayOffset { dayOffset = d; router.pendingJournalDayOffset = nil }
@@ -221,6 +231,71 @@ struct NunaJournalView: View {
         .buttonStyle(.plain)
     }
 
+    // MARK: Use previous answers
+
+    /// The switch under the mood, as the reference has it: on, the day opens with the day before's answers in it; the question mark says how it works.
+    private var previousAnswersToggle: some View {
+        HStack(spacing: 12) {
+            Toggle("", isOn: $usePrevious).labelsHidden().tint(Color(red: 0.45, green: 0.62, blue: 0.90))
+                .accessibilityLabel(Text("Use previous answers"))
+            Text("Use previous answers").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel * 1.3).textCase(.uppercase)
+                .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+            Button { showPreviousHelp = true } label: {
+                Image(systemName: "questionmark").font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                    .frame(width: 24, height: 24).overlay(Circle().strokeBorder(NunaPalette.textPrimary, lineWidth: 1.4)).frame(width: 44, height: 44).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain).accessibilityLabel(Text("How Use previous answers works"))
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 10)
+    }
+
+    /// Which of a day's answers were copied from the day before (and not touched since) and which the person gave or changed: "copied" or "own".
+    private func prefillState(_ day: String) -> [String: String] {
+        UserDefaults.standard.dictionary(forKey: "journal.prefill.\(day)") as? [String: String] ?? [:]
+    }
+    private func setPrefillState(_ state: [String: String], day: String) {
+        UserDefaults.standard.set(state, forKey: "journal.prefill.\(day)")
+    }
+    /// An answer the person gave, changed or cleared is theirs: it is never filled in again or taken back.
+    private func markOwn(_ q: String) {
+        var s = prefillState(dayKey); s[q] = "own"; setPrefillState(s, day: dayKey)
+    }
+
+    /// With the switch on, copy the day before's answers (yes or no, and numbers) into the questions this day has none for and has not had one
+    /// filled or cleared before. Only questions on the list now are copied; what is copied is saved like any answer and can be changed.
+    private func fillFromPrevious() async {
+        guard usePrevious, !editing, let before = Calendar.current.date(byAdding: .day, value: -1, to: dayDate) else { return }
+        let day = dayKey, prev = Repository.localDayKey(before)
+        let visible = Set(catalog.resolvedItems(imported: imported, includeHidden: false).map(\.canonical))
+        let yesNo = await repo.nativeJournalAnswers(day: prev), numeric = await repo.nativeJournalNumeric(day: prev)
+        let mineYesNo = await repo.nativeJournalAnswers(day: day), mineNumeric = await repo.nativeJournalNumeric(day: day)
+        var state = prefillState(day)
+        var changed = false
+        for (q, value) in numeric where visible.contains(q) && mineNumeric[q] == nil && mineYesNo[q] == nil && state[q] == nil {
+            await repo.saveJournalNumeric(day: day, question: q, value: value); state[q] = "copied"; changed = true
+        }
+        for (q, yes) in yesNo where visible.contains(q) && numeric[q] == nil && mineYesNo[q] == nil && state[q] == nil {
+            await repo.saveJournalAnswer(day: day, question: q, answeredYes: yes); state[q] = "copied"; changed = true
+        }
+        guard changed else { return }
+        setPrefillState(state, day: day)
+        guard day == dayKey else { return }
+        await load()
+    }
+
+    /// With the switch turned off, take back this day's answers that were only copied; the ones the person gave or changed stay.
+    private func takeBackCopied() async {
+        let day = dayKey
+        var state = prefillState(day)
+        let copied = state.filter { $0.value == "copied" }.map(\.key)
+        guard !copied.isEmpty else { return }
+        for q in copied { await repo.clearJournalAnswer(day: day, question: q); state[q] = nil }
+        setPrefillState(state, day: day)
+        guard day == dayKey else { return }
+        await load()
+    }
+
     // MARK: Smart log
 
     /// "Smart log": write the day in your own words and the behaviours it answers are filled in.
@@ -257,7 +332,7 @@ struct NunaJournalView: View {
         let kept = note.isEmpty ? text : note + "\n" + text
         note = kept; NunaJournalExtras.setNote(kept, day: dayKey)
         guard !found.isEmpty else { smartResult = String(localized: "Nothing in that matched a behavior. It was kept as a note."); return }
-        for (q, yes) in found { answers[q] = yes }
+        for (q, yes) in found { answers[q] = yes; markOwn(q) }
         Task {
             for (q, yes) in found { await repo.saveJournalAnswer(day: dayKey, question: q, answeredYes: yes) }
             await load()
@@ -501,6 +576,7 @@ struct NunaJournalView: View {
 
     private func set(_ q: String, _ value: Bool) {
         let same = answers[q] == value
+        markOwn(q)
         if same { answers[q] = nil } else { answers[q] = value }
         Task {
             // Tapping the filled chip again clears the answer; only the app's own rows can ever be removed this way.
@@ -511,6 +587,7 @@ struct NunaJournalView: View {
 
     private func save(_ q: String, _ value: Double) {
         numbers[q] = value
+        markOwn(q)
         Task { await repo.saveJournalNumeric(day: dayKey, question: q, value: value); await load() }
     }
 

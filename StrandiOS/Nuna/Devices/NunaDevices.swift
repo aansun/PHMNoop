@@ -70,6 +70,8 @@ private struct NunaDevicesContent: View {
     @State private var confirmRemove = false
     @State private var confirmDeleteData = false
     @State private var buzzed = false
+    /// The strap shares its heart rate over Bluetooth (a WHOOP 5.0 / MG). The same switch the Live heart rate screen has.
+    @AppStorage(PuffinExperiment.broadcastHrKey) private var broadcastOn = false
 
     private var devices: [PairedDevice] { registry.devices.filter { $0.status != .archived } }
     private var active: PairedDevice? { devices.first { $0.status == .active } }
@@ -123,9 +125,40 @@ private struct NunaDevicesContent: View {
         if let d = active {
             hero(d)
             if live.lastSyncedAt != nil || live.backfilling { syncRow }
+            broadcastCard
         } else {
             emptyCard
             addButton
+        }
+    }
+
+    /// "Broadcast heart rate to compatible apps and devices": a heart, the two lines and the switch. Only for a 5.0 / MG (or while it is on, so it can be
+    /// turned off); the write to the strap is done when it is connected, and again on every connection while the switch stays on.
+    @ViewBuilder private var broadcastCard: some View {
+        if model.whoop5Detected || broadcastOn {
+            VStack(alignment: .leading, spacing: 10) {
+                NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
+                    HStack(spacing: 14) {
+                        Image(systemName: NunaIcons.heartRate).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
+                            .frame(width: 42, height: 42).background(NunaPalette.glassStrong, in: Circle())
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Broadcast heart rate").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                            Text("To compatible apps & devices").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+                        }
+                        Spacer(minLength: 8)
+                        Toggle("", isOn: $broadcastOn).labelsHidden().tint(NunaPalette.charge)
+                            .onChange(of: broadcastOn) { _, on in model.ble.setBroadcastHr(on) }
+                            .accessibilityLabel(Text("Broadcast heart rate"))
+                    }
+                }
+                if broadcastOn {
+                    Text("Broadcast is on: the strap advertises its heart rate all the time, which uses its battery faster. Turn it off when you are not using it with another device.")
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).textCase(nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
     }
 
