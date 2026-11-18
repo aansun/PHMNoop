@@ -7,21 +7,23 @@ import StrandAnalytics
 /// its figures, computed on this iPhone. A provider adds a short explanation only after it is connected and data access is
 /// allowed; follow-up questions are answered inside the sheet, and "Open full conversation" hands over to the Anya tab.
 /// Something the card could do, offered in the sheet instead (start a session, breathe, open the journal).
-/// The type of Anya's words: the sizes the sheet opened from My Day sets, which every place Anya talks (that sheet, the Anya tab, the sheets on the module
-/// screens) takes from here, so her words are the same size wherever she says them.
+/// The type of Anya's words: the sizes of the Daily Outlook she writes on My Day (16 pt, 7 pt between lines), which every place Anya talks (the sheet, the
+/// Anya tab, the sheets on the module screens) takes from here, so her words are the same size wherever she says them.
 enum NunaAnyaType {
+    /// The size of her words, and of the bold figures inside them.
+    static let bodySize: CGFloat = 16
     /// The first thing she says: the day read out, or her written analysis.
-    static var lead: Font { .nuna(size: 20, weight: .regular) }
-    static let leadSpacing: CGFloat = 9
+    static var lead: Font { .nuna(size: bodySize, weight: .regular) }
+    static let leadSpacing: CGFloat = 7
     /// An answer in the conversation.
-    static var reply: Font { .nuna(size: 18, weight: .regular) }
-    static let replySpacing: CGFloat = 8
+    static var reply: Font { .nuna(size: bodySize, weight: .regular) }
+    static let replySpacing: CGFloat = 7
     /// What the person asked, in its bubble.
-    static var asked: Font { .nuna(size: 16, weight: .semibold) }
+    static var asked: Font { .nuna(size: 15, weight: .semibold) }
     /// The line the person types in.
-    static var input: Font { .nuna(size: 18, weight: .regular) }
+    static var input: Font { .nuna(size: bodySize, weight: .regular) }
     /// "Anya is thinking…".
-    static var thinking: Font { .nuna(size: 15, weight: .semibold) }
+    static var thinking: Font { .nuna(size: 14, weight: .semibold) }
 }
 
 struct NunaAnyaCardAction: Identifiable {
@@ -192,9 +194,9 @@ struct NunaAnyaSheet: View {
         NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
             VStack(alignment: .leading, spacing: 12) {
                 // The headline and what follows it read as one paragraph; what is good news or bad news is in a colour.
-                Text(NunaMark.attributed(NunaMark.compose(headline: r.headline, detail: r.detail)))
-                    .font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                    .lineSpacing(5).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                Text(NunaMark.attributed(NunaMark.compose(headline: r.headline, detail: r.detail), size: NunaAnyaType.bodySize))
+                    .font(NunaAnyaType.lead).foregroundStyle(NunaPalette.textPrimary)
+                    .lineSpacing(NunaAnyaType.leadSpacing).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 if let acts = cardLine?.actions, !acts.isEmpty {
                     HStack(spacing: 8) {
                         ForEach(acts) { a in
@@ -439,13 +441,13 @@ extension NunaAnyaSheet {
                 .frame(maxWidth: .infinity, alignment: .leading)
             if turns.isEmpty { feedbackRow(copying: AnyaActions.proseOnly(explanation), note: String(explanation.prefix(80))) }
         } else if let read {
-            Text(NunaMark.attributed(NunaMark.compose(headline: read.headline, detail: read.detail), size: 20))
+            Text(NunaMark.attributed(NunaMark.compose(headline: read.headline, detail: read.detail), size: NunaAnyaType.bodySize))
                 .font(NunaAnyaType.lead).lineSpacing(NunaAnyaType.leadSpacing).fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if turns.isEmpty { feedbackRow(copying: NunaMark.plain(NunaMark.compose(headline: read.headline, detail: read.detail)), note: read.headline) }
         } else if loaded {
             Text("Anya shows a line only when it has figures to cite. Wear the strap and sync, then ask again.")
-                .font(.nuna(size: 18, weight: .regular)).foregroundStyle(.white.opacity(0.7)).lineSpacing(6)
+                .font(NunaAnyaType.reply).foregroundStyle(.white.opacity(0.7)).lineSpacing(NunaAnyaType.replySpacing)
         }
     }
 
