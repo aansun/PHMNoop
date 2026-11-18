@@ -356,6 +356,10 @@ final class AppModel: ObservableObject {
         // kept the old firmware alarm and still buzzed, while the app logged "Alarm: disarmed".
         // `disarmPending` latches exactly that dropped write, so this stays a no-op for the many users who
         // never armed one (re-running unconditionally would put a DISABLE_ALARM on every connect).
+        // A strap put on its charger is not "off the wrist" in the sense the reminder means, so a pending one is taken back.
+        live.$charging.removeDuplicates().sink { charging in
+            if charging == true { AppModel.cancelOffWristReminder() }
+        }.store(in: &hrCancellables)
         live.$connectSettled.dropFirst().sink { [weak self] _ in
             guard let self, self.behavior.smartAlarmEnabled || self.ble.disarmPending else { return }
             self.applySmartAlarm()
@@ -1937,6 +1941,9 @@ final class AppModel: ObservableObject {
     }
 
     private func handleWristChange(_ worn: Bool) {
+        // The reminder that the strap has come off: scheduled with the OS the moment it does, so it still arrives when the app is suspended, and taken
+        // back the moment the strap is on the wrist again. A strap on its charger is off the wrist on purpose.
+        if worn { Self.cancelOffWristReminder() } else if live.charging != true { Self.scheduleOffWristReminder(log: { [weak self] in self?.live.append(log: $0) }) }
         if worn {
             if !behavior.wristOnShortcut.isEmpty { MacActions.runShortcut(behavior.wristOnShortcut) }
         } else {
@@ -1948,6 +1955,52 @@ final class AppModel: ObservableObject {
             #endif
             if !behavior.wristOffShortcut.isEmpty { MacActions.runShortcut(behavior.wristOffShortcut) }
         }
+    }
+
+    // MARK: - Off-wrist reminder
+
+    /// Whether to remind the wearer that the strap is off their wrist. On unless they turned it off in Strap automations.
+    static let offWristReminderKey = "notif.offWristReminder"
+    static var offWristReminderOn: Bool { UserDefaults.standard.object(forKey: offWristReminderKey) as? Bool ?? true }
+    /// How long the strap may be off the wrist before the phone says so.
+    static let offWristReminderDelay: TimeInterval = 10 * 60
+    private static let offWristReminderId = "wrist-off-reminder"
+
+    /// Ask the OS to post "put your strap back on" after `offWristReminderDelay`. One request with a fixed identifier, so a second
+    /// wrist-off replaces the first and never stacks. No-op on macOS and when the reminder is off or notifications are not allowed.
+    static func scheduleOffWristReminder(log: ((String) -> Void)? = nil) {
+        #if os(iOS)
+        guard offWristReminderOn else { return }
+        let center = UNUserNotificationCenter.current()
+        func add() {
+            let content = UNMutableNotificationContent()
+            content.title = String(localized: "Your strap is off-body")
+            content.body = String(localized: "Remember to wear your strap consistently for uninterrupted data and more accurate insights.")
+            content.sound = .default
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: offWristReminderDelay, repeats: false)
+            center.removePendingNotificationRequests(withIdentifiers: [offWristReminderId])
+            center.add(UNNotificationRequest(identifier: offWristReminderId, content: content, trigger: trigger))
+        }
+        center.getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .authorized, .provisional, .ephemeral:
+                add()
+            case .notDetermined:
+                center.requestAuthorization(options: [.alert, .sound]) { granted, _ in if granted { add() } }
+            default:
+                DispatchQueue.main.async { log?("Off-wrist reminder: not scheduled (notifications not allowed)") }
+            }
+        }
+        #endif
+    }
+
+    /// Take the reminder back: the strap is on the wrist again, or on its charger. Also takes one already delivered off the lock screen.
+    static func cancelOffWristReminder() {
+        #if os(iOS)
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [offWristReminderId])
+        center.removeDeliveredNotifications(withIdentifiers: [offWristReminderId])
+        #endif
     }
 
     /// HR-zone haptic coaching: buzz when crossing into the top zone (ease off) or back to recovery.
