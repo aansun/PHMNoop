@@ -71,8 +71,10 @@ struct NunaExperimentsView: View {
     @AppStorage(PuffinExperiment.spo2CandidateDisplayKey) private var spo2 = false
     @AppStorage(PuffinExperiment.motionAwareWakeKey) private var motionWake = false
     @AppStorage(PuffinExperiment.stressPersonalBaselineKey) private var stressBaseline = false
+    /// The WHOOP 5/MG wake alarm: the strap is sent the wake time only while this is on (it is the flag `BLEManager.armStrapAlarm` reads).
+    @AppStorage(PuffinExperiment.defaultsKey) private var strapAlarm5 = false
 
-    private var on: Int { [rhythm, liveSessions, sleepV2, spo2, motionWake, stressBaseline].filter { $0 }.count }
+    private var on: Int { [rhythm, liveSessions, sleepV2, spo2, motionWake, stressBaseline, strapAlarm5].filter { $0 }.count }
 
     var body: some View {
         NunaDetailScreen("Experiments") {
@@ -90,6 +92,8 @@ struct NunaExperimentsView: View {
                 NunaSettingsSwitch("Sleep staging V2", subtitle: "Cardiorespiratory recipe, better at separating deep and REM", systemImage: NunaIcons.sleep, isOn: $sleepV2)
                 NunaSettingsSwitch("Estimated SpO₂ from the strap", subtitle: "WHOOP 5/MG. Not verified", systemImage: "drop", isOn: Binding(get: { spo2 }, set: { spo2 = $0; rescore(model) }))
                 NunaSettingsSwitch("Wake refinement from motion", subtitle: "Uses motion to refine the wake time", systemImage: "alarm", isOn: $motionWake)
+                NunaSettingsSwitch("WHOOP 5/MG wake alarm", subtitle: "Sends your wake time to a 5/MG strap so it vibrates. Not yet confirmed on every strap, so keep a backup alarm", systemImage: "alarm.waves.left.and.right",
+                                   isOn: Binding(get: { strapAlarm5 }, set: { strapAlarm5 = $0; model.applySmartAlarm() }))
                 NunaSettingsSwitch("Personal stress baseline", subtitle: "Scores the day's stress against your own baseline", systemImage: NunaIcons.stress, isOn: $stressBaseline)
             }
             NunaSettingsSection("Device research") {

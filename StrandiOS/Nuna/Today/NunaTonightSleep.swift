@@ -9,6 +9,9 @@ import StrandDesign
 struct NunaTonightSleep: View {
     @EnvironmentObject private var behavior: BehaviorStore
     @EnvironmentObject private var router: NavRouter
+    @EnvironmentObject private var model: AppModel
+    /// A 5/MG strap is sent the alarm only while this is on, so the card does not say "Alarm on" for one that was never armed.
+    @AppStorage(PuffinExperiment.defaultsKey) private var strapAlarm5 = false
     @AppStorage(NunaGoals.sleepMinutes) private var sleepGoal = 0
     /// The strap buzzes only while wrist alerts are on, so the card says "Alarm on" only then.
     @AppStorage(AppModel.wristAlertsMasterKey) private var wristAlerts = false
@@ -18,6 +21,9 @@ struct NunaTonightSleep: View {
         NunaSleepPlan(wakeMinutes: behavior.smartAlarmMinutes, needMinutes: NunaSleepPlan.needMinutes(goal: sleepGoal),
                       goalPercent: behavior.smartAlarmMode == "exact" ? 100 : behavior.smartAlarmGoal).bedtimeMinutes
     }
+
+    /// Whether the strap will be sent the alarm: every strap but a 5/MG always, a 5/MG once its alarm is turned on in Experiments.
+    private var strapArms: Bool { !(model.whoop5Detected && !strapAlarm5) }
 
     private var whp: Bool { NunaThemePrefs.skin == .whp }
     /// Measured on the reference: the card, the button on it, and the grey of the small labels.
@@ -49,8 +55,8 @@ struct NunaTonightSleep: View {
                         .frame(width: 60, height: 1).padding(.top, 15)
                     Spacer(minLength: 0)
                     block(icon: NunaTracedIcon.alarmStrap, time: NunaAlarmFormat.clock(behavior.smartAlarmMinutes),
-                          lines: [Text(!behavior.smartAlarmEnabled ? "Alarm off" : (wristAlerts ? "Alarm on" : "Wrist alerts off"))],
-                          tint: !behavior.smartAlarmEnabled ? NunaPalette.textMuted : (wristAlerts ? mint : NunaPalette.warning),
+                          lines: [Text(!behavior.smartAlarmEnabled ? "Alarm off" : (!strapArms ? "Strap not armed" : (wristAlerts ? "Alarm on" : "Wrist alerts off")))],
+                          tint: !behavior.smartAlarmEnabled ? NunaPalette.textMuted : ((wristAlerts && strapArms) ? mint : NunaPalette.warning),
                           footer: Text("Latest alarm"))
                         .frame(width: 125)
                 }

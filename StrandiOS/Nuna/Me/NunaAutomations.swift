@@ -12,6 +12,7 @@ struct NunaAutomationsView: View {
     @EnvironmentObject private var model: AppModel
     @StateObject private var inactivity = InactivityPrefs()
     @AppStorage("notif.masterEnabled") private var wrist = false
+    @AppStorage(AppModel.offWristReminderKey) private var offWristReminder = true
     @AppStorage(HapticPrefs.breathing) private var breathing = true
     @AppStorage(HapticPrefs.intervals) private var intervals = true
     @AppStorage(HapticPrefs.liveSession) private var liveSession = true
@@ -46,6 +47,7 @@ struct NunaAutomationsView: View {
                 NunaSettingsSwitch("Stress check with vibration", subtitle: "A minute of guided breathing when HRV drops while you are still", systemImage: NunaIcons.breathing, isOn: $behavior.stressCheckIn)
             }
             NunaSettingsSection("Reminders") {
+                NunaSettingsSwitch("Strap off-body", subtitle: "A notification when the strap has been off your wrist for 10 minutes", systemImage: "applewatch.slash", isOn: $offWristReminder)
                 NunaSettingsCard {
                     NavigationLink(value: NunaMeRoute.sedentary) {
                         NunaListRow("Sitting too long", subtitle: LocalizedStringKey(inactivity.enabled ? String(localized: "Vibrates after \(inactivity.thresholdMinutes) minutes") : String(localized: "Off")), systemImage: "chair", showsChevron: true)

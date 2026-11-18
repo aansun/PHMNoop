@@ -203,7 +203,7 @@ struct NunaSmartAlarmView: View {
 
     /// Shown while the strap is not armed or does not accept the alarm.
     private var armWarning: String? {
-        if behavior.smartAlarmEnabled && !willArm { return String(localized: "Your WHOOP 5/MG is not armed until Experimental mode is on.") }
+        if behavior.smartAlarmEnabled && !willArm { return String(localized: "Your WHOOP 5/MG is not armed until its wake alarm is turned on in Experiments.") }
         if behavior.smartAlarmEnabled && rejectStreak >= 2 { return String(localized: "Your strap isn't accepting the alarm. See the help for what to do.") }
         return nil
     }
@@ -486,7 +486,7 @@ struct NunaSmartAlarmView: View {
                 note("The buzz is the same one as your other wrist alerts, so it follows the Wrist alerts switch in Strap automations: with it off the strap stays silent and only the phone notification wakes you. To turn the alarm off, double-tap your strap while it buzzes.")
                 note("The buzz is silent, from the strap's own firmware, so it works even if your phone is asleep or PHMN is closed. A backup notification is scheduled too, but Focus or silent mode can mute it. Keep your phone's Clock alarm as your real backup.")
                 if model.whoop5Detected && !PuffinExperiment.isEnabled {
-                    note("Your WHOOP 5/MG won't arm this until Experimental mode is on (Settings, Experimental). Right now your wake time is saved but the strap is NOT armed.", warn: true)
+                    note("Your WHOOP 5/MG won't arm this until its wake alarm is turned on in Settings, Experiments. Right now your wake time is saved but the strap is NOT armed.", warn: true)
                 } else if model.whoop5Detected {
                     note("Armed on the strap itself with the experimental 5/MG command. A strap-driven wake is still unconfirmed on 5/MG, so keep a backup alarm.")
                 } else {
