@@ -29,6 +29,11 @@
 	</dict>
 	<key>UIAppFonts</key>
 	<array>
+		<string>DINPro-Medium.otf</string>
+		<string>DINPro-Bold.otf</string>
+		<string>ProximaNova-Regular.ttf</string>
+		<string>ProximaNova-Semibold.ttf</string>
+		<string>ProximaNova-Extrabold.ttf</string>
 		<string>D-DIN-PRO-400-Regular.otf</string>
 		<string>D-DIN-PRO-500-Medium.otf</string>
 		<string>D-DIN-PRO-600-SemiBold.otf</string>
