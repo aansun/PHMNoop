@@ -187,20 +187,32 @@ public extension Font {
         // the DIN role of the sheet; words are Proxima Nova: main headers (24 to 31) bold, card headers (16 to 23) semibold, body (13 to 15)
         // regular, captions and menu labels medium. When a font file is not in the app the system font stands in with the same weights.
         if NunaThemePrefs.skin == .whp { return NunaWHPFont.font(size: size, weight: weight, design: design) }
-        if NunaThemePrefs.skin == .flow { return NunaFlowFont.font(size: size, weight: weight, design: design) }
-        return .system(size: size, weight: weight, design: design)
+        // Every skin sets its type at the sizes of WHP: figures at the size the screen asks for, words 7% smaller (to the half point). The Default and
+        // Flow faces differ from WHP's, the sizes do not.
+        let pt = NunaWHPFont.isFigure(size: size, weight: weight, design: design) ? size : NunaWHPFont.wordSize(size)
+        if NunaThemePrefs.skin == .flow { return NunaFlowFont.font(size: size, drawSize: pt, weight: weight, design: design) }
+        // `.rounded` is the marker for a figure (see `NunaType.design`); the Default look draws its figures in the system face as it always has.
+        return .system(size: pt, weight: weight, design: design == .rounded ? .default : design)
     }
 }
 
 /// The font design the Nuna screens use for numerals and headings: SF Pro, as the typography guide recommends.
 public enum NunaType {
-    /// The design every figure and heading asks for. In WHP and Flow it is a marker (`.rounded`) that `Font.nuna` turns into the skin's figure font (D-DIN-PRO, Fraunces).
-    public static var design: Font.Design { NunaThemePrefs.skin != .standard ? .rounded : .default }
+    /// The design every figure and heading asks for. It is a marker (`.rounded`) that `Font.nuna` turns into the skin's figure font (D-DIN-PRO, Fraunces, the system face).
+    public static var design: Font.Design { .rounded }
 }
 
 /// The WHP style's fonts, from the WHOOP brand guide: DINPro Bold for numbers; Proxima Nova for words, Semibold for body text and (the guide
 /// asks for Bold, which is not among the files) Extrabold for headlines. D-DIN-PRO and Montserrat, then the system font, stand in when a file is missing.
 enum NunaWHPFont {
+    /// The size words are drawn at for a size the screens ask for: 7% smaller, to the half point (Proxima Nova runs wider than the sizes were drawn for).
+    static func wordSize(_ size: CGFloat) -> CGFloat { (size * 0.93 * 2).rounded() / 2 }
+
+    /// Whether a text is a figure, drawn at the size asked: the figure design below 32 pt unless it is a heading (heavy or black), which is words.
+    static func isFigure(size: CGFloat, weight: Font.Weight, design: Font.Design) -> Bool {
+        design == .rounded && !((weight == .heavy || weight == .black) && size < 32)
+    }
+
     private static func available(_ name: String) -> Bool {
         CTFontCopyPostScriptName(CTFontCreateWithName(name as CFString, 12, nil)) as String == name
     }
@@ -292,16 +304,18 @@ enum NunaFlowFont {
     // Variation axis tags (four-character codes as integers): weight, optical size, softness, wonk.
     private static let wght = 2003265652, opsz = 1869640570, soft = 1397704276, wonk = 1464815179
 
-    static func font(size: CGFloat, weight: Font.Weight, design: Font.Design) -> Font {
+    /// `size` decides the role (a figure or title from 24 pt up is Fraunces); `drawSize` is the size it is drawn at, `size` when not given.
+    static func font(size: CGFloat, drawSize: CGFloat? = nil, weight: Font.Weight, design: Font.Design) -> Font {
+        let pt = drawSize ?? size
         let bold = weight == .bold || weight == .heavy || weight == .black
         // Fraunces is for the numeral (48), display (32) and title-lg (24) roles only: a figure or a heading from 24 pt up. Below that, figures are words.
         if size >= 24 && (design == .rounded || bold) {
-            guard frauncesOK else { return .system(size: size, weight: .semibold, design: .serif) }
+            guard frauncesOK else { return .system(size: pt, weight: .semibold, design: .serif) }
             let d = CTFontDescriptorCreateWithAttributes([
                 kCTFontFamilyNameAttribute: "Fraunces",
-                kCTFontVariationAttribute: [wght: 600, opsz: min(max(size, 9), 144), soft: 50, wonk: 0],
+                kCTFontVariationAttribute: [wght: 600, opsz: min(max(pt, 9), 144), soft: 50, wonk: 0],
             ] as CFDictionary)
-            return Font(CTFontCreateWithFontDescriptor(d, size, nil))
+            return Font(CTFontCreateWithFontDescriptor(d, pt, nil))
         }
         let value: Double
         switch weight {
@@ -310,12 +324,12 @@ enum NunaFlowFont {
         case .medium: value = 500
         default: value = 400
         }
-        guard jakartaOK else { return .system(size: size, weight: weight, design: .default) }
+        guard jakartaOK else { return .system(size: pt, weight: weight, design: .default) }
         let d = CTFontDescriptorCreateWithAttributes([
             kCTFontFamilyNameAttribute: "Plus Jakarta Sans",
             kCTFontVariationAttribute: [wght: value],
         ] as CFDictionary)
-        return Font(CTFontCreateWithFontDescriptor(d, size, nil))
+        return Font(CTFontCreateWithFontDescriptor(d, pt, nil))
     }
 }
 

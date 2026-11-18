@@ -395,7 +395,7 @@ public struct TrendChart: View {
                 // One fixed size for every label, and never truncated. Capitals (WHP) are wider than a slot, so that style sets them a
                 // little smaller; shrinking each label to its own slot made "30 SEP" and "1 OKT" different sizes.
                 Text(xAxisDateFormat(date))
-                    .font(.system(size: NunaThemePrefs.skin == .whp ? 10 : 12, weight: .medium))
+                    .font(.system(size: 10, weight: .medium))
                     .multilineTextAlignment(.center)
                     .tracking(0)
                     .lineLimit(2)

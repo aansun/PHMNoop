@@ -319,7 +319,7 @@ struct NunaAnyaView: View {
                 LazyVStack(alignment: .leading, spacing: 16) {
                     ForEach(coach.messages) { message in bubble(message).id(message.id) }
                     if coach.sending {
-                        HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }.id("typing")
+                        HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(NunaAnyaType.thinking).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }.id("typing")
                     } else if let last = coach.messages.last, last.role == .assistant {
                         followUps.id("follow")
                     }
@@ -351,7 +351,7 @@ struct NunaAnyaView: View {
         case .user:
             HStack {
                 Spacer(minLength: 56)
-                Text(verbatim: m.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).textSelection(.enabled)
+                Text(verbatim: m.text).font(NunaAnyaType.asked).foregroundStyle(NunaPalette.onAccent).textSelection(.enabled)
                     .padding(.horizontal, 16).padding(.vertical, 11).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
         case .assistant:
@@ -432,7 +432,7 @@ struct NunaAnyaView: View {
                 }.buttonStyle(.plain).accessibilityLabel(Text("Add attachment"))
                 HStack(spacing: 6) {
                     TextField("", text: $draft, prompt: Text("Ask Anya about your data").foregroundStyle(NunaPalette.textMuted), axis: .vertical)
-                        .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1...4)
+                        .font(NunaAnyaType.input).foregroundStyle(NunaPalette.textPrimary).lineLimit(1...4)
                         .focused($focused).padding(.leading, 16).padding(.vertical, 12).onSubmit { send(draft) }
                     if coach.sending {
                         ProgressView().controlSize(.small).tint(NunaPalette.textSecondary).frame(width: 40, height: 40)

@@ -7,6 +7,23 @@ import StrandAnalytics
 /// its figures, computed on this iPhone. A provider adds a short explanation only after it is connected and data access is
 /// allowed; follow-up questions are answered inside the sheet, and "Open full conversation" hands over to the Anya tab.
 /// Something the card could do, offered in the sheet instead (start a session, breathe, open the journal).
+/// The type of Anya's words: the sizes the sheet opened from My Day sets, which every place Anya talks (that sheet, the Anya tab, the sheets on the module
+/// screens) takes from here, so her words are the same size wherever she says them.
+enum NunaAnyaType {
+    /// The first thing she says: the day read out, or her written analysis.
+    static var lead: Font { .nuna(size: 20, weight: .regular) }
+    static let leadSpacing: CGFloat = 9
+    /// An answer in the conversation.
+    static var reply: Font { .nuna(size: 18, weight: .regular) }
+    static let replySpacing: CGFloat = 8
+    /// What the person asked, in its bubble.
+    static var asked: Font { .nuna(size: 16, weight: .semibold) }
+    /// The line the person types in.
+    static var input: Font { .nuna(size: 18, weight: .regular) }
+    /// "Anya is thinking…".
+    static var thinking: Font { .nuna(size: 15, weight: .semibold) }
+}
+
 struct NunaAnyaCardAction: Identifiable {
     let title: LocalizedStringKey
     let perform: () -> Void
@@ -194,10 +211,10 @@ struct NunaAnyaSheet: View {
                     }
                 }
                 if explaining {
-                    HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+                    HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(NunaAnyaType.thinking).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 } else if let explanation {
                     NunaDivider()
-                    NunaAnyaReply(text: explanation, font: .nuna(size: 14.5, weight: .semibold)).textCase(nil)
+                    NunaAnyaReply(text: explanation, font: NunaAnyaType.reply, lineSpacing: NunaAnyaType.replySpacing).textCase(nil)
                 }
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
@@ -269,19 +286,19 @@ struct NunaAnyaSheet: View {
             ForEach(turns) { t in
                 if t.role == .user {
                     HStack { Spacer(minLength: 40)
-                        Text(verbatim: t.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) }
+                        Text(verbatim: t.text).font(NunaAnyaType.asked).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) }
                 } else {
-                    NunaAnyaReply(text: t.text, font: .nuna(size: 14.5, weight: .semibold), question: question(before: t)).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
+                    NunaAnyaReply(text: t.text, font: NunaAnyaType.reply, lineSpacing: NunaAnyaType.replySpacing, question: question(before: t)).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) } }
+            if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(NunaAnyaType.thinking).foregroundStyle(NunaPalette.textSecondary).textCase(nil) } }
         }
     }
 
     private var composer: some View {
         HStack(spacing: 8) {
             TextField("", text: $draft, prompt: Text(coach.isConfigured ? "Ask a follow-up" : "Connect Anya to ask").foregroundStyle(NunaPalette.textMuted), axis: .vertical)
-                .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1...3).focused($focused)
+                .font(NunaAnyaType.input).foregroundStyle(NunaPalette.textPrimary).lineLimit(1...3).focused($focused)
                 .padding(.leading, 16).padding(.vertical, 12).disabled(!coach.isConfigured).onSubmit { submit() }
             Button { submit() } label: {
                 Image(systemName: "arrow.up").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
@@ -415,15 +432,15 @@ extension NunaAnyaSheet {
         if outlook {
             outlookMessage
         } else if explaining {
-            HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
+            HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(NunaAnyaType.thinking).foregroundStyle(.white.opacity(0.7)) }
         } else if let explanation {
             // Her written analysis is the message; the local read stays behind it.
-            NunaAnyaReply(text: explanation, font: .nuna(size: 20, weight: .regular), lineSpacing: 9, color: nil)
+            NunaAnyaReply(text: explanation, font: NunaAnyaType.lead, lineSpacing: NunaAnyaType.leadSpacing, color: nil)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if turns.isEmpty { feedbackRow(copying: AnyaActions.proseOnly(explanation), note: String(explanation.prefix(80))) }
         } else if let read {
             Text(NunaMark.attributed(NunaMark.compose(headline: read.headline, detail: read.detail), size: 20))
-                .font(.nuna(size: 20, weight: .regular)).lineSpacing(9).fixedSize(horizontal: false, vertical: true)
+                .font(NunaAnyaType.lead).lineSpacing(NunaAnyaType.leadSpacing).fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if turns.isEmpty { feedbackRow(copying: NunaMark.plain(NunaMark.compose(headline: read.headline, detail: read.detail)), note: read.headline) }
         } else if loaded {
@@ -436,19 +453,19 @@ extension NunaAnyaSheet {
         ForEach(turns) { t in
             if t.role == .user {
                 HStack { Spacer(minLength: 56)
-                    Text(verbatim: t.text).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaAnyaWing.ink)
+                    Text(verbatim: t.text).font(NunaAnyaType.asked).foregroundStyle(NunaAnyaWing.ink)
                         .padding(.horizontal, 16).padding(.vertical, 10).background(NunaAnyaWing.gradient, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
             } else {
                 VStack(alignment: .leading, spacing: 14) {
-                    NunaAnyaReply(text: t.text, font: .nuna(size: 18, weight: .regular), lineSpacing: 8, color: nil, question: question(before: t))
+                    NunaAnyaReply(text: t.text, font: NunaAnyaType.reply, lineSpacing: NunaAnyaType.replySpacing, color: nil, question: question(before: t))
                         .frame(maxWidth: .infinity, alignment: .leading)
                     if t.id == turns.last?.id { feedbackRow(copying: AnyaActions.proseOnly(t.text), note: String(t.text.prefix(80))) }
                 }
             }
         }
         if sending {
-            HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
+            HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(NunaAnyaType.thinking).foregroundStyle(.white.opacity(0.7)) }
         }
     }
 
@@ -522,7 +539,7 @@ extension NunaAnyaSheet {
             .buttonStyle(.plain).accessibilityLabel(Text("More"))
             HStack(spacing: 8) {
                 TextField("", text: $draft, prompt: Text("Ask Anya anything").foregroundStyle(.white.opacity(0.45)), axis: .vertical)
-                    .font(.nuna(size: 18, weight: .regular)).lineLimit(1...3).focused($focused).tint(NunaAnyaWing.colors[0])
+                    .font(NunaAnyaType.input).lineLimit(1...3).focused($focused).tint(NunaAnyaWing.colors[0])
                     .disabled(!coach.isConfigured).onSubmit { submit() }
                 let empty = draft.trimmingCharacters(in: .whitespaces).isEmpty
                 Button { submit() } label: {
@@ -612,17 +629,17 @@ extension NunaAnyaSheet {
         if review, let r = reviewData {
             NunaReviewContent(review: r, provider: explanation, committed: reviewCommitted, onCommit: { if let idea = r.bedtime { commitBedtime(idea) } })
             if explaining {
-                HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
+                HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(NunaAnyaType.thinking).foregroundStyle(.white.opacity(0.7)) }
             }
             if turns.isEmpty { feedbackRow(copying: NunaMark.plain(r.opening + "\n" + (explanation ?? r.paragraphs.joined(separator: "\n"))), note: r.opening) }
         } else if let o = outlookData {
             NunaOutlookContent(outlook: o, provider: explanation, committed: outlookCommitted, onCommit: { commit($0) }, onAlternatives: { alternatives() })
             if explaining {
-                HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
+                HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(NunaAnyaType.thinking).foregroundStyle(.white.opacity(0.7)) }
             }
             if turns.isEmpty { feedbackRow(copying: NunaMark.plain(o.greeting + "\n" + (explanation ?? o.paragraph)), note: o.greeting) }
         } else {
-            HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
+            HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(NunaAnyaType.thinking).foregroundStyle(.white.opacity(0.7)) }
         }
     }
 }
