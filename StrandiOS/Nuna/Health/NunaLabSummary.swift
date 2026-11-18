@@ -83,7 +83,7 @@ struct NunaLabStatusChip: View {
     var body: some View {
         HStack(spacing: 7) {
             Image(systemName: status.symbol).font(.nuna(size: status == .noRange ? 5.5 : 9, weight: .heavy))
-            Text(status.cardTitle).font(.nunaBoldFigure(size: 10.5)).tracking(0.1).textCase(nil).lineLimit(1)
+            Text(status.cardTitle).font(.nunaBoldFigure(size: 10.5)).tracking(0.1).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
         }
         .foregroundStyle(status.tint).padding(.leading, 7).padding(.trailing, 5).frame(height: 18)
         .background(status.tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
@@ -353,8 +353,9 @@ struct NunaLabBookCard: View {
                                         HStack(spacing: 0) {
                                             NunaLabStatusChip(status: s)
                                             Spacer(minLength: 6)
+                                            // The count is never cut: a fixed one-digit width turned 8 results into "…" at 10 or more, so the chip gives way instead.
                                             Text(verbatim: "\(counts[s] ?? 0)").font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                                .frame(width: 16, height: 18, alignment: .leading)
+                                                .lineLimit(1).fixedSize().layoutPriority(1).frame(minWidth: 16, minHeight: 18, alignment: .trailing)
                                         }
                                         .frame(height: 18)
                                     }
@@ -526,7 +527,7 @@ struct NunaLabSummaryPage: View {
                         NunaLabStatusChip(status: s)
                         Spacer(minLength: 6)
                         Text(verbatim: "\(counts[s] ?? 0)").font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(height: 18)
+                            .lineLimit(1).fixedSize().layoutPriority(1).frame(height: 18)
                     }
                     .frame(height: 18)
                 }

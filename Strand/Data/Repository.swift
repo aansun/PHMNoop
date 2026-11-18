@@ -3478,12 +3478,15 @@ final class Repository: ObservableObject {
         detectedDismissedTokens: [String]
     ) -> AutoWorkoutSuggestion? {
         let exact = Set(autoDismissedTokens)
-        let legacy = WorkoutSource.parseDismissedSpans(detectedDismissedTokens)
+        // A dismissed span hides every window that overlaps it, not only the same start and end: the next scan sees the same session with its
+        // boundaries moved by a few minutes (it was still going, or merged with a neighbour), and an exact match would offer it again, one more
+        // deletion for each shift.
+        let dismissed = WorkoutSource.parseDismissedSpans(detectedDismissedTokens) + WorkoutSource.parseDismissedSpans(autoDismissedTokens)
         return candidates
             .filter { candidate in
                 let token = "\(candidate.startSec):\(candidate.endSec)"
                 return !exact.contains(token)
-                    && !legacy.contains { span in
+                    && !dismissed.contains { span in
                         candidate.startSec < span.end && span.start < candidate.endSec
                     }
             }

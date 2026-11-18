@@ -406,13 +406,63 @@ public enum AnyaActions {
 
     // MARK: Parsing a reply
 
-    /// Splits a reply into prose and action blocks, in order. An action fence that is still open (a reply that is streaming) or
-    /// does not parse is dropped from the prose when it is open and kept as text when it is closed but invalid.
+    /// The kinds of block a fence may carry, by the name after `anya-`.
+    static let blockKinds: Set<String> = ["chart", "program", "workout", "lab", "food", "plan", "breath"]
+
+    /// What a fence tag stands for: one of `blockKinds` (named `anya-workout`, `anya_workout` or just `workout`), `json` or no tag at all (a model that
+    /// forgot the name: the kind is then read from the keys of its JSON), an `anya-` name this app does not know, or another language's code.
+    enum FenceKind: Equatable { case action(String), generic, unknownAction, other }
+
+    static func fenceKind(_ tag: String) -> FenceKind {
+        let t = tag.lowercased()
+        if t.isEmpty || t == "json" { return .generic }
+        let bare = t.hasPrefix("anya") ? String(t.dropFirst(4)).trimmingCharacters(in: CharacterSet(charactersIn: "-_ ")) : t
+        if blockKinds.contains(bare) { return .action(bare) }
+        return t.hasPrefix("anya") ? .unknownAction : .other
+    }
+
+    /// The block a bare JSON object describes, read from its keys, for a fence that has no (or the wrong) name. Only what validates as one of the
+    /// blocks counts; any other JSON is not guessed at.
+    static func inferBlock(_ o: [String: Any]) -> AnyaBlock? {
+        if o["stages"] != nil, let b = breath(o) { return .breath(b) }
+        if o["metrics"] != nil || o["metric"] != nil, let c = chart(o) { return .chart(c) }
+        if o["targetKcal"] != nil, let p = plan(o) { return .plan(p) }
+        if o["results"] != nil, let l = lab(o) { return .lab(l) }
+        if o["items"] != nil, let f = food(o) { return .food(f) }
+        if o["days"] != nil, o["name"] != nil, let p = program(o) { return .program(p) }
+        if o["minutes"] != nil, o["title"] != nil, let w = workout(o) { return .workout(w) }
+        return nil
+    }
+
+    private static func block(_ kind: String, _ o: [String: Any]) -> AnyaBlock? {
+        switch kind {
+        case "chart": return chart(o).map(AnyaBlock.chart)
+        case "program": return program(o).map(AnyaBlock.program)
+        case "workout": return workout(o).map(AnyaBlock.workout)
+        case "lab": return lab(o).map(AnyaBlock.lab)
+        case "food": return food(o).map(AnyaBlock.food)
+        case "plan": return plan(o).map(AnyaBlock.plan)
+        case "breath": return breath(o).map(AnyaBlock.breath)
+        default: return nil
+        }
+    }
+
+    /// A model writes a quote as `> text`; the app draws no quote, so the marker would show as a stray ">".
+    static func withoutQuoteMarkers(_ text: String) -> String {
+        text.split(separator: "\n", omittingEmptySubsequences: false).map { line -> String in
+            let t = line.drop { $0 == " " }
+            guard t.hasPrefix(">") else { return String(line) }
+            return String(t.dropFirst().drop { $0 == " " })
+        }.joined(separator: "\n")
+    }
+
+    /// Splits a reply into prose and action blocks, in order. A fence named for an action, or a `json` (or unnamed) fence whose JSON reads as one, becomes
+    /// a block. An action fence that is still open (a reply that is streaming) is dropped from the prose, and so is a closed one that does not validate; a
+    /// closed action fence whose body is not JSON is kept as text. Any other fence (code in another language, JSON that is no block) stays in the prose.
     public static func parse(_ reply: String) -> [AnyaBlock] {
         var out: [AnyaBlock] = []
-        var rest = Substring(reply)
         func flush(_ s: Substring) {
-            var text = s.trimmingCharacters(in: .whitespacesAndNewlines)
+            var text = withoutQuoteMarkers(s.trimmingCharacters(in: .whitespacesAndNewlines)).trimmingCharacters(in: .whitespacesAndNewlines)
             // A small model often skips the fence and writes the chart as a bare JSON object: draw it, and keep it out of the prose.
             while let (range, spec) = looseChart(in: text) {
                 let before = text[text.startIndex..<range.lowerBound].trimmingCharacters(in: .whitespacesAndNewlines)
@@ -422,30 +472,45 @@ public enum AnyaActions {
             }
             if !text.isEmpty { out.append(.text(text)) }
         }
-        while let open = rest.range(of: "```anya-") {
-            flush(rest[rest.startIndex..<open.lowerBound])
-            let afterTag = rest[open.upperBound...]
-            guard let nl = afterTag.firstIndex(of: "\n") else { rest = ""; break }   // tag line not finished: still streaming
-            let kind = afterTag[afterTag.startIndex..<nl].trimmingCharacters(in: .whitespaces).lowercased()
-            let body = afterTag[afterTag.index(after: nl)...]
-            guard let close = body.range(of: "```") else { rest = ""; break }         // fence still open: hide it
+        var textStart = reply.startIndex
+        var cursor = reply.startIndex
+        while let open = reply[cursor...].range(of: "```") {
+            // The tag runs to the first space, line end or "{": `anya-workout\n{…}` and `json {…}` both read.
+            var tagEnd = open.upperBound
+            while tagEnd < reply.endIndex, !reply[tagEnd].isWhitespace, reply[tagEnd] != "{", reply[tagEnd] != "`" { tagEnd = reply.index(after: tagEnd) }
+            let kind = fenceKind(String(reply[open.upperBound..<tagEnd]))
+            let body = reply[tagEnd...]
+            let close = body.range(of: "```")
+            if kind == .other {
+                // Not ours: its whole fence stays in the prose.
+                guard let close else { break }
+                cursor = close.upperBound
+                continue
+            }
+            guard let close else {
+                // Still streaming (or a fence never closed): an action's body is hidden, never shown half written.
+                flush(reply[textStart..<open.lowerBound]); textStart = reply.endIndex; cursor = reply.endIndex
+                break
+            }
             let json = body[body.startIndex..<close.lowerBound].trimmingCharacters(in: .whitespacesAndNewlines)
-            rest = body[close.upperBound...]
-            guard let data = json.data(using: .utf8), let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
-                flush(Substring(json)); continue
-            }
+            let object = json.data(using: .utf8).flatMap { (try? JSONSerialization.jsonObject(with: $0)) as? [String: Any] }
             switch kind {
-            case "chart": if let c = chart(obj) { out.append(.chart(c)) }
-            case "program": if let p = program(obj) { out.append(.program(p)) }
-            case "workout": if let w = workout(obj) { out.append(.workout(w)) }
-            case "lab": if let l = lab(obj) { out.append(.lab(l)) }
-            case "food": if let f = food(obj) { out.append(.food(f)) }
-            case "plan": if let p = plan(obj) { out.append(.plan(p)) }
-            case "breath": if let b = breath(obj) { out.append(.breath(b)) }
-            default: break
+            case .generic:
+                // A model that forgot the name: it counts only if the JSON reads as one of the blocks.
+                guard let object, let inferred = inferBlock(object) else { cursor = close.upperBound; continue }
+                flush(reply[textStart..<open.lowerBound]); out.append(inferred)
+            case .action(let name):
+                flush(reply[textStart..<open.lowerBound])
+                guard let object else { flush(Substring(json)); break }
+                if let b = block(name, object) { out.append(b) }
+            case .unknownAction:
+                flush(reply[textStart..<open.lowerBound])
+            case .other:
+                break
             }
+            textStart = close.upperBound; cursor = close.upperBound
         }
-        flush(rest)
+        flush(reply[textStart...])
         return out
     }
 
