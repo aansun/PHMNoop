@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "3.0.0",
+          "buildVersion": "417",
+          "date": "2026-11-18",
+          "localizedDescription": "Your day in WHOOP's words, redrawn: Recovery, Strain and Sleep, a Body age built from nine habits, and a strap that tells you what it is doing.",
+          "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.0.0/PHMN-v3.0.0-ios-unsigned.ipa",
+          "size": 86396703,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "2.0.0",
           "buildVersion": "416",
           "date": "2026-10-24",
@@ -105,12 +114,12 @@
           "NSSpeechRecognitionUsageDescription": "PHMN transcribes your question on-device so you can ask the coach out loud instead of typing. Audio never leaves your iPhone."
         }
       },
-      "version": "2.0.0",
-      "buildVersion": "416",
-      "versionDate": "2026-10-24",
-      "versionDescription": "Charge, Effort and Rest follow the day you pick, Effort shows what builds it, the resting heart rate is the nightly average everywhere, a monitor-style heart-rate card, a simpler Compare and a glass strap-sync card.",
-      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v2.0.0/PHMN-v2.0.0-ios-unsigned.ipa",
-      "size": 75438655,
+      "version": "3.0.0",
+      "buildVersion": "417",
+      "versionDate": "2026-11-18",
+      "versionDescription": "Your day in WHOOP's words, redrawn: Recovery, Strain and Sleep, a Body age built from nine habits, and a strap that tells you what it is doing.",
+      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.0.0/PHMN-v3.0.0-ios-unsigned.ipa",
+      "size": 86396703,
       "minOSVersion": "17.0"
     }
   ],
