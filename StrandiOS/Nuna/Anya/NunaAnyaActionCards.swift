@@ -9,8 +9,8 @@ import StrandImport
 struct NunaAnyaReply: View {
     let text: String
     /// The type of the prose, for the sheets that set their own (the cards stay as they are).
-    var font: Font = .nuna(size: 15.5, weight: .regular)
-    var lineSpacing: CGFloat = 0
+    var font: Font = NunaAnyaType.reply
+    var lineSpacing: CGFloat = NunaAnyaType.replySpacing
     var color: Color? = NunaPalette.textPrimary
     /// What the person asked. A question about a week draws a 7-day chart, whatever window the reply named.
     var question: String?

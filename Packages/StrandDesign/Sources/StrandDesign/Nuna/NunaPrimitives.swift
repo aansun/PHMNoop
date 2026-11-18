@@ -593,7 +593,7 @@ public struct NunaTabBar: View {
         } label: {
             VStack(spacing: 5) {
                 glyph(item, size: 27, anyaScale: 1.1).frame(width: 34, height: 26)
-                Text(verbatim: item.title).font(.nuna(size: NunaThemePrefs.skin == .whp ? 11.5 : 12, weight: .semibold)).lineLimit(1)
+                Text(verbatim: item.title).font(.nuna(size: 11.5, weight: .semibold)).lineLimit(1)
                     .textCase(nil).minimumScaleFactor(0.7).allowsTightening(true)
             }
             // The active tab is lit; the others are dimmed. No card behind either, only a faint glow at the foot of the active one.

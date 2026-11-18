@@ -434,7 +434,7 @@ public struct OverviewHRChart: View {
                 // Same size and weight as the other charts' time axis (TrendChart), one size for every label.
                 AxisValueLabel(collisionResolution: .greedy)
                     .foregroundStyle(StrandPalette.textTertiary)
-                    .font(.system(size: NunaThemePrefs.skin == .whp ? 10 : 12, weight: .medium))
+                    .font(.system(size: 10, weight: .medium))
             }
         }
         .chartYAxis {
