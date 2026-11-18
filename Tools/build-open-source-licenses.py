@@ -24,7 +24,6 @@ PACKAGES = {
     "NetworkImage": ("NetworkImage", "Guille Gonzalez", "MIT", "https://github.com/gonzalezreal/NetworkImage", "Image loading inside MarkdownUI.", "LICENSE"),
     "swift-cmark": ("swift-cmark (cmark-gfm)", "John MacFarlane and contributors", "BSD 2-Clause and others, see the text", "https://github.com/swiftlang/swift-cmark", "The Markdown parser inside MarkdownUI.", "COPYING"),
     "ZIPFoundation": ("ZIPFoundation", "Thomas Zoechling", "MIT", "https://github.com/weichsel/ZIPFoundation", "Reading and writing the zip files of imports and backups.", "LICENSE"),
-    "luciq-ios-sdk": ("Luciq SDK", "Luciq", "Luciq licence (use as is, no modification)", "https://github.com/luciqai/luciq-ios-sdk", "The feedback and problem-report screen. It starts only when you open Feedback.", "LICENSE.md"),
 }
 
 entries = []

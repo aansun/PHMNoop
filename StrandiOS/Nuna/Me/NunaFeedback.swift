@@ -2,10 +2,10 @@
 import SwiftUI
 import StrandDesign
 
-/// Settings > Support > Feedback: the way to tell the makers what works and what does not. The message itself is written on Luciq's screen, which these two
-/// buttons open; see `PHMNFeedback` for what is turned off and what a report carries.
+/// Settings > Support > Feedback: the way to tell the makers what works and what does not. Each button opens a new GitHub issue in the browser with its outline
+/// already written (`PHMNFeedback`); the message is written and sent on GitHub, not in the app.
 struct NunaFeedbackView: View {
-    private var available: Bool { PHMNFeedback.isConfigured }
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         NunaDetailScreen("Feedback") {
@@ -18,29 +18,25 @@ struct NunaFeedbackView: View {
             }
             .frame(maxWidth: .infinity).padding(.top, 18).padding(.bottom, 6)
             NunaSettingsGroup {
-                Button { PHMNFeedback.show(.feedback) } label: {
+                Button { open(.feedback) } label: {
                     NunaListRow("Share feedback", description: "An idea, a request or a word of thanks", systemImage: "text.bubble", showsChevron: true)
-                }.buttonStyle(.plain).disabled(!available)
+                }.buttonStyle(.plain)
                 NunaDivider()
-                Button { PHMNFeedback.show(.problem) } label: {
+                Button { open(.problem) } label: {
                     NunaListRow("Report a problem", description: "Something broke or looks wrong", systemImage: "exclamationmark.bubble", showsChevron: true)
-                }.buttonStyle(.plain).disabled(!available)
-            }
-            .opacity(available ? 1 : 0.45)
-            if !available {
-                NunaCard(small: true) {
-                    NunaListRow("Not available in this build", subtitle: "This copy of PHMN was built without a feedback channel. Report a problem on GitHub from About instead.", systemImage: "exclamationmark.circle")
-                }
+                }.buttonStyle(.plain)
             }
             VStack(spacing: 10) {
-                Text("A report carries what you write, your email only if you give one, a picture only if you attach one, and basic details of the app and your iPhone (such as the model and the versions) so a problem can be reproduced.")
-                Text("Your heart rate, sleep, workouts and other health data are never attached, and nothing is sent as a report until you tap Send. PHMN makes no contact with the feedback service until you open this page.")
+                Text("Each button opens GitHub in your browser with a new issue started for you. You write the rest and send it there, so you need a GitHub account.")
+                Text("The app adds only its version, your iOS version, the model of your iPhone and the language. Your heart rate, sleep, workouts and other health data are never added, and nothing is sent until you submit the issue on GitHub. PHMN makes no contact with GitHub until you tap a button.")
             }
             .font(.nuna(size: 12.5, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textMuted).multilineTextAlignment(.center).textCase(nil)
             .fixedSize(horizontal: false, vertical: true).padding(.horizontal, 6).padding(.top, 4)
         }
-        // Luciq is started here, not at launch: the app makes no contact with it until this page is opened.
-        .onAppear { PHMNFeedback.start() }
+    }
+
+    private func open(_ kind: PHMNFeedback.Kind) {
+        if let url = PHMNFeedback.url(kind) { openURL(url) }
     }
 }
 #endif

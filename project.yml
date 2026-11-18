@@ -46,12 +46,6 @@ packages:
   MarkdownUI:
     url: https://github.com/gonzalezreal/swift-markdown-ui
     exactVersion: 2.4.1
-  # Luciq (formerly Instabug): the feedback and problem-report screen behind Settings > Support > Feedback, iOS app only. Pinned exactly, as its own
-  # integration guide asks. It is started only when LUCIQ_APP_TOKEN is set (Strand/Luciq/LuciqSecrets.xcconfig, gitignored), with every automatic
-  # trigger and collector off, so nothing is sent until the person sends a report.
-  Luciq:
-    url: https://github.com/luciqai/luciq-ios-sdk
-    exactVersion: 19.14.0
   # The body map of the gym screens (MIT, Melih Colpan). iOS-only: it needs macOS 14 and the macOS app targets 13.
   MuscleMap:
     url: https://github.com/melihcolpan/MuscleMap
@@ -264,8 +258,8 @@ targets:
       - path: StrandiOS/Resources/ExerciseLibrary
     # Same tracked wrapper as the macOS target (Strand/Oura/ is shared, not per-platform).
     configFiles:
-      Debug: Strand/Luciq/LuciqConfig.xcconfig
-      Release: Strand/Luciq/LuciqConfig.xcconfig
+      Debug: Strand/Oura/OuraConfig.xcconfig
+      Release: Strand/Oura/OuraConfig.xcconfig
     info:
       path: StrandiOS/Resources/Info.plist
       properties:
@@ -373,10 +367,6 @@ targets:
         OURA_CLIENT_ID: $(OURA_CLIENT_ID)
         OURA_CLIENT_SECRET: $(OURA_CLIENT_SECRET)
         OURA_REDIRECT_URI: $(OURA_REDIRECT_URI)
-        # The Luciq application token (from the same kind of local file); blank leaves the Feedback page without its report screen and never starts the SDK.
-        LUCIQ_APP_TOKEN: $(LUCIQ_APP_TOKEN)
-        # Luciq's report screen can attach a picture from the library; the picker asks only when the person chooses to attach one.
-        NSPhotoLibraryUsageDescription: "PHMN lets you attach a picture to the feedback or problem report you choose to send. Nothing is sent until you send it."
         # Registers the noop:// URL scheme so ASWebAuthenticationSession's OAuth redirect reaches
         # the active OAuth session instead of bouncing off the OS. Strava's localhost callback
         # domain is used by the BYO-app settings flow; the URI is defined in StravaCredentials.
@@ -412,8 +402,6 @@ targets:
       - package: ZIPFoundation
       - package: PolarProtocol
       - package: MuscleMap
-      - package: Luciq
-        product: Luciq
       - target: NOOPiOSWidgets
 
   # WidgetKit + Live Activity extension — the iOS analogue of the macOS menu-bar
