@@ -77,6 +77,9 @@ enum IOSAutoWorkoutDetector {
     /// A window with no gait to show for it (cycling, strength, unnamed) must be effort, not stress: the mean heart rate sits at
     /// least this far up the reserve (Karvonen %HRR). A seated presentation, a drive or a hard meeting stays below it.
     static let minEffortHRRPct = 35.0
+    /// Every suggestion, a walk with gait included, must have the heart rate in the first zone (from 50% of the reserve) for at least this long. A window
+    /// whose heart rate never gets there is not a workout, whatever the steps say: a stroll around the house or a few minutes of chores.
+    static let minZone1Seconds = 2 * 60
     /// The HRmax used when the caller has none (the profile's value is passed from the repository).
     static let fallbackMaxBpm = 190
     private static let maxClassGapSeconds = 90
@@ -187,6 +190,8 @@ enum IOSAutoWorkoutDetector {
 
             let hrWindow = sortedHR.filter { $0.ts >= window.start && $0.ts <= window.end }
             guard !hrWindow.isEmpty else { continue }
+            let zones = HRZones.timeInZone(hrWindow, zoneSet: .reserveBands(maxHR: maxHR, restingHR: Double(resting)))
+            guard zones.seconds.reduce(0, +) >= Double(minZone1Seconds) else { continue }
             let bpms = hrWindow.map(\.bpm)
             let average = Int((Double(bpms.reduce(0, +)) / Double(bpms.count)).rounded())
             let detected = DetectedWorkout(

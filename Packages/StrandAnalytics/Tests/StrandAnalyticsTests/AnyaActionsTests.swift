@@ -119,3 +119,63 @@ final class AnyaLabBlockTests: XCTestCase {
         XCTAssertNil(AnyaActions.requestedDays(in: nil))
     }
 }
+
+/// A model that does not follow the `anya-…` naming still gets its card, and nothing it writes shows as raw JSON or a stray marker.
+final class AnyaLooseFenceTests: XCTestCase {
+    private let workoutJSON = #"{"title":"Latihan ringan malam","sport":"Latihan ringan","minutes":20,"zone":4}"#
+
+    private func workouts(_ blocks: [AnyaBlock]) -> [AnyaWorkoutSpec] { blocks.compactMap { if case .workout(let w) = $0 { return w } else { return nil } } }
+    private func texts(_ blocks: [AnyaBlock]) -> [String] { blocks.compactMap { if case .text(let t) = $0 { return t } else { return nil } } }
+
+    func testAJsonFenceThatReadsAsAWorkoutBecomesTheCard() {
+        let reply = "Latihan ringan 20 menit.\n```json\n\(workoutJSON)\n```\nLakukan dengan pelan."
+        let blocks = AnyaActions.parse(reply)
+        XCTAssertEqual(workouts(blocks).first?.minutes, 20)
+        XCTAssertEqual(workouts(blocks).first?.zone, 4)
+        XCTAssertEqual(texts(blocks), ["Latihan ringan 20 menit.", "Lakukan dengan pelan."])
+        XCTAssertFalse(AnyaActions.proseOnly(reply).contains("{"), "raw JSON never reaches the prose")
+    }
+
+    func testTheJsonOnTheSameLineAsTheFenceAndAnUnnamedFenceBothRead() {
+        XCTAssertEqual(workouts(AnyaActions.parse("Ok.\n```json \(workoutJSON)```")).count, 1)
+        XCTAssertEqual(workouts(AnyaActions.parse("Ok.\n```\n\(workoutJSON)\n```")).count, 1)
+    }
+
+    func testOtherSpellingsOfTheNameStillCount() {
+        XCTAssertEqual(workouts(AnyaActions.parse("```anya_workout\n\(workoutJSON)\n```")).count, 1)
+        XCTAssertEqual(workouts(AnyaActions.parse("```workout\n\(workoutJSON)\n```")).count, 1)
+        XCTAssertEqual(workouts(AnyaActions.parse("```Anya-Workout\n\(workoutJSON)\n```")).count, 1)
+    }
+
+    func testTheKindIsReadFromTheKeysAndNothingIsGuessed() {
+        let chart = AnyaActions.parse("```json\n{\"metrics\":[\"hrv\"],\"days\":14}\n```")
+        XCTAssertEqual(chart.count, 1)
+        if case .chart(let c) = chart[0] { XCTAssertEqual(c.metrics, ["hrv"]) } else { XCTFail("a chart") }
+        // JSON that is none of the blocks stays where it was, fenced, in the prose.
+        let other = AnyaActions.parse("Here you go.\n```json\n{\"colour\":\"red\"}\n```")
+        XCTAssertEqual(workouts(other).count, 0)
+        XCTAssertTrue(texts(other).joined().contains("colour"))
+    }
+
+    func testCodeInAnotherLanguageStaysAsItIs() {
+        let reply = "Try:\n```swift\nlet x = 1\n```\nDone."
+        let blocks = AnyaActions.parse(reply)
+        XCTAssertEqual(blocks.count, 1)
+        XCTAssertTrue(texts(blocks)[0].contains("let x = 1"))
+    }
+
+    func testAnOpenFenceIsHiddenWhileTheReplyStreams() {
+        XCTAssertEqual(texts(AnyaActions.parse("Latihan ringan.\n```json\n{\"title\":\"Lat")), ["Latihan ringan."])
+        XCTAssertEqual(texts(AnyaActions.parse("Latihan ringan.\n```anya-work")), ["Latihan ringan."])
+    }
+
+    func testAnUnknownAnyaNameIsDroppedAsBefore() {
+        XCTAssertEqual(texts(AnyaActions.parse("Hi.\n```anya-banana\n{\"a\":1}\n```\nBye.")), ["Hi.", "Bye."])
+    }
+
+    func testQuoteMarkersDoNotShowAsStrayArrows() {
+        let blocks = AnyaActions.parse("> Latihan malam: ringan 20 menit.\n>Jaga tidur.\nBiasa.")
+        XCTAssertEqual(texts(blocks), ["Latihan malam: ringan 20 menit.\nJaga tidur.\nBiasa."])
+        XCTAssertEqual(AnyaActions.withoutQuoteMarkers("a > b"), "a > b", "only a marker at the start of a line goes")
+    }
+}

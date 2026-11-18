@@ -26,8 +26,9 @@ final class IOSAutoWorkoutDetectionTests: XCTestCase {
     }
 
     func testBriskWalkProducesWalkingSuggestion() {
+        // The heart rate reaches the first zone (from 50% of the reserve: 125 bpm with a resting 60 and the fallback maximum of 190).
         let suggestions = IOSAutoWorkoutDetector.detect(
-            hr: hr(15 * 60, bpm: 98),
+            hr: hr(15 * 60, bpm: 130),
             gravity: gravity(15 * 60, delta: 0.05),
             steps: steps(15 * 60, activityClass: 1),
             restingBpm: 60,
@@ -198,6 +199,30 @@ final class IOSAutoWorkoutDetectionTests: XCTestCase {
             savedSpans: [SavedWorkoutSpan(startSec: start - 300, endSec: start + 15 * 60 + 3600)])
 
         XCTAssertTrue(suggestions.isEmpty)
+    }
+
+    func testAWalkWhoseHeartRateNeverReachesTheFirstZoneIsNotASuggestion() {
+        // Fifteen minutes of walking gait at 79 bpm (resting 60): the steps say walking, the heart says it was not effort, and the Zones page
+        // would show no minute in zone 1 for it.
+        let suggestions = IOSAutoWorkoutDetector.detect(
+            hr: hr(15 * 60, bpm: 79),
+            gravity: gravity(15 * 60, delta: 0.05),
+            steps: steps(15 * 60, activityClass: 1),
+            restingBpm: 60,
+            savedSpans: [])
+        XCTAssertTrue(suggestions.isEmpty)
+    }
+
+    func testADismissedSessionStaysHiddenWhenTheNextScanMovesItsEdges() {
+        func suggestion(_ s: Int, _ e: Int) -> AutoWorkoutSuggestion {
+            AutoWorkoutSuggestion(workout: DetectedWorkout(startSec: s, endSec: e, avgBpm: 130, peakBpm: 150, durationMin: (e - s) / 60), sport: "Walking", confidence: 0.8)
+        }
+        let dismissed = ["\(start):\(start + 1800)"]
+        // The same session seen again with its start and end a few minutes off: still the one that was deleted.
+        XCTAssertNil(Repository.selectAutoDetectSuggestion([suggestion(start + 240, start + 2100)], autoDismissedTokens: dismissed, detectedDismissedTokens: []))
+        XCTAssertNil(Repository.selectAutoDetectSuggestion([suggestion(start - 300, start + 1500)], autoDismissedTokens: dismissed, detectedDismissedTokens: []))
+        // A different session hours later is not.
+        XCTAssertNotNil(Repository.selectAutoDetectSuggestion([suggestion(start + 3 * 3600, start + 3 * 3600 + 1800)], autoDismissedTokens: dismissed, detectedDismissedTokens: []))
     }
 
     func testShortWalkDoesNotProduceSuggestion() {
