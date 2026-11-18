@@ -1,7 +1,0 @@
-// Tracked wrapper for the iOS app target, so a clean checkout (no Luciq token) still generates and builds.
-//
-// It carries what the iOS target always had (the Oura wrapper) and adds the optional Luciq file:
-// LuciqSecrets.xcconfig is gitignored and user-created (template: LuciqSecrets.example.xcconfig). It sets LUCIQ_APP_TOKEN, which reaches the app
-// through Info.plist. When the file is absent, the token resolves to an empty string and the app never starts the Luciq SDK.
-#include "../Oura/OuraConfig.xcconfig"
-#include? "LuciqSecrets.xcconfig"
