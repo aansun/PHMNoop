@@ -7,9 +7,11 @@ explain. Each section names the file that holds the code, so you can check the a
 Everything is an **estimate, not medical advice**. Where a figure needs history to mean anything, PHMN says what it is waiting for instead of
 showing a number.
 
+**Names.** The app shows the three scores as **Strain**, **Recovery** and **Sleep**. This page and the code keep the names **Effort**, **Charge** and **Rest**.
+
 Contents: [Effort](#effort) · [Effort target and plan](#effort-target-and-plan) · [Session reads](#session-reads) ·
 [Resting heart rate](#resting-heart-rate) · [Sleep](#sleep) · [Training load](#training-load-and-readiness) ·
-[Treadmill distance](#treadmill-distance) · [Fitness age pace](#pace-of-aging) · [Weather and air](#weather-and-air) ·
+[Treadmill distance](#treadmill-distance) · [Body age](#body-age) · [Pace of aging](#pace-of-aging) · [Stress](#stress) · [Workout detection](#workout-detection) · [Weather and air](#weather-and-air) ·
 [Breathing](#breathing) · [Nutrition](#nutrition) · [Lab Book ranges](#lab-book-ranges) · [Ranges and colours](#ranges-and-colours)
 
 ---
@@ -26,6 +28,17 @@ effort = 100 · ln(1 + load) / ln(D)
 that the theoretical maximum day lands exactly on 100. Because Effort is a logarithm, **loads add up, Effort points do not**: two sessions of Effort 40
 are far less than 80. Every calculation below that combines Efforts therefore goes back to load, adds, and maps again.
 Code: `StrainScorer` in `Packages/StrandAnalytics`.
+
+### Which load
+
+Two recipes turn heart rate into `load`, and the iOS app uses the second unless you switch it (Advanced › Exponential intensity scale), which re-scores the history:
+
+- **Edwards**, NOOP's: time in five zones, each sample weighing 1 to 5 from 50% of your heart-rate reserve up. Below 50% it pays nothing, so an hour at 45% scores 0.
+- **Banister** (the default on iOS): an exponential weight, `duration · x · 0.64 · e^(b·x)` with `x` the share of your reserve, `b` 1.92 for men and 1.67 for women. It pays at every intensity, so it sees intermittent work Edwards zeroes, and it subtracts the **cost of being awake**: a body sitting at 18% of reserve, taken off every day, so a desk day nets about nothing.
+  Each recipe has its own log denominator (Banister's daily ceiling is sex-dependent), so both map the theoretical maximum day to exactly 100 and switching does not rescale the axis.
+
+The 18% is a judgement, not a measurement: on eight days of one wearer, scored against the Day Strain WHOOP's app showed, the mean error fell from 3.7 (a floor of 10%) to 2.4 (18%) of 21, and strength sessions still read 4 to 5 points under WHOOP's, which adds a muscular load a heart rate cannot see.
+Code: `StrainScorer.Method`, `StrainScorer.banisterSedentaryHRR`.
 
 ### Effort after an activity
 
@@ -134,12 +147,44 @@ A treadmill gives the strap no GPS and no speed, but it counts steps. Distance =
 
 It needs at least 50 steps, 30 seconds and a height between 120 and 230 cm, and you can replace it with the treadmill's own reading afterwards. Code: `TreadmillDistance`.
 
+## Body age
+
+The fitness age the iOS app shows is a **Body age**: the age plus the years that nine inputs add or take away, each read against a break-even (resting heart rate 60, steps 7,000, sleep 7.5 h, regularity 70%, zones 1 to 3 at 92 min a week,
+zones 4 to 5 at 10 min, strength at 45 min, lean body mass 78%, and the median VO₂ max for your age and sex). The inputs are combined as log-hazards, shrunk by 0.75 for their overlap and turned into years by the Gompertz doubling time of 8 years.
+The whole model, with its sources and its limits, is in **[FITNESS_AGE.md](FITNESS_AGE.md)**. Code: `VitalityEngine`, `VitalityWeekReader`, `BodyAgeHistory`.
+
 ## Pace of aging
 
-The fitness age moves by exactly one year per calendar year plus the change in its offset, so the pace is `1 + slope of the offset`. A weekly fitness age is noisy, so the
+The Body age moves by exactly one year per calendar year plus the change in its offset, so the pace is `1 + slope of the offset`. A weekly Body age is noisy, so the
 estimate fits a line through up to 26 weekly readings, measures the noise around the line, and **shrinks the slope towards 1.0×** in proportion to that noise: a short or
 jumpy history reads close to normal and only a long, consistent trend moves it far. The result is clamped to −1.0× to 3.0× and needs six weekly readings spanning five weeks.
-It is a fitness comparison, not a biological age. Code: `PaceOfAging`.
+It is a wellness comparison, not a biological age. Code: `PaceOfAging`.
+
+## Stress
+
+The Stress monitor is a reading from **0 to 3** after WHOOP's public description of its Stress Monitor, which gives no formula; everything past that description is this code's own reading, as named constants in `WhoopStress.Tuning`.
+
+- Every **5 minutes** the last **10 minutes** are read: mean heart rate against your resting heart rate, and daytime HRV (RMSSD of artifact-filtered R-R on a log scale) against your HRV baseline of the last 14 nights. An epoch whose R-R is too poor drops the HRV term and scores on heart rate alone.
+- The two z-scores (heart rate weighing 0.9, HRV 0.6, each clamped to ±3) are summed and squashed by a logistic curve onto 0 to 3. **0.0 to 0.9 is Low, 1.0 to 1.9 Medium, 2.0 to 3.0 High.**
+- Heart rate runs higher and HRV lower awake than asleep, so the nightly baselines are shifted for daytime, and a typical night is placed in Low. These shifts are the least certain numbers and were fitted to a few of WHOOP's days.
+- Exercise is not removed from the day: it is pulled towards neutral in proportion to how much of the epoch was motion.
+- It is shown in three parts: **Total day**, **Non-activity** (outside your Strain activities and sleep) and **Sleep** (lower is better).
+- It needs **14 nights** before it shows anything; until then the page says how far along it is.
+
+Code: `WhoopStress` (the iOS app, through `StressEngine`); `DaytimeStress` is NOOP's previous formula, kept beside it.
+
+## Workout detection
+
+Auto-detect only ever **suggests**; nothing is saved until you choose. A candidate window is found three ways: a run of gait seen by the strap's decoded activity classes, a sustained heart-rate window at least 15 bpm over your resting for 12 minutes (cycling and the like), and, when there is motion data, a window 10 bpm over resting for 10 minutes with motion behind it.
+Overlapping windows are merged, and one that overlaps a saved workout is dropped.
+
+- **Minimum length:** 10 minutes for a walk, 8 for a run, 12 for anything else.
+- **A sport is named only on evidence:** walking or running from the gait classes or a classifier at least 50% sure; cycling only when no gait is seen, the classifier is at least 55% sure and you have saved cycling at least twice, as often as any other gaitless sport; strength only for a saw-toothed heart rate (variation 10% or more) that peaks under 85% of reserve. Otherwise the suggestion is a plain *Workout* with three sports to pick from.
+- **Without a gait, the window must be effort and not stress:** its mean heart rate at least 35% of your reserve.
+- **Every suggestion, a walk included, needs at least 2 minutes at or above 50% of your heart-rate reserve**, the first zone of the Zones pages. A window whose heart rate never gets there is not offered, so the detector and the Zones pages cannot disagree.
+- **A deletion stays.** The span you delete is remembered, and any later window that overlaps it is hidden, because the next scan often sees the same session with its start or end a few minutes off.
+
+Code: `IOSAutoWorkoutDetector` and `Repository.selectAutoDetectSuggestion`.
 
 ## Weather and air
 
