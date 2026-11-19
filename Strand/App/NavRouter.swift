@@ -76,6 +76,9 @@ final class NavRouter: ObservableObject {
     /// One-shot: the Updates inbox's "Notification settings" button. The Nuna shell opens Me > Notifications; other shells ignore it.
     @Published var openNotificationSettings = false
 
+    /// One-shot: the first-launch Highlight for Recommended settings. The Nuna shell opens Settings > App Settings > Recommended settings; other shells ignore it.
+    @Published var openRecommendedSettings = false
+
     /// Ask the shell to open the quick-action sheet (Live HR · workout · journal · breathe).
     func requestQuickActions() { quickActionsRequested = true }
 
