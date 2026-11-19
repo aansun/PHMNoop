@@ -379,12 +379,16 @@ extension NunaAnyaSheet {
 
     private var floatingHeader: some View {
         HStack(spacing: 10) {
-            HStack(spacing: 8) {
-                NunaAnyaRing(size: 34)
-                Text("Anya").font(.nuna(size: 15, weight: .semibold))
+            Button { path.append(NunaAnyaRoute.settings) } label: {
+                HStack(spacing: 8) {
+                    NunaAnyaRing(size: 34)
+                    Text("Anya").font(.nuna(size: 15, weight: .semibold))
+                }
+                .padding(.leading, 6).padding(.trailing, 14).frame(height: 40)
+                .background(Color.white.opacity(0.09), in: Capsule())
+                .contentShape(Capsule())
             }
-            .padding(.leading, 6).padding(.trailing, 14).frame(height: 40)
-            .background(Color.white.opacity(0.09), in: Capsule())
+            .buttonStyle(.plain).accessibilityLabel(Text("Anya settings"))
             Spacer(minLength: 0)
             Button { path.append(NunaAnyaRoute.memory) } label: {
                 HStack(spacing: 8) {
