@@ -108,3 +108,59 @@ struct AppleIntelligenceClient: AIProviderClient {
         return lines.joined(separator: "\n\n")
     }
 }
+
+// MARK: - Food estimate by guided generation
+
+#if canImport(FoundationModels)
+/// One dish or drink of a meal, as the on-device model fills it in. Guided generation returns exactly this shape, so there is no JSON to parse out of
+/// prose, which a small model gets wrong now and then.
+@available(iOS 26.0, macOS 26.0, *)
+@Generable
+struct GeneratedFoodItem {
+    @Guide(description: "The dish or drink, named as the person named it, in their own language")
+    var name: String
+    @Guide(description: "The portion: what the person said, such as 1 plate, 2 eggs or 150 g; a typical serving when none was named")
+    var amount: String
+    @Guide(description: "Kilocalories in this portion", .range(0...3000))
+    var kcal: Int
+    @Guide(description: "Grams of protein in this portion", .range(0...200))
+    var proteinG: Int
+    @Guide(description: "Grams of carbohydrate in this portion", .range(0...400))
+    var carbsG: Int
+    @Guide(description: "Grams of fat in this portion", .range(0...200))
+    var fatG: Int
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@Generable
+struct GeneratedMeal {
+    @Guide(description: "One entry for each dish or drink the person listed, with its own portion", .maximumCount(12))
+    var items: [GeneratedFoodItem]
+}
+#endif
+
+extension AppleIntelligenceClient {
+    /// The calories and macros of a described meal, worked out on this iPhone by guided generation, as the `anya-food` block the Add food sheet reads.
+    /// nil when the on-device model is not available or does not answer; the caller then asks the way it does for any other provider.
+    static func estimateMeal(_ description: String) async -> String? {
+        #if canImport(FoundationModels)
+        guard #available(iOS 26.0, macOS 26.0, *), case .available = SystemLanguageModel.default.availability else { return nil }
+        let llm = LanguageModelSession(instructions: """
+            You estimate calories and macros for a food diary. The person says what they ate or drank, in any language. Give each item its own estimate at the portion \
+            they named. Use typical values, and for Indonesian and other local dishes the usual home or street-food serving. Never judge or advise on the food.
+            """)
+        do {
+            let meal = try await llm.respond(to: "What the person ate:\n" + description, generating: GeneratedMeal.self).content
+            let items: [[String: Any]] = meal.items.map {
+                ["name": $0.name, "amount": $0.amount, "kcal": $0.kcal, "proteinG": $0.proteinG, "carbsG": $0.carbsG, "fatG": $0.fatG]
+            }
+            guard !items.isEmpty, let data = try? JSONSerialization.data(withJSONObject: ["items": items]), let json = String(data: data, encoding: .utf8) else { return nil }
+            return "An estimate, worked out on this iPhone.\n```anya-food\n" + json + "\n```"
+        } catch {
+            return nil
+        }
+        #else
+        return nil
+        #endif
+    }
+}
