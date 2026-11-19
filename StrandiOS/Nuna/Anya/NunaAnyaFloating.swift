@@ -69,20 +69,27 @@ private struct NunaAnyaShimmerText: View {
     }
 }
 
-/// The glowing blue line that slides along the foot of the pill while she works.
-private struct NunaAnyaProgressLine: View {
-    @State private var x: CGFloat = 0
+/// A light that runs round the pill's edge while she works: a short comet of blue that circles the whole outline, with a soft glow behind it.
+private struct NunaAnyaProgressLight: View {
+    let shape: RoundedRectangle
+    /// Seconds for one lap.
+    private let lap = 2.2
+
     var body: some View {
-        GeometryReader { g in
-            let w: CGFloat = 70
+        TimelineView(.animation) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            let angle = Angle.degrees((t.truncatingRemainder(dividingBy: lap)) / lap * 360)
+            let comet = AngularGradient(stops: [
+                .init(color: .clear, location: 0),
+                .init(color: .clear, location: 0.62),
+                .init(color: Color(red: 0.36, green: 0.42, blue: 0.9).opacity(0.55), location: 0.86),
+                .init(color: Color(red: 0.7, green: 0.76, blue: 1.0), location: 0.995),
+                .init(color: .clear, location: 1.0),
+            ], center: .center, angle: angle)
             ZStack {
-                Capsule().fill(LinearGradient(colors: [Color(red: 0.36, green: 0.42, blue: 0.9), Color(red: 0.55, green: 0.62, blue: 1.0)], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: w, height: 3).blur(radius: 3).opacity(0.9)
-                Capsule().fill(LinearGradient(colors: [Color(red: 0.36, green: 0.42, blue: 0.9), Color(red: 0.62, green: 0.7, blue: 1.0)], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: w, height: 2.5)
+                shape.strokeBorder(comet, lineWidth: 5).blur(radius: 5).opacity(0.9)
+                shape.strokeBorder(comet, lineWidth: 2.5)
             }
-            .frame(width: w).position(x: w / 2 + x * (g.size.width - w), y: g.size.height - 1.5)
-            .onAppear { withAnimation(.easeInOut(duration: 1.3).repeatForever(autoreverses: true)) { x = 1 } }
         }
         .allowsHitTesting(false)
     }
@@ -175,7 +182,7 @@ struct NunaAnyaFloating: ViewModifier {
             .background(Self.surface, in: shape)
             .overlay(shape.strokeBorder(
                 LinearGradient(colors: [Color(red: 0.55, green: 0.5, blue: 0.85).opacity(0.5), Color.white.opacity(0.06)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1))
-            .overlay { if line == nil { NunaAnyaProgressLine().clipShape(shape) } }
+            .overlay { if line == nil { NunaAnyaProgressLight(shape: shape) } }
             .shadow(color: .black.opacity(0.35), radius: 14, y: 6)
         }
         .buttonStyle(.plain)

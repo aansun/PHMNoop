@@ -86,11 +86,7 @@ struct NunaAnyaView: View {
     @FocusState private var focused: Bool
     @State private var reading: NunaAnyaRead?
     @State private var showAttach = false
-    @State private var showPhoto = false
-    @State private var showDocument = false
-    @State private var photoItem: PhotosPickerItem?
     @State private var attachment: Attachment?
-    @State private var attachmentError: String?
     @State private var showVoice = false
 
     enum Attachment {
@@ -135,17 +131,7 @@ struct NunaAnyaView: View {
         .onChange(of: coach.sending) { _, sending in
             if !sending, !coach.messages.isEmpty { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
         }
-        .nunaDialog("Add to Anya", isPresented: $showAttach) {
-            NunaDialogButton("Photo") { showPhoto = true }
-            NunaDialogButton("Document") { showDocument = true }
-            NunaDialogButton("Cancel", role: .cancel) {}
-        }
-        .photosPicker(isPresented: $showPhoto, selection: $photoItem, matching: .images)
-        .fileImporter(isPresented: $showDocument, allowedContentTypes: [.pdf, .plainText, .commaSeparatedText, .json, .rtf, .html], allowsMultipleSelection: false) { importDocument($0) }
-        .onChange(of: photoItem) { _, item in if let item { loadPhoto(item) } }
-        .alert("Couldn't attach file", isPresented: Binding(get: { attachmentError != nil }, set: { if !$0 { attachmentError = nil } })) {
-            Button("OK", role: .cancel) {}
-        } message: { Text(verbatim: attachmentError ?? "") }
+        .nunaAnyaAttachPicker(attachment: $attachment, isPresented: $showAttach)
         .sheet(isPresented: $showVoice) { NunaAnyaVoiceSheet(voice: voice) { text in
             showVoice = false
             if !text.isEmpty { send(text) }
@@ -474,52 +460,17 @@ struct NunaAnyaView: View {
             coach.pendingChartImage = nil
             coach.appendLocalExchange(user: trimmed.isEmpty ? String(localized: "Add the lab results in \(name)") : trimmed,
                                       assistant: String(localized: "I found \(count) lab results in \(name), read on this iPhone. Check them, then save them to your Lab Book.") + "\n```anya-lab\n\(block)\n```")
-            attachment = nil; photoItem = nil; draft = ""; focused = false
+            attachment = nil; draft = ""; focused = false
             return
         case nil: coach.pendingChartImage = nil
         }
-        attachment = nil; photoItem = nil; draft = ""; focused = false
+        attachment = nil; draft = ""; focused = false
         Task { await coach.send(prompt) }
     }
 
     private func saveAdvice(_ text: String) {
         let day = Repository.localDayKey(Date())
         Task { await repo.saveJournalAnswer(day: day, question: "Coach advice", answeredYes: true, notes: text) }
-    }
-
-    private func loadPhoto(_ item: PhotosPickerItem) {
-        Task {
-            guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data),
-                  let resized = image.preparingThumbnail(of: CGSize(width: 1600, height: 1600)), let png = resized.pngData() else {
-                attachmentError = String(localized: "The selected photo could not be read."); photoItem = nil; return
-            }
-            attachment = .image(name: String(localized: "Photo"), base64: png.base64EncodedString()); photoItem = nil
-        }
-    }
-
-    private func importDocument(_ result: Result<[URL], Error>) {
-        guard case .success(let urls) = result, let url = urls.first else { return }
-        let secured = url.startAccessingSecurityScopedResource(); defer { if secured { url.stopAccessingSecurityScopedResource() } }
-        do {
-            let data = try Data(contentsOf: url)
-            if let lab = Self.labAttachment(name: url.lastPathComponent, ext: url.pathExtension.lowercased(), data: data) { attachment = lab; return }
-            let text: String
-            switch url.pathExtension.lowercased() {
-            case "pdf":
-                guard let doc = PDFDocument(data: data), let s = doc.string else { throw CocoaError(.fileReadCorruptFile) }
-                text = s
-            case "rtf": text = try NSAttributedString(data: data, options: [.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil).string
-            case "html", "htm": text = try NSAttributedString(data: data, options: [.documentType: NSAttributedString.DocumentType.html], documentAttributes: nil).string
-            default:
-                guard let s = String(data: data, encoding: .utf8) else { throw CocoaError(.fileReadCorruptFile) }
-                text = s
-            }
-            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { throw CocoaError(.fileReadCorruptFile) }
-            attachment = .document(name: url.lastPathComponent, text: String(trimmed.prefix(24_000)))
-        } catch {
-            attachmentError = String(localized: "This document could not be read. Choose a PDF or a text-based document.")
-        }
     }
 }
 
