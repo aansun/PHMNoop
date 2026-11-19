@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "3.0.1",
+          "buildVersion": "418",
+          "date": "2026-11-19",
+          "localizedDescription": "Live heart rate back where you train, and an Anya that coaches the way the WHOOP app does.",
+          "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.0.1/PHMN-v3.0.1-ios-unsigned.ipa",
+          "size": 86483160,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "3.0.0",
           "buildVersion": "417",
           "date": "2026-11-18",
@@ -114,12 +123,12 @@
           "NSSpeechRecognitionUsageDescription": "PHMN transcribes your question on-device so you can ask the coach out loud instead of typing. Audio never leaves your iPhone."
         }
       },
-      "version": "3.0.0",
-      "buildVersion": "417",
-      "versionDate": "2026-11-18",
-      "versionDescription": "Your day in WHOOP's words, redrawn: Recovery, Strain and Sleep, a Body age built from nine habits, and a strap that tells you what it is doing.",
-      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.0.0/PHMN-v3.0.0-ios-unsigned.ipa",
-      "size": 86396703,
+      "version": "3.0.1",
+      "buildVersion": "418",
+      "versionDate": "2026-11-19",
+      "versionDescription": "Live heart rate back where you train, and an Anya that coaches the way the WHOOP app does.",
+      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.0.1/PHMN-v3.0.1-ios-unsigned.ipa",
+      "size": 86483160,
       "minOSVersion": "17.0"
     }
   ],
