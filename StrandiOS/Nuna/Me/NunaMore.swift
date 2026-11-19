@@ -72,7 +72,7 @@ struct NunaExperimentsView: View {
     @AppStorage(PuffinExperiment.motionAwareWakeKey) private var motionWake = false
     @AppStorage(PuffinExperiment.stressPersonalBaselineKey) private var stressBaseline = false
     /// The WHOOP 5/MG wake alarm: the strap is sent the wake time only while this is on (it is the flag `BLEManager.armStrapAlarm` reads).
-    @AppStorage(PuffinExperiment.defaultsKey) private var strapAlarm5 = false
+    @AppStorage(PuffinExperiment.defaultsKey) private var strapAlarm5 = PuffinExperiment.defaultsDefault
 
     private var on: Int { [rhythm, liveSessions, sleepV2, spo2, motionWake, stressBaseline, strapAlarm5].filter { $0 }.count }
 

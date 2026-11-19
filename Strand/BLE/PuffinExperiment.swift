@@ -11,8 +11,11 @@ import StrandAnalytics
 enum PuffinExperiment {
     /// Shared with the Settings toggle via `@AppStorage(PuffinExperiment.defaultsKey)`.
     static let defaultsKey = "noopPuffinExperiments"
+    /// ON for anyone who has not chosen (Nov 2026). The one thing this switch gates today is the 5.0 / MG firmware alarm: a strap that is never armed never
+    /// wakes anyone, and a wearer who set an alarm on Home expects it to buzz. A stored choice, either way, wins over this default.
+    static let defaultsDefault = true
 
-    static var isEnabled: Bool { UserDefaults.standard.bool(forKey: defaultsKey) }
+    static var isEnabled: Bool { (UserDefaults.standard.object(forKey: defaultsKey) as? Bool) ?? defaultsDefault }
 
     /// Separate, more-deliberate opt-in for the WHOOP 5/MG "R22" deep-data unlock — the one probe
     /// that WRITES a persistent feature flag to the strap (the `enable_r22_*` SET_CONFIG sequence the
