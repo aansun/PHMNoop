@@ -846,6 +846,7 @@ final class AppModel: ObservableObject {
         let resolved = name.isEmpty ? WorkoutCatalog.defaultSportName : name
         let started = Date()
         activeWorkout = ActiveWorkout(start: started, sport: resolved)
+        holdRealtimeForWorkout()
         // #524: arm GPS route recording for a distance-type sport (run / ride / walk / hike), mirroring
         // Android, which defaults GPS on for `isDistanceSport`. Manual-first / opt-in: only these sports
         // record a route, and the recorder still captures nothing unless the user grants When-In-Use
@@ -936,6 +937,7 @@ final class AppModel: ObservableObject {
         w.pausedAt = snap.pausedAtSec.map { Date(timeIntervalSince1970: TimeInterval($0)) }
         w.pausedDuration = TimeInterval(snap.pausedDurationSec ?? 0)
         activeWorkout = w
+        holdRealtimeForWorkout()
         // The targets chosen at the start come back with the session, so the strap buzz and the spoken cues survive an OS kill.
         if snap.targetSeconds != nil || snap.targetMeters != nil || snap.targetZone != nil {
             workoutTarget = WorkoutTarget(seconds: snap.targetSeconds, meters: snap.targetMeters, zone: snap.targetZone)
@@ -974,6 +976,7 @@ final class AppModel: ObservableObject {
     func discardWorkout() {
         guard activeWorkout != nil else { return }
         activeWorkout = nil
+        releaseRealtimeForWorkout()
         if activeWorkoutIsGps { gpsRecorder.stop() }
         activeWorkoutIsGps = false
         ActiveWorkoutPersistence.clear()
@@ -998,6 +1001,7 @@ final class AppModel: ObservableObject {
     func endWorkout() {
         guard let w = activeWorkout else { return }
         activeWorkout = nil
+        releaseRealtimeForWorkout()
         let wasGps = activeWorkoutIsGps
         activeWorkoutIsGps = false
         // Drop the durable snapshot the instant the session ends , whether it saves below or is discarded
@@ -1479,6 +1483,24 @@ final class AppModel: ObservableObject {
     func rearmRealtimeIfWanted() {
         guard realtimeWanters > 0 else { return }
         ble.startRealtime()
+    }
+
+    /// Whether a running workout holds one want on the realtime stream. A 5.0 / MG only sends live heart rate while the stream is armed, and a session must not
+    /// depend on a screen being open to keep it so: the workout carries on with the phone locked or on another tab.
+    private var workoutHoldsRealtime = false
+
+    /// A workout started (or came back after the app was killed): keep the stream armed until it ends. Idempotent, so a second call adds no second want.
+    private func holdRealtimeForWorkout() {
+        guard !workoutHoldsRealtime else { return }
+        workoutHoldsRealtime = true
+        startRealtimeHR()
+    }
+
+    /// The workout ended or was discarded: give its want back. A no-op when it holds none.
+    private func releaseRealtimeForWorkout() {
+        guard workoutHoldsRealtime else { return }
+        workoutHoldsRealtime = false
+        stopRealtimeHR()
     }
     /// Ask the strap for a fresh battery reading.
     func getBattery() { ble.refreshBattery() }
