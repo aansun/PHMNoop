@@ -133,4 +133,65 @@ struct NunaQuickRunner: View {
         }
     }
 }
+
+/// The one-time tour of the plus, shown the first time Home opens: the screen dims except for the plus, and a card says what it does and that holding it is
+/// how the shortcuts are changed. It is put away by a tap anywhere, and does not come back.
+struct NunaQuickTip: View {
+    /// The plus, in the coordinates of this view.
+    let target: CGRect
+    let onDone: () -> Void
+
+    static let seenKey = "nuna.quickTip.seen"
+
+    var body: some View {
+        GeometryReader { geo in
+            let spot = target.insetBy(dx: -9, dy: -9)
+            let width = min(300, geo.size.width - 32)
+            // Above the plus when there is room for the card, below it when not; its right edge follows the plus, kept 16 pt inside the screen.
+            let below = target.minY < 260
+            let rightEdge = min(max(target.maxX, width + 16), geo.size.width - 16)
+            ZStack(alignment: .topLeading) {
+                Color.black.opacity(0.64)
+                    .mask {
+                        Rectangle().overlay(alignment: .topLeading) {
+                            RoundedRectangle(cornerRadius: 15, style: .continuous).frame(width: spot.width, height: spot.height)
+                                .offset(x: spot.minX, y: spot.minY).blendMode(.destinationOut)
+                        }.compositingGroup()
+                    }
+                RoundedRectangle(cornerRadius: 15, style: .continuous).strokeBorder(NunaAnyaWing.gradient, lineWidth: 2)
+                    .frame(width: spot.width, height: spot.height).offset(x: spot.minX, y: spot.minY)
+                    .shadow(color: NunaAnyaWing.colors[0].opacity(0.6), radius: 8)
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "hand.tap").font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaAnyaWing.colors[0])
+                        Text("Quick actions").font(.nuna(size: 16, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    }
+                    Text("Tap + to open your shortcuts. Hold + to choose which ones it shows.")
+                        .font(.nunaWords(size: 14.5)).tracking(0).lineSpacing(2).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                    HStack {
+                        Spacer(minLength: 0)
+                        Button(action: onDone) {
+                            Text("Got it").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).padding(.vertical, 8)
+                                .background(Capsule().fill(NunaPalette.cardHighlight))
+                        }.buttonStyle(.plain)
+                    }
+                }
+                .padding(18).frame(width: width, alignment: .leading)
+                .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaAnyaWing.gradient.opacity(0.8), lineWidth: 1))
+                .shadow(color: .black.opacity(0.4), radius: 20, y: 8)
+                .padding(.trailing, geo.size.width - rightEdge)
+                .padding(below ? .top : .bottom, below ? spot.maxY + 12 : geo.size.height - spot.minY + 12)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: below ? .topTrailing : .bottomTrailing)
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .contentShape(Rectangle()).onTapGesture(perform: onDone)
+        }
+        .accessibilityAddTraits(.isModal)
+        .transition(.opacity)
+    }
+}
+
 #endif
