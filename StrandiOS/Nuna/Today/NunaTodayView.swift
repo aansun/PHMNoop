@@ -914,7 +914,8 @@ struct NunaTodayView: View {
                                    stressHighMin: model.stressCurve.map(StressDayCurve.highMinutes),
                                    rest: model.rest, workouts: model.workouts, calibrating: calibrationStages, feed: highlightsFeed,
                                    onBreathe: { showBreath = true }, onWindDown: { pushToday(.windDown) }, onOutlook: { showOutlook = true },
-                                   onJournal: { router.openJournal(day: 1) }, onTrend: { pushToday(.trend(.charge)) }, onPlan: { pushToday(.plan) })
+                                   onJournal: { router.openJournal(day: 1) }, onTrend: { pushToday(.trend(.charge)) }, onPlan: { pushToday(.plan) },
+                                   onRecommended: { router.openRecommendedSettings = true })
             }
         case .recoveryVitals:
             if !model.stressStatus.isReady {

@@ -184,6 +184,12 @@ struct NunaRootView: View {
             paths[Tab.me.rawValue] = NavigationPath([NunaMeRoute.notifications])
             router.openNotificationSettings = false
         }
+        .onChange(of: router.openRecommendedSettings) { _, on in
+            guard on else { return }
+            selection = Tab.me.rawValue
+            paths[Tab.me.rawValue] = NavigationPath([NunaMeRoute.settings, NunaMeRoute.appSettings, NunaMeRoute.recommended])
+            router.openRecommendedSettings = false
+        }
     }
 
     /// Light or dark is also set on the windows themselves, because pages pushed inside the tabs are hosted by UIKit and

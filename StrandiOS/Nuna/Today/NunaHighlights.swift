@@ -16,7 +16,7 @@ struct NunaHighlight: Identifiable, Equatable {
     /// A picture on the right of the card.
     var art: Art?
     enum Art: Equatable { case dart }
-    enum Action: Equatable { case breathe, windDown, outlook, journal, trend, plan }
+    enum Action: Equatable { case breathe, windDown, outlook, journal, trend, plan, recommended }
 }
 
 /// What the highlights are worked out from. Plain numbers, so the rules can be read (and tested) without the app around them.
@@ -62,6 +62,8 @@ struct NunaHighlightInputs {
     var pushingLimits = false
     /// The Daily Outlook just opened up and has not been looked at yet.
     var outlookFirst = false
+    /// Version 3's Recommended settings, announced once: until the card is opened or put away.
+    var recommendedFirst = false
     /// The share of the week's plan done so far, in the morning of a day with a plan; nil otherwise.
     var planCheckIn: Int?
 }
@@ -91,6 +93,13 @@ enum NunaHighlightEngine {
     static func build(_ i: NunaHighlightInputs) -> [NunaHighlight] {
         var out: [NunaHighlight] = []
         let recoveryWord: String? = i.charge.flatMap { c in c < 34 ? String(localized: "red") : (c < 67 ? String(localized: "yellow") : nil) }
+
+        // 0. Version 3's Recommended settings, the first time the app is opened on it.
+        if i.recommendedFirst {
+            out.append(.init(id: "recommended-first", title: String(localized: "Recommended settings"),
+                             message: String(localized: "Version 3 can set PHMN up the way the WHOOP app does. See what yours are now, then use them all in one tap."),
+                             actionTitle: String(localized: "Review settings"), action: .recommended))
+        }
 
         // 1. The early warning, when it has something to say.
         if let r = i.illness, r.level != .quiet {
@@ -290,6 +299,9 @@ struct NunaHighlightsCard: View {
     let onJournal: () -> Void
     let onTrend: () -> Void
     var onPlan: () -> Void = {}
+    var onRecommended: () -> Void = {}
+    /// Set once the Recommended settings card has been opened or put away, so it is announced only the first time.
+    static let recommendedSeenKey = "nuna.recommended.seen"
 
     @StateObject private var planModel = NunaPlanModel()
     @EnvironmentObject private var profile: ProfileStore
@@ -382,6 +394,7 @@ struct NunaHighlightsCard: View {
             naps: freshNaps, sleepRecorded: slept, journalYesterdayOpen: !yesterdayLogged, newlyRedBars: newlyRed,
             pushingLimits: (effort.map { $0 * UnitFormatter.effortScaleFactor } ?? 0) >= 20,
             outlookFirst: NunaOutlookGate.ready(repo.days) && !UserDefaults.standard.bool(forKey: NunaOutlookGate.openedKey),
+            recommendedFirst: !UserDefaults.standard.bool(forKey: NunaHighlightsCard.recommendedSeenKey),
             planCheckIn: NunaCheckInGate.visible(woke: (sleepMinutes ?? 0) >= 60, hasPlan: NunaPlanStore.hasPlan(NunaPlanStore.load(planRaw)), now: nowDate)
                 ? Int((planModel.accomplished * 100).rounded()) : nil)
 #if DEBUG
@@ -463,13 +476,13 @@ struct NunaHighlightsCard: View {
                     }
                     if let t = h.actionTitle, let a = h.action {
                         Button { perform(a) } label: {
-                            if a == .outlook || a == .trend || a == .plan {
+                            if a == .outlook || a == .trend || a == .plan || a == .recommended {
                                 // The Outlook's own call to action: gradient letters and an arrow, no pill.
                                 HStack(spacing: 10) {
                                     Text(verbatim: t).font(.nuna(size: compact ? 12 : 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                                     Image(systemName: "arrow.right").font(.system(size: compact ? 14 : 16, weight: .regular))
                                 }
-                                .foregroundStyle(a == .trend || a == .plan ? AnyShapeStyle(Color(red: 0.29, green: 0.56, blue: 0.89)) : AnyShapeStyle(Self.outlookGradient)).frame(minHeight: compact ? 20 : 32)
+                                .foregroundStyle(a == .trend || a == .plan || a == .recommended ? AnyShapeStyle(Color(red: 0.29, green: 0.56, blue: 0.89)) : AnyShapeStyle(Self.outlookGradient)).frame(minHeight: compact ? 20 : 32)
                             } else {
                                 Text(verbatim: t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                                     .foregroundStyle(NunaPalette.textPrimary)
@@ -548,12 +561,16 @@ struct NunaHighlightsCard: View {
         case .journal: onJournal()
         case .trend: onTrend()
         case .plan: onPlan()
+        case .recommended:
+            UserDefaults.standard.set(true, forKey: Self.recommendedSeenKey)
+            onRecommended()
         }
     }
 
     private func put(away id: String) {
         // Put away unopened, the first Outlook is not announced again; the card under "My Day" stays.
         if id == "outlook-first" { UserDefaults.standard.set(true, forKey: NunaOutlookGate.openedKey) }
+        if id == "recommended-first" { UserDefaults.standard.set(true, forKey: Self.recommendedSeenKey) }
         var entries = dismissedRaw.split(separator: ",").map(String.init).filter { $0.hasPrefix(dayKey + "|") }
         entries.append("\(dayKey)|\(id)")
         withAnimation(.easeInOut(duration: 0.25)) { dismissedRaw = entries.joined(separator: ",") }
