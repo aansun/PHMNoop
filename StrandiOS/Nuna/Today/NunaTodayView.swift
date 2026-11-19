@@ -179,6 +179,9 @@ struct NunaTodayView: View {
     /// What the customize sheet opens on; set together with presenting it, so the sheet always gets the right page.
     @State private var customize: TodayCustomizationDestination?
     @State private var showQuick = false
+    /// The one-time tour of the plus (hold it to change the shortcuts): shown the first time Home opens.
+    @AppStorage(NunaQuickTip.seenKey) private var quickTipSeen = false
+    @State private var showQuickTip = false
     /// Pulling Today down syncs the strap and says when it last did.
     @StateObject private var sync = NunaPullSync()
     /// The shortcut just picked, handed to `NunaQuickRunner`.
@@ -262,6 +265,20 @@ struct NunaTodayView: View {
         .padding(.horizontal, 4).padding(.top, 14)
     }
 
+    /// The tour of the plus, over a dimmed screen with the plus lit. Not shown when the plus is out of sight.
+    @ViewBuilder private func quickTip(_ anchor: Anchor<CGRect>?) -> some View {
+        if showQuickTip, !quickTipSeen, !showQuick, let anchor {
+            GeometryReader { geo in
+                let r = geo[anchor]
+                if geo.frame(in: .local).insetBy(dx: 0, dy: 60).contains(CGPoint(x: r.midX, y: r.midY)) {
+                    NunaQuickTip(target: r) { withAnimation(.easeOut(duration: 0.2)) { quickTipSeen = true; showQuickTip = false } }
+                }
+            }
+            // The reader takes the whole screen, so the plus and the dimmed layer are measured from the same corner.
+            .ignoresSafeArea()
+        }
+    }
+
     /// The shortcuts over a dimmed screen, opening upward from the plus (downward when there is no room above), with the plus turned into a cross.
     @ViewBuilder private func quickOverlay(_ anchor: Anchor<CGRect>?) -> some View {
         if showQuick, let anchor {
@@ -325,7 +342,15 @@ struct NunaTodayView: View {
                 }
             }
         }
-        .overlayPreferenceValue(NunaQuickAnchorKey.self) { anchor in quickOverlay(anchor) }
+        .overlayPreferenceValue(NunaQuickAnchorKey.self) { anchor in
+            ZStack { quickOverlay(anchor); quickTip(anchor) }
+        }
+        .task {
+            // Once, the first time Home is on screen: a moment to settle, then the tour of the plus.
+            guard !quickTipSeen, model.isToday else { return }
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            if !quickTipSeen { withAnimation(.easeOut(duration: 0.25)) { showQuickTip = true } }
+        }
         .background(NunaBackdrop())
         .background(NunaQuickRunner(action: $pendingQuick, onAddActivity: { showManual = true }))
         .nunaTodayDestinations()
