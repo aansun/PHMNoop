@@ -37,7 +37,6 @@ enum PHMNChangelog {
                 "**Live heart rate on a 5.0 / MG** now shows when you start a workout, during it and in the Health monitor, not only in Breathing.",
                 "**Anya food estimates** no longer end in \"couldn't read that as food\" on the on-device model.",
                 "**Let Anya use my numbers** lives in Anya settings only, not repeated on the connect pages.",
-                "**Reports from the app** arrive with PHMN's own questions, not NOOP's.",
             ]
         ),
         Release(
