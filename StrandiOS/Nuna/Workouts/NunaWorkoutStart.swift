@@ -131,6 +131,8 @@ struct NunaWorkoutStartView: View {
         .background(NunaBackdrop())
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
+            // A 5.0 / MG sends live heart rate only while the realtime stream is armed; this screen shows it before the session starts.
+            model.startRealtimeHR()
             if resume, !didResume, model.activeWorkout != nil { didResume = true; live = true }
             // A session suggested by the day plan: hold its main zone, and keep its length for the Time goal.
             if let p = router.plannedSession {
@@ -148,7 +150,7 @@ struct NunaWorkoutStartView: View {
             dayPlan = await NunaDayPlanResult.load(repo: repo, profile: profile)
             applyAnyaDefaults()
         }
-        .onDisappear { locationPreview.stop() }
+        .onDisappear { locationPreview.stop(); model.stopRealtimeHR() }
         .onChange(of: chosen) { _, _ in
             if !isDistance, goal.distanceOn { goal.distanceOn = false }
             updateLocationPreview()
