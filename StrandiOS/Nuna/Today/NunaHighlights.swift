@@ -453,6 +453,89 @@ struct NunaHighlightsCard: View {
         }
     }
 
+    /// The card of a highlight: the usual one, or for the first-launch Recommended settings the large one drawn like the Apple Health tile, in Anya's neon.
+    @ViewBuilder private func cardBody(_ h: NunaHighlight) -> some View {
+        if h.id == "recommended-first" {
+            recommendedHero(h)
+        } else {
+        NunaCard(padding: EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: h.art != nil ? 160 : (h.bars == nil ? 46 : 140))) {
+            // A card with a picture is the compact one: smaller words, no three-line floor, 138 pt tall with its words centred.
+            let compact = h.art != nil
+            VStack(alignment: .leading, spacing: compact ? 8 : 6) {
+                Text(verbatim: h.title).font(.nunaWords(size: compact ? 13.5 : 14.5, semibold: true)).tracking(0).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                // Always at least three lines tall (a hidden three-line stand-in sets the floor), so every card is four lines with its title.
+                ZStack(alignment: .topLeading) {
+                    if !compact { Text(verbatim: "A\nA\nA").font(.nunaWords(size: 15)).tracking(0).lineSpacing(2).hidden().accessibilityHidden(true) }
+                    Text(verbatim: h.message).font(.nunaWords(size: compact ? 12 : 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .lineSpacing(2).fixedSize(horizontal: false, vertical: true)
+                }
+                if let t = h.actionTitle, let a = h.action {
+                    Button { perform(a) } label: {
+                        if a == .outlook || a == .trend || a == .plan || a == .recommended {
+                            // The Outlook's own call to action: gradient letters and an arrow, no pill.
+                            HStack(spacing: 10) {
+                                Text(verbatim: t).font(.nuna(size: compact ? 12 : 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                Image(systemName: "arrow.right").font(.system(size: compact ? 14 : 16, weight: .regular))
+                            }
+                            .foregroundStyle(a == .trend || a == .plan || a == .recommended ? AnyShapeStyle(Color(red: 0.29, green: 0.56, blue: 0.89)) : AnyShapeStyle(Self.outlookGradient)).frame(minHeight: compact ? 20 : 32)
+                        } else {
+                            Text(verbatim: t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                .foregroundStyle(NunaPalette.textPrimary)
+                                .padding(.horizontal, 12).padding(.vertical, 6)
+                                .background(Capsule().fill(NunaPalette.cardHighlight))
+                        }
+                    }
+                    .buttonStyle(.plain).padding(.top, compact ? 2 : 4)
+                }
+            }
+            .frame(minHeight: compact ? 102 : nil, alignment: .leading)
+        }
+        }
+    }
+
+    /// Large, like the Apple Health tile on Data and integrations: a tilted glass square with a picture, the icon, the name in capitals and what it does, and
+    /// an outline in the colours of Anya's wing with a soft glow so it cannot be missed.
+    private func recommendedHero(_ h: NunaHighlight) -> some View {
+        let shape = RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous)
+        let neon = NunaAnyaWing.colors[0]
+        return Button { if let a = h.action { perform(a) } } label: {
+            ZStack(alignment: .bottomLeading) {
+                LinearGradient(colors: [NunaPalette.card, neon.opacity(0.22)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 30, style: .continuous).fill(neon.opacity(0.10)).frame(width: 118, height: 118)
+                    RoundedRectangle(cornerRadius: 30, style: .continuous).strokeBorder(neon.opacity(0.35), lineWidth: 1).frame(width: 118, height: 118)
+                    Image(systemName: "wand.and.stars").font(.system(size: 50)).foregroundStyle(neon)
+                        .shadow(color: neon.opacity(0.55), radius: 10)
+                }
+                .rotationEffect(.degrees(-14)).offset(x: 36, y: 14)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
+                Text(verbatim: h.message).font(.nunaWords(size: 13.5)).tracking(0).lineSpacing(2).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    .multilineTextAlignment(.leading).padding(.leading, 18).padding(.trailing, 150).padding(.top, 18)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                HStack(spacing: 12) {
+                    Image(systemName: "wand.and.stars").font(.nuna(size: 18, weight: .semibold)).foregroundStyle(neon)
+                        .frame(width: 38, height: 38).background(neon.opacity(0.16), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(verbatim: h.title).font(.nuna(size: 16, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Closest to the WHOOP app").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(neon).textCase(nil)
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right").font(.nuna(size: 15, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                }
+                .padding(.horizontal, 16).padding(.bottom, 16)
+            }
+            .frame(height: 156)
+            .clipShape(shape)
+            .overlay(shape.strokeBorder(NunaAnyaWing.gradient, lineWidth: 2))
+            .shadow(color: neon.opacity(0.35), radius: 14)
+            .contentShape(shape)
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: h.title + ". " + h.message))
+        .accessibilityAddTraits(.isButton)
+    }
+
     private func card(_ h: NunaHighlight, remaining: Int) -> some View {
         ZStack(alignment: .top) {
             // The next one, showing only as an edge under this one.
@@ -463,38 +546,7 @@ struct NunaHighlightsCard: View {
                     .mask(alignment: .bottom) { Rectangle().frame(height: 12) }
                     .frame(maxHeight: .infinity, alignment: .bottom).offset(y: 12)
             }
-            NunaCard(padding: EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: h.art != nil ? 160 : (h.bars == nil ? 46 : 140))) {
-                // A card with a picture is the compact one: smaller words, no three-line floor, 138 pt tall with its words centred.
-                let compact = h.art != nil
-                VStack(alignment: .leading, spacing: compact ? 8 : 6) {
-                    Text(verbatim: h.title).font(.nunaWords(size: compact ? 13.5 : 14.5, semibold: true)).tracking(0).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                    // Always at least three lines tall (a hidden three-line stand-in sets the floor), so every card is four lines with its title.
-                    ZStack(alignment: .topLeading) {
-                        if !compact { Text(verbatim: "A\nA\nA").font(.nunaWords(size: 15)).tracking(0).lineSpacing(2).hidden().accessibilityHidden(true) }
-                        Text(verbatim: h.message).font(.nunaWords(size: compact ? 12 : 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            .lineSpacing(2).fixedSize(horizontal: false, vertical: true)
-                    }
-                    if let t = h.actionTitle, let a = h.action {
-                        Button { perform(a) } label: {
-                            if a == .outlook || a == .trend || a == .plan || a == .recommended {
-                                // The Outlook's own call to action: gradient letters and an arrow, no pill.
-                                HStack(spacing: 10) {
-                                    Text(verbatim: t).font(.nuna(size: compact ? 12 : 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                    Image(systemName: "arrow.right").font(.system(size: compact ? 14 : 16, weight: .regular))
-                                }
-                                .foregroundStyle(a == .trend || a == .plan || a == .recommended ? AnyShapeStyle(Color(red: 0.29, green: 0.56, blue: 0.89)) : AnyShapeStyle(Self.outlookGradient)).frame(minHeight: compact ? 20 : 32)
-                            } else {
-                                Text(verbatim: t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                    .foregroundStyle(NunaPalette.textPrimary)
-                                    .padding(.horizontal, 12).padding(.vertical, 6)
-                                    .background(Capsule().fill(NunaPalette.cardHighlight))
-                            }
-                        }
-                        .buttonStyle(.plain).padding(.top, compact ? 2 : 4)
-                    }
-                }
-                .frame(minHeight: compact ? 102 : nil, alignment: .leading)
-            }
+            cardBody(h)
             .overlay {
                 // The first Outlook is framed in the Outlook's violet to sky blue.
                 if h.id == "outlook-first" {
