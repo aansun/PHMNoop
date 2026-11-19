@@ -406,6 +406,15 @@ final class AICoachEngine: ObservableObject {
     static let extraInstructionsKey = "ai.extraInstructions"    // free text, appended after the built-in prompt
     static let maxExtraInstructionsLength = 600
 
+    /// What Anya is told when the wearer has not written instructions of their own: a coach in the manner of the WHOOP app's. A stored text, even an empty
+    /// one, replaces it, so clearing the field turns it off.
+    static let defaultExtraInstructions = "Coach me the way a WHOOP-style performance coach would: warm, direct and brief. Lead with the answer, then the numbers behind it: Recovery, Strain, Sleep, HRV and resting heart rate against my own baseline. Give one clear next step for today, tied to my Recovery and my Strain target. Use plain words, never diagnose, and say so when the data is thin."
+
+    /// The instructions in force: the wearer's own text when one is stored (an empty one meaning none), else the default.
+    static func extraInstructions(_ defaults: UserDefaults = .standard) -> String {
+        (defaults.string(forKey: extraInstructionsKey) ?? defaultExtraInstructions).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     static func answerStyleBlock(_ defaults: UserDefaults = .standard) -> String {
         var out = ""
         switch defaults.string(forKey: responseLanguageKey) ?? "app" {
@@ -427,7 +436,7 @@ final class AICoachEngine: ObservableObject {
         if defaults.double(forKey: "nuna.goal.waterL") > 0 { goals.append("daily water target \(defaults.double(forKey: "nuna.goal.waterL")) L") }
         if defaults.double(forKey: "nuna.goal.targetWeightKg") > 0 { goals.append("target weight \(defaults.double(forKey: "nuna.goal.targetWeightKg")) kg") }
         if !goals.isEmpty { out += "\n\nTHE USER'S OWN GOALS (use them when advising; never invent others): " + goals.joined(separator: "; ") + "." }
-        let extra = (defaults.string(forKey: extraInstructionsKey) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let extra = extraInstructions(defaults)
         if !extra.isEmpty {
             out += "\n\nTHE USER'S OWN INSTRUCTIONS (follow them unless they conflict with the safety rules above):\n" + String(extra.prefix(maxExtraInstructionsLength))
         }

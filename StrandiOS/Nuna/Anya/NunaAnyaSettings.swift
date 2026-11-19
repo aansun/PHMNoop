@@ -126,12 +126,12 @@ struct NunaAnyaSettingsView: View {
 
 struct NunaAnyaInstructionsView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var text = UserDefaults.standard.string(forKey: AICoachEngine.extraInstructionsKey) ?? ""
+    @State private var text = AICoachEngine.extraInstructions()
     private let limit = AICoachEngine.maxExtraInstructionsLength
 
     var body: some View {
         NunaDetailScreen("Anya's instructions", trailing: AnyView(saveButton)) {
-            Text("Change how Anya thinks and talks. It applies from your next message, on top of Anya's built-in safety rules.")
+            Text("Change how Anya thinks and talks. It applies from your next message, on top of Anya's built-in safety rules. Until you change it, Anya coaches in the manner of the WHOOP app.")
                 .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaCard {
                 VStack(alignment: .leading, spacing: 10) {
@@ -143,7 +143,8 @@ struct NunaAnyaInstructionsView: View {
                     HStack {
                         Text(verbatim: String(localized: "\(text.count) of \(limit) characters")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         Spacer()
-                        Button("Clear") { text = "" }.font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).disabled(text.isEmpty)
+                        Button("Use default") { text = AICoachEngine.defaultExtraInstructions }.font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).disabled(text == AICoachEngine.defaultExtraInstructions)
+                        Button("Clear") { text = "" }.font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).disabled(text.isEmpty).padding(.leading, 14)
                     }
                 }
             }
@@ -161,7 +162,8 @@ struct NunaAnyaInstructionsView: View {
     private var saveButton: some View {
         Button {
             let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
-            if t.isEmpty { UserDefaults.standard.removeObject(forKey: AICoachEngine.extraInstructionsKey) } else { UserDefaults.standard.set(t, forKey: AICoachEngine.extraInstructionsKey) }
+            // The default is stored as nothing, so it follows any later change to it; an empty text is stored as empty, which means none.
+            if t == AICoachEngine.defaultExtraInstructions { UserDefaults.standard.removeObject(forKey: AICoachEngine.extraInstructionsKey) } else { UserDefaults.standard.set(t, forKey: AICoachEngine.extraInstructionsKey) }
             dismiss()
         } label: {
             Text("Save").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 20).frame(height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
