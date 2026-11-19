@@ -45,7 +45,7 @@ struct TestCentreView: View {
 
     // WHOOP 5/MG developer controls. These use the same persisted keys as the former Settings card;
     // moving the UI does not reset an opt-in or lose the ability to undo a persistent strap write.
-    @AppStorage(PuffinExperiment.defaultsKey) private var puffinExperiments = false
+    @AppStorage(PuffinExperiment.defaultsKey) private var puffinExperiments = PuffinExperiment.defaultsDefault
     @AppStorage(PuffinFrameRecorder.enabledKey) private var puffinCapture = false
     @AppStorage(PuffinExperiment.deepDataKey) private var deepDataEnabled = false
     @AppStorage(PuffinExperiment.broadcastHrKey) private var broadcastHrEnabled = false

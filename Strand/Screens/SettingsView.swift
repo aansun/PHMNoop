@@ -41,7 +41,7 @@ struct SettingsView: View {
     @State private var oversizeRestoreMessage = ""
 
     /// Opt-in WHOOP 5/MG protocol experiments (off by default). See [PuffinExperiment].
-    @AppStorage(PuffinExperiment.defaultsKey) private var puffinExperiments = false
+    @AppStorage(PuffinExperiment.defaultsKey) private var puffinExperiments = PuffinExperiment.defaultsDefault
 
     /// Opt-in WHOOP 5/MG raw-frame capture to a file (off by default). See [PuffinFrameRecorder].
     @AppStorage(PuffinFrameRecorder.enabledKey) private var puffinCapture = false
@@ -1734,7 +1734,7 @@ struct SettingsView: View {
     }
 
     private var experimentalControlsNeedReview: Bool {
-        puffinExperiments || puffinCapture || deepDataEnabled || broadcastHrEnabled ||
+        puffinExperiments != PuffinExperiment.defaultsDefault || puffinCapture || deepDataEnabled || broadcastHrEnabled ||
             ecgRawDataEnabled || ecgEnabled || spo2CandidateDisplayEnabled
     }
 
