@@ -85,6 +85,9 @@ struct NunaAnyaSheet: View {
     @State private var turns: [ChatMessage] = []
     @State private var draft = ""
     @State private var sending = false
+    /// What "+" added to the next question: a photo, a document or a file of lab results, as in the Anya tab.
+    @State private var attachment: NunaAnyaView.Attachment?
+    @State private var showAttach = false
     @FocusState private var focused: Bool
     /// 1 helpful, -1 not helpful, 0 none: for the line on show (floating style).
     @State private var feedback = 0
@@ -119,6 +122,7 @@ struct NunaAnyaSheet: View {
                 .toolbar(.hidden, for: .navigationBar)
                 .nunaAnyaDestinations()
         }
+        .nunaAnyaAttachPicker(attachment: $attachment, isPresented: $showAttach)
         .presentationDetents(floating ? [.large] : [.medium, .large]).presentationDragIndicator(.visible)
         .preferredColorScheme(floating ? .dark : NunaTheme.colorScheme)
         .task(id: "\(context)|\(metric?.key ?? "")") {
@@ -316,19 +320,34 @@ struct NunaAnyaSheet: View {
 
     private func submit() {
         let q = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !q.isEmpty else { return }
-        draft = ""; focused = false
-        Task { await ask(q, shown: q) }
+        guard !q.isEmpty || attachment != nil else { return }
+        let attached = attachment
+        draft = ""; focused = false; attachment = nil
+        switch attached {
+        case nil:
+            Task { await ask(q, shown: q) }
+        case .image(let name, let base64):
+            let question = q.isEmpty ? "Please review the attached image and tell me what is relevant to this page." : q
+            Task { await ask(question, shown: [q, "📎 " + name].filter { !$0.isEmpty }.joined(separator: "\n"), image: base64) }
+        case .document(let name, let body):
+            let question = q.isEmpty ? "Please review the attached document and explain the points most relevant to this page." : q
+            Task { await ask("\(question)\n\n[Attached document: \(name)]\n\(body)\n[/Attached document]", shown: [q, "📎 " + name].filter { !$0.isEmpty }.joined(separator: "\n")) }
+        case .labResults(let name, let block, let count):
+            // Read here and answered here: the card is built from the file, so no provider is called.
+            turns.append(ChatMessage(id: UUID(), role: .user, text: q.isEmpty ? String(localized: "Add the lab results in \(name)") : q))
+            turns.append(ChatMessage(id: UUID(), role: .assistant,
+                                     text: String(localized: "I found \(count) lab results in \(name), read on this iPhone. Check them, then save them to your Lab Book.") + "\n```anya-lab\n\(block)\n```"))
+        }
     }
 
     /// Answers inside the sheet. Needs a provider and data access; otherwise it hands the question to the full conversation
     /// where the same gates are explained, so nothing is sent from here without them.
-    private func ask(_ prompt: String, shown: String) async {
+    private func ask(_ prompt: String, shown: String, image: String? = nil) async {
         guard coach.isConfigured else { return }
-        guard coach.dataConsent else { coach.pendingPrompt = prompt; openFull(); return }
+        guard coach.dataConsent else { coach.pendingChartImage = image; coach.pendingPrompt = prompt; openFull(); return }
         turns.append(ChatMessage(id: UUID(), role: .user, text: shown))
         sending = true; defer { sending = false }
-        let reply = await coach.answerContextualMessage(pageContext: context, notice: notice, history: Array(turns.dropLast()), question: prompt)
+        let reply = await coach.answerContextualMessage(pageContext: context, notice: notice, history: Array(turns.dropLast()), question: prompt, imageBase64: image)
         turns.append(ChatMessage(id: UUID(), role: .assistant, text: reply ?? String(localized: "I couldn't answer right now. Check the provider in Anya settings.")))
         if let reply { NunaAnyaMemory.remember(module, "Asked: \(shown) Answer: \(reply.prefix(220))") }
     }
@@ -532,22 +551,40 @@ extension NunaAnyaSheet {
         Task { await ask(q.prompt, shown: q.title) }
     }
 
+    /// What "+" added to the question, with a way to take it off again, as in the Anya tab.
+    @ViewBuilder private var attachmentChip: some View {
+        if let a = attachment {
+            HStack(spacing: 10) {
+                Image(systemName: a.symbol)
+                Text(verbatim: a.name).font(.nuna(size: 13.5, weight: .semibold)).lineLimit(1)
+                Spacer(minLength: 0)
+                Button { attachment = nil } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.white.opacity(0.6)) }
+                    .buttonStyle(.plain).accessibilityLabel(Text("Remove attachment"))
+            }
+            .padding(.horizontal, 14).frame(height: 40).foregroundStyle(.white)
+            .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            if case .labResults(_, _, let n) = a {
+                Text(verbatim: String(localized: "\(n) lab results found. Read on this iPhone, nothing is sent.")).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(.white.opacity(0.5)).textCase(nil)
+            } else {
+                Text("The file is read on this iPhone and only its text is sent with your question.").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(.white.opacity(0.5)).textCase(nil)
+            }
+        }
+    }
+
     private var floatingComposer: some View {
+        VStack(spacing: 8) {
+        attachmentChip
         HStack(spacing: 12) {
-            NunaMenu {
-                NunaMenuItem("Continue in the Anya tab", icon: "bubble.left.and.bubble.right") { openFull() }
-                NunaMenuItem("Memory", icon: "lightbulb") { path.append(NunaAnyaRoute.memory) }
-                NunaMenuItem("Anya settings", icon: "gearshape") { path.append(NunaAnyaRoute.settings) }
-            } label: {
+            Button { showAttach = true } label: {
                 Image(systemName: "plus").font(.system(size: 22, weight: .regular))
                     .frame(width: 52, height: 52).background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
-            .buttonStyle(.plain).accessibilityLabel(Text("More"))
+            .buttonStyle(.plain).disabled(!coach.isConfigured).accessibilityLabel(Text("Add attachment"))
             HStack(spacing: 8) {
                 TextField("", text: $draft, prompt: Text("Ask Anya anything").foregroundStyle(.white.opacity(0.45)), axis: .vertical)
                     .font(NunaAnyaType.input).lineLimit(1...3).focused($focused).tint(NunaAnyaWing.colors[0])
                     .disabled(!coach.isConfigured).onSubmit { submit() }
-                let empty = draft.trimmingCharacters(in: .whitespaces).isEmpty
+                let empty = draft.trimmingCharacters(in: .whitespaces).isEmpty && attachment == nil
                 Button { submit() } label: {
                     Image(systemName: "arrow.up").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaAnyaWing.ink)
                         .frame(width: 34, height: 34).background(NunaAnyaWing.gradient, in: Circle())
@@ -557,6 +594,7 @@ extension NunaAnyaSheet {
             .padding(.leading, 20).padding(.trailing, 9).frame(minHeight: 52)
             .background(LinearGradient(colors: [Color.white.opacity(0.07), Color.white.opacity(0.03)], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaAnyaWing.gradient.opacity(0.8), lineWidth: 1))
+        }
         }
         .padding(.horizontal, 20).padding(.bottom, 12)
     }

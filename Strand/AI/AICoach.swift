@@ -1387,7 +1387,8 @@ final class AICoachEngine: ObservableObject {
     func answerContextualMessage(pageContext: String,
                                  notice: String?,
                                  history: [ChatMessage],
-                                 question: String) async -> String? {
+                                 question: String,
+                                 imageBase64: String? = nil) async -> String? {
         guard CoachBriefScheduler.coachMasterEnabled,
               isConfigured,
               dataConsent,
@@ -1409,9 +1410,15 @@ final class AICoachEngine: ObservableObject {
         prompt += "\n\nUser's new question:\n"
         prompt += trimmed
 
-        let reply: String
-        do { reply = try await callProvider(key: key, messages: [(.user, prompt)]) }
-        catch { NSLog("[AnyaDebug] contextual send failed: %@", String(describing: error)); return nil }
+        var reply = ""
+        do {
+            if let imageBase64 {
+                // As in the Anya tab: a provider that cannot read images still gets the text of the question.
+                try await streamProvider(key: key, messages: [(.user, prompt)], inlineImage: imageBase64) { reply += $0 }
+            } else {
+                reply = try await callProvider(key: key, messages: [(.user, prompt)])
+            }
+        } catch { NSLog("[AnyaDebug] contextual send failed: %@", String(describing: error)); return nil }
         let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
         return clean.isEmpty ? nil : clean
     }
