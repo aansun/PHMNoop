@@ -2434,8 +2434,6 @@
  "Recommended": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Disarankan"}}}},
  "Anya uses the AI provider you choose. Your key is kept in the Keychain and does not leave this iPhone.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Anya memakai penyedia AI pilihanmu. Kunci disimpan di Keychain dan tidak keluar dari iPhone."}}}},
  "Let Anya use my numbers": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Izinkan Anya memakai datamu"}}}},
- "Summaries of your computed scores, not raw data": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ringkasan skor yang sudah dihitung, bukan data mentah"}}}},
- "Summaries of computed scores, not raw data": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ringkasan skor yang sudah dihitung, bukan data mentah"}}}},
  "Summaries of computed scores": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ringkasan skor yang sudah dihitung"}}}},
  "On this iPhone. No account, no key, no network.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Di iPhone. Tanpa akun, tanpa kunci, tanpa jaringan."}}}},
  "ChatGPT (sign in)": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "ChatGPT (masuk)"}}}},

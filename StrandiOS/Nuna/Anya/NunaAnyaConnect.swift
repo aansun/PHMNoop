@@ -41,9 +41,6 @@ struct NunaAnyaConnectView: View {
                         selected: coach.provider == .custom && coach.isConfigured)
                 }.buttonStyle(.plain)
             }
-            NunaCard(small: true) {
-                NunaToggleRow("Let Anya use my numbers", subtitle: "Summaries of your computed scores, not raw data", systemImage: "lock.open", isOn: $coach.dataConsent).padding(.vertical, 8)
-            }
             Text("Only a text summary of numbers already computed on this iPhone is sent to your chosen provider, and only after you allow it and ask. Raw heartbeat intervals, PPG and motion are never sent.")
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
@@ -118,9 +115,6 @@ struct NunaAnyaKeyView: View {
                 }
             }
             modelCard
-            NunaCard(small: true) {
-                NunaToggleRow("Let Anya use my numbers", subtitle: "Summaries of computed scores, not raw data", systemImage: "lock.open", isOn: $coach.dataConsent).padding(.vertical, 8)
-            }
             Text("Usage is billed by the provider to your account. The key only leaves this iPhone to reach this provider.")
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
             if let e = coach.errorText, !e.isEmpty {
