@@ -637,6 +637,8 @@ private struct NunaWorkoutTargetSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// The Strain scale in use (0-21 or 0-100): every figure here is worked out on the stored 0-100 axis and shown on this one.
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     /// The card whose controls are open; the others show their value on one line.
     @State private var open: Kind?
     @ObservedObject private var environment = EnvironmentStore.shared
@@ -652,7 +654,11 @@ private struct NunaWorkoutTargetSheet: View {
     private static let minimumDistanceKm = 1.0
 
     private var estimatedEffort: Double { goal.estimatedEffort }
-    private func effortNumber(_ value: Double) -> String { String(format: "%.1f", locale: AppLanguage.activeLocale, value) }
+    private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
+    /// A figure on the stored 0-100 axis, shown on the Strain scale in use.
+    private func effortNumber(_ value: Double) -> String {
+        String(format: "%.1f", locale: AppLanguage.activeLocale, UnitFormatter.effortValue(value, scale: effortScale))
+    }
     private var unit: String { UnitFormatter.distanceUnit(distanceSystem) }
     private var perKm: Double { distanceSystem == .imperial ? UnitFormatter.milesPerKilometer : 1 }
 
@@ -1060,10 +1066,13 @@ private struct NunaWorkoutTargetSheet: View {
             let applied = goal.timeOn && !goal.distanceOn && goal.minutes == suggested.minutes && goal.zoneOn && goal.zone == suggested.zone
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
-                    PHMNAnyaMark(size: 30)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(verbatim: sentence(suggestion))
-                            .font(.nuna(size: NunaTypeSize.sub, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                    // As Anya's pick on Breathing: a bold line, the figures behind it in grey, no mark.
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(verbatim: headline(suggestion))
+                            .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                        Text(verbatim: detail(suggestion))
+                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             .fixedSize(horizontal: false, vertical: true).textCase(nil)
                         // Outdoor sports only: when the weather or the air is against it, one more line says so.
                         if isDistanceActivity, environment.isActive, let snap = environment.snapshot,
@@ -1099,13 +1108,18 @@ private struct NunaWorkoutTargetSheet: View {
         }
     }
 
-    /// "Anya suggests steady zone 2, 42 min for Charge 51 (+31–46 Effort)."
-    private func sentence(_ s: NunaDayPlanResult) -> String {
-        let title = s.title.prefix(1).lowercased() + s.title.dropFirst()
+    /// "Steady zone 2, 42 min": the session Anya picks, as the bold line.
+    private func headline(_ s: NunaDayPlanResult) -> String {
+        s.title.prefix(1).uppercased() + s.title.dropFirst()
+    }
+
+    /// "For Recovery 61 (+4.8–7.6 Strain).": what it is picked for, with the Strain it adds on the scale in use.
+    private func detail(_ s: NunaDayPlanResult) -> String {
         guard let lo = s.plan.effortLow, let hi = s.plan.effortHigh else {
-            return String(localized: "Anya suggests \(title) for Recovery \(s.charge).")
+            return String(localized: "For Recovery \(s.charge).")
         }
-        return String(localized: "Anya suggests \(title) for Recovery \(s.charge) (+\(Int(lo.rounded()))–\(Int(hi.rounded())) Strain).")
+        let f: (Double) -> Int = { Int(UnitFormatter.effortValue($0, scale: effortScale).rounded()) }
+        return String(localized: "For Recovery \(s.charge) (+\(f(lo))–\(f(hi)) Strain).")
     }
 
     // MARK: Actions
@@ -1157,6 +1171,7 @@ struct NunaLiveWorkoutView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("workoutKeepScreenOn") private var keepScreenOn = false
     @AppStorage("nuna.live.hideBpm") private var hideBpm = false
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.distanceSystemKey) private var distanceSystemRaw = ""
     @State private var confirmEnd = false
@@ -1464,7 +1479,7 @@ struct NunaLiveWorkoutView: View {
     private func activityRing(_ w: AppModel.ActiveWorkout, bpm: Int?, zone: Int, color: Color, size: CGFloat) -> some View {
         let isHeartRate = selectedTab == .heartRate
         let fraction = isHeartRate ? (hideBpm ? 0 : Double(bpm ?? 0) / max(zoneSet.maxHR, 1)) : w.liveStrain / 100
-        let number = isHeartRate ? (hideBpm ? "•••" : bpm.map(String.init) ?? "–") : String(format: "%.1f", locale: AppLanguage.activeLocale, w.liveStrain)
+        let number = isHeartRate ? (hideBpm ? "•••" : bpm.map(String.init) ?? "–") : String(format: "%.1f", locale: AppLanguage.activeLocale, UnitFormatter.effortValue(w.liveStrain, scale: UnitPrefs.resolveEffortScale(effortScaleRaw)))
         return NunaRingGauge(
             fraction: fraction,
             color: isHeartRate ? color : nunaEffortColor(w.liveStrain),
