@@ -61,10 +61,10 @@ struct NunaWhatsNewView: View {
                     Text(verbatim: date).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                 }
                 Text(verbatim: title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                if !fixes.isEmpty { nunaTrendsCap("New / Enhancement") }
+                if !fixes.isEmpty, !items.isEmpty { nunaTrendsCap("New / Enhancement") }
                 ForEach(Array(items.enumerated()), id: \.offset) { _, item in bullet(item) }
                 if !fixes.isEmpty {
-                    nunaTrendsCap("Bug Fixing").padding(.top, 6)
+                    nunaTrendsCap("Bug Fixing").padding(.top, items.isEmpty ? 0 : 6)
                     ForEach(Array(fixes.enumerated()), id: \.offset) { _, item in bullet(item) }
                 }
             }.frame(maxWidth: .infinity, alignment: .leading)
