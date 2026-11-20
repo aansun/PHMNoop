@@ -41,13 +41,14 @@ enum AppleDemoSeeder {
         guard requested else { return }
         seedDemoDeviceIfNeeded(into: store)
         let existing = (try? await store.dailyMetrics(deviceId: whoop, from: "0000-00-00", to: "9999-99-99")) ?? []
-        guard existing.isEmpty else { await seedLabBookIfNeeded(into: store); await seedSportExtrasIfNeeded(into: store); await seedLowIntensityExtrasIfNeeded(into: store); await seedRecoveryExtrasIfNeeded(into: store); return }
+        guard existing.isEmpty else { await seedLabBookIfNeeded(into: store); await seedSportExtrasIfNeeded(into: store); await seedLowIntensityExtrasIfNeeded(into: store); await seedRecoveryExtrasIfNeeded(into: store); await seedNapExtrasIfNeeded(into: store); return }
         do { try await seed(into: store) }
         catch { NSLog("AppleDemoSeeder: seed failed — \(error)") }
         await seedLabBookIfNeeded(into: store)
         await seedSportExtrasIfNeeded(into: store)
         await seedLowIntensityExtrasIfNeeded(into: store)
         await seedRecoveryExtrasIfNeeded(into: store)
+        await seedNapExtrasIfNeeded(into: store)
     }
 
     /// DEBUG/demo-only: so the Devices screen renders with content under `--demo-seed`, pair a second
@@ -669,6 +670,61 @@ enum AppleDemoSeeder {
                 _ = try await store.insert(Streams(hr: Array(hr[from..<Swift.min(from + 50_000, hr.count)])), deviceId: whoop)
             }
         } catch { NSLog("AppleDemoSeeder: low-intensity extras failed — \(error)") }
+    }
+
+    /// Afternoon naps over the last week, to look at the Naps page under `--demo-seed`: a short one, a longer one, a day with none, a day with
+    /// two and a long one the wearer added by hand. Each carries a stage timeline and a calm heart rate. Added once.
+    private static func seedNapExtrasIfNeeded(into store: WhoopStore) async {
+        let cal = Calendar.current
+        let now = Int(Date().timeIntervalSince1970)
+        let recent = (try? await store.sleepSessions(deviceId: whoop, from: now - 8 * 86_400, to: now + 86_400, limit: 200)) ?? []
+        guard !recent.contains(where: { $0.endTs - $0.startTs < 3 * 3_600 }) else { return }
+        var rng = SplitMix64(seed: 0x4E4150)
+        // days back, start (minutes after midnight), minutes light / deep / rem / awake, added by hand
+        let plans: [(back: Int, at: Int, light: Double, deep: Double, rem: Double, awake: Double, manual: Bool)] = [
+            (0, 14 * 60 + 5, 20, 0, 0, 2, false),
+            (1, 13 * 60 + 40, 38, 6, 8, 6, false),
+            (3, 15 * 60 + 10, 34, 5, 7, 6, false),
+            (3, 18 * 60 + 20, 18, 0, 0, 3, false),
+            (5, 13 * 60 + 15, 48, 14, 18, 10, true),
+        ]
+        var sessions: [CachedSleepSession] = []
+        var hr: [HRSample] = []
+        for p in plans {
+            let total = Int((p.light + p.deep + p.rem + p.awake) * 60)
+            // A nap that has not happened yet today (the afternoon is still ahead) moves to the same hour six days back.
+            var back = p.back
+            func startTs(_ b: Int) -> Int {
+                Int(cal.date(byAdding: .day, value: -b, to: cal.startOfDay(for: Date()))!.timeIntervalSince1970) + p.at * 60
+            }
+            if startTs(back) + total > now - 300 { back += 6 }
+            let start = startTs(back)
+            var t = start
+            var parts: [String] = []
+            func seg(_ stage: String, _ minutes: Double) {
+                let secs = Int(minutes * 60)
+                guard secs > 0 else { return }
+                parts.append("{\"start\":\(t),\"end\":\(t + secs),\"stage\":\"\(stage)\"}")
+                t += secs
+            }
+            seg("light", p.light * 0.4); seg("deep", p.deep * 0.6); seg("light", p.light * 0.3)
+            seg("rem", p.rem); seg("deep", p.deep * 0.4); seg("light", p.light * 0.3); seg("wake", p.awake)
+            let end = start + total
+            sessions.append(CachedSleepSession(
+                startTs: start, endTs: end, efficiency: round1(((p.light + p.deep + p.rem) / (p.light + p.deep + p.rem + p.awake) * 100).clamped(70.0, 98.0)),
+                restingHr: 58 + Int(rng.nextInt(-2, 3)), avgHrv: round1(gauss(&rng, 74.0, 6.0)),
+                stagesJSON: "[" + parts.joined(separator: ",") + "]", userEdited: p.manual))
+            var ts = start
+            while ts <= end {
+                let level = 63.0 - 6.0 * Foundation.sin(Double.pi * Double(ts - start) / Double(max(total, 1)))
+                hr.append(HRSample(ts: ts, bpm: Int((level + gauss(&rng, 0.0, 1.8)).clamped(48.0, 80.0))))
+                ts += 10
+            }
+        }
+        do {
+            _ = try await store.upsertSleepSessions(sessions, deviceId: whoop)
+            _ = try await store.insert(Streams(hr: hr), deviceId: whoop)
+        } catch { NSLog("AppleDemoSeeder: nap extras failed — \(error)") }
     }
 
     /// Recovery activities (breathwork, a cold shower) for the Charge tab, with a calm heart rate on the breathwork: added once.
