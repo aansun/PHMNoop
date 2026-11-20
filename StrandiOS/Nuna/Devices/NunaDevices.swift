@@ -181,10 +181,7 @@ private struct NunaDevicesContent: View {
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 5) {
                     Text("Last sync").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    HStack(spacing: 6) {
-                        Text(verbatim: live.lastSyncedAt.map(NunaDeviceFormat.clock) ?? "–").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        phoneSyncIcon
-                    }
+                    syncPill
                 }
             }
         }
@@ -216,14 +213,24 @@ private struct NunaDevicesContent: View {
         }
     }
 
-    /// The phone the strap last synced to: a phone with a tick, or crossed out when it never has.
-    @ViewBuilder private var phoneSyncIcon: some View {
-        if live.lastSyncedAt == nil {
-            Image(systemName: "iphone.slash").font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
-        } else {
-            Image(systemName: "iphone").font(.nuna(size: 19, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                .overlay { Image(systemName: "checkmark").font(.nuna(size: 7, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary).offset(y: -1) }
+    /// The time of the last sync and the button that runs the next one, as one pill: the arrow pulses while a sync runs, and the pill is dimmed
+    /// (and does nothing) while the strap is not connected.
+    private var syncPill: some View {
+        Button { model.ble.syncNow() } label: {
+            HStack(spacing: 8) {
+                Text(verbatim: live.lastSyncedAt.map(NunaDeviceFormat.clock) ?? "–").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                ZStack {
+                    Circle().fill(NunaPalette.accent).frame(width: 26, height: 26)
+                    Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
+                        .symbolEffect(.pulse, isActive: live.backfilling)
+                }
+            }
+            .padding(.leading, 14).padding(.trailing, 5).frame(height: 36)
+            .background(NunaPalette.glassStrong, in: Capsule())
         }
+        .buttonStyle(.plain)
+        .disabled(!live.connected || live.backfilling).opacity(live.connected ? 1 : 0.45)
+        .accessibilityLabel(Text("Sync now"))
     }
 
     private var addButton: some View {
@@ -364,15 +371,13 @@ private struct NunaDevicesContent: View {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(live.backfilling ? "Syncing history…" : "Strap history pulled").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: live.backfilling ? String(localized: "\(live.syncChunksThisSession) packets so far")
-                                                     : (live.lastSyncedAt.map { String(localized: "Last at \(NunaDeviceFormat.clock($0))") } ?? "")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    // The time of the last sync is in the header above; a second copy here could only disagree with it.
+                    if live.backfilling {
+                        Text(verbatim: String(localized: "\(live.syncChunksThisSession) packets so far")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
                 }
                 Spacer()
-                if live.connected && !live.backfilling {
-                    Button { model.ble.syncNow() } label: {
-                        Text("Sync now").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    }.buttonStyle(.plain)
-                } else { Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
+                Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
             }
             .padding(.vertical, 14)
             .overlay(alignment: .top) { NunaDivider() }

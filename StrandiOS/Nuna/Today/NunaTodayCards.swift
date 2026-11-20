@@ -46,7 +46,8 @@ struct NunaStrapChip: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            if let battery {
+            // A strap that is not connected has no charge to report: the last reading would only be stale.
+            if connected, let battery {
                 Text(verbatim: "\(Int(battery.rounded()))%").font(.nunaBoldFigure(size: 13)).foregroundStyle(battery <= 20 ? NunaPalette.alertText : NunaPalette.textMuted)
             }
             // The strap as drawn in the reference, with the dot on it that says whether it is connected.

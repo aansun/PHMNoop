@@ -88,6 +88,54 @@ struct NunaPullSyncBinder: View {
     }
 }
 
+/// "Strap not in use" under the day for as long as a paired strap is not connected: it stays until the strap is back, unlike the sync banner,
+/// which is a result that goes after a few seconds. Nothing to put away: it goes by itself when the strap connects.
+struct NunaStrapIdleBanner: View {
+    static let height: CGFloat = 64
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Image(systemName: "applewatch.slash").font(.system(size: 20, weight: .light)).foregroundStyle(Color.white.opacity(0.7)).frame(width: 30)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Strap not in use").font(.nuna(size: 13, weight: .heavy)).tracking(1.5).textCase(.uppercase).foregroundStyle(Color.white).lineLimit(1).minimumScaleFactor(0.7)
+                Text("Put it on to keep recording").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(Color.white.opacity(0.7)).textCase(nil).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16).frame(height: Self.height)
+        .background(Color.black, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Mirrors "a paired strap has been off for a few seconds" into the screen. The wait keeps a reconnect that takes a moment (the app opening, the
+/// strap changing link) from flashing the banner. Today itself does not observe the live state, which ticks with every heartbeat.
+struct NunaStrapIdleWatcher: View {
+    @Binding var idle: Bool
+    @EnvironmentObject private var live: LiveState
+    @EnvironmentObject private var app: AppModel
+    @State private var pending: Task<Void, Never>?
+
+    var body: some View {
+        Color.clear.frame(width: 0, height: 0)
+            .onAppear { update() }
+            .onChange(of: live.connected) { _, _ in update() }
+            .onDisappear { pending?.cancel() }
+    }
+
+    private var hasStrap: Bool { app.deviceRegistry?.devices.contains { $0.status == .active } ?? false }
+
+    private func update() {
+        pending?.cancel()
+        if live.connected { if idle { withAnimation(.easeInOut(duration: 0.25)) { idle = false } }; return }
+        pending = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 6_000_000_000)
+            guard !Task.isCancelled, !live.connected, hasStrap else { return }
+            withAnimation(.easeInOut(duration: 0.25)) { idle = true }
+        }
+    }
+}
+
 /// The strip under the day: a cloud and what it says on the left, when and a check on the right, on a black ground.
 struct NunaSyncBanner: View {
     let phase: NunaPullSync.Phase
@@ -96,7 +144,13 @@ struct NunaSyncBanner: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon).font(.system(size: 22, weight: .light)).foregroundStyle(Color.white.opacity(0.55)).frame(width: 30)
-            Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(1.5).textCase(.uppercase).foregroundStyle(Color.white).lineLimit(1).minimumScaleFactor(0.7)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(1.5).textCase(.uppercase).foregroundStyle(Color.white).lineLimit(1).minimumScaleFactor(0.7)
+                // A strap that is not on the wrist has nothing to sync: say what to do, not only that it is away.
+                if case .offline = phase {
+                    Text("Put it on to sync").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(Color.white.opacity(0.6)).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+                }
+            }
             Spacer(minLength: 6)
             trailing
         }
@@ -110,7 +164,7 @@ struct NunaSyncBanner: View {
     }
 
     private var title: LocalizedStringKey {
-        switch phase { case .syncing: return "Syncing…"; case .caughtUp: return "Data caught up"; case .offline: return "Strap not connected" }
+        switch phase { case .syncing: return "Syncing…"; case .caughtUp: return "Data caught up"; case .offline: return "Strap not in use" }
     }
 
     @ViewBuilder private var trailing: some View {
