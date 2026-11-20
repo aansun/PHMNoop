@@ -121,8 +121,8 @@ struct NunaChargeEffortLines: View {
                 ForEach([(100.0, "100%", 100.0), (66.0, "66%", 50.0), (33.0, "33%", 10.0), (0.0, "0%", 10.0)], id: \.0) { t in
                     Text(verbatim: t.1).font(.nunaBoldFigure(size: 10)).foregroundStyle(zone(t.2)).position(x: w - 4, y: yc(t.0))
                 }
-                chargeLine(cx, yc, ye)
-                effortLine(cx, ye, yc)
+                chargeLine(cx, yc, ye, plot)
+                effortLine(cx, ye, yc, plot)
                 ForEach(Array(days.enumerated()), id: \.offset) { i, day in
                     let on = day.key == litKey
                     // The name at 15 pt under the 0 line and the date, in DIN Bold, at 29 pt.
@@ -145,47 +145,60 @@ struct NunaChargeEffortLines: View {
         v >= 67 ? Color(red: 0.49, green: 0.86, blue: 0.38) : (v >= 34 ? Color(red: 0.95, green: 0.87, blue: 0.41) : Color(red: 0.84, green: 0.24, blue: 0.27))
     }
 
-    @ViewBuilder private func chargeLine(_ cx: @escaping (Int) -> CGFloat, _ yc: @escaping (Double) -> CGFloat, _ ye: @escaping (Double) -> CGFloat) -> some View {
+    @ViewBuilder private func chargeLine(_ cx: @escaping (Int) -> CGFloat, _ yc: @escaping (Double) -> CGFloat, _ ye: @escaping (Double) -> CGFloat, _ plot: CGRect) -> some View {
         let pts = days.enumerated().compactMap { i, d in charge[d.key].map { (i, d.key, $0) } }
         Path { p in for (n, pt) in pts.enumerated() { let c = CGPoint(x: cx(pt.0), y: yc(pt.2)); n == 0 ? p.move(to: c) : p.addLine(to: c) } }
             .stroke(NunaPalette.textSecondary.opacity(0.8), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
         ForEach(pts, id: \.0) { pt in
             let on = pt.1 == litKey
             ring(zone(pt.2)).position(x: cx(pt.0), y: yc(pt.2))
+            let off = labelOffsets(pt.1, yc, ye, plot).charge
             Text(verbatim: String(format: "%.0f%%", pt.2)).font(.nunaBoldFigure(size: 11.5))
-                .foregroundStyle(zone(pt.2)).fixedSize()
-                .position(x: cx(pt.0) + closeShift(pt.1, yc, ye, side: -1), y: yc(pt.2) + (chargeIsHigher(pt.1, yc, ye) ? -13.5 : 15))
+                .foregroundStyle(zone(pt.2)).fixedSize().modifier(Halo())
+                .position(x: cx(pt.0) + off.width, y: yc(pt.2) + off.height)
         }
     }
 
-    @ViewBuilder private func effortLine(_ cx: @escaping (Int) -> CGFloat, _ ye: @escaping (Double) -> CGFloat, _ yc: @escaping (Double) -> CGFloat) -> some View {
+    @ViewBuilder private func effortLine(_ cx: @escaping (Int) -> CGFloat, _ ye: @escaping (Double) -> CGFloat, _ yc: @escaping (Double) -> CGFloat, _ plot: CGRect) -> some View {
         let pts = days.enumerated().compactMap { i, d in effort[d.key].map { (i, UnitFormatter.effortValue($0, scale: effortScale)) } }
         Path { p in for (n, pt) in pts.enumerated() { let c = CGPoint(x: cx(pt.0), y: ye(pt.1)); n == 0 ? p.move(to: c) : p.addLine(to: c) } }
             .stroke(blue.opacity(0.55), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
         ForEach(pts, id: \.0) { pt in
             ring(blue).position(x: cx(pt.0), y: ye(pt.1))
+            let off = labelOffsets(days[pt.0].key, yc, ye, plot).effort
             Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, pt.1)).font(.nunaBoldFigure(size: 11.5))
-                .foregroundStyle(blue).fixedSize()
-                .position(x: cx(pt.0) + closeShift(days[pt.0].key, yc, ye, side: 1), y: ye(pt.1) + (effortIsHigher(pt.0, ye, yc) ? -13.5 : 15))
+                .foregroundStyle(blue).fixedSize().modifier(Halo())
+                .position(x: cx(pt.0) + off.width, y: ye(pt.1) + off.height)
         }
     }
 
-    /// On a day with both figures, the higher point takes its figure above it and the lower one below, so the two never sit on each other.
-    private func chargeIsHigher(_ key: String, _ yc: (Double) -> CGFloat, _ ye: (Double) -> CGFloat) -> Bool {
-        guard let c = charge[key], let e = effort[key] else { return true }
-        return yc(c) <= ye(UnitFormatter.effortValue(e, scale: effortScale))
+    /// Where each figure sits relative to its ring. A lone figure goes above its ring (below only at the very top). With both on a day, the higher
+    /// point takes its figure above and the lower one below, except near the 0 line, where "below" would land on the day names: then the lower one
+    /// goes above its ring when there is room between the two, and otherwise steps out to the side of it.
+    private func labelOffsets(_ key: String, _ yc: (Double) -> CGFloat, _ ye: (Double) -> CGFloat, _ plot: CGRect) -> (charge: CGSize, effort: CGSize) {
+        let up = CGSize(width: 0, height: -13.5), down = CGSize(width: 0, height: 15)
+        let c = charge[key].map { yc($0) }
+        let e = effort[key].map { ye(UnitFormatter.effortValue($0, scale: effortScale)) }
+        switch (c, e) {
+        case let (c?, e?):
+            let chargeUpper = c <= e
+            let gap = abs(c - e), lowerY = max(c, e)
+            let lower: CGSize
+            if lowerY <= plot.maxY - 12 { lower = down }
+            else if gap >= 28 { lower = up }
+            else { lower = CGSize(width: chargeUpper ? 22 : -22, height: 0) }
+            return chargeUpper ? (up, lower) : (lower, up)
+        case let (c?, nil): return (c < plot.minY + 4 ? down : up, up)
+        case let (nil, e?): return (up, e < plot.minY + 4 ? down : up)
+        default: return (up, up)
+        }
     }
 
-    private func effortIsHigher(_ index: Int, _ ye: (Double) -> CGFloat, _ yc: (Double) -> CGFloat) -> Bool {
-        let key = days[index].key
-        guard let c = charge[key], let e = effort[key] else { return false }
-        return ye(UnitFormatter.effortValue(e, scale: effortScale)) < yc(c)
-    }
-
-    /// When both points of a day sit almost on each other, their figures move apart sideways.
-    private func closeShift(_ key: String, _ yc: (Double) -> CGFloat, _ ye: (Double) -> CGFloat, side: CGFloat) -> CGFloat {
-        guard let c = charge[key], let e = effort[key] else { return 0 }
-        return abs(yc(c) - ye(UnitFormatter.effortValue(e, scale: effortScale))) < 16 ? side * 20 : 0
+    /// A faint dark edge behind a figure, so it stays readable where a line runs through it.
+    private struct Halo: ViewModifier {
+        func body(content: Content) -> some View {
+            content.shadow(color: Color.black.opacity(0.7), radius: 1.5).shadow(color: Color.black.opacity(0.5), radius: 3)
+        }
     }
 
     private func ring(_ color: Color) -> some View {
