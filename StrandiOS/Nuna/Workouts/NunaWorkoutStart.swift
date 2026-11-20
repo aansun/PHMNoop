@@ -862,7 +862,7 @@ private struct NunaWorkoutTargetSheet: View {
         }()
         return VStack(spacing: 20) {
             HStack(alignment: .top, spacing: 8) {
-                stat("Current\neffort", dayEffort.map(effortNumber) ?? "–")
+                stat("Current\nstrain", dayEffort.map(effortNumber) ?? "–")
                 stat("After activity\n(est.)", free ? "–" : effortNumber(after), color: afterColor)
             }
             .padding(.horizontal, NunaSpacing.screenH + 18)
@@ -1060,7 +1060,7 @@ private struct NunaWorkoutTargetSheet: View {
             let applied = goal.timeOn && !goal.distanceOn && goal.minutes == suggested.minutes && goal.zoneOn && goal.zone == suggested.zone
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
-                    AnyaMark(size: 26)
+                    PHMNAnyaMark(size: 30)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(verbatim: sentence(suggestion))
                             .font(.nuna(size: NunaTypeSize.sub, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
