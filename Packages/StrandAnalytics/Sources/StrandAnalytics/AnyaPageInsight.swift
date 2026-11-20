@@ -81,7 +81,7 @@ public enum AnyaReplyCleaner {
     /// Sentences a small model adds out of habit and that say nothing: a doubt tacked on to a cause it has just stated ("I am not sure what caused it, but ..."), or a
     /// line about "this surface". They are taken out; if that would leave nothing, the reply is returned as it was.
     public static func clean(_ reply: String) -> String {
-        let doubt = try! NSRegularExpression(pattern: #"^\s*(i am not sure|i'm not sure|i am unsure|i can't tell|i cannot tell|i can’t tell|this surface)"#, options: .caseInsensitive)
+        let doubt = try! NSRegularExpression(pattern: #"^\s*(i am not sure|i'm not sure|i am unsure|i can't tell|i cannot tell|i can’t tell)|\bthis surface\b"#, options: .caseInsensitive)
         var out: [String] = []
         for line in reply.components(separatedBy: "\n") {
             // Split a paragraph into sentences without losing the markdown around it.
