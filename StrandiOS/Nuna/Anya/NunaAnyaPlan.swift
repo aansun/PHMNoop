@@ -185,7 +185,7 @@ struct NunaAnyaPlanView: View {
                 router.plannedSession = .init(title: NunaDayPlanResult(plan: plan, charge: charge, yesterdayEffort: nil, band: nil).title, minutes: plan.totalMinutes, zone: plan.mainZone)
                 router.requestedDestination = .activeWorkout
             } label: {
-                Text("Start session").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                Text("Start activity").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
             if coach.isConfigured {
                 Button {

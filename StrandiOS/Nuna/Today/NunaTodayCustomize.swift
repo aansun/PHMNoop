@@ -19,7 +19,7 @@ extension TodaySection {
         case .yourCards: return String(localized: "My Dashboard")
         case .menstrualCycle: return String(localized: "Menstrual cycle")
         case .heartRate: return String(localized: "Heart rate")
-        case .liveSession: return String(localized: "Start session")
+        case .liveSession: return String(localized: "Start activity")
         case .addedCards: return String(localized: "Added cards")
         }
     }

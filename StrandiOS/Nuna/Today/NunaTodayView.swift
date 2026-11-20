@@ -635,7 +635,7 @@ struct NunaTodayView: View {
         case .yourCards: return "My Dashboard"
         case .menstrualCycle: return "Menstrual cycle"
         case .heartRate: return "Heart rate"
-        case .liveSession: return "Start session"
+        case .liveSession: return "Start activity"
         case .addedCards: return "Added cards"
         }
     }
@@ -769,7 +769,7 @@ struct NunaTodayView: View {
         case .yourCards: previewRow("rectangle.stack", nil, String(localized: "My Dashboard"), "Cards you chose").background(inner)
         case .menstrualCycle: previewRow(NunaIcons.cycle, NunaPalette.alertText, String(localized: "Menstrual cycle"), "Cycle awareness").background(inner)
         case .heartRate: previewRow(NunaIcons.heartRate, NunaPalette.alertText, String(localized: "Heart rate"), "Live").background(inner)
-        case .liveSession: previewRow("play", NunaPalette.charge, String(localized: "Start session"), "Live session").background(inner)
+        case .liveSession: previewRow("play", NunaPalette.charge, String(localized: "Start activity"), "Live session").background(inner)
         case .addedCards: previewRow("square.stack", nil, String(localized: "Added cards"), "From Sleep and Trends").background(inner)
         }
     }
@@ -1013,7 +1013,7 @@ struct NunaTodayView: View {
             NunaJournalWeekCard { router.requestedDestination = .journal }
         case .liveSession where model.isToday:
             Button { router.requestedDestination = .liveSession } label: {
-                Label("Start session", systemImage: "play.fill")
+                Label("Start activity", systemImage: "play.fill")
             }
             .buttonStyle(.nuna(.primary, height: 52, fullWidth: true))
         case .yourCards:
