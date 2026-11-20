@@ -1,0 +1,17 @@
+{
+  "Build today's plan" : {
+    "answer" : "nil",
+    "prompt" : "",
+    "seconds" : 0.061840057373046875
+  },
+  "Summarise my day" : {
+    "answer" : "Your body has carried a steady load, with Recovery at 82 and Strain at 55.3—slightly above your usual baseline—while Sleep held at 7.0 hours, just under your normal 7.2. HRV climbed to 93ms, a soft signal of resilience, though your heart rate rested at 58bpm, a touch higher than usual. The recent strength and tempo efforts added 36.4 and 45.7 Strain points, pulling your average slightly higher.  \n\n**Next step:** finish with a gentle 20–30 minute easy session in Zone 1 or 2, completed at least two hours before 23:10.",
+    "prompt" : "Summarise my day so far in a few sentences, using my numbers.",
+    "seconds" : 11.245604038238525
+  },
+  "Why did Recovery change?" : {
+    "answer" : "Your Recovery rose to 82 today, up from 31 yesterday — a shift tied to better HRV (93ms vs 78ms) and a steadier RHR (58bpm vs 57bpm), both showing your body is settling into a calmer rhythm after recent load. Sleep held steady at 7.0h, but the dip in HRV suggests the nervous system is still adjusting. The pattern shows your baseline resilience is returning, even as the strain climbed.\n\n- **Charge 67-86** — lean into measured quality  \n- **Sleep 7.0h** — protect this quiet recovery window  \n- **HRV 93ms** — your body’s balance is shifting back  \n- **RHR 58bpm** — a sign of improved baseline calm  \n\nTry a 20-minute easy walk in zone 1 or 2 tonight, done at least two hours before 23:10.",
+    "prompt" : "Why did my Recovery change compared with yesterday? Use my sleep, HRV and resting heart rate.",
+    "seconds" : 15.222324013710022
+  }
+}

@@ -290,7 +290,7 @@ final class AICoachEngine: ObservableObject {
     Use the user's wearable summary when provided: charge 0-100 \
     is readiness, effort 0-100 is cardiovascular load, and rest 0-100 is sleep quality. Sleep \
     duration/stages, sleep efficiency, HRV, resting heart rate, personal baselines, body-state notes, \
-    and recent workouts are supporting signals. A dash means NOT MEASURED — never treat it as zero.
+    and recent workouts are supporting signals. A dash means the figure is not available — never treat it as zero.
     First form a body-state read from the pattern, not from one number: compare today's signals with the \
     user's own baseline, notice agreement or conflict between sleep and autonomic signals, and account for \
     recent training load. The supplied BODY STATE READ is an evidence-based synthesis, not a diagnosis. \
@@ -336,10 +336,21 @@ final class AICoachEngine: ObservableObject {
     /// The system prompt actually sent, read FRESH from UserDefaults on every request so an edit in
     /// the settings takes effect on the next message, with no engine rebuild. A blank/absent stored
     /// value falls back to `defaultSystemPrompt`, so a user who clears it never sends an empty prompt.
-    var systemPrompt: String {
+    var systemPrompt: String { buildSystemPrompt(compact: false) }
+
+    /// The short persona a page insight or a module answer runs under: no block formats (they never draw one there) and a fraction of the length, which
+    /// matters on the on-device model, whose window (about 8,000 tokens) has to hold the instructions, the data and the reply together.
+    static let compactPersona = """
+    You are Anya, a perceptive, warm health assistant for recovery and performance. The data is the person's own wearable summary: Recovery 0-100 is readiness, \
+    Sleep 0-100 is sleep quality, and HRV and resting heart rate are read against their own baseline. A dash means the figure is not available, never zero. \
+    Autoregulation rules (they are rules, never the person's readings): Recovery 67-100 supports building or pushing, 34-66 supports maintenance and controlled quality, 0-33 means easy movement, food, water and sleep. \
+    Do not infer illness, injury, dehydration or mood from wearable data.
+    """
+
+    func buildSystemPrompt(compact: Bool) -> String {
         let stored = UserDefaults.standard.string(forKey: Self.systemPromptKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        let base = (stored?.isEmpty == false) ? stored! : Self.defaultSystemPrompt
+        let base = compact ? Self.compactPersona : ((stored?.isEmpty == false) ? stored! : Self.defaultSystemPrompt)
         // iOS follows the user's selected app/system language. Keep the health vocabulary stable,
         // but make the coach's prose match the active language instead of relying on the provider to guess.
         #if os(iOS)
@@ -372,11 +383,32 @@ final class AICoachEngine: ObservableObject {
         // The Nuna experience draws charts, gym programs and workouts from fenced blocks; the Default one does not, so it never asks.
         #if os(iOS)
         let nuna = UserDefaults.standard.string(forKey: "experience.mode") == "nuna"
-        let actions = nuna ? "\n\n" + AnyaActions.instruction + "\n\n" + Self.dayRhythmInstruction : ""
+        // In the Nuna experience every answer follows the assistant contract (read, explain, advise); the block formats only go to a model that has the room.
+        let actions = nuna ? "\n\n" + AnyaSurface.contract + (compact ? "" : "\n\n" + AnyaActions.instruction + "\n\n" + Self.dayRhythmInstruction) : ""
         #else
         let actions = ""
         #endif
-        return base + languagePrompt + Self.answerStyleBlock() + CoachMemoryStore.activePromptBlock() + actions
+        return base + languagePrompt + Self.answerStyleBlock() + Self.strainScaleBlock() + CoachMemoryStore.activePromptBlock() + actions
+    }
+
+    // MARK: Strain scale
+
+    /// The Strain scale the wearer reads in the app. The stored value is always 0-100; what is shown (and so what Anya must quote) follows this.
+    nonisolated static func strainScale(_ defaults: UserDefaults = .standard) -> EffortScale {
+        UnitPrefs.resolveEffortScale(defaults.string(forKey: UnitPrefs.effortScaleKey) ?? "")
+    }
+
+    /// A stored 0-100 Strain figure as the wearer sees it, one decimal: the one funnel every Strain number in Anya's context goes through, so
+    /// what she says and what the screen shows can never be on two scales.
+    nonisolated static func strainText(_ stored: Double, scale: EffortScale? = nil) -> String {
+        UnitFormatter.effortDisplay(stored, scale: scale ?? strainScale())
+    }
+
+    /// Tells the model which scale every Strain figure is on, because its base description speaks of the stored 0-100 score.
+    nonisolated static func strainScaleBlock(_ defaults: UserDefaults = .standard) -> String {
+        let scale = strainScale(defaults)
+        let max = UnitFormatter.effortScaleMax(scale)
+        return "\n\nSTRAIN SCALE: this app shows Strain on a 0-\(max) scale. Every Strain figure in the data is already on that scale: quote it exactly as given, never convert it, and never call it a percentage" + (scale == .whoop ? " or a figure out of 100" : "") + ". Where the text above speaks of effort 0-100, it describes how the score is stored, not what the person sees."
     }
 
     // MARK: Day rhythm (Nuna)
@@ -1131,7 +1163,7 @@ final class AICoachEngine: ObservableObject {
         // full running history so follow-ups stay coherent; the context only needs to ride the
         // earliest user message.
         // Include the user's data ONLY with explicit consent; otherwise send a note instead of numbers.
-        let context = dataConsent ? await buildFullContext() : noConsentNote
+        let context = dataConsent ? await buildFullContext(compact: runsOnDevice) : noConsentNote
         // K13: if the conversation overflows the sliding window, summarize the dropped middle so
         // the model retains context continuity. Best-effort; failure degrades to the old gap.
         await summarizeDroppedMiddleIfNeeded(key: key)
@@ -1152,7 +1184,7 @@ final class AICoachEngine: ObservableObject {
         var accumulated = ""
 
         do {
-            try await streamProvider(key: key, messages: wire, inlineImage: imageBase64) { delta in
+            try await streamProvider(key: key, messages: wire, inlineImage: imageBase64, compact: runsOnDevice) { delta in
                 accumulated += delta
                 // Replace the last message's text with the accumulated stream so far.
                 if let lastIdx = self.messages.indices.last,
@@ -1210,7 +1242,7 @@ final class AICoachEngine: ObservableObject {
         sending = true
         defer { sending = false; persistMessages() }
 
-        let context = await buildFullContext()
+        let context = await buildFullContext(compact: runsOnDevice)
         let pageInstruction = contextualPageInstruction(pageContext)
         let wire: [(role: ChatMessage.Role, content: String)] =
             [(.user, context + "\n\n---\n\n" + Self.briefInstruction + pageInstruction)]
@@ -1221,7 +1253,7 @@ final class AICoachEngine: ObservableObject {
         var accumulated = ""
 
         do {
-            try await streamProvider(key: key, messages: wire) { delta in
+            try await streamProvider(key: key, messages: wire, compact: runsOnDevice) { delta in
                 accumulated += delta
                 if let lastIdx = self.messages.indices.last,
                    self.messages[lastIdx].role == .assistant {
@@ -1292,9 +1324,11 @@ final class AICoachEngine: ObservableObject {
     /// nil when Anya is off or not connected, or the provider did not answer.
     func suggestNutritionPlan(snapshot: String) async -> String? {
         guard CoachBriefScheduler.coachMasterEnabled, isConfigured, dataConsent, let key = resolvedKey else { return nil }
-        var prompt = await buildFullContext()
+        // The plan rests on the profile, the weight trend and the diary in the snapshot; the wearable summary only goes along when there is one.
+        var prompt = repo.days.isEmpty ? "" : await buildFullContext(compact: runsOnDevice)
         prompt += "\n\n---\n\n" + AnyaActions.planInstruction + "\n\nNUTRITION SNAPSHOT:\n" + snapshot
-        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)]) else { return nil }
+        if runsOnDevice, let guided = await AppleIntelligenceClient.nutritionPlan(rules: AnyaActions.planRules, prompt: (repo.days.isEmpty ? "" : await buildFullContext(compact: true)) + "\n\nNUTRITION SNAPSHOT:\n" + snapshot, maintenanceKcal: Self.maintenanceKcal(in: snapshot)) { return guided }
+        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)], compact: runsOnDevice) else { return nil }
         let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
         return clean.isEmpty ? nil : clean
     }
@@ -1336,7 +1370,8 @@ final class AICoachEngine: ObservableObject {
         var prompt = AnyaActions.programInstruction + "\n\nWHAT THE PERSON ASKED FOR:\n" + String(brief.prefix(1200))
         prompt += "\n\nTRAINING SUMMARY:\n" + String(trainingSummary.prefix(1500))
         if let previous { prompt += "\n\nTHE PROGRAM TO CHANGE (keep everything the new instruction does not touch):\n" + String(previous.prefix(2500)) }
-        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)]) else { return nil }
+        if runsOnDevice, let guided = await AppleIntelligenceClient.program(rules: AnyaActions.programRules, prompt: prompt) { return guided }
+        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)], compact: runsOnDevice) else { return nil }
         let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
         return clean.isEmpty ? nil : clean
     }
@@ -1349,7 +1384,8 @@ final class AICoachEngine: ObservableObject {
         guard !text.isEmpty else { return nil }
         var prompt = AnyaActions.breathInstruction + "\n\nWHAT THE PERSON ASKED FOR:\n" + String(text.prefix(500))
         if !context.isEmpty { prompt += "\n\n" + context }
-        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)]) else { return nil }
+        if runsOnDevice, let guided = await AppleIntelligenceClient.breath(rules: AnyaActions.breathRules, prompt: prompt) { return guided }
+        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)], compact: runsOnDevice) else { return nil }
         let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
         return clean.isEmpty ? nil : clean
     }
@@ -1397,14 +1433,35 @@ final class AICoachEngine: ObservableObject {
         let trimmed = question.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
-        let context = await buildFullContext()
+        // The first line of the page context names the page; the rest is her own reading of it and, for some modules, a data pack.
+        let pageName = pageContext.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: true).first.map(String.init) ?? pageContext
+        let module = AnyaSurface.Module.of(context: pageName)
+        // No readings at all: say so, rather than let a model that has nothing to read invent figures. Only for a question about the person's own numbers: the
+        // strap, food and breathing questions, and a general one ("what is fitness age"), do not need them and are answered as usual.
+        if repo.days.isEmpty, [.today, .sleep, .workouts, .trends].contains(module) || (module == .health && !trimmed.lowercased().hasPrefix("what is")) { return Self.noReadingsReply }
+        // The summary of the body answers a question about the body. A question about the strap, food or breathing is answered from its own data (the page's
+        // pack) with only what bears on it beside: given the whole summary instead, the answer turns into a report on Recovery and sleep.
+        let context: String
+        switch module {
+        case .device: context = ""
+        case .nutrition: context = await focusedContext(topic: .load)
+        case .breathing: context = await focusedContext(topic: .stress)
+        case .trends: context = await focusedContext(topic: .trend)
+        default:
+            var full = await buildFullContext(compact: runsOnDevice, includeDayContext: [.today, .workouts, .sleep].contains(module))
+            // The day's NEXT STEP belongs to the day and to sleep; elsewhere it closes the answer with advice for another surface.
+            if module != .today && module != .sleep { full = Self.withoutNextStep(full) }
+            context = full
+        }
         let noticeBlock = notice.map { "\n\nCurrent Anya notice:\n\($0)" } ?? ""
         let historyBlock = history.isEmpty ? "" : "\n\nLocal conversation so far:\n" + history.map {
             "\($0.role == .user ? "User" : "Anya"): \($0.text)"
         }.joined(separator: "\n")
         var prompt = context
         prompt += "\n\n---\n\n"
-        prompt += contextualQuestionInstruction(pageContext)
+        prompt += contextualQuestionInstruction(pageName)
+        let pageBody = pageContext.dropFirst(pageName.count).trimmingCharacters(in: .whitespacesAndNewlines)
+        if !pageBody.isEmpty { prompt += "\n\nTHE PAGE (her own reading of it, and the data this surface needs):\n" + pageBody }
         prompt += noticeBlock
         prompt += historyBlock
         prompt += "\n\nUser's new question:\n"
@@ -1414,14 +1471,53 @@ final class AICoachEngine: ObservableObject {
         do {
             if let imageBase64 {
                 // As in the Anya tab: a provider that cannot read images still gets the text of the question.
-                try await streamProvider(key: key, messages: [(.user, prompt)], inlineImage: imageBase64) { reply += $0 }
+                try await streamProvider(key: key, messages: [(.user, prompt)], inlineImage: imageBase64, compact: runsOnDevice) { reply += $0 }
             } else {
-                reply = try await callProvider(key: key, messages: [(.user, prompt)])
+                reply = try await callProvider(key: key, messages: [(.user, prompt)], compact: runsOnDevice)
             }
         } catch { NSLog("[AnyaDebug] contextual send failed: %@", String(describing: error)); return nil }
         let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
         return clean.isEmpty ? nil : clean
     }
+
+    /// Whether the on-device model answers: its window holds the instructions, the data and the reply together, so what it is sent is kept short and its
+    /// structured replies come from guided generation instead of text it might get wrong.
+    private var runsOnDevice: Bool { provider == .appleIntelligence }
+
+    /// What Anya says about one metric page, as the person's assistant: the reading, what it means and one next step (to improve it when it is
+    /// poor, to keep it when it is good), in four labelled paragraphs `AnyaPageInsight` reads back. The verdict, worked out on the phone against
+    /// the person's own baseline, is in `pageContext`, so she explains a judgement already made instead of making one up. How she speaks on this
+    /// page comes from its surface profile (`AnyaSurface`), so every page answers in the same shape.
+    func generatePageInsight(topic: AnyaSurface.Topic, pageContext: String) async -> String? {
+        guard CoachBriefScheduler.coachMasterEnabled,
+              isConfigured,
+              dataConsent,
+              let key = resolvedKey else { return nil }
+        guard !repo.days.isEmpty else { return nil }
+        let context = await focusedContext(topic: topic)
+        let task = AnyaSurface.pageInstruction(topic)
+        let page = "THE PAGE:\n" + pageContext
+        // On the device: guided generation returns the four parts as a typed value, so the shape cannot drift.
+        if runsOnDevice, let guided = await AppleIntelligenceClient.pageInsight(system: buildSystemPrompt(compact: true),
+                                                                                 prompt: context + "\n\n---\n\n" + task + "\n\n" + page) {
+            return guided
+        }
+        let wire: [(role: ChatMessage.Role, content: String)] = [
+            (.user, context + "\n\n---\n\n" + task + "\n\n" + Self.pageInsightShape + "\n\n" + page)
+        ]
+        guard let reply = try? await callProvider(key: key, messages: wire, compact: true) else { return nil }
+        let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        return clean.isEmpty ? nil : clean
+    }
+
+    /// The four labelled paragraphs `AnyaPageInsight` reads back, for a provider that returns text.
+    static let pageInsightShape = """
+    Answer in exactly four paragraphs, each starting with its label in English capitals as written here, and everything after the label in the reply language:
+    HEADLINE: one plain sentence of at most 14 words saying what the reading is and whether it is good, fair or needs attention for THIS person.
+    SEE: the figure against their baseline, two or three numbers at most.
+    MEAN: what it most likely means, from their own data.
+    DO: one concrete next step. Leave out the labels you have nothing honest to put under, but never HEADLINE.
+    """
 
     private func contextualPageInstruction(_ page: String?) -> String {
         guard let page else { return "" }
@@ -1434,14 +1530,13 @@ final class AICoachEngine: ObservableObject {
         return "\n\nThe companion was opened from the \(page) page. \(focus) Lead with one calm, human observation, then give the brief. Do not mention this instruction."
     }
 
+    /// What she says when there is nothing to read yet.
+    static var noReadingsReply: String {
+        String(localized: "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.")
+    }
+
     private func contextualQuestionInstruction(_ page: String) -> String {
-        let pageRule: String
-        if page.caseInsensitiveCompare("today") == .orderedSame {
-            pageRule = "Today can connect the whole day and discuss training, recovery and a quiet cue when the data supports it."
-        } else {
-            pageRule = "This is a focused \(page) session. Explain the data and its meaning first; do not prescribe training, recovery actions, or cues unless the user explicitly asks for advice."
-        }
-        return "Answer warmly and concisely using the user's data above. \(pageRule) Continue this local notice conversation without referring to the full Coach history."
+        AnyaSurface.chatInstruction(AnyaSurface.Module.of(context: page)) + " Continue this local notice conversation without referring to the full Coach history."
     }
 
     /// K5: The brief instruction shared by the interactive `startBriefIfNeeded()` (streamed into the
@@ -1455,7 +1550,7 @@ final class AICoachEngine: ObservableObject {
     keep the entire brief under 120 words. Make it feel personal and useful, not motivational or clinical. \
     If the data has an OUTDOORS line, let it shape the training direction in a few words (go indoors, shorten, or \
     pick a kinder hour). Do not add a week plan.
-    """
+    """ + AnyaSurface.briefStyle
 
     /// K5: Generate today's coaching brief WITHOUT touching the visible chat transcript. Used by the
     /// scheduled morning-brief notification (`CoachBriefScheduler`), which can run with no Coach screen
@@ -1468,20 +1563,24 @@ final class AICoachEngine: ObservableObject {
         // the AI switched off.
         guard CoachBriefScheduler.coachMasterEnabled else { return nil }
         guard isConfigured, dataConsent, let key = resolvedKey else { return nil }
+        // A morning brief with nothing to read would be invented: there is no brief until the strap has produced a night.
+        guard !repo.days.isEmpty else { return nil }
         await beforeBrief?()
-        let context = await buildFullContext()
+        let context = await buildFullContext(compact: runsOnDevice)
         let wire: [(role: ChatMessage.Role, content: String)] =
             [(.user, context + "\n\n---\n\n" + Self.briefInstruction)]
-        guard let reply = try? await callProvider(key: key, messages: wire) else { return nil }
+        guard let reply = try? await callProvider(key: key, messages: wire, compact: runsOnDevice) else { return nil }
         let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
         return clean.isEmpty ? nil : clean
     }
 
     /// Full data context = the metrics summary + recent workouts (+ an OPT-IN on-device-signals summary
     /// when the second consent is on). Used when the user has granted data access.
-    func buildFullContext() async -> String {
-        var ctx = buildContext()
-        ctx += "\n\n" + (await recentWorkoutsBlock())
+    /// `compact` is for the surfaces that answer in a few lines (page insights, module answers): a week of days and three sessions rather than two weeks and
+    /// six, and no Lab Book or pattern block, so the data, the instructions and the reply fit the on-device model's window together.
+    func buildFullContext(compact: Bool = false, includeDayContext: Bool = true) async -> String {
+        var ctx = buildContext(recentDays: compact ? 7 : 14)
+        ctx += "\n\n" + (await recentWorkoutsBlock(limit: compact ? 3 : 6))
         // Derived stress: a single Baevsky Stress Index summary line over today's R-R, computed the same
         // way StressView does. Gated here under `dataConsent` (the caller only reaches buildFullContext()
         // with consent on), so it rides the SAME consent + text-only channel as the HRV/RHR summary, a
@@ -1489,15 +1588,108 @@ final class AICoachEngine: ObservableObject {
         if let line = await stressIndexLine() { ctx += "\n\n" + line }
         // The clock, the Plan card's session, banked Effort and tonight's sleep need. Set by the Nuna shell only, so the
         // Default experience and the macOS app send exactly the context they always did.
-        if let provider = dayContextProvider {
+        if includeDayContext, let provider = dayContextProvider {
             let block = await provider()
             if !block.isEmpty { ctx += "\n\n" + block }
         }
-        if includeOnDeviceSignals {
+        if includeOnDeviceSignals && !compact {
             let block = await onDeviceSignalsBlock()
             if !block.isEmpty { ctx += "\n\n" + block }
         }
         return ctx
+    }
+
+    /// The data pack for one page: only the columns that bear on that page, a week of days and the 30-day averages of the same columns. A page that is
+    /// handed the whole summary drifts to whatever is most prominent in it (Recovery and sleep), and picks up the day's NEXT STEP for a page that has nothing
+    /// to do with it; a pack of its own keeps the answer on the page's subject. The page's own reading (with its verdict) is passed next to it.
+    func focusedContext(topic: AnyaSurface.Topic) async -> String {
+        enum Col { case recovery, hrv, rhr, sleep, strain, eff, deep, rem, wakes, spo2, resp }
+        let columns: [Col]
+        switch topic {
+        case .recovery: columns = [.recovery, .hrv, .rhr, .sleep, .strain]
+        case .sleep: columns = [.sleep, .eff, .deep, .rem, .wakes, .recovery]
+        case .strain: columns = [.strain, .recovery, .sleep]
+        case .stress: columns = [.hrv, .rhr, .strain, .sleep]
+        case .hrv: columns = [.hrv, .rhr, .sleep, .strain]
+        case .restingHR: columns = [.rhr, .hrv, .sleep, .strain]
+        case .vitals: columns = [.spo2, .resp, .rhr]
+        case .skinTemp: columns = [.hrv, .rhr, .sleep]
+        case .weight: columns = []
+        case .trend: columns = [.recovery, .strain, .sleep]
+        case .load: columns = [.strain, .recovery]
+        case .other: columns = [.recovery, .hrv, .rhr, .sleep]
+        }
+        let scale = Self.strainScale()
+        func value(_ c: Col, _ d: DailyMetric) -> String? {
+            switch c {
+            case .recovery: return d.recovery.map { "recovery \(Int($0.rounded()))" }
+            case .hrv: return d.avgHrv.map { "HRV \(Int($0.rounded()))ms" }
+            case .rhr: return d.restingHr.map { "RHR \($0)bpm" }
+            case .sleep: return d.totalSleepMin.map { String(format: "sleep %.1fh", $0 / 60) }
+            case .strain: return d.strain.map { "strain \(UnitFormatter.effortDisplay($0, scale: scale))" }
+            case .eff: return d.efficiency.map { "efficiency \(efficiencyPercentOrDash($0))%" }
+            case .deep: return d.deepMin.map { String(format: "deep %.1fh", $0 / 60) }
+            case .rem: return d.remMin.map { String(format: "REM %.1fh", $0 / 60) }
+            case .wakes: return d.disturbances.map { "wake-ups \($0)" }
+            case .spo2: return d.spo2Pct.map { String(format: "SpO2 %.1f%%", $0) }
+            case .resp: return d.respRateBpm.map { String(format: "respiration %.1f/min", $0) }
+            }
+        }
+        func average(_ c: Col, _ days: [DailyMetric]) -> String? {
+            let vs: [Double]
+            switch c {
+            case .recovery: vs = days.compactMap { $0.recovery }
+            case .hrv: vs = days.compactMap { $0.avgHrv }
+            case .rhr: vs = days.compactMap { $0.restingHr.map(Double.init) }
+            case .sleep: vs = days.compactMap { $0.totalSleepMin.map { $0 / 60 } }
+            case .strain: vs = days.compactMap { $0.strain.map { UnitFormatter.effortValue($0, scale: scale) } }
+            case .spo2: vs = days.compactMap { $0.spo2Pct }
+            case .resp: vs = days.compactMap { $0.respRateBpm }
+            default: return nil
+            }
+            guard !vs.isEmpty else { return nil }
+            let mean = vs.reduce(0, +) / Double(vs.count)
+            switch c {
+            case .recovery, .hrv, .rhr: return "\(Int(mean.rounded()))"
+            case .sleep: return String(format: "%.1fh", mean)
+            default: return String(format: "%.1f", mean)
+            }
+        }
+        let names: [Col: String] = [.recovery: "recovery", .hrv: "HRV", .rhr: "RHR", .sleep: "sleep", .strain: "strain", .spo2: "SpO2", .resp: "respiration"]
+        var lines = ["THE PERSON'S OWN WEARABLE DATA FOR THIS PAGE (a dash means not available: never zero, and never call it a dash):"]
+        let days = repo.days
+        if !columns.isEmpty, !days.isEmpty {
+            lines.append("Last 7 days, newest first:")
+            for d in days.suffix(7).reversed() {
+                let parts = columns.compactMap { value($0, d) }
+                lines.append("  " + d.day + ": " + (parts.isEmpty ? "—" : parts.joined(separator: ", ")))
+            }
+            let last30 = Array(days.suffix(30))
+            let avgs = columns.compactMap { c in names[c].flatMap { n in average(c, last30).map { "\(n) \($0)" } } }
+            if !avgs.isEmpty { lines.append("30-day averages: " + avgs.joined(separator: ", ")) }
+        }
+        var ctx = lines.joined(separator: "\n")
+        // Load pages read the sessions too; the day pages (Recovery, Strain, Sleep) read the clock, the plan and tonight, and nothing else does.
+        if topic == .strain || topic == .load || topic == .recovery { ctx += "\n\n" + (await recentWorkoutsBlock(limit: 3)) }
+        if topic == .recovery || topic == .strain || topic == .sleep, let provider = dayContextProvider {
+            // The clock, the suggested session and tonight's bedtime; not the day's NEXT STEP, which otherwise closes every page's answer.
+            let block = Self.withoutNextStep(await provider())
+            if !block.isEmpty { ctx += "\n\n" + block }
+        }
+        return ctx
+    }
+
+    /// With no goal weight set, the plan is maintenance at the estimated energy use: that estimate, read from the snapshot ("ESTIMATED DAILY ENERGY USE: 2390 kcal"),
+    /// or nil when there is a goal (or no estimate), in which case the model's own target stands.
+    nonisolated static func maintenanceKcal(in snapshot: String) -> Int? {
+        guard snapshot.contains("GOAL WEIGHT: not set"),
+              let r = snapshot.range(of: #"ESTIMATED DAILY ENERGY USE: (\d+)"#, options: .regularExpression) else { return nil }
+        return Int(snapshot[r].filter(\.isNumber))
+    }
+
+    /// The day block without its NEXT STEP paragraph (the lines that follow it, such as patterns, are not part of this block).
+    nonisolated static func withoutNextStep(_ block: String) -> String {
+        block.split(separator: "\n", omittingEmptySubsequences: false).filter { !$0.hasPrefix("NEXT STEP") }.joined(separator: "\n")
     }
 
     /// One derived stress line for the coach context: the Baevsky Stress Index over TODAY's R-R, read
@@ -1576,11 +1768,12 @@ final class AICoachEngine: ObservableObject {
 
     /// Dispatch to the user's chosen provider client.
     private func callProvider(key: String,
-                              messages: [(role: ChatMessage.Role, content: String)]) async throws -> String {
+                              messages: [(role: ChatMessage.Role, content: String)],
+                              compact: Bool = false) async throws -> String {
         try await provider.client.send(
             key: key,
             model: model,
-            systemPrompt: systemPrompt,
+            systemPrompt: compact ? buildSystemPrompt(compact: true) : systemPrompt,
             messages: messages,
             session: session
         )
@@ -1593,11 +1786,12 @@ final class AICoachEngine: ObservableObject {
     private func streamProvider(key: String,
                                 messages: [(role: ChatMessage.Role, content: String)],
                                 inlineImage: String? = nil,
+                                compact: Bool = false,
                                 onDelta: (String) -> Void) async throws {
         try await provider.client.streamWithImage(
             key: key,
             model: model,
-            systemPrompt: systemPrompt,
+            systemPrompt: compact ? buildSystemPrompt(compact: true) : systemPrompt,
             messages: messages,
             inlineImage: inlineImage,
             session: session,
@@ -1721,27 +1915,27 @@ final class AICoachEngine: ObservableObject {
     /// Build a compact plain-text summary of the user's recent data: last ~14 days of
     /// recovery/strain/sleep-hours/HRV/restingHR where present, plus 30-day averages, plus a few
     /// recent workouts. Kept well under ~1500 tokens. If there's no data, it says so.
-    func buildContext() -> String {
+    func buildContext(recentDays: Int = 14) -> String {
         let days = repo.days // oldest → newest
         var lines: [String] = ["USER BIOMETRIC SUMMARY (the user's own wearable data):"]
 
         guard !days.isEmpty else {
             return """
             USER BIOMETRIC SUMMARY:
-            No wearable data is available yet. Acknowledge this and give general, encouraging guidance \
-            while inviting the user to sync their device so future advice can reference real numbers.
+            There is no wearable data yet. Say so plainly, state no figure about the person (the bands in your instructions are rules, not their readings), \
+            and tell them to wear the strap overnight and sync in the morning so there is something to read. A general question can still be answered in general terms.
             """
         }
 
         // Last ~14 days, newest first for readability.
-        let recent = Array(days.suffix(14)).reversed()
+        let recent = Array(days.suffix(recentDays)).reversed()
         if let current = latestBodyStateDay(in: days) {
             lines.append("")
             lines.append(Self.bodyStateSummary(current: current, history: days))
         }
         lines.append("")
-        lines.append("Recent days (newest first) — recovery(0-100), strain(0-100), sleep(h), "
-                     + "deep/REM/light(h), eff(%), HRV(ms), RHR(bpm). A dash means NOT MEASURED, not zero:")
+        lines.append("Recent days (newest first) — recovery(0-100), strain(0-\(UnitFormatter.effortScaleMax(Self.strainScale()))), sleep(h), "
+                     + "deep/REM/light(h), eff(%), HRV(ms), RHR(bpm). A dash means the figure is not available, not zero:")
         for d in recent {
             lines.append("  " + dayLine(d))
         }
@@ -1751,7 +1945,7 @@ final class AICoachEngine: ObservableObject {
         lines.append("")
         lines.append("30-day averages:")
         lines.append("  recovery: \(avgInt(last30.compactMap { $0.recovery }))"
-                     + ", strain: \(avgOne(last30.compactMap { $0.strain }))"
+                     + ", strain: \(avgOne(last30.compactMap { $0.strain.map { UnitFormatter.effortValue($0, scale: Self.strainScale()) } }))"
                      + ", sleep: \(avgSleepHours(last30))h"
                      + ", HRV: \(avgInt(last30.compactMap { $0.avgHrv })) ms"
                      + ", RHR: \(avgInt(last30.compactMap { $0.restingHr.map(Double.init) })) bpm")
@@ -1842,10 +2036,10 @@ final class AICoachEngine: ObservableObject {
             evidence.append("RHR \(rhr)bpm\(comparison)")
         }
         if let recentEffort {
-            let comparison = effortBaseline.map { " vs \(String(format: "%.1f", $0)) average daily strain" } ?? ""
-            evidence.append("recent strain \(String(format: "%.1f", recentEffort))\(comparison)")
+            let comparison = effortBaseline.map { " vs \(strainText($0)) average daily strain" } ?? ""
+            evidence.append("recent strain \(strainText(recentEffort))\(comparison)")
         } else if let effort {
-            evidence.append("Strain \(String(format: "%.1f", effort))")
+            evidence.append("Strain \(strainText(effort))")
         }
 
         // Effort describes load, not recovery. It can support the recommendation, but by itself it
@@ -1882,7 +2076,7 @@ final class AICoachEngine: ObservableObject {
         for w in rows.prefix(limit) {
             var parts = ["  \(dateString(w.startTs)) \(w.sport)"]
             if let dur = w.durationS { parts.append("\(Int((dur / 60).rounded())) min") }
-            if let s = w.strain { parts.append("strain \(String(format: "%.1f", s))") }
+            if let s = w.strain { parts.append("strain \(Self.strainText(s))") }
             if let hr = w.avgHr { parts.append("avg HR \(hr)") }
             if let mx = w.maxHr { parts.append("max HR \(mx)") }
             if let kcal = w.energyKcal { parts.append("\(Int(kcal.rounded())) kcal") }
@@ -1917,7 +2111,7 @@ final class AICoachEngine: ObservableObject {
     func dayLine(_ d: DailyMetric) -> String {
         var parts: [String] = [d.day + ":"]
         parts.append("recovery " + (d.recovery.map { "\(Int($0.rounded()))" } ?? "—"))
-        parts.append("strain " + (d.strain.map { String(format: "%.1f", $0) } ?? "—"))
+        parts.append("strain " + (d.strain.map { Self.strainText($0) } ?? "—"))
         parts.append("sleep " + (d.totalSleepMin.map { String(format: "%.1fh", $0 / 60) } ?? "—"))
         // The stage breakdown and efficiency, which the coach could not see at all: a user asked why it
         // said it had no access to sleep stages, and it was answering honestly — `rest 7.8h` was every

@@ -11,18 +11,20 @@ final class NunaAnyaFloatingModel: ObservableObject {
     @Published private(set) var phase = Phase.idle
     /// The local read of the page, as one run of sentences.
     @Published private(set) var local: String?
-    /// The provider's analysis, when there is one.
+    /// The provider's analysis, when there is one (or, without one, what the phone worked out): the sheet's text, with titled parts.
     @Published private(set) var explanation: String?
+    /// The one sentence the pill shows from that analysis: what the reading is and whether it is good, fair or needs attention.
+    @Published private(set) var headline: String?
 
     /// A finished analysis is kept for a while, so opening the page again does not ask the provider again.
-    private static var cache: [String: (at: Date, local: String?, explanation: String?)] = [:]
+    private static var cache: [String: (at: Date, local: String?, explanation: String?, headline: String?)] = [:]
     private static let keep: TimeInterval = 30 * 60
 
     func analyse(context: String, metric: NunaAnyaMetric?, pageLine: String?, repo: Repository, profile: ProfileStore, coach: AICoachEngine, scale: EffortScale) async {
         guard phase != .analysing else { return }
         let key = "\(context)|\(Repository.localDayKey(Date()))|\(coach.isConfigured && coach.dataConsent)"
         if let hit = Self.cache[key], Date().timeIntervalSince(hit.at) < Self.keep {
-            local = hit.local; explanation = hit.explanation; phase = .done; return
+            local = hit.local; explanation = hit.explanation; headline = hit.headline; phase = .done; return
         }
         phase = .analysing
 #if DEBUG
@@ -31,12 +33,22 @@ final class NunaAnyaFloatingModel: ObservableObject {
 #endif
         let read = await NunaAnyaReader.read(context: context, metric: metric, repo: repo, profile: profile, scale: scale)
         local = read.map { NunaMark.plain(NunaMark.compose(headline: $0.headline, detail: $0.detail)) } ?? pageLine
+        let verdict = read?.verdict
         if coach.isConfigured, coach.dataConsent {
             let module = NunaAnyaModule(context: context)
-            let page = context + (local.map { "\n\n" + $0 } ?? "") + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? "")
-            explanation = await coach.generateContextualBrief(pageContext: page).map { AnyaActions.proseOnly($0) }
+            // The page, the phone's own verdict on it (so she explains a judgement instead of making one up) and what she noted before.
+            let page = context + (local.map { "\n\n" + $0 } ?? "") + (verdict.map { "\n\n" + $0.providerLine } ?? "") + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? "")
+            if let raw = await coach.generatePageInsight(topic: verdict?.topic ?? NunaAnyaTopic.of(metricKey: metric?.key ?? "", title: metric?.title ?? context), pageContext: page) {
+                let shown = NunaAnyaInsightText.fromProvider(raw, verdict: verdict)
+                explanation = shown.text; headline = shown.headline
+            }
         }
-        Self.cache[key] = (Date(), local, explanation)
+        // No provider, or it did not answer: the sheet still gets the verdict, the reading and the next step, worked out on this phone.
+        // The pill keeps the page's own line (it is richer than the verdict's one sentence).
+        if explanation == nil, let verdict {
+            explanation = NunaAnyaInsightText.fromVerdict(verdict, reading: read?.detail.map { NunaMark.plain($0) }).text
+        }
+        Self.cache[key] = (Date(), local, explanation, headline)
         phase = .done
     }
 }
@@ -121,6 +133,7 @@ struct NunaAnyaFloating: ViewModifier {
             return String(localized: "You are inside the Strain your Recovery supports today: more adds load without much return.")
         }
 #endif
+        if let h = model.headline { return h }
         if let e = model.explanation { return e }
         return givenLine ?? model.local
     }

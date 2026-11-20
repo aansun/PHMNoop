@@ -45,6 +45,8 @@ enum AnyaDayContext {
         /// nil when the wearer has not turned weather and air on, or the reading is old.
         var outdoorLine: String?
         var outdoorLevel: String?
+        /// The Strain scale the wearer reads. Every Strain figure in the block is converted to it, so Anya quotes what the screen shows.
+        var effortScale: EffortScale = .hundred
     }
 
     // MARK: Parts of the day
@@ -98,31 +100,32 @@ enum AnyaDayContext {
         }
         lines.append(clockLine)
 
-        // Effort so far, against what is usual and against the week.
+        // Effort so far, against what is usual and against the week. Stored 0-100 values, shown on the wearer's scale.
+        func shown(_ stored: Double) -> Double { UnitFormatter.effortValue(stored, scale: i.effortScale) }
         var effort: [String] = []
         if let t = i.todayEffort, t > 0 {
-            var s = "Strain so far today \(oneDecimal(t))"
-            if let u = i.usualEffort, u > 0 { s += " (a usual day is about \(oneDecimal(u)))" }
+            var s = "Strain so far today \(oneDecimal(shown(t)))"
+            if let u = i.usualEffort, u > 0 { s += " (a usual day is about \(oneDecimal(shown(u))))" }
             effort.append(s)
         } else if i.todayEffort != nil {
             effort.append("no Strain banked yet today")
         }
         if let lo = i.effortTargetLow, let hi = i.effortTargetHigh {
-            effort.append("the Strain worth aiming for at today's Recovery is \(Int(lo.rounded()))-\(Int(hi.rounded()))")
+            effort.append("the Strain worth aiming for at today's Recovery is \(Int(shown(lo).rounded()))-\(Int(shown(hi).rounded()))")
         }
         if let w = i.weekEffort, w > 0 {
-            var s = "last 7 days \(Int(w.rounded()))"
+            var s = "last 7 days \(Int(shown(w).rounded()))"
             if let g = i.weeklyEffortGoal, g > 0 { s += " of the weekly target \(Int(g.rounded()))" }
             effort.append(s)
         }
-        if !effort.isEmpty { lines.append("STRAIN (0-100 axis): " + effort.joined(separator: "; ") + ".") }
+        if !effort.isEmpty { lines.append("STRAIN (0-\(UnitFormatter.effortScaleMax(i.effortScale)) scale, as the person sees it): " + effort.joined(separator: "; ") + ".") }
 
         // The Plan card's session. Anya must not contradict it unless the person gives a reason to change it.
         if let title = i.sessionTitle {
             var s = "TODAY'S SUGGESTED SESSION (the same one the Plan card shows; do not contradict it unless the person gives a reason): \(title)"
             if let z = i.sessionMainZone { s += ", main work in zone \(z)" }
             if let lo = i.sessionEffortLow, let hi = i.sessionEffortHigh {
-                s += ", about +\(Int(lo.rounded()))-\(Int(hi.rounded())) Strain"
+                s += ", about +\(Int(shown(lo).rounded()))-\(Int(shown(hi).rounded())) Strain"
             }
             s += "."
             if let c = i.chargePct { s += " It was chosen from a Recovery of \(Int(c.rounded()))."}

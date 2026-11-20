@@ -1,0 +1,93 @@
+{
+  "chat" : [
+
+  ],
+  "compactContext" : "USER BIOMETRIC SUMMARY:\nThere is no wearable data yet. Say so plainly, state no figure about the person (the bands in your instructions are rules, not their readings), and tell them to wear the strap overnight and sync in the morning so there is something to read. A general question can still be answered in general terms.\n\nRecent workouts: none recorded in the last 30 days.\n\nRIGHT NOW: Friday 20 November, 21:12 (evening). This is the review part of the day: when asked how the day went, say what its Strain and the night ahead imply and point to bedtime, not to a new hard session.\nNEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): Keep the evening light.",
+  "compactContextChars" : 736,
+  "compactSystemChars" : 3563,
+  "configured" : true,
+  "consent" : true,
+  "fullSystemChars" : 12980,
+  "pages" : [
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Recovery",
+      "seconds" : 0.0039579868316650391,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "No Strain yet today. Anya reads it as soon as your heart rate has spent time in the zones.",
+      "page" : "Strain",
+      "seconds" : 0.0032529830932617188,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "sleep",
+      "seconds" : 0.0027030706405639648,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "stress",
+      "seconds" : 0.0025669336318969727,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "HRV",
+      "seconds" : 0.00076401233673095703,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Resting heart rate",
+      "seconds" : 0.00087404251098632812,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Respiratory rate",
+      "seconds" : 0.0008029937744140625,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Weight",
+      "seconds" : 0.00076401233673095703,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Skin temperature",
+      "seconds" : 0.00076699256896972656,
+      "text" : "nil",
+      "verdict" : "none"
+    }
+  ],
+  "plan" : {
+    "output" : "Here’s your plan, shaped by your own numbers and the path forward:  \n\n{\"targetKcal\":2150,\"paceKgPerWeek\":-0.4,\"proteinPerKg\":1.8,\"fatShare\":0.28,\"explanation\":\"Your intake of 2250 kcal against a 2404 kcal estimate shows a deficit, while your weight at 75.0 kg against a trend (not available) suggests minimal change—I used your current intake, estimated energy use, and your own weight to set the target. The pace of -0.25 kg\/week against a goal weight (not set) means we stay steady, but we must stay close to 2150 kcal to protect the protein level of 1.8 g\/kg—this is tied to the kidney marker outside its range, so we keep protein at that level. I used the intake, estimated energy use, and weight to set the macros: fat at 28% (within 20-35%), carbs at ~55% (within 55-75%), and protein at 1.8 g\/kg (within 0.8-2.4 g\/kg) because your body needs this to function while avoiding overload. The low intake may reflect a need to match energy to movement, but we must preserve the protein floor due to the lab signal. I can't tell if the estimated energy use is accurate without confirmed logs, and the trend is missing—consult a clinician if weight stability is a concern.\"}",
+    "parsed" : false,
+    "seconds" : 10.956154942512512
+  },
+  "provider" : "appleIntelligence",
+  "scale" : "whoop",
+  "scenario" : "empty"
+}

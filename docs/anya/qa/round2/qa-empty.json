@@ -1,0 +1,207 @@
+{
+  "breath" : {
+    "output" : "This breathing exercise is for calming down before sleep, helping your body settle into rest with soft, steady breaths. It should feel peaceful and gentle, like a quiet lullaby.\n```anya-breath\n{\"minutes\":5,\"goal\":\"calm\",\"stages\":[{\"phase\":\"inhale\",\"seconds\":4},{\"phase\":\"exhale\",\"seconds\":6},{\"seconds\":4,\"phase\":\"inhale\"},{\"phase\":\"exhale\",\"seconds\":6}],\"title\":\"Soft breath before sleep\"}\n```",
+    "parsed" : true,
+    "seconds" : 2.8317760229110718
+  },
+  "chat" : [
+    {
+      "answer" : "I can’t tell why Recovery changed—no data shows yesterday’s numbers—but HRV and resting heart rate against your baseline suggest low resilience from inactivity. The one cause this best supports is insufficient movement recently. This data doesn’t confirm sleep quality alone, especially since no baseline comparison is clear.  \n\nKeep the evening light. Sync your device soon to track how rest and activity shape your numbers. Would you like help setting a nightly routine?",
+      "module" : "today",
+      "question" : "Why did my Recovery change compared with yesterday? Use my sleep, HRV and resting heart rate.",
+      "seconds" : 3.5864421129226685
+    },
+    {
+      "answer" : "Your day so far shows Strain at 15—this reflects light activity—and Sleep is 62, meaning quality dipped. Recovery is 67, HRV is 68, and resting heart rate is 62—these suggest your body is holding steady with minimal strain. The low Sleep and Strain point to insufficient recovery, not illness. These numbers favor maintenance and controlled quality.  \n\nKeep the evening light.",
+      "module" : "today",
+      "question" : "Summarise my day so far in a few sentences, using my numbers.",
+      "seconds" : 3.181427001953125
+    },
+    {
+      "answer" : "No wearable data is available yet. Sync your device so we can look at real numbers.\n\nREAD: HRV — dash — against your own baseline.  \n\nEXPLAIN: the signal best supports readiness for gentle movement, since HRV is not measured, meaning we cannot assess its state. This does not indicate fatigue or strain.  \n\nADVISE: begin a 5-minute walk today — this directly supports building baseline resilience when the signal is unclear. Recheck HRV once your device syncs.",
+      "module" : "health",
+      "question" : "Explain what my HRV is telling me today, compared with my own baseline.",
+      "seconds" : 3.625356912612915
+    },
+    {
+      "answer" : "I cannot provide fitness age or explain how it’s calculated—this data is not available here. The only figures we have are the wearable summary, and no lab results appear on this screen.  \n\nReading: Recovery—0–100, Strain—0–21, Sleep—0–100, HRV and resting heart rate—not measured.  \n\nThe lack of measured data suggests the system hasn’t recorded recent physiological signals, which may reflect inactivity or new device sync. The absence of baseline tracking means we cannot assess trends or thresholds from this surface alone.  \n\nNext step: sync your wearable now—this will let us build a baseline for your 8000 steps goal and recovery readiness.  \n\nWould you like to know how to set up a baseline tracker?",
+      "module" : "health",
+      "question" : "What is fitness age and how is mine worked out in this app?",
+      "seconds" : 5.2758209705352783
+    },
+    {
+      "answer" : "I can’t trace a change in Recovery from your data because no weekly patterns or behavioural links are available yet.  \n\nThe system shows no measured Recovery values against your baseline—this surface lacks the history needed to identify what drove shifts.  \n\nTo begin, sync your device so we can build the picture together. Once you have the data, we’ll track changes from there.  \n\nNext step: start logging your daily movement and sleep for two weeks—focus on consistency—so we can see how they shape your readiness.",
+      "module" : "trends",
+      "question" : "Why did my Recovery move over the last month? Point to the behaviours in my data.",
+      "seconds" : 3.8222960233688354
+    },
+    {
+      "answer" : "I cannot answer which day was hardest—no wearable data is available yet.  \n\nThe data shows no recent activity, so no pattern can be drawn from effort or recovery.  \n\nSync your device now so we can track changes over time.  \n\nStart by setting a 8000-step goal today—this will help build steady movement as your baseline forms.",
+      "module" : "trends",
+      "question" : "Which day was hardest on my body this month and what followed it?",
+      "seconds" : 2.92125403881073
+    },
+    {
+      "answer" : "I don’t have sleep numbers yet—no data from your wearable.  \n\nIf you had logged wake-ups, the strain of inactivity might have pulled you into lighter cycles, but without numbers, I can’t name the cause. This data doesn’t show depth or stage—only patterns.  \n\nKeep the evening light.",
+      "module" : "sleep",
+      "question" : "Why might I have woken up several times last night? Use my sleep numbers.",
+      "seconds" : 2.6334810256958008
+    },
+    {
+      "answer" : "I can’t compare sleep this week with last week because no wearable data is available yet.  \n\nThe only thing we know now is that your Strain is not recorded, and the night ahead is quiet—no hard effort logged.  \n\nSince there’s no baseline to measure, we can’t say what changed, but the lack of strain suggests rest is the focus tonight.  \n\nKeep the evening light.",
+      "module" : "sleep",
+      "question" : "Compare my sleep this week with last week.",
+      "seconds" : 3.0758060216903687
+    },
+    {
+      "answer" : "No wearable data is available yet. Sync your device so we can build from real numbers.  \n\nStrain is 0, Sleep is dash, HRV is dash, resting heart rate is dash.  \n\nThe data shows no recent effort, which best supports a need for gentle movement—this cannot tell if recovery will improve over time.  \n\nKeep the evening light.  \n\nTake a 20-minute walk at a comfortable pace today—this fits the low strain and supports easy movement.",
+      "module" : "workouts",
+      "question" : "Recommend the best workout for today using my Recovery, Strain, Sleep and recent workouts.",
+      "seconds" : 3.3707199096679688
+    },
+    {
+      "answer" : "No wearable data is available yet. Sync your device so we can build from real numbers.  \n\nStrain: 0 — this means no load, just rest. The absence of strain suggests the body is not adapting to stress, which the data cannot confirm without baseline movement.  \n\nThe lack of strain and recovery data points to a pause, but the current stillness aligns with the need to let the body settle.  \n\nTake a short walk at a comfortable pace today to maintain gentle movement without strain.",
+      "module" : "workouts",
+      "question" : "Plan my training for this week from my current load and recovery.",
+      "seconds" : 3.7372109889984131
+    },
+    {
+      "answer" : "No wearable data is available yet. Sync your device so I can use your own numbers to guide you.\n\nREAD: no data — nothing measured against baseline.\n\nEXPLAIN: without signals from your own device, I cannot identify the clearest driver; this surface lacks the signals to infer what’s shaping your readiness. This data cannot confirm nutritional balance or metabolic state.\n\nADVISE: sync your wearable now so we can track your recovery and strain as you begin moving toward your 8000 steps.",
+      "module" : "nutrition",
+      "question" : "Look at what I have eaten today against my target and macros and tell me what to do for the rest of the day.",
+      "seconds" : 3.683696985244751
+    },
+    {
+      "answer" : "I cannot suggest food based on today’s activity or what you’ve eaten—no data is available yet.  \n\nThe surface shows no vital signs, HRV, or resting heart rate—this is a blank slate.  \n\nThe only thing this surface cannot tell, if it changes, is how your body responds to food—so we must wait for real signals.  \n\nSync your device to get the numbers—start there.",
+      "module" : "nutrition",
+      "question" : "Suggest what to eat tonight given what I have eaten today, my target and today's activity.",
+      "seconds" : 3.1358640193939209
+    },
+    {
+      "answer" : "I can’t pick a breathing exercise right now because no live data is available—HRV, stress, recovery, and heart rate are not measured. Sync your device so I can help with real numbers.  \n\nRecovery is at 0, which best supports easy movement—this means your body needs minimal strain. This data cannot confirm what worked in earlier sessions, so we can’t repeat them.  \n\nStart with 2 minutes of slow, comfortable breathing now—do it daily until you feel a slight shift in readiness.",
+      "module" : "breathing",
+      "question" : "Which breathing exercise fits me right now? Use my live heart rate, HRV, stress and Recovery, and what worked in my earlier breathing sessions.",
+      "seconds" : 3.661329984664917
+    },
+    {
+      "answer" : "I can’t see HRV or heart rate change from your breathing sessions yet—no data here.  \n\nSince no readings are available, the data doesn’t show what’s working.  \n\nSync your device so I can check your breathing patterns and recovery trends.  \n\nStart with 4 minutes of slow, comfortable breathing now—repeat it tomorrow at the same time.",
+      "module" : "breathing",
+      "question" : "How did my recent breathing sessions go? Look at the HRV and heart rate change in each and tell me what is working.",
+      "seconds" : 2.8427619934082031
+    },
+    {
+      "answer" : "No wearable data is available yet. The strap’s sync, battery, and connection status are not recorded.\n\nThe only possible cause from this surface is a physical disconnect—the most likely reason. This data cannot tell why the device fails to pair when the hardware is intact.\n\nBring the strap closer to your phone and reconnect—do this now. Keep it within arm’s reach for the next few minutes.\n\nLet me know if the connection holds after two minutes.",
+      "module" : "device",
+      "question" : "Why might my strap keep disconnecting from the phone?",
+      "seconds" : 3.3209249973297119
+    },
+    {
+      "answer" : "I can’t tell you how to charge it or how long it lasts—the data doesn’t include battery level or duration.  \n\nThe only thing we can measure now is that the strap hasn’t synced, and the connection is unclear—no signal, no charge status.  \n\nBring the strap closer to your phone and reconnect—do this now—so we can start tracking real numbers.  \n\nWould you like to check if the last sync failed?",
+      "module" : "device",
+      "question" : "How should I charge my strap and how long does the battery last?",
+      "seconds" : 3.4527270793914795
+    }
+  ],
+  "compactContext" : "USER BIOMETRIC SUMMARY:\nNo wearable data is available yet. Acknowledge this and give general, encouraging guidance while inviting the user to sync their device so future advice can reference real numbers.\n\nRecent workouts: none recorded in the last 30 days.\n\nRIGHT NOW: Friday 20 November, 20:03 (evening). This is the review part of the day: when asked how the day went, say what its Strain and the night ahead imply and point to bedtime, not to a new hard session.\nNEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): Keep the evening light.",
+  "compactContextChars" : 617,
+  "compactSystemChars" : 2431,
+  "configured" : true,
+  "consent" : true,
+  "food" : {
+    "input" : "2 telur dadar dan 1 piring nasi goreng",
+    "output" : "An estimate, worked out on this iPhone.\n```anya-food\n{\"items\":[{\"name\":\"2 telur dadar\",\"kcal\":120,\"amount\":\"2 eggs\",\"proteinG\":12,\"carbsG\":10,\"fatG\":6},{\"proteinG\":15,\"name\":\"1 piring nasi goreng\",\"amount\":\"1 plate\",\"carbsG\":35,\"fatG\":8,\"kcal\":250}]}\n```",
+    "seconds" : 2.1476179361343384
+  },
+  "fullSystemChars" : 11900,
+  "morningBrief" : {
+    "output" : "Hi, I’m Anya, your health assistant.  \n\nNo wearable data is available yet — sync your device soon so we can build from real numbers.  \n\n- Strain: 0 — suggests rest is the clearest need, no effort recorded.  \n- Sleep: dash — not enough to guide action.  \n- HRV and resting heart rate: dash — not enough to guide action.  \n\nThe lack of effort and data means your body is settling — this points to stillness as the best support.  \n\n- Keep the evening light — it helps your system shift gently.  \n\nLet the day rest.  \n\n**Next step:** Keep the evening light — it supports your body’s quiet transition tonight.",
+    "seconds" : 4.5862610340118408
+  },
+  "pages" : [
+    {
+      "headline" : "Recovery is steady but low—sleep may be the main factor.",
+      "local" : "nil",
+      "page" : "Recovery",
+      "seconds" : 4.8859089612960815,
+      "text" : "Recovery is steady but low—sleep may be the main factor.\n\n**What I see**\nRecovery 82%, HRV up 35 ms, resting heart rate up 1 bpm\n\n**What it means**\nThe low score most likely reflects insufficient sleep, as sleep quality is a key lever even with stable HRV and heart rate changes\n\n**What to do**\nKeep the evening light and aim to be asleep by 22:00 tonight—this consistency will help lift Recovery over the next few nights.",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "No strain yet—keep the evening light",
+      "local" : "No Strain yet today. Anya reads it as soon as your heart rate has spent time in the zones.",
+      "page" : "Strain",
+      "seconds" : 3.6427741050720215,
+      "text" : "No strain yet—keep the evening light\n\n**What I see**\nStrain—NOT MEASURED, Recovery—67-100, Sleep—NOT MEASURED, HRV—NOT MEASURED, Resting heart rate—NOT MEASURED\n\n**What it means**\nThe data best supports that the lack of effort is normal, with no sign of overload\n\n**What to do**\nFinish the day easy and keep the rhythm—this habit holds the 67-100 Recovery so it stays stable.",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "Sleep was slightly beyond need—keep the evening routine intact.",
+      "local" : "nil",
+      "page" : "sleep",
+      "seconds" : 3.397442102432251,
+      "text" : "Sleep was slightly beyond need—keep the evening routine intact.\n\n**What I see**\n1h 0m past what you need\n\n**What it means**\nThe data best supports that yesterday’s evening routine helped your body recover well\n\n**What to do**\nStick to your usual evening routine tonight—start winding down by 18:00 to maintain the pattern that supported recovery.",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "Your stress is stable—no clear trigger from data.",
+      "local" : "nil",
+      "page" : "stress",
+      "seconds" : 3.3166199922561646,
+      "text" : "Your stress is stable—no clear trigger from data.\n\n**What I see**\nHRV at or above baseline, resting heart rate under HRV, hours spent in high stress dash\n\n**What it means**\nThe data best supports consistent physiological readiness, with no clear cause from logged habits or hard sessions\n\n**What to do**\nTake a five-minute walk now to maintain the calm state—do this today to preserve the current balance.",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "HRV is at or above baseline—your body is recovering well",
+      "local" : "nil",
+      "page" : "HRV",
+      "seconds" : 3.1135650873184204,
+      "text" : "HRV is at or above baseline—your body is recovering well\n\n**What I see**\nHRV at or above baseline, resting heart rate under it\n\n**What it means**\nThe data best supports your body’s natural recovery state\n\n**What to do**\nStart a 10-minute walk tonight to maintain this rhythm—keep it every evening this week to preserve the pattern.",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "Resting heart rate: steady, mirroring yesterday’s quiet recovery.",
+      "local" : "nil",
+      "page" : "Resting heart rate",
+      "seconds" : 2.7534530162811279,
+      "text" : "Resting heart rate: steady, mirroring yesterday’s quiet recovery.\n\n**What I see**\nresting heart rate stays steady, HRV 104ms today, up from baseline\n\n**What it means**\nthe data best supports your body’s strong resilience and well-regulation\n\n**What to do**\nrepeat what you did yesterday evening: keep that quiet recovery routine so it holds.",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "Respiratory rate stable but not improving",
+      "local" : "nil",
+      "page" : "Respiratory rate",
+      "seconds" : 2.5049220323562622,
+      "text" : "Respiratory rate stable but not improving\n\n**What I see**\nRespiratory rate: 18\n\n**What it means**\nThe data best supports consistent airflow during sleep, with no clear change in cause\n\n**What to do**\nKeep the strap snug and worn overnight so the reading stays reliable—do this every night tonight and tomorrow morning.",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "Your body is ready to train—this reading is fair for movement.",
+      "local" : "nil",
+      "page" : "Weight",
+      "seconds" : 3.5255210399627686,
+      "text" : "Your body is ready to train—this reading is fair for movement.\n\n**What I see**\nRecovery 67, HRV — baseline, resting heart rate — baseline.\n\n**What it means**\nThe data shows strong recovery and stable heart response, which best supports pushing effort—this does not tell if intake is enough.\n\n**What to do**\nAdd 200 steps to your daily walk now—this aligns with your Recovery and Strain target.",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "Skin temperature rising slightly, HRV and heart rate stable—watch the trend",
+      "local" : "nil",
+      "page" : "Skin temperature",
+      "seconds" : 3.7102680206298828,
+      "text" : "Skin temperature rising slightly, HRV and heart rate stable—watch the trend\n\n**What I see**\nResting heart rate up 1 bpm, HRV up 35 ms, sleep dash\n\n**What it means**\nThe data best supports consistent movement—no change in effort yet\n\n**What to do**\nKeep your daily walk at 8000 steps as a baseline habit—this holds your Recovery at 82% and Strain at 10.9 while supporting your goal.",
+      "verdict" : "none"
+    }
+  ],
+  "plan" : {
+    "output" : "Your body is waking up to a quiet rhythm—no recent effort, but the weight of daily needs begins to shape the plan. With no wearable data and no food log, we’re relying on the profile, energy estimate, and the current aim, which tells us to stay steady.\n\n- Aim for **2150 kcal** to align with the estimated energy use and avoid overreaching, while keeping protein at **1.8 g\/kg** to honor the kidney safety note—this is a personal priority, not a standard rule. The **-0.4 kg\/week** pace reflects the current trend, and the **28% fat share** stays within the personal target.\n\n```anya-plan\n{\"targetKcal\":2150,\"paceKgPerWeek\":-0.4,\"proteinPerKg\":1.8,\"fatShare\":0.28,\"reasons\":[\"Profile weight 75.0 kg; estimated energy use 2404 kcal; current plan 2250 kcal; Lab Book not shared; personal focus on protein and fat ratio\"],\"cautions\":[\"No Lab Book values shared—consult clinician if cutting calories further.\"] }\n```\n\nSync your wearable soon—this is how we’ll truly track your rhythm.",
+    "parsed" : true,
+    "seconds" : 11.264657974243164
+  },
+  "program" : {
+    "output" : "You’re aiming to build muscle with dumbbells, 3 days a week, 45 minutes—focusing on upper body first, then lower—with chest still showing signs of recovery. Compound lifts lead the way, and you’re adding a subtle weight increase only when reps hit the top of the range. This split honors your intermediate level and the fact legs are ready while chest needs patience.\n\n- Start with a 45-minute upper body session three times this week, using only dumbbells—begin with Dumbbell Bench Press - Medium Grip, then move to Lat Pulldown, and finish with Dumbbell Shoulder Press - Standard Grip, keeping rest at 60–120 seconds on muscle sets. Add a slight weight increase only when each set reaches the upper end of the rep range. Save the lower body work for a fourth day if needed, but today keep it light.\n\n```anya-program\n{\"name\":\"Upper body dumbbell build\",\"note\":\"3 days a week, 45 minutes, dumbbells only\",\"days\":[{\"title\":\"Day A\",\"items\":[{\"exercise\":\"Dumbbell Bench Press - Medium Grip\",sets\":3,\"repsLow\":8,\"repsHigh\":10,\"restSec\":120,\"note\":\"Shoulder blades pinched\"}]}]}\n```",
+    "parsed" : false,
+    "seconds" : 188.43208599090576
+  },
+  "provider" : "appleIntelligence",
+  "scale" : "whoop",
+  "scenario" : "empty"
+}

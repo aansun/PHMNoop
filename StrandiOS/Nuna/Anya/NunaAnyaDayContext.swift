@@ -66,7 +66,8 @@ enum NunaAnyaDayContext {
             habitualMidsleepSec: midsleep,
             sessionFeelings: feelings,
             outdoorLine: outdoor?.line,
-            outdoorLevel: outdoor?.level)
+            outdoorLevel: outdoor?.level,
+            effortScale: AICoachEngine.strainScale())
         return AnyaDayContext.block(input)
     }
 

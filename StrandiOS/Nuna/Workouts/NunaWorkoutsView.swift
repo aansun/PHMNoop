@@ -190,7 +190,8 @@ struct NunaWorkoutsView: View {
         let week = rows(inWeek: 0)
         return Group {
             if !week.isEmpty {
-                NunaAnyaCard(verbatim: String(localized: "This week: \(week.count) sessions, Strain \(UnitFormatter.effortDisplay(m.effort(week), scale: scale)).")) { showCoach = true }
+                NunaAnyaCard(verbatim: String(localized: "This week: \(week.count) sessions, Strain \(UnitFormatter.effortDisplay(m.effort(week), scale: scale))."),
+                             detail: NunaAnyaVerdict.load(weeks: m.weeklyEffort(weeks: 4))?.advice) { showCoach = true }
             }
         }
     }

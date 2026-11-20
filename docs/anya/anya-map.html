@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peta Anya</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--paper:#f5f5f5;--ink:#2d3142;--muted:#4f5d75;--soft:#5a6580;--accent:#bf4520;--rule:rgba(45,49,66,0.12)}
+body{font-family:'Geist',system-ui,sans-serif;background:var(--paper);color:var(--ink);padding:3rem 2rem;line-height:1.5}
+.frame{max-width:1040px;margin:0 auto}
+.eyebrow{font-family:'Geist Mono',monospace;font-size:.66rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+h1{font-family:'Instrument Serif',serif;font-size:clamp(1.5rem,2.4vw + .75rem,2rem);font-weight:400;letter-spacing:-.02em;line-height:1.15;margin-bottom:1.5rem}
+h2{font-family:'Instrument Serif',serif;font-size:1.35rem;font-weight:400;letter-spacing:-.01em;margin:2.5rem 0 .75rem}
+.diagram-container,.tablewrap{width:100%;overflow-x:auto}
+svg{width:100%;min-width:960px;display:block}
+p.lead{max-width:70ch;color:var(--muted);margin-bottom:1.25rem}
+.cards{display:grid;grid-template-columns:1.1fr 1fr .9fr;gap:1rem;margin-top:1.25rem}
+.card{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1rem 1.1rem}
+.card h3{font-family:'Geist Mono',monospace;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-bottom:.5rem;font-weight:500}
+.card ul{padding-left:1.1rem;font-size:.9rem} .card li{margin:.25rem 0}
+.card.focal{border-color:var(--accent);background:rgba(191,69,32,0.05)}
+pre.ctx{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1rem;font-family:'Geist Mono',monospace;font-size:.68rem;line-height:1.45;overflow-x:auto;white-space:pre-wrap;margin:0 0 1rem}
+table{border-collapse:collapse;table-layout:fixed;min-width:1480px;width:100%;font-size:.84rem;background:#fff;border:1px solid var(--rule)}
+th,td{text-align:left;vertical-align:top;padding:.55rem .7rem;border-bottom:1px solid var(--rule)}
+th{font-family:'Geist Mono',monospace;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);font-weight:500;background:rgba(45,49,66,0.04)}
+td:first-child{font-weight:600} th:nth-child(1){width:150px} th:nth-child(2){width:230px} th:nth-child(3){width:260px} th:nth-child(4){width:690px} th:nth-child(5){width:110px} td:nth-child(4){font-size:.8rem}
+.note{font-size:.85rem;color:var(--muted);margin-top:1rem;max-width:80ch}
+code{font-family:'Geist Mono',monospace;font-size:.8em}
+@media print{.diagram-container,.tablewrap{overflow-x:visible}svg{min-width:0}}
+</style></head><body><div class="frame">
+<p class="eyebrow">Architecture · Anya, tanpa My Day Outlook</p>
+<h1>Bagaimana Anya membaca data dan memberikannya</h1>
+<p class="lead">Selalu ada dua jalur. Jalur lokal (jingga) membaca angka yang tersimpan di iPhone dan langsung menjadi kalimat berangka di kartu, tanpa model. Jalur penyedia hanya jalan kalau penyedia terhubung dan kamu mengizinkan data: yang dikirim ringkasan teks, lalu balasannya digambar sebagai kartu native.</p>
+<div class="diagram-container"><svg viewBox="0 0 960 476" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="anya-map-title anya-map-desc">
+<title id="anya-map-title">How Anya reads and gives data</title>
+<desc id="anya-map-desc">Stored data is read on the phone into a local read that feeds the cards; only with data access allowed does a summary context go through a consent gate to the AI provider, whose reply is drawn as native cards.</desc>
+<defs>
+<marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+<marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+<marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<rect x="392" y="240" width="176" height="128" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8" stroke-dasharray="5,4"/>
+<rect x="428.0" y="244" width="104" height="12" rx="2" fill="#f5f5f5"/><text x="480.0" y="253" fill="#5a6580" font-size="7" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.14em">LEAVES THE PHONE</text>
+<line x1="168" y1="136" x2="216" y2="136" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/><rect x="175.5" y="116" width="33" height="12" rx="2" fill="#f5f5f5"/><text x="192.0" y="125" fill="#5a6580" font-size="8" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.06em">READS</text><line x1="360" y1="136" x2="408" y2="136" stroke="#bf4520" stroke-width="1.2" marker-end="url(#arrow-accent)"/><rect x="367.5" y="116" width="33" height="12" rx="2" fill="#f5f5f5"/><text x="384.0" y="125" fill="#5a6580" font-size="8" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.06em">SHOWS</text><line x1="96" y1="176" x2="96" y2="272" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/><rect x="104" y="218.0" width="63" height="12" rx="2" fill="#f5f5f5"/><text x="108" y="227.0" fill="#5a6580" font-size="8" font-family="Geist Mono, monospace" letter-spacing="0.06em">CLOCK, PLAN</text><line x1="168" y1="312" x2="216" y2="312" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/><rect x="170.5" y="292" width="43" height="12" rx="2" fill="#f5f5f5"/><text x="192.0" y="301" fill="#5a6580" font-size="8" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.06em">CONTEXT</text><line x1="288" y1="176" x2="288" y2="272" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/><rect x="296" y="218.0" width="53" height="12" rx="2" fill="#f5f5f5"/><text x="300" y="227.0" fill="#5a6580" font-size="8" font-family="Geist Mono, monospace" letter-spacing="0.06em">PAGE READ</text><line x1="360" y1="312" x2="408" y2="312" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/><rect x="370.0" y="292" width="28" height="12" rx="2" fill="#f5f5f5"/><text x="384.0" y="301" fill="#5a6580" font-size="8" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.06em">TEXT</text><line x1="552" y1="312" x2="600" y2="312" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/><rect x="559.5" y="292" width="33" height="12" rx="2" fill="#f5f5f5"/><text x="576.0" y="301" fill="#5a6580" font-size="8" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.06em">REPLY</text><line x1="744" y1="312" x2="792" y2="312" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/><rect x="751.5" y="292" width="33" height="12" rx="2" fill="#f5f5f5"/><text x="768.0" y="301" fill="#5a6580" font-size="8" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.06em">DRAWS</text>
+<rect x="24" y="96" width="144" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="24" y="96" width="144" height="80" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+<rect x="32" y="104" width="37" height="12" rx="2" fill="transparent" stroke="#4f5d75" stroke-opacity="0.4" stroke-width="0.8"/>
+<text x="50.5" y="113" fill="#2d3142" fill-opacity="0.8" font-size="7" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.08em">STORE</text>
+<text x="96" y="136" fill="#2d3142" font-size="12" font-weight="600" font-family="Geist, sans-serif" text-anchor="middle">Stored data</text>
+<text x="96" y="152" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">repo.days · workouts</text>
+<text x="96" y="164" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">journal · lab · weather</text>
+<rect x="216" y="96" width="144" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="216" y="96" width="144" height="80" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1"/>
+<rect x="224" y="104" width="37" height="12" rx="2" fill="transparent" stroke="#bf4520" stroke-opacity="0.4" stroke-width="0.8"/>
+<text x="242.5" y="113" fill="#2d3142" fill-opacity="0.8" font-size="7" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.08em">LOCAL</text>
+<text x="288" y="136" fill="#2d3142" font-size="12" font-weight="600" font-family="Geist, sans-serif" text-anchor="middle">Local read</text>
+<text x="288" y="152" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">no model, cites figures</text>
+<text x="288" y="164" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">+ one note a day</text>
+<rect x="408" y="96" width="144" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="408" y="96" width="144" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="416" y="104" width="22" height="12" rx="2" fill="transparent" stroke="#2d3142" stroke-opacity="0.4" stroke-width="0.8"/>
+<text x="427.0" y="113" fill="#2d3142" fill-opacity="0.8" font-size="7" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.08em">UI</text>
+<text x="480" y="136" fill="#2d3142" font-size="12" font-weight="600" font-family="Geist, sans-serif" text-anchor="middle">Cards, pill, sheet</text>
+<text x="480" y="152" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">the line + Read: chips</text>
+<text x="480" y="164" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">works offline</text>
+<rect x="24" y="272" width="144" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="24" y="272" width="144" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="32" y="280" width="47" height="12" rx="2" fill="transparent" stroke="#2d3142" stroke-opacity="0.4" stroke-width="0.8"/>
+<text x="55.5" y="289" fill="#2d3142" fill-opacity="0.8" font-size="7" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.08em">CONTEXT</text>
+<text x="96" y="312" fill="#2d3142" font-size="12" font-weight="600" font-family="Geist, sans-serif" text-anchor="middle">Day context</text>
+<text x="96" y="328" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">clock · plan · Strain</text>
+<text x="96" y="340" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">sleep need · NEXT STEP</text>
+<rect x="216" y="272" width="144" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="216" y="272" width="144" height="80" rx="6" fill="rgba(191,69,32,0.05)" stroke="rgba(191,69,32,0.50)" stroke-width="1" stroke-dasharray="4,4"/>
+<rect x="224" y="280" width="32" height="12" rx="2" fill="transparent" stroke="rgba(191,69,32,0.50)" stroke-opacity="0.4" stroke-width="0.8"/>
+<text x="240.0" y="289" fill="#2d3142" fill-opacity="0.8" font-size="7" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.08em">GATE</text>
+<text x="288" y="312" fill="#2d3142" font-size="12" font-weight="600" font-family="Geist, sans-serif" text-anchor="middle">Consent gate</text>
+<text x="288" y="328" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">Let Anya use my</text>
+<text x="288" y="340" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">numbers: off by default</text>
+<rect x="408" y="272" width="144" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="408" y="272" width="144" height="80" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+<rect x="416" y="280" width="52" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.30)" stroke-opacity="0.4" stroke-width="0.8"/>
+<text x="442.0" y="289" fill="#2d3142" fill-opacity="0.8" font-size="7" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.08em">EXTERNAL</text>
+<text x="480" y="312" fill="#2d3142" font-size="12" font-weight="600" font-family="Geist, sans-serif" text-anchor="middle">AI provider</text>
+<text x="480" y="328" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">Apple Intelligence local</text>
+<text x="480" y="340" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">or OpenAI · Claude · more</text>
+<rect x="600" y="272" width="144" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="600" y="272" width="144" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="608" y="280" width="42" height="12" rx="2" fill="transparent" stroke="#2d3142" stroke-opacity="0.4" stroke-width="0.8"/>
+<text x="629.0" y="289" fill="#2d3142" fill-opacity="0.8" font-size="7" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.08em">BLOCKS</text>
+<text x="672" y="312" fill="#2d3142" font-size="12" font-weight="600" font-family="Geist, sans-serif" text-anchor="middle">Prose + blocks</text>
+<text x="672" y="328" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">anya-chart · program</text>
+<text x="672" y="340" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">workout · food · plan</text>
+<rect x="792" y="272" width="144" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="792" y="272" width="144" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="800" y="280" width="22" height="12" rx="2" fill="transparent" stroke="#2d3142" stroke-opacity="0.4" stroke-width="0.8"/>
+<text x="811.0" y="289" fill="#2d3142" fill-opacity="0.8" font-size="7" font-family="Geist Mono, monospace" text-anchor="middle" letter-spacing="0.08em">UI</text>
+<text x="864" y="312" fill="#2d3142" font-size="12" font-weight="600" font-family="Geist, sans-serif" text-anchor="middle">Native cards</text>
+<text x="864" y="328" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">values clamped, saved</text>
+<text x="864" y="340" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace" text-anchor="middle">only when you tap</text>
+
+<line x1="24" y1="432" x2="936" y2="432" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<text x="24" y="448" fill="#4f5d75" font-size="8" font-family="Geist Mono, monospace" letter-spacing="0.14em">LEGEND</text>
+<rect x="96" y="440" width="14" height="10" rx="2" fill="rgba(191,69,32,0.08)" stroke="#bf4520"/><text x="118" y="448" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace">always local</text>
+<rect x="232" y="440" width="14" height="10" rx="2" fill="rgba(191,69,32,0.05)" stroke="rgba(191,69,32,0.5)" stroke-dasharray="3,2"/><text x="254" y="448" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace">boundary check</text>
+<rect x="392" y="440" width="14" height="10" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.3)"/><text x="414" y="448" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace">third-party / optional</text>
+<line x1="590" y1="445" x2="614" y2="445" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/><text x="624" y="448" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace">network call</text>
+<line x1="740" y1="445" x2="764" y2="445" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/><text x="774" y="448" fill="#4f5d75" font-size="9" font-family="Geist Mono, monospace">on-device</text>
+</svg></div>
+<div class="cards">
+<div class="card focal"><h3>Jalur lokal (tanpa model)</h3><ul>
+<li>Pembaca per modul: today, health, trends, sleep, workouts, nutrition, device, breathing, plus body / strain / satu metrik.</li>
+<li>Setiap kalimat mengutip angkanya; tanpa angka, kartu tidak digambar.</li>
+<li>Catatan harian per modul disimpan di defaults dan dipakai untuk "dibanding catatan kemarin"; antar modul tidak saling baca.</li>
+<li>Strain tampil di skala pilihanmu (0-21 atau 0-100).</li></ul></div>
+<div class="card"><h3>Yang dikirim ke penyedia</h3><ul>
+<li>Ringkasan hari (recovery, strain, tidur per hari, rata-rata 30 hari) dan 6 workout terakhir.</li>
+<li>Satu angka Stress Index dari R-R hari ini.</li>
+<li>Blok "right now": jam, sesi plan, Strain terkumpul, kebutuhan tidur, cuaca, NEXT STEP.</li>
+<li>Izin kedua (mati default): pola pribadi dari jurnal dan ringkasan Lab Book.</li>
+<li>Memory aktif, gaya jawab, dan bacaan lokal halaman + catatan modul untuk pill.</li>
+<li>Tanpa izin data: hanya pertanyaanmu.</li></ul></div>
+<div class="card"><h3>Yang kembali</h3><ul>
+<li>Prosa, plus blok berpagar <code>anya-chart / program / workout / lab / food / plan / breath</code>.</li>
+<li>Blok digambar sebagai kartu; angka dibatasi di kode (napas, target nutrisi).</li>
+<li>Tidak ada yang tersimpan sebelum tap: Add (makanan), Apply (plan), Save (lab, program).</li></ul></div>
+</div>
+<h2>Di mana Anya muncul (versi 3.0.2)</h2>
+<p class="lead">Diperiksa terhadap kode v3 dan dijalankan di simulator dengan data demo (20 Nov 2026) dan penyedia Apple Intelligence on-device. Input dan output di bawah adalah hasil nyata, bukan contoh. Setiap panggilan model memakan 2 sampai 17 detik.</p>
+<div class="tablewrap"><table><thead><tr><th>Permukaan</th><th>Cara membuka</th><th>Data yang diambil</th><th>Output Anya (data demo, Apple Intelligence)</th><th>Model</th></tr></thead><tbody><tr><td>Tombol Anya (bar bawah)</td><td>Tombol bulat di samping tab bar. Home, Breathing, More membuka konteks <b>today</b>; tab Health membuka <b>health</b>. Tidak pernah workouts / sleep / trends.</td><td>Pembaca lokal modul today: Recovery, RHR dan HRV vs hari lalu, Strain, Sleep, ditambah catatan harian modul.</td><td><b>Baris lokal:</b> Recovery 82%, take it easy today. Resting heart rate down 1 bpm. HRV up 15 ms. Strain so far 11.6. Compared with my note yesterday: HRV 93 ms (was 104 ms), Resting heart rate 58 bpm (was 54 bpm).<br><b>Chip “Summarise my day” (Apple, 11 s):</b> Your body has carried a steady load, with Recovery at 82 and Strain at 55.3—slightly above your usual baseline—while Sleep held at 7.0 hours, just under your normal 7.2. HRV climbed to 93ms, a soft signal of resilience, though your heart rate rested at 58bpm, a touch higher than usual. …<br><b>Chip “Build today’s plan”:</b> <i>I couldn’t answer right now. Check the provider in Anya settings.</i> (lihat temuan 2)</td><td>lokal + chip</td></tr><tr><td>Halaman percakapan Anya</td><td>Me › Anya (route .coach), kartu Anya di My Dashboard / More; juga “Open full conversation” dari sheet.</td><td>Konteks penuh 4980 karakter (daftar di bawah) + system prompt 10532 karakter + riwayat chat + memory.</td><td><b>“Summarise my day” (Apple):</b> Your body carried a mix of effort and recovery today — the Strain reached 55.3, slightly above your usual baseline, while sleep dipped to 7.0h, just under your normal 7.2h. HRV rose to 93ms, a step above your average, but your RHR at 58bpm is lower than usual, hinting at a quiet nervous system after recent hard sessions. …</td><td>Apple, tiap pesan</td></tr><tr><td>Pill melayang di halaman detail</td><td>Recovery, Strain, Stress, Sleep (index 0), Skin temp, Weight, halaman satu metrik; hanya saat melihat hari ini.</td><td>Bacaan lokal satu metrik + catatan modul + konteks penuh; dikirim otomatis saat halaman terbuka, di-cache 30 menit.</td><td><b>Sleep (13 s):</b> Your body has held the quiet after a recent load, showing HRV and heart rate staying steady while sleep held strong—a sign of deep adaptation. - Recovery at 82, up from dips when stress or alcohol showed up—this suggests your system is balancing better now - HRV at 93ms, near your baseline, while sl …<br><b>Health (10 s):</b> Your heart is humming slightly louder than usual, even as your body’s rhythm stays steady—a quiet sign of recent strain settling in. - Resting heart rate sits at 58bpm, 5bpm above your baseline, suggesting a subtle shift after recent hard efforts - HRV remains strong at 93ms, 11ms above your usual, …</td><td>Apple, otomatis</td></tr><tr><td>Chip pertanyaan di sheet modul</td><td>Kartu Anya inline di Workouts, Trends, Health (vital / sleep), Sleep, Nutrition, Breathing membuka sheet sesuai modul; chip pertama dikirim sebagai pertanyaan.</td><td>Bacaan lokal modul sebagai <i>pageContext</i> + konteks penuh + kalimat instruksi per modul.</td><td><b>Workouts (13 s):</b> You’re carrying a mix of recent effort and lingering recovery — your Readiness sits at 82, which leans toward quality over push, and the Strain is high at 55.3, signaling a day where the body needs to stay measured. …<br><b>Trends (14 s):</b> Your Recovery dipped from a 30-day average of 65% to 58%, and that shift aligns with how stress and habits show up in your data. When you logged feeling stressed, Recovery dropped 25%—your body seemed to absorb more load when mental tension was high. …</td><td>Apple, saat chip diketuk</td></tr><tr><td>Baris “Read” per modul (lokal)</td><td>Bagian atas sheet dan kartu inline; tanpa model.</td><td>Per modul: today = Recovery/RHR/HRV/Strain/Sleep; health = HRV, RHR, SpO₂, respirasi; sleep = malam terakhir + faktor; trends = 7 hari vs 30 hari; workouts = sesi 7 hari; nutrition = kalori, bobot; breathing = riwayat sesi + stres.</td><td><b>Health:</b> Resting heart rate is above your usual while HRV holds: often one short night or a late meal.. Check it again tomorrow before changing your plan.<br><b>Trends:</b> Recovery averaged 58% this week, 7 points below the month before. Compared with 30 earlier days (65% on average).<br><b>Workouts:</b> 26 sessions this week, Strain 160.0. 983 minutes of training in the last 7 days. Compared with my note 7 days ago: Strain this week 160 (was 79), Training minutes 983 min (was 561 min), Sessions in 7 days 26 (was 21).<br><b>Nutrition:</b> 0 of 2.250 kcal eaten, 2.250 left. Trend weight 74,0 kg, down 1,2 kg in four weeks. Your body spends roughly 2.390 kcal a day, a rough figure from your profile for now.</td><td>lokal</td></tr><tr><td>Kartu inline lain (lokal)</td><td>Workouts (minggu ini), Training load, History (streak), Workout summary, Gym session (PR / volume), Health › sleep 7 malam, Body clock, Nap, Early warning, Trends relasi.</td><td>Angka halaman itu sendiri lewat template kalimat; Body clock, Nap, Early warning hanya satu pertanyaan tetap.</td><td>Contoh template: “You slept 7h a night over the last 7 nights, 1h short of what you need.” / “This week: 26 sessions, Strain 160.” (isi persis mengikuti data).</td><td>lokal</td></tr><tr><td>Breathing</td><td>Tab Breathing: “Anya’s pick”, “Generate with Anya”, “Ask Anya”, laporan sesi.</td><td>Pick: jam, stres hari ini, riwayat sesi (lokal). Generate: permintaanmu + konteks.</td><td><b>Pick (lokal):</b> Calm down: Slow down, 5 min. Stress is 1,7 of 3 today. It raised your HRV 11% in earlier sessions.<br><b>Generate (Apple, 5 s):</b> You’re settling into the evening with a quiet mind—this breath rhythm helps calm the nervous system, letting your body unwind without strain. Let it flow gently, matching your breath to the soft hush of the night. [blok]</td><td>lokal + Apple</td></tr><tr><td>Program with Anya / Generate with Anya</td><td>Gym › Start workout / Build workout.</td><td>Brief yang kamu tulis + ringkasan latihan + konteks penuh.</td><td><b>Apple (8 s):</b> You’re aiming to build muscle with a 3-day split—Upper, Lower, and a third focused on core and pulling—using only dumbbells. Each 45-minute session includes 4 to 6 compound lifts first, like Dumbbell Bench Press - Medium Grip, followed by targeted work, with the smallest weight step added only when reps hit the top of the range. …<br><i>JSON program rusak (<code>"Medium Grip",sets":3</code> kehilangan tanda kutip), jadi kartu program tidak bisa digambar.</i></td><td>Apple</td></tr><tr><td>Add food</td><td>Nutrition › Add food: kotak “tell Anya”.</td><td>Hanya teks makanan (atau foto), tanpa data kesehatan; memakai guided generation.</td><td><b>Input “2 telur dadar dan 1 piring nasi goreng” (2.3 s):</b> 2 telur dadar 120 kcal (P12 K10 L8); 1 piring nasi goreng 350 kcal (P15 K60 L18). Masuk diary setelah Add.</td><td>Apple, hanya teks</td></tr><tr><td>Strategy plan</td><td>Nutrition › Strategy › minta saran Anya.</td><td>Snapshot nutrisi (profil, tren bobot, diary 14 hari, energi harian, plan sekarang, Lab Book) + konteks penuh.</td><td><b>Apple (11 s):</b> You’re holding a balanced rhythm—Recovery at 82 and HRV near your baseline, but Strain slightly higher than usual, hinting at recent effort. Sleep is solid at 7 hours, but the body shows a quiet need for gentle movement tonight. …<br><i>Balasan hanya prosa, tanpa blok <code>anya-plan</code>, jadi kartu Apply tidak muncul.</i></td><td>Apple</td></tr><tr><td>Klasifikasi latihan buatan sendiri</td><td>Gym › exercise baru yang diketik.</td><td>Hanya nama latihan.</td><td><b>“Bulgarian split squat” (6 s):</b> blok JSON benar (quadriceps; hamstrings, glutes; body only; bodyweight), diapit prosa yang salah (“engages the chest”).</td><td>Apple</td></tr><tr><td>Smart log with Anya</td><td>Journal › Smart log.</td><td>Teks bebas yang kamu tulis, dicocokkan ke daftar perilaku jurnal.</td><td>Pencocokan kata kunci dan negasi di ponsel (kopi, bir, “no”, “tidak”); tidak ada model walau bernama “with Anya”.</td><td>lokal</td></tr><tr><td>Target sesi di Workout start</td><td>Start activity: “From Anya’s plan”.</td><td>Plan hari ini dari Charge, beban kemarin, zona HR pribadi (NunaDayPlanResult).</td><td>Panjang dan zona target terisi dari sesi plan (mis. “Tempo session, 42 min, zona 4, +7–11 Strain”).</td><td>lokal</td></tr><tr><td>Pelatih suara</td><td>Workout settings dan halaman Anya.</td><td>Mesin aturan: zona HR, pace, kadensi.</td><td>Kalimat suara per km / keluar zona; kata-kata AI hanya bila “AI wording” dinyalakan (endpoint Custom).</td><td>lokal; AI opsional</td></tr><tr><td>Brief pagi</td><td>Anya › Brief; notifikasi harian.</td><td>Konteks penuh.</td><td><b>Apple (11 s):</b> Your body is holding steady under recent load, with HRV and RHR near baseline—this suggests you’re managing well today, but the strain lingers. - Keep the tempo session light, 20–30 minutes in Zone 1 or 2—your HRV shows you don’t need to push hard. - Avoid adding new intensity—your strain is close to the upper end, and sleep is tight. …</td><td>Apple, default mati</td></tr><tr><td>Memory, riwayat, instruksi, penyedia</td><td>Me › Anya.</td><td>Memory aktif, catatan per modul, gaya jawab, bahasa.</td><td>Tidak menghasilkan jawaban; mengatur apa yang ikut ke setiap permintaan.</td><td>-</td></tr></tbody></table></div>
+<p class="note">Tidak dicakup: Daily Outlook dan Day In Review di My Day. Kode <code>NunaAnyaTodayCard</code> (+ <code>RunningSessionCard</code>) dan <code>NunaAnyaDayRead</code> tidak dipanggil di mana pun di v3, jadi kartu Anya di Home yang ada di tabel lama sudah tidak tampil.</p>
+<h2>Isi konteks yang dikirim (cuplikan nyata)</h2>
+<pre class="ctx">USER BIOMETRIC SUMMARY (the user&#x27;s own wearable data):
+BODY STATE READ (today vs personal baseline; not a diagnosis): carrying recent training load. Confidence high. Evidence: Recovery 82; sleep 7.0h vs 7.2h baseline; HRV 93ms vs 82ms baseline; RHR 58bpm vs 54bpm baseline; recent stra
+Recent days (newest first) — recovery(0-100), strain(0-100), sleep(h), deep/REM/light(h), eff(%), HRV(ms), RHR(bpm). A dash means NOT MEASURED, not zero:
+  2026-11-20:, recovery 82, strain 55.3, sleep 7.0h, deep 1.3h, REM 1.7h, light 3.9h, eff 82%, HRV 93ms, RHR 58bpm
+  2026-11-19:, recovery 49, strain 76.7, sleep 6.8h, deep 1.4h, REM 1.8h, light 3.6h, eff 81%, HRV 78ms, RHR 59bpm
+  2026-11-18:, recovery 74, strain 71.0, sleep 7.1h, deep 1.3h, REM 1.7h, light 4.1h, eff 91%, HRV 66ms, RHR 59bpm
+  2026-11-17:, recovery 31, strain 18.7, sleep 7.1h, deep 1.4h, REM 1.7h, light 4.0h, eff 88%, HRV 78ms, RHR 57bpm
+  2026-11-16:, recovery 86, strain 72.2, sleep 7.9h, deep 1.6h, REM 1.4h, light 5.0h, eff 84%, HRV 77ms, RHR 52bpm
+  2026-11-15:, recovery 58, strain 78.3, sleep 7.0h, deep 1.8h, REM 1.7h, light 3.5h, eff 91%, HRV 86ms, RHR 51bpm
+  2026-11-14:, recovery 28, strain 68.1, sleep 8.2h, deep 1.6h, REM 1.7h, light 4.9h, eff 88%, HRV 73ms, RHR 61bpm
+  2026-11-13:, recovery 53, strain 73.5, sleep 7.9h, deep 1.8h, REM 2.0h, light 4.0h, eff 94%, HRV 68ms, RHR 55bpm
+  2026-11-12:, recovery 74, strain 42.4, sleep 7.3h, deep 1.7h, REM 1.3h, light 4.2h, eff 85%, HRV 87ms, RHR 47bpm
+  2026-11-11:, recovery 62, strain 76.9, sleep 7.3h, deep 1.2h, REM 2.0h, light 4.1h, eff 86%, HRV 71ms, RHR 53bpm
+  2026-11-10:, recovery 70, strain 21.7, sleep 7.4h, deep 1.9h, REM 1.9h, light 3.6h, eff 82%, HRV 88ms, RHR 52bpm
+  2026-11-09:, recovery 73, strain 43.8, sleep 7.7h, deep 1.1h, REM 2.0h, light 4.6h, eff 88%, HRV 90ms, RHR 53bpm
+  2026-11-08:, recovery 63, strain 44.7, sleep 6.6h, deep 1.4h, REM 1.5h, light 3.7h, eff 84%, HRV 79ms, RHR 56bpm
+  2026-11-07:, recovery 70, strain 74.3, sleep 6.8h, deep 1.0h, REM 1.4h, light 4.5h, eff 87%, HRV 83ms, RHR 57bpm
+30-day averages:
+  recovery: 64, strain: 54.5, sleep: 7.2h, HRV: 82 ms, RHR: 55 bpm
+  SpO2: 97%, respiration: 14.4/min, skin-temp deviation: -0.1°C, steps: —/day, active energy: 2576kcal/day
+Recent workouts (newest first):
+  2026-11-20 Walking, 63 min, strain 31.8, avg HR 145, max HR 160, 690 kcal, 6.8 km, time in zones Z1 19% Z2 32% Z3 21% Z4 22%
+  2026-11-20 Strength Training, 58 min, strain 36.4, avg HR 104, max HR 161, 362 kcal
+  2026-11-20 Breathwork, 20 min, avg HR 66, max HR 78
+  2026-11-20 Running, 38 min, strain 45.7, avg HR 156, max HR 178, 410 kcal, 6.7 km, time in zones Z1 4% Z2 12% Z3 30% Z4 40% Z5 14%
+  2026-11-20 Stretching, 13 min, strain 1.6, avg HR 84, max HR 97, 44 kcal
+  2026-11-19 Cycling, 37 min, strain 42.8, avg HR 151, max HR 168, 293 kcal, 3.4 km, time in zones Z1 10% Z2 21% Z3 28% Z4 14% Z5 8%
+Stress (SI): 23 (Baevsky Stress Index over today&#x27;s R-R; higher means more sympathetic / under load; an autonomic-balance proxy, not a clinical figure).
+RIGHT NOW: Friday 20 November, 18:49 (evening). This is the review part of the day: when asked how the day went, say what its Strain and the night ahead imply and point to bedtime, not to a new hard session.
+STRAIN (0-100 axis): Strain so far today 55.3 (a usual day is about 63.7); the Strain worth aiming for at today&#x27;s Recovery is 67-86; last 7 days 440.</pre>
+<p class="note">Satu permintaan = konteks ini (4980 karakter, dengan izin kedua aktif di simulator) + system prompt 10532 karakter + instruksi halaman. File mentah: <code>docs/anya/dumps/</code>.</p>
+<h2>Temuan dari uji nyata</h2>
+<div class="cards" style="grid-template-columns:1fr 1fr 1fr">
+<div class="card focal"><h3>1 · Skala Strain bercampur</h3><p style="font-size:.9rem">Teks lokal memakai 0-21 (“Strain so far 11.6”), konteks model memakai 0-100 (“55.3”). Pill Today menjawab “Strain so far 11.6, well below the 67–86 range”: dua skala dalam satu kalimat. Chat menyebut “Strain 55.3”, sementara layar menunjukkan 11.6.</p></div>
+<div class="card focal"><h3>2 · Chip “Build today’s plan” rusak</h3><p style="font-size:.9rem">Chip pertama di Home bertipe <code>.plan</code> dengan prompt kosong dan tidak ada kode yang menanganinya. Kalau penyedia terhubung, hasilnya “I couldn’t answer right now. Check the provider in Anya settings.” Di halaman Anya, prompt kosong ditolak sebagai pertanyaan kosong.</p></div>
+<div class="card"><h3>3 · Model on-device gagal di blok terstruktur</h3><p style="font-size:.9rem">Food memakai guided generation dan benar. Program menghasilkan JSON rusak, Plan hanya prosa tanpa blok <code>anya-plan</code>, dan klasifikasi latihan diapit prosa yang salah. Hasilnya kartu program dan Apply tidak muncul dengan Apple Intelligence.</p></div>
+<div class="card"><h3>4 · “Take it easy” di Recovery 82%</h3><p style="font-size:.9rem">Baris lokal Today berbunyi “Recovery 82%, take it easy today”, sementara prompt model mengatakan Recovery 67-100 mendukung latihan berat. Kalimat lokal mengikuti readiness (beban latihan rasio 1,86), bukan angka Recovery.</p></div>
+<div class="card"><h3>5 · Buka pertama setelah launch kosong</h3><p style="font-size:.9rem">Membuka tombol Anya sekitar 6 detik setelah app dijalankan menampilkan “Anya shows a line only when it has figures to cite”, padahal data ada. Pembukaan berikutnya normal.</p></div>
+<div class="card"><h3>6 · Kesalahan hitung kecil</h3><p style="font-size:.9rem">Model menulis “RHR 5 bpm above baseline” (58 vs 54 = 4) dan “slightly above your 54.5-day average”. Gaya jawab juga puitis (“like a tree bracing against a steady wind”) walau instruksi minta ringkas.</p></div>
+</div>
+<p class="note">Dua temuan sebelumnya tetap berlaku: alamat bawaan <code>api.gutsai.id</code> untuk AI wording pelatih suara, dan konteks tanpa label skala Strain. Label “skin-temp deviation” memuat suhu absolut (21,5 °C) bila data impor absolut; pada data demo yang bersih bernilai -0,1 °C.</p>
+</div></body></html>

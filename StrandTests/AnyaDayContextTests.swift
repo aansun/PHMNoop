@@ -13,6 +13,39 @@ final class AnyaDayContextTests: XCTestCase {
         cal.date(from: DateComponents(year: y, month: m, day: d, hour: h, minute: min))!
     }
 
+    /// Every Strain figure goes to Anya on the scale the wearer reads: 55.3 on the stored axis is 11.6 on the 0-21 scale, and the block says so.
+    func testStrainIsQuotedOnTheScaleTheWearerReads() {
+        var i = AnyaDayContext.Input(now: date(2026, 10, 13, 9, 0), calendar: cal)
+        i.todayEffort = 55.3; i.usualEffort = 63.7; i.effortTargetLow = 67; i.effortTargetHigh = 86; i.weekEffort = 440
+        i.sessionTitle = "Tempo session"; i.sessionEffortLow = 34; i.sessionEffortHigh = 51
+        i.effortScale = .whoop
+        let whoop = AnyaDayContext.block(i)
+        XCTAssertTrue(whoop.contains("STRAIN (0-21 scale, as the person sees it): Strain so far today 11.6 (a usual day is about 13.4)"), whoop)
+        XCTAssertTrue(whoop.contains("worth aiming for at today's Recovery is 14-18"), whoop)
+        XCTAssertTrue(whoop.contains("about +7-11 Strain"), whoop)
+        XCTAssertTrue(whoop.contains("last 7 days 92"), whoop)
+
+        i.effortScale = .hundred
+        let hundred = AnyaDayContext.block(i)
+        XCTAssertTrue(hundred.contains("STRAIN (0-100 scale, as the person sees it): Strain so far today 55.3"), hundred)
+        XCTAssertTrue(hundred.contains("is 67-86"), hundred)
+    }
+
+    func testStrainScaleBlockFollowsThePreference() {
+        let suite = "anya.strain.scale.test"
+        let d = UserDefaults(suiteName: suite)!
+        d.removePersistentDomain(forName: suite)
+        defer { d.removePersistentDomain(forName: suite) }
+        d.set(EffortScale.whoop.rawValue, forKey: UnitPrefs.effortScaleKey)
+        let whoop = AICoachEngine.strainScaleBlock(d)
+        XCTAssertTrue(whoop.contains("0-21") && whoop.contains("out of 100"), whoop)
+        d.set(EffortScale.hundred.rawValue, forKey: UnitPrefs.effortScaleKey)
+        let hundred = AICoachEngine.strainScaleBlock(d)
+        XCTAssertTrue(hundred.contains("0-100") && !hundred.contains("out of 100"), hundred)
+        XCTAssertEqual(AICoachEngine.strainText(55.3, scale: .whoop), "11.6")
+        XCTAssertEqual(AICoachEngine.strainText(55.3, scale: .hundred), "55.3")
+    }
+
     func testPartsOfTheDay() {
         XCTAssertEqual(AnyaDayContext.part(hour: 3), .night)
         XCTAssertEqual(AnyaDayContext.part(hour: 7), .morning)

@@ -76,6 +76,7 @@ struct NunaAnyaSheet: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @EnvironmentObject private var router: NavRouter
+    @EnvironmentObject private var live: LiveState
     @Environment(\.dismiss) private var dismiss
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @State private var read: NunaAnyaRead?
@@ -347,14 +348,21 @@ struct NunaAnyaSheet: View {
         guard coach.dataConsent else { coach.pendingChartImage = image; coach.pendingPrompt = prompt; openFull(); return }
         turns.append(ChatMessage(id: UUID(), role: .user, text: shown))
         sending = true; defer { sending = false }
-        let reply = await coach.answerContextualMessage(pageContext: context, notice: notice, history: Array(turns.dropLast()), question: prompt, imageBase64: image)
+        // The page she is asked about: what it is, her own reading of it (with its verdict), and the data this module's questions need beyond the summary.
+        var page = context
+        if let r = read { page += "\n\n" + NunaMark.plain(NunaMark.compose(headline: r.headline, detail: r.detail)) }
+        if let v = read?.verdict { page += "\n\n" + v.providerLine }
+        if let pack = await NunaAnyaPack.text(for: module, repo: repo, profile: profile, live: live) { page += "\n\n" + pack }
+        let reply = await coach.answerContextualMessage(pageContext: page, notice: notice, history: Array(turns.dropLast()), question: prompt, imageBase64: image)
         turns.append(ChatMessage(id: UUID(), role: .assistant, text: reply ?? String(localized: "I couldn't answer right now. Check the provider in Anya settings.")))
         if let reply { NunaAnyaMemory.remember(module, "Asked: \(shown) Answer: \(reply.prefix(220))") }
     }
 
     private func explain() async {
         explaining = true; defer { explaining = false }
-        explanation = await coach.generateContextualBrief(pageContext: context + (cardLine.map { "\n\n" + NunaMark.plain($0.headline + ($0.detail.map { ". " + $0 } ?? "")) } ?? "") + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? ""))
+        let page = context + (cardLine.map { "\n\n" + NunaMark.plain($0.headline + ($0.detail.map { ". " + $0 } ?? "")) } ?? "")
+            + (read?.verdict.map { "\n\n" + $0.providerLine } ?? "") + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? "")
+        if let raw = await coach.generatePageInsight(topic: read?.verdict?.topic ?? NunaAnyaTopic.of(metricKey: metric?.key ?? "", title: metric?.title ?? context), pageContext: page) { explanation = NunaAnyaInsightText.fromProvider(raw, verdict: read?.verdict).text }
     }
 
     private func openFull() {
@@ -545,6 +553,8 @@ extension NunaAnyaSheet {
     }
 
     private func chipTapped(_ q: NunaAnyaQuestion) {
+        // A plan chip has no question to send: it opens today's plan, which is worked out on this phone and needs no provider.
+        if q.kind == .plan { path.append(NunaAnyaRoute.plan); return }
         if review { chooseReviewChip(q); return }
         if outlook, let idea = outlookData?.ideas.first(where: { q.id == outlookChipTitle($0) }) { chooseIdea(idea, prompt: q.prompt, shown: q.title); return }
         if !coach.isConfigured { path.append(NunaAnyaRoute.connect); return }
