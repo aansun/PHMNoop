@@ -184,10 +184,12 @@ struct NunaChargeEffortLines: View {
             let chargeUpper = c <= e
             let gap = abs(c - e), lowerY = max(c, e)
             let lower: CGSize
-            if lowerY <= plot.maxY - 12 { lower = down }
+            if lowerY <= plot.maxY - 26 { lower = down }
             else if gap >= 28 { lower = up }
             else { lower = CGSize(width: chargeUpper ? 22 : -22, height: 0) }
-            return chargeUpper ? (up, lower) : (lower, up)
+            // Two rings on top of each other: the upper figure lifts a little higher so it clears both of them.
+            let upper = gap < 16 ? CGSize(width: 0, height: -18) : up
+            return chargeUpper ? (upper, lower) : (lower, upper)
         case let (c?, nil): return (c < plot.minY + 4 ? down : up, up)
         case let (nil, e?): return (up, e < plot.minY + 4 ? down : up)
         default: return (up, up)
