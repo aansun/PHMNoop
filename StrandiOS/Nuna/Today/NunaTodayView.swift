@@ -447,6 +447,13 @@ struct NunaTodayView: View {
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             router.openMetric(args[i + 1])
         }
+        // `--open-nap` opens the nap page on today's first nap, once.
+        .task {
+            guard CommandLine.arguments.contains("--open-nap"), !NunaTodayDebug.openedPlanner else { return }
+            NunaTodayDebug.openedPlanner = true
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            pushToday(.sleepNaps(0))
+        }
         // `--open-plan` opens the plan overview, once.
         .task {
             guard CommandLine.arguments.contains("--open-plan"), !NunaTodayDebug.openedPlanner else { return }
