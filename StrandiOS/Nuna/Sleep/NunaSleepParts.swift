@@ -259,14 +259,25 @@ struct NunaNightPicker: View {
     /// One short line between the arrows ("THU, 19 NOV"), the way the day is named on Today, instead of the long date under a caption.
     var compact = false
     var body: some View {
+        if compact { compactBody } else { fullBody }
+    }
+
+    /// "‹ THU, 19 NOV ›", set the way the Stress page sets its day: the arrows close to the day, the three together in the middle.
+    private var compactBody: some View {
+        HStack(spacing: 22) {
+            step("chevron.left", enabled: model.hasOlder, size: 18, weight: .heavy) { model.index += 1 }
+            Text(verbatim: (date ?? model.night?.wakeDate).map { Self.shortDay($0) } ?? "–")
+                .font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .foregroundStyle(NunaPalette.textPrimary).frame(minWidth: 90)
+            step("chevron.right", enabled: model.hasNewer, size: 18, weight: .heavy) { model.index -= 1 }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var fullBody: some View {
         HStack {
             step("chevron.left", enabled: model.hasOlder) { model.index += 1 }
             Spacer()
-            if compact {
-                Text(verbatim: (date ?? model.night?.wakeDate).map { Self.shortDay($0) } ?? "–")
-                    .font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingHead(0.8)).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textPrimary)
-            } else {
             VStack(spacing: 2) {
                 if showsCaption {
                     Text(caption ?? (model.index == 0 ? "Last night" : "Earlier night"))
@@ -275,7 +286,6 @@ struct NunaNightPicker: View {
                 }
                 Text(verbatim: (date ?? model.night?.wakeDate).map { NunaSleepFormat.nightTitle($0) } ?? "–")
                     .font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            }
             }
             Spacer()
             step("chevron.right", enabled: model.hasNewer) { model.index -= 1 }
@@ -288,9 +298,9 @@ struct NunaNightPicker: View {
         return wd.string(from: date) + ", " + md.string(from: date)
     }
 
-    private func step(_ symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+    private func step(_ symbol: String, enabled: Bool, size: CGFloat = 15, weight: Font.Weight = .bold, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol).font(.nuna(size: 15, weight: .bold))
+            Image(systemName: symbol).font(.nuna(size: size, weight: weight))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
                 .frame(width: 44, height: 44)
         }
