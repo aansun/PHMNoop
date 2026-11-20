@@ -44,7 +44,7 @@ def check(d):
         body = re.sub(r"\*\*[^*]+\*\*", "", p.get("text", ""))
         audit("page", p["page"], body, p.get("local", ""), CAP["pages"] + 40)
     for c in d.get("chat", []):
-        audit("chat", c["module"] + ": " + c["question"][:50], c.get("answer", ""), "", CAP["chat"] + 30)
+        audit("chat", c["module"] + ": " + c["question"][:50], c.get("answer", ""), c.get("known", ""), CAP["chat"] + 30)
     mb = d.get("morningBrief")
     if mb: audit("brief", "morning brief", mb.get("output", ""), "", CAP["brief"] + 40)
     return rows

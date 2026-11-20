@@ -28,7 +28,7 @@ enum NunaAnyaQA {
         func timed<T>(_ f: () async -> T) async -> (T, Double) { let t = Date(); let r = await f(); return (r, Date().timeIntervalSince(t)) }
 
         let compact = await coach.buildFullContext(compact: true)
-        out["compactContext"] = compact
+        out["compactContext"] = compact + "\n" + (coach.comparatorBlock([.recovery, .hrv, .rhr, .sleep, .strain, .spo2, .resp]) ?? "")
         out["compactContextChars"] = compact.count
         out["compactSystemChars"] = coach.buildSystemPrompt(compact: true).count
         out["fullSystemChars"] = coach.systemPrompt.count
@@ -64,8 +64,12 @@ enum NunaAnyaQA {
             if let v = read?.verdict { page += "\n\n" + v.providerLine }
             if let pack = await NunaAnyaPack.text(for: module, repo: model.repo, profile: model.profile, live: model.live) { page += "\n\n" + pack }
             for q in NunaAnyaReader.questions(module).filter({ $0.kind == .ask && !$0.prompt.isEmpty }).prefix(2) {
-                let (ans, secs) = await timed { await coach.answerContextualMessage(pageContext: page, notice: nil, history: [], question: q.prompt) }
-                chatOut.append(["module": ctx, "question": q.prompt, "answer": ans ?? "nil", "seconds": secs])
+                // The strap's questions are answered on the phone, as the sheet does.
+                let (ans, secs): (String?, Double) = module == .device
+                    ? (NunaAnyaPack.deviceAnswer(question: q.prompt, live: model.live), 0)
+                    : await timed { await coach.answerContextualMessage(pageContext: page, notice: nil, history: [], question: q.prompt) }
+                chatOut.append(["module": ctx, "question": q.prompt, "answer": ans ?? "nil", "seconds": secs,
+                                "known": page + "\n" + (coach.comparatorBlock(module: AnyaSurface.Module.of(context: ctx)) ?? "")])
             }
         }
         out["chat"] = chatOut

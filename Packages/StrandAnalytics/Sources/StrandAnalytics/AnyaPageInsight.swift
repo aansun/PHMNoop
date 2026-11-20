@@ -74,3 +74,34 @@ public struct AnyaPageInsight: Equatable, Sendable {
         return parts.joined(separator: "\n\n")
     }
 }
+
+// MARK: - Cleaning a reply
+
+public enum AnyaReplyCleaner {
+    /// Sentences a small model adds out of habit and that say nothing: a doubt tacked on to a cause it has just stated ("I am not sure what caused it, but ..."), or a
+    /// line about "this surface". They are taken out; if that would leave nothing, the reply is returned as it was.
+    public static func clean(_ reply: String) -> String {
+        let doubt = try! NSRegularExpression(pattern: #"^\s*(i am not sure|i'm not sure|i am unsure|i can't tell|i cannot tell|i can’t tell|this surface)"#, options: .caseInsensitive)
+        var out: [String] = []
+        for line in reply.components(separatedBy: "\n") {
+            // Split a paragraph into sentences without losing the markdown around it.
+            var kept: [String] = []
+            var sentence = ""
+            func flush() {
+                let t = sentence.trimmingCharacters(in: .whitespaces)
+                if !t.isEmpty, doubt.firstMatch(in: t, range: NSRange(t.startIndex..., in: t)) == nil { kept.append(t) }
+                sentence = ""
+            }
+            // A full stop ends a sentence only when a space or the end of the line follows it, so "11.6" and "2.250" stay whole.
+            let chars = Array(line)
+            for (i, ch) in chars.enumerated() {
+                sentence.append(ch)
+                if ch == "." || ch == "?" || ch == "!", i + 1 == chars.count || chars[i + 1] == " " { flush() }
+            }
+            flush()
+            out.append(kept.joined(separator: " "))
+        }
+        let cleaned = out.joined(separator: "\n").replacingOccurrences(of: "\n\n\n", with: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleaned.isEmpty ? reply : cleaned
+    }
+}

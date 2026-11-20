@@ -205,7 +205,7 @@ struct GeneratedBreathStage {
 @available(iOS 26.0, macOS 26.0, *)
 @Generable
 struct GeneratedBreath {
-    @Guide(description: "One or two plain sentences: what it is for and how it should feel")
+    @Guide(description: "One or two plain sentences: what it is for and how it should feel, without comparisons or similes")
     var explanation: String
     @Guide(description: "A short clear title, in the person's language")
     var title: String
@@ -302,7 +302,11 @@ extension AppleIntelligenceClient {
             let b = try await llm.respond(to: prompt, generating: GeneratedBreath.self).content
             let stages: [[String: Any]] = b.stages.map { ["phase": $0.phase.rawValue, "seconds": $0.seconds] }
             guard let block = json(["title": b.title, "goal": b.goal.rawValue, "minutes": b.minutes, "stages": stages] as [String: Any]) else { return nil }
-            return b.explanation + "\n```anya-breath\n" + block + "\n```"
+            // A model that is told not to use a comparison sometimes does: a sentence with "like a" or "as if" is dropped rather than shown.
+            let sentences = b.explanation.split(separator: ".").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+            let plain = sentences.filter { let t = $0.lowercased(); return !t.contains(" like a ") && !t.contains(" like an ") && !t.contains(" as if ") }
+            let explanation = (plain.isEmpty ? sentences.prefix(1).map { _ in "A slow, steady rhythm to settle you" } : plain).joined(separator: ". ") + "."
+            return explanation + "\n```anya-breath\n" + block + "\n```"
         } catch { NSLog("[AnyaGuided] breath failed: %@", String(describing: error)); return nil }
         #else
         return nil

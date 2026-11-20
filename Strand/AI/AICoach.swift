@@ -1328,8 +1328,11 @@ final class AICoachEngine: ObservableObject {
         var prompt = repo.days.isEmpty ? "" : await buildFullContext(compact: runsOnDevice)
         prompt += "\n\n---\n\n" + AnyaActions.planInstruction + "\n\nNUTRITION SNAPSHOT:\n" + snapshot
         if runsOnDevice, let guided = await AppleIntelligenceClient.nutritionPlan(rules: AnyaActions.planRules, prompt: (repo.days.isEmpty ? "" : await buildFullContext(compact: true)) + "\n\nNUTRITION SNAPSHOT:\n" + snapshot, maintenanceKcal: Self.maintenanceKcal(in: snapshot)) { return guided }
-        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)], compact: runsOnDevice) else { return nil }
-        let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        let reply = try? await callProvider(key: key, messages: [(.user, prompt)], compact: runsOnDevice)
+        let clean = reply?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        // A reply with no plan block in it (a small model drifts) is no plan: with no goal weight the plan is the maintenance one the snapshot already implies, so that is given instead.
+        let hasPlan = AnyaActions.parse(clean).contains { if case .plan = $0 { return true } else { return false } }
+        if !hasPlan, let kcal = Self.maintenanceKcal(in: snapshot) { return Self.maintenancePlanReply(kcal: kcal) }
         return clean.isEmpty ? nil : clean
     }
 
@@ -1458,6 +1461,8 @@ final class AICoachEngine: ObservableObject {
             "\($0.role == .user ? "User" : "Anya"): \($0.text)"
         }.joined(separator: "\n")
         var prompt = context
+        if let cmp = comparatorBlock(module: module) { prompt += "\n\n" + cmp }
+        prompt += "\n\n" + Self.timeLine()
         prompt += "\n\n---\n\n"
         prompt += contextualQuestionInstruction(pageName)
         let pageBody = pageContext.dropFirst(pageName.count).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1476,7 +1481,7 @@ final class AICoachEngine: ObservableObject {
                 reply = try await callProvider(key: key, messages: [(.user, prompt)], compact: runsOnDevice)
             }
         } catch { NSLog("[AnyaDebug] contextual send failed: %@", String(describing: error)); return nil }
-        let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        let clean = AnyaReplyCleaner.clean(reply.trimmingCharacters(in: .whitespacesAndNewlines))
         return clean.isEmpty ? nil : clean
     }
 
@@ -1669,6 +1674,21 @@ final class AICoachEngine: ObservableObject {
             if !avgs.isEmpty { lines.append("30-day averages: " + avgs.joined(separator: ", ")) }
         }
         var ctx = lines.joined(separator: "\n")
+        let cmp: [CompareColumn]
+        switch topic {
+        case .recovery: cmp = [.recovery, .hrv, .rhr, .sleep, .strain]
+        case .sleep: cmp = [.sleep, .hrv, .rhr]
+        case .strain, .load: cmp = [.strain, .recovery]
+        case .stress: cmp = [.hrv, .rhr, .strain]
+        case .hrv: cmp = [.hrv, .rhr, .sleep]
+        case .restingHR: cmp = [.rhr, .hrv, .sleep]
+        case .vitals: cmp = [.spo2, .resp]
+        case .skinTemp: cmp = [.hrv, .rhr, .sleep]
+        case .trend, .other: cmp = [.recovery, .hrv, .rhr]
+        case .weight: cmp = []
+        }
+        if let block = comparatorBlock(cmp) { ctx += "\n\n" + block }
+        ctx += "\n\n" + Self.timeLine()
         // Load pages read the sessions too; the day pages (Recovery, Strain, Sleep) read the clock, the plan and tonight, and nothing else does.
         if topic == .strain || topic == .load || topic == .recovery { ctx += "\n\n" + (await recentWorkoutsBlock(limit: 3)) }
         if topic == .recovery || topic == .strain || topic == .sleep, let provider = dayContextProvider {
@@ -1685,6 +1705,79 @@ final class AICoachEngine: ObservableObject {
         guard snapshot.contains("GOAL WEIGHT: not set"),
               let r = snapshot.range(of: #"ESTIMATED DAILY ENERGY USE: (\d+)"#, options: .regularExpression) else { return nil }
         return Int(snapshot[r].filter(\.isNumber))
+    }
+
+    /// "TODAY AGAINST YESTERDAY AND THE 30-DAY AVERAGE": the comparisons worked out in code and labelled, so the model never has to subtract, never takes a baseline for
+    /// yesterday's figure, and never calls a figure that has a value "not available". Today is the newest day with a reading for that figure.
+    enum CompareColumn { case recovery, hrv, rhr, sleep, strain, spo2, resp }
+
+    func comparatorBlock(_ columns: [CompareColumn]) -> String? {
+        let days = repo.days
+        guard let today = days.last else { return nil }
+        let scale = Self.strainScale()
+        func pick(_ c: CompareColumn, _ d: DailyMetric) -> Double? {
+            switch c {
+            case .recovery: return d.recovery
+            case .hrv: return d.avgHrv
+            case .rhr: return d.restingHr.map(Double.init)
+            case .sleep: return d.totalSleepMin.map { $0 / 60 }
+            case .strain: return d.strain.map { UnitFormatter.effortValue($0, scale: scale) }
+            case .spo2: return d.spo2Pct
+            case .resp: return d.respRateBpm
+            }
+        }
+        func fmt(_ c: CompareColumn, _ v: Double) -> String {
+            switch c {
+            case .recovery: return "\(Int(v.rounded()))"
+            case .hrv: return "\(Int(v.rounded())) ms"
+            case .rhr: return "\(Int(v.rounded())) bpm"
+            case .sleep: return String(format: "%.1f h", v)
+            case .strain: return String(format: "%.1f", v)
+            case .spo2: return String(format: "%.1f%%", v)
+            case .resp: return String(format: "%.1f/min", v)
+            }
+        }
+        let names: [CompareColumn: String] = [.recovery: "Recovery", .hrv: "HRV", .rhr: "Resting heart rate", .sleep: "Sleep", .strain: "Strain", .spo2: "SpO2", .resp: "Respiration"]
+        let earlier = Array(days.dropLast().suffix(30))
+        var lines: [String] = []
+        for c in columns {
+            guard let now = pick(c, today) else { continue }
+            var parts = ["today \(fmt(c, now))"]
+            func signed(_ d: Double) -> String { (d >= 0 ? "+" : "-") + fmt(c, abs(d)) }
+            if let y = days.dropLast().last.flatMap({ pick(c, $0) }) { parts.append("yesterday \(fmt(c, y)) (change \(signed(now - y)))") }
+            let vs = earlier.compactMap { pick(c, $0) }
+            if vs.count >= 5 { let avg = vs.reduce(0, +) / Double(vs.count); parts.append("30-day average \(fmt(c, avg)) (gap \(signed(now - avg)))") }
+            lines.append("  \(names[c] ?? ""): " + parts.joined(separator: ", "))
+        }
+        return lines.isEmpty ? nil : "TODAY (\(today.day)) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n" + lines.joined(separator: "\n")
+    }
+
+    /// The comparisons that bear on a module's questions.
+    func comparatorBlock(module: AnyaSurface.Module) -> String? {
+        switch module {
+        case .today: return comparatorBlock([.recovery, .hrv, .rhr, .sleep, .strain])
+        case .health: return comparatorBlock([.hrv, .rhr, .spo2, .resp])
+        case .sleep: return comparatorBlock([.sleep, .hrv, .rhr])
+        case .workouts: return comparatorBlock([.strain, .recovery, .sleep])
+        case .breathing: return comparatorBlock([.hrv, .rhr, .strain])
+        case .nutrition: return comparatorBlock([.strain, .sleep])
+        case .trends, .device: return nil
+        }
+    }
+
+    /// The time now, so a step is never set for an hour that has gone ("by 7 p.m." at 20:50).
+    nonisolated static func timeLine(_ now: Date = Date()) -> String {
+        let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "HH:mm"
+        return "THE TIME NOW: \(f.string(from: now)). Never set a step for an hour that has already passed; late in the evening the step is the evening and bedtime."
+    }
+
+    /// The maintenance plan for a person with no goal weight, written without a model: their estimated energy use, protein at 1.6 g per kg and fat at 28% of energy.
+    nonisolated static func maintenancePlanReply(kcal: Int) -> String {
+        let object: [String: Any] = ["targetKcal": kcal, "paceKgPerWeek": 0.0, "proteinPerKg": 1.6, "fatShare": 0.28,
+                                     "explanation": "With no goal weight set, this is maintenance: your estimated daily energy use of \(kcal) kcal, protein at 1.6 g per kg and fat at 28 percent of energy. Set a goal weight and I can set a pace.",
+                                     "reasons": ["Estimated daily energy use \(kcal) kcal, from your profile"], "cautions": [] as [String]]
+        let json = (try? JSONSerialization.data(withJSONObject: object)).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+        return "A starting point from your profile.\n```anya-plan\n" + json + "\n```"
     }
 
     /// The day block without its NEXT STEP paragraph (the lines that follow it, such as patterns, are not part of this block).
