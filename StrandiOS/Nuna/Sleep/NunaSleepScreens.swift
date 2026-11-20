@@ -64,7 +64,8 @@ struct NunaSleepNightSections: View {
     @State private var undo: SleepDeletionSnapshot?
 
     var body: some View {
-        Group {
+        // One container: a modifier on a Group is applied to every child of it, which drew the "Sleep deleted" toast (and the editor sheet) once per card.
+        VStack(spacing: NunaSpacing.section) {
             NunaSleepStageSection(model: model, night: night,
                                   onEdit: night.editTarget.map { block in { edit = NunaSleepEditTarget(block, isNap: false) } })
             if !night.naps.isEmpty { napCard(night) }
@@ -285,55 +286,67 @@ struct NunaNapView: View {
     /// Open on a given nap: the day it belongs to and when it started (unix seconds).
     var dayKey: String?
     var napStart: Int?
-    var body: some View {
-        NunaSleepHost(title: "Naps", startIndex: startIndex) { model in
-            NunaNapContent(model: model, dayKey: dayKey, napStart: napStart)
-        }
-    }
-}
-
-private struct NunaNapContent: View {
-    @ObservedObject var model: NunaSleepModel
-    var dayKey: String?
-    var napStart: Int?
+    @EnvironmentObject private var repo: Repository
+    @StateObject private var model = NunaSleepModel()
+    @AppStorage(NunaNapPrefs.autoDetectKey) private var autoNaps = true
     /// The nap in view when the day has more than one; the one asked for, else the first.
     @State private var selectedStart: Int?
-    @EnvironmentObject private var repo: Repository
-    @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @State private var showAdd = false
     @State private var edit: NunaSleepEditTarget?
     @State private var undo: SleepDeletionSnapshot?
-    @State private var showCoach = false
 
     private var night: NunaNight? { model.night }
     private var naps: [NunaNap] { night?.naps ?? [] }
     private var isToday: Bool { night.map { Calendar.current.isDateInToday($0.wakeDate) } ?? false }
+    /// The nap on show: the one asked for, else the first of the day.
+    private var current: NunaNap? { naps.first(where: { Int($0.start.timeIntervalSince1970) == selectedStart }) ?? naps.first }
 
     var body: some View {
-        Group { content }
-            .onAppear { select() }
-            .sheet(isPresented: $showAdd) { NunaAddNapSheet(day: night?.wakeDate ?? Date()) { await repo.refresh(); await model.load(repo: repo) } }
-            .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "nap") }
-            .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { snap in await model.load(repo: repo); if let snap { undo = snap } } }
-            .nunaSleepUndo($undo) { await model.load(repo: repo) }
+        // The same page as the Sleep one: the header with the title in the middle and its button at the right, then the cards, one under the other.
+        NunaDetailScreen("Naps", trailing: AnyView(addButton), centersTitle: true) {
+            if !model.loaded {
+                ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 200)
+            } else if let night {
+                NunaNightPicker(model: model, caption: isToday ? "Today" : "Earlier day", date: night.wakeDate)
+                if let nap = current {
+                    stagesCard(nap)
+                    impact(night)
+                } else {
+                    noNap
+                }
+            } else {
+                noNap
+            }
+        }
+        .task(id: "\(repo.refreshSeq)-\(autoNaps)") {
+            await model.load(repo: repo)
+            if model.loaded, startIndex < model.nights.count, startIndex > 0, model.index == 0 { model.index = startIndex }
+            if let dayKey, let i = model.nights.firstIndex(where: { $0.dayKey == dayKey }) { model.index = i }
+            if let napStart { selectedStart = napStart }
+        }
+        .sheet(isPresented: $showAdd) { NunaAddNapSheet(day: night?.wakeDate ?? Date()) { await repo.refresh(); await model.load(repo: repo) } }
+        .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { snap in await model.load(repo: repo); if let snap { undo = snap } } }
+        .nunaSleepUndo($undo) { await model.load(repo: repo) }
+        // Her line is about the nap on show; there is no analysis to fetch for a page about one nap.
+        .nunaAnyaFloating(context: "nap", line: anyaLine, analyses: false)
     }
 
-    @ViewBuilder private var content: some View {
-        if let night {
-            NunaNightPicker(model: model, caption: isToday ? "Today" : "Earlier day", date: night.wakeDate)
-            if let nap = naps.first(where: { Int($0.start.timeIntervalSince1970) == selectedStart }) ?? naps.first {
-                stagesCard(nap)
-                impact(night)
-                if coachEnabled { NunaAnyaCard(title: "A nap under 30 minutes is safest for your night's sleep", highlight: false) { showCoach = true } }
-            } else {
-                NunaCard {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("No nap this day").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("A nap is any sleep that is not your main night. It is detected automatically when you rest without moving for a while.")
-                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+    private var addButton: some View {
+        Button { showAdd = true } label: {
+            Image(systemName: "plus").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44)
+        }
+        .buttonStyle(.plain).accessibilityLabel(Text("Add a nap by hand"))
+    }
+
+    private var noNap: some View {
+        VStack(spacing: NunaSpacing.section) {
+            NunaCard {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("No nap this day").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("A nap is any sleep that is not your main night. It is detected automatically when you rest without moving for a while.")
+                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             Button { showAdd = true } label: {
                 HStack(spacing: 10) {
@@ -349,14 +362,17 @@ private struct NunaNapContent: View {
         }
     }
 
-    /// Go to the night and the nap the caller asked for.
-    private func select() {
-        if let dayKey, let i = model.nights.firstIndex(where: { $0.dayKey == dayKey }) { model.index = i }
-        if let napStart { selectedStart = napStart }
+    /// Anya's line about the nap: how long it was against the 30 minutes that leave the night alone.
+    private var anyaLine: String? {
+        guard let nap = current else { return nil }
+        let length = NunaSleepFormat.duration(nap.asleepMin)
+        return nap.asleepMin <= 30
+            ? String(localized: "Your \(length) nap stays under 30 minutes, the length that is safest for tonight's sleep.")
+            : String(localized: "Your \(length) nap is longer than 30 minutes, which can make it harder to fall asleep tonight. Keep the next one under 30 minutes.")
     }
 
-    /// The nap shaped as a night, so it is drawn by the very same Sleep stages card: the stage chart in the chosen style, the heart rate and
-    /// the movement through it.
+    /// The nap shaped as a night, so it is drawn by the very same Sleep stages card, in the layout of the night: the title and the pencil above the card,
+    /// the hours of sleep, the chart, the stages and the restorative sleep.
     private func stagesCard(_ nap: NunaNap) -> some View {
         let night = NunaNight(dayKey: "nap-\(Int(nap.start.timeIntervalSince1970))", wakeDate: nap.end, onset: nap.start, wake: nap.end,
                               stages: Stages(awake: nap.minutes(.awake), light: nap.minutes(.light), deep: nap.minutes(.deep), rem: nap.minutes(.rem)),
@@ -365,10 +381,10 @@ private struct NunaNapContent: View {
         let number = (naps.firstIndex(where: { $0.id == nap.id }) ?? 0) + 1
         return NunaSleepStageSection(model: model, night: night,
                                      onEdit: nap.block.map { block in { edit = NunaSleepEditTarget(block, isNap: true) } },
-                                     title: count > 1 ? LocalizedStringKey("Nap \(number) of \(count)") : "Nap stages", compareWithNights: false,
+                                     title: count > 1 ? LocalizedStringKey("Nap \(number) of \(count)") : "Nap", compareWithNights: false,
                                      rangeText: "\(NunaSleepFormat.clock(nap.start)) – \(NunaSleepFormat.clock(nap.end))",
                                      badge: nap.manual ? "Added by you" : "Detected automatically", badgeColor: nap.manual ? nil : NunaPalette.charge,
-                                     edited: nap.manual)
+                                     edited: nap.manual, referenceLayout: true)
     }
 
     /// The same Need and debt card as the Sleep page, with what this day's naps add to it.
@@ -402,7 +418,6 @@ private struct NunaNapContent: View {
             Text(verbatim: v).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
-
 }
 
 /// Add a nap by hand: pick the day and the start and end. Staged from the strap's raw data when there is any.

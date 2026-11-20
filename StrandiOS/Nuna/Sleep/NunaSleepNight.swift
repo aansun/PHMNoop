@@ -127,6 +127,9 @@ struct NunaSleepStageSection: View {
     var badge: LocalizedStringKey?
     var badgeColor: Color?
     var edited: Bool?
+    /// Draw the card in the layout of the night (the title and the pencil above the card, the hours of sleep, one chart, the stages, the restorative sleep): a nap on its
+    /// own page is, so that the two pages read the same.
+    var referenceLayout = false
     @EnvironmentObject private var repo: Repository
     @State private var selected: SleepStage?
     @State private var series: [String: [(date: Date, value: Double)]] = [:]
@@ -169,7 +172,7 @@ struct NunaSleepStageSection: View {
     }
 
     /// A night (not a nap) is drawn in the layout of the reference: a title outside the card, hours of sleep, the chart, the stages, the restorative sleep.
-    private var isNight: Bool { compareWithNights && rangeText == nil }
+    private var isNight: Bool { (compareWithNights && rangeText == nil) || referenceLayout }
 
     var body: some View {
         Group {
@@ -227,7 +230,7 @@ struct NunaSleepStageSection: View {
     private var nightTitle: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
-                Text(model.index == 0 ? "Last night's sleep" : "Sleep").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                Text(referenceLayout ? title : (model.index == 0 ? "Last night's sleep" : "Sleep")).font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                     .textCase(nil).accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 8)
                 if let onEdit {
@@ -241,7 +244,13 @@ struct NunaSleepStageSection: View {
                     .buttonStyle(.plain).accessibilityLabel(Text("Edit sleep times"))
                 }
             }
-            if !others.isEmpty {
+            if referenceLayout {
+                // A nap: when it ran and how it was found, where a night says what it is compared with.
+                HStack(spacing: 8) {
+                    if let rangeText { Text(verbatim: rangeText).font(.nuna(size: 12.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary) }
+                    if let badge { Text(badge).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(badgeColor ?? NunaPalette.textSecondary).textCase(nil) }
+                }
+            } else if !others.isEmpty {
                 Text("Today vs. prior 30 days").font(.nuna(size: 12.5, weight: .medium)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
@@ -265,12 +274,13 @@ struct NunaSleepStageSection: View {
                         Image(systemName: trend.direction > 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.system(size: 8, weight: .bold)).foregroundStyle(trend.tint)
                     }
                 }
-                if let trend {
+                // The average underneath only when there is one to compare with: a nap, or a first week of nights, has none, and "–" says nothing.
+                if let trend, mean != nil {
                     Text(verbatim: trend.previous).font(.nuna(size: 12.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
             if showsHoursInfo {
-                Text("The time you were asleep, against the average of your last 30 nights.").font(.nuna(size: 13.5, weight: .semibold))
+                Text(referenceLayout ? "The time you were asleep during this nap." : "The time you were asleep, against the average of your last 30 nights.").font(.nuna(size: 13.5, weight: .semibold))
                     .foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
         }
@@ -286,7 +296,12 @@ struct NunaSleepStageSection: View {
             Text("Restorative sleep").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.7)
             Spacer(minLength: 8)
-            NunaTrendFigure(value: Self.hm(total), trend: NunaTrend.make(current: total, previous: mean, decimals: 0, upIsGood: true, format: Self.hm), size: 16)
+            if mean == nil {
+                // Nothing to compare with (a nap, or a first week of nights): the figure alone, without a marker and a dash after it.
+                Text(verbatim: Self.hm(total)).font(.nuna(size: 16, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            } else {
+                NunaTrendFigure(value: Self.hm(total), trend: NunaTrend.make(current: total, previous: mean, decimals: 0, upIsGood: true, format: Self.hm), size: 16)
+            }
         }
     }
 
