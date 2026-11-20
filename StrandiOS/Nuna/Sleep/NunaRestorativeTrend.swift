@@ -93,6 +93,13 @@ struct NunaRestorativeTrendView: View {
                     Text(verbatim: shown.map(hm) ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(tint)
                     if shown != nil { Text("hr").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
                 }
+                if pickedTotal == nil {
+                    NunaChangeChip(average: average, prior: NunaTrendChange.prior(start: win.start, range: range) { d in
+                        let key = Repository.localDayKey(d)
+                        guard let rem = history.remMin[key], let deep = history.deepMin[key] else { return nil }
+                        return (rem + deep) / 60
+                    }, range: range, upIsGood: true)
+                }
             }
             Spacer(minLength: 0)
             VStack(alignment: .trailing, spacing: 14) {

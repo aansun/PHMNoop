@@ -58,6 +58,14 @@ struct NunaFitnessAgeTrendView: View {
         return all.filter { $0.date >= w.start && $0.date < w.domain.upperBound }
     }
 
+    /// The average of the weekly readings in the period just before the one on show.
+    private var priorAverage: Double? {
+        let cal = Calendar.current
+        guard let from = cal.date(byAdding: .day, value: -range, to: win.start) else { return nil }
+        let v = all.filter { $0.date >= from && $0.date < win.start }.map(\.value)
+        return v.isEmpty ? nil : v.reduce(0, +) / Double(v.count)
+    }
+
     private func calendarAge(on day: Date) -> Double {
         Double(Calendar.current.dateComponents([.day], from: profile.dateOfBirth, to: day).day ?? 0) / 365.25
     }
@@ -109,6 +117,10 @@ struct NunaFitnessAgeTrendView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(verbatim: shown.map(fmt) ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(colour)
                     if shown != nil, !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(colour).textCase(nil) }
+                }
+                if pickedValue == nil {
+                    // A younger fitness age and a slower pace of aging are the better way.
+                    NunaChangeChip(average: average, prior: priorAverage, range: range, upIsGood: false)
                 }
             }
             Spacer(minLength: 0)

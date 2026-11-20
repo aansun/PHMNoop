@@ -113,10 +113,6 @@ struct NunaLineTrendView: View {
         return (average - prior) / prior * 100
     }
 
-    private var priorLabel: String {
-        range == 7 ? String(localized: "vs. prior week") : (range == 30 ? String(localized: "vs. prior month") : String(localized: "vs. prior six months"))
-    }
-
     private var canGoBack: Bool {
         series.byDay.keys.min().map { Repository.localDayKey(win.start) > $0 } ?? false
     }
@@ -187,13 +183,8 @@ struct NunaLineTrendView: View {
                     Text(verbatim: shown.map(fmt) ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(tint)
                     if shown != nil { Text(verbatim: unit).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
                 }
-                if pickedValue == nil, let c = change(average) {
-                    HStack(spacing: 4) {
-                        Image(systemName: c >= 0 ? "arrow.up" : "arrow.down").font(.system(size: 10, weight: .heavy))
-                        Text(verbatim: String(format: "%.0f%%", locale: AppLanguage.activeLocale, abs(c)) + " " + priorLabel).font(.nuna(size: 12, weight: .bold)).textCase(nil)
-                    }
-                    .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 9).padding(.vertical, 4)
-                    .background(NunaPalette.glassStrong, in: Capsule())
+                if pickedValue == nil {
+                    NunaChangeChip(average: average, prior: earlierAverage, range: range, upIsGood: upIsGood)
                 }
             }
             Spacer(minLength: 0)

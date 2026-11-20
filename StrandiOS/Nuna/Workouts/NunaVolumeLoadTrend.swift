@@ -73,6 +73,12 @@ struct NunaVolumeLoadTrendView: View {
                             .foregroundStyle(pickedKg == nil ? NunaPalette.textPrimary : blue)
                         if shown != nil { Text("kg").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(pickedKg == nil ? NunaPalette.textPrimary : blue).textCase(nil) }
                     }
+                    if pickedKg == nil {
+                        // More volume lifted than in the period before is the better way (progressive load).
+                        NunaChangeChip(average: average, prior: NunaTrendChange.prior(start: w.start, range: range) { d in
+                            dayVolumes[cal.startOfDay(for: d)].flatMap { $0 > 0 ? $0 : nil }
+                        }, range: range, upIsGood: true)
+                    }
                 }
                 Spacer(minLength: 0)
                 VStack(alignment: .trailing, spacing: 14) {

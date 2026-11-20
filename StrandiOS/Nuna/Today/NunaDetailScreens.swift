@@ -564,6 +564,9 @@ struct NunaEffortActivityDetailView: View {
                         Text(verbatim: Self.hm(headlineValue)).font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Text("hr").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     }
+                    // More time than in the period before is the better way. The period before is kept in the same unit as the figure above (a
+                    // week's total, or the weekly average for a month and six months); six months of zone time has none, it is too long to read twice.
+                    NunaChangeChip(average: headlineValue, prior: previousValue > 0 ? previousValue / (range == 7 ? 1 : Double(range) / 7) : nil, range: range, upIsGood: true)
                 }
             }
             Spacer(minLength: 0)

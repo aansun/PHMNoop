@@ -44,6 +44,9 @@ struct NunaPctTrendView: View {
     var showsBreakdown = true
     /// A month writes the figure of its newest day over its bar; false leaves the bars bare (Effort, Calories).
     var labelsNewestInMonth = true
+    /// Whether a rise of the average is the better way (sleep, Charge, steps), a fall is (sleep debt), or neither is (Effort, calories): the colour of
+    /// the change under the average.
+    var upIsGood: Bool? = true
     var endingDaysAgo = 0
     /// What sits under the chart and the levels (Steps: the target and what steps are).
     var footer: AnyView?
@@ -118,6 +121,10 @@ struct NunaPctTrendView: View {
                         else if duration { Text("hr").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
                         else { Text("%").font(.nuna(size: 20, weight: .semibold, design: NunaType.design)).foregroundStyle(tint) }
                     }
+                }
+                if pickedValue == nil {
+                    NunaChangeChip(average: average, prior: NunaTrendChange.prior(start: win.start, range: range) { value(history, Repository.localDayKey($0)) },
+                                   range: range, upIsGood: upIsGood)
                 }
             }
             Spacer(minLength: 0)
@@ -368,7 +375,7 @@ struct NunaSleepDebtTrendView: View {
                 .init(color: Color(hex: "#3F5C75"), name: "Low", range: "<0:30") { $0 < 30 },
             ],
             breakdownTitle: "Sleep debt breakdown",
-            value: { $0.debtMin[$1] }, duration: true, endingDaysAgo: endingDaysAgo, footer: AnyView(NunaTrendInfo(kind: .debt)))
+            value: { $0.debtMin[$1] }, duration: true, upIsGood: false, endingDaysAgo: endingDaysAgo, footer: AnyView(NunaTrendInfo(kind: .debt)))
     }
 }
 
@@ -410,7 +417,7 @@ struct NunaEffortScoreTrendView: View {
             value: { h, day in h.effort[day].map { UnitFormatter.effortValue($0, scale: scale) } },
             format: { String(format: "%.1f", $0) }, hidesUnit: true,
             axisTicks: scale == .whoop ? [0, 5, 10, 15, 21] : [0, 25, 50, 75, 100],
-            tint: blue, excludesToday: true, labelsNewestInMonth: false, endingDaysAgo: endingDaysAgo,
+            tint: blue, excludesToday: true, labelsNewestInMonth: false, upIsGood: nil, endingDaysAgo: endingDaysAgo,
             footer: AnyView(NunaDayStrainFooter()))
     }
 }
@@ -438,7 +445,7 @@ struct NunaCaloriesTrendView: View {
                 default: return String(localized: "During this 6-month period, you have burned an average of \(n) calories. Wear your strap consistently to see how this changes over time.")
                 }
             },
-            showsBreakdown: false, labelsNewestInMonth: false, endingDaysAgo: endingDaysAgo, footer: AnyView(NunaTrendInfo(kind: .calories)))
+            showsBreakdown: false, labelsNewestInMonth: false, upIsGood: nil, endingDaysAgo: endingDaysAgo, footer: AnyView(NunaTrendInfo(kind: .calories)))
     }
 }
 
