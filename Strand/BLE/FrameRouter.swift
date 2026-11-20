@@ -477,6 +477,7 @@ public final class FrameRouter {
                     state.charging = true
                 } else if ev.hasPrefix("CHARGING_OFF") {
                     state.charging = false
+                    state.noteChargeEnded()
                 }
                 // #1826: BATTERY_PACK_CONNECTED(21) / BATTERY_PACK_REMOVED(22), declared in the shared
                 // schema and handled on neither platform until @Zebsi235 measured them. On a 5/MG they
@@ -493,6 +494,7 @@ public final class FrameRouter {
                     state.charging = true
                 } else if ev.hasPrefix("BATTERY_PACK_REMOVED") {
                     state.charging = false
+                    state.noteChargeEnded()
                 }
                 // Physical inputs the strap exposes — live only (this path never sees historical
                 // replay, which goes through the Backfiller). Event strings are "NAME(rawValue)".

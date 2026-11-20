@@ -663,6 +663,26 @@ public final class LiveState: ObservableObject {
     /// link, the twin of the `charging = nil` clear on the same path.
     public func clearBatterySamples() {
         batterySamples.removeAll()
+        chargeEndedAt = nil
+    }
+
+    /// When the strap last said a charge ended (CHARGING_OFF / pack removed): readings up to then are the climb of a charge that is over, not of
+    /// one going on. Not published: it only bounds what `isCharging` reads from `batterySamples`, which is.
+    private(set) var chargeEndedAt: Int?
+
+    /// Note an edge that ends a charge. Live path only, with the `charging = false` it comes with.
+    public func noteChargeEnded(now: Int = Int(Date().timeIntervalSince1970)) { chargeEndedAt = now }
+
+    /// Whether the strap is charging, for what a screen shows: the strap's own flag, or else the level going up. The flag alone is late (a battery
+    /// event about every eight minutes and the on / off edges), so a link that opens on a strap already on the charger, or a missed edge, showed
+    /// "not charging" while the level climbed. This is for display; the throttles that read `charging` keep to the strap's word.
+    public var isCharging: Bool {
+        charging == true || BatteryEstimator.chargeTrend(samples: batterySamples, now: Int(Date().timeIntervalSince1970), after: chargeEndedAt).rising
+    }
+
+    /// Hours until full at the pace the level has been rising, nil while it is not charging or the pace is not known yet.
+    public var chargeHoursToFull: Double? {
+        BatteryEstimator.chargeTrend(samples: batterySamples, now: Int(Date().timeIntervalSince1970), after: chargeEndedAt).hoursToFull
     }
 
     /// Single funnel for R-R intervals from EITHER source (the standard 0x2A37 profile in BLEManager,

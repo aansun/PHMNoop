@@ -55,8 +55,8 @@ struct NunaLowBatteryWatcher: View {
             .onChange(of: live.charging) { _, _ in update() }
     }
     private func update() {
-        if live.charging == true || (live.batteryPct ?? 0) > 25 { onRecovered() }
-        let low = NunaLowBatteryBanner.level(pct: live.batteryPct, charging: live.charging) != nil ? live.batteryPct.map { Int($0.rounded()) } : nil
+        if live.isCharging || (live.batteryPct ?? 0) > 25 { onRecovered() }
+        let low = NunaLowBatteryBanner.level(pct: live.batteryPct, charging: live.isCharging ? true : live.charging) != nil ? live.batteryPct.map { Int($0.rounded()) } : nil
         if low != pct { pct = low }
     }
 }

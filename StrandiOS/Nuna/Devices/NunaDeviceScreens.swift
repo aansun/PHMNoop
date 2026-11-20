@@ -21,14 +21,16 @@ struct NunaDeviceBatteryView: View {
         let est = live.batteryEstimate
         let samples = live.batterySamples
         NunaDetailScreen("Battery") {
-            NunaCard(highlight: live.charging == true) {
+            NunaCard(highlight: live.isCharging) {
                 VStack(alignment: .leading, spacing: 14) {
-                    HStack { nunaTrendsCap("Now"); Spacer(); NunaChip(live.charging == true ? "Charging" : (live.connected ? "Not charging" : "Not connected"), color: live.charging == true ? NunaPalette.charge : nil) }
+                    HStack { nunaTrendsCap("Now"); Spacer(); NunaChip(live.isCharging ? "Charging" : (live.connected ? "Not charging" : "Not connected"), color: live.isCharging ? NunaPalette.charge : nil) }
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text(verbatim: pct.map { "\(Int($0.rounded()))" } ?? "–").font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary)
                         if pct != nil { Text("%").font(.nuna(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
-                    if let est, live.charging != true {
+                    if live.isCharging, let toFull = live.chargeHoursToFull {
+                        Text(verbatim: String(localized: "Full in about \(NunaDeviceFormat.fullIn(toFull)).")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    } else if let est, !live.isCharging {
                         Text(verbatim: String(localized: "About \(NunaDeviceFormat.remaining(est.remainingHours)) left.")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     } else if pct == nil {
                         Text("Connect the strap to read its battery.").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
