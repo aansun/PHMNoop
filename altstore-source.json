@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "3.0.2",
+          "buildVersion": "419",
+          "date": "2026-11-20",
+          "localizedDescription": "Strain on the scale you chose, vital signs that agree on every screen, and a Strain & Recovery chart you can read.",
+          "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.0.2/PHMN-v3.0.2-ios-unsigned.ipa",
+          "size": 86499179,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "3.0.1",
           "buildVersion": "418",
           "date": "2026-11-19",
@@ -123,12 +132,12 @@
           "NSSpeechRecognitionUsageDescription": "PHMN transcribes your question on-device so you can ask the coach out loud instead of typing. Audio never leaves your iPhone."
         }
       },
-      "version": "3.0.1",
-      "buildVersion": "418",
-      "versionDate": "2026-11-19",
-      "versionDescription": "Live heart rate back where you train, and an Anya that coaches the way the WHOOP app does.",
-      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.0.1/PHMN-v3.0.1-ios-unsigned.ipa",
-      "size": 86483160,
+      "version": "3.0.2",
+      "buildVersion": "419",
+      "versionDate": "2026-11-20",
+      "versionDescription": "Strain on the scale you chose, vital signs that agree on every screen, and a Strain & Recovery chart you can read.",
+      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.0.2/PHMN-v3.0.2-ios-unsigned.ipa",
+      "size": 86499179,
       "minOSVersion": "17.0"
     }
   ],
