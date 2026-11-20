@@ -62,6 +62,48 @@ public enum BatteryEstimator {
         public var hoursRemaining: Double { remainingHours }
     }
 
+    // MARK: - Charging, read from the charge itself
+
+    /// The strap's own charging flag arrives with a battery event about every eight minutes and on the CHARGING_ON / pack-attached edges, so a
+    /// link that opens on a strap already on the charger, or an edge that was missed, leaves it unset or false for a long while. The charge
+    /// level moves the whole time (the poll reads it every 30 s while charging), and a strap that is charging is the only one whose level goes up.
+    ///
+    /// How far back a rise still counts as "charging now".
+    public static let chargeLookbackSeconds = 45 * 60
+    /// A reading older than this says nothing about now (the link may have been quiet): no charge is read from it.
+    public static let chargeFreshSeconds = 20 * 60
+    /// The rise, in percentage points, across the lookback that marks a charge. Larger than a reading's own jitter.
+    public static let chargeRisePct: Double = 1.0
+    /// The shortest stretch the rate of a charge is taken from, so two readings a moment apart do not give a wild "time to full".
+    public static let chargeMinSpanSeconds = 10 * 60
+
+    public struct ChargeTrend: Equatable, Sendable {
+        /// The level has gone up over the recent readings and is not coming down now.
+        public let rising: Bool
+        /// Hours until 100% at the rate the level has been rising, nil unless it is rising over a long enough stretch and is not yet full.
+        public let hoursToFull: Double?
+    }
+
+    /// Whether the readings say the strap is charging, and how long until it is full at the pace so far.
+    ///
+    /// - Parameters:
+    ///   - samples: `(unix-seconds, SoC%)` pairs in any order.
+    ///   - now: unix seconds.
+    ///   - after: readings at or before this time are ignored: the moment the strap said a charge ended, so the climb before it is not read
+    ///     as one still going on.
+    public static func chargeTrend(samples: [(ts: Int, soc: Double)], now: Int, after: Int? = nil) -> ChargeTrend {
+        let recent = samples.filter { $0.ts >= now - chargeLookbackSeconds && $0.ts <= now && $0.ts > (after ?? Int.min) }.sorted { $0.ts < $1.ts }
+        guard let first = recent.first, let last = recent.last, recent.count >= 2,
+              now - last.ts <= chargeFreshSeconds,
+              last.soc - first.soc >= chargeRisePct,
+              last.soc >= recent[recent.count - 2].soc else { return ChargeTrend(rising: false, hoursToFull: nil) }
+        let span = last.ts - first.ts
+        guard span >= chargeMinSpanSeconds, last.soc < 99.5 else { return ChargeTrend(rising: true, hoursToFull: nil) }
+        let ratePerHour = (last.soc - first.soc) / (Double(span) / 3600)
+        guard ratePerHour > 0 else { return ChargeTrend(rising: true, hoursToFull: nil) }
+        return ChargeTrend(rising: true, hoursToFull: min((100 - last.soc) / ratePerHour, 24))
+    }
+
     // MARK: - Estimate
 
     /// Estimate remaining runtime from a SoC series.

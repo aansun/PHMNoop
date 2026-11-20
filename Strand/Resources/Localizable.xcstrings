@@ -8973,6 +8973,8 @@
  "Strap not in use": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strap tidak digunakan"}}}},
  "Put it on to keep recording": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pakai strap agar perekaman berlanjut"}}}},
  "Put it on to sync": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pakai strap untuk sinkron"}}}},
+ "Charging · full in about %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Mengisi · penuh dalam sekitar %@"}}}},
+ "Full in about %@.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Penuh dalam sekitar %@."}}}},
  "Data caught up": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Data sudah terbaru"}}}},
  "Synced to": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tersinkron sampai"}}}},
  "e.g. 2.0-5.0": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "mis. 2.0-5.0"}}}},

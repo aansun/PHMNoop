@@ -44,6 +44,21 @@ enum NunaDeviceFormat {
         if h >= 48 { return String(localized: "\(h / 24) days \(h % 24) hours") }
         return String(localized: "\(h) hours")
     }
+    /// The line under the charge on the Status tab: the time to full while charging (when the pace is known), else the runtime left. The runtime
+    /// is not shown while charging: it comes from the discharge, which is not what is going on, so it stood still all through a charge.
+    @MainActor static func batteryLine(_ live: LiveState) -> String? {
+        if live.isCharging { return live.chargeHoursToFull.map { "~" + fullIn($0) } }
+        return live.batteryEstimate.map { "~" + remaining($0.remainingHours) }
+    }
+    /// "Charging" with how long until full, when that is known.
+    @MainActor static func chargingLine(_ live: LiveState) -> String {
+        live.chargeHoursToFull.map { String(localized: "Charging · full in about \(fullIn($0))") } ?? String(localized: "Charging")
+    }
+    /// "1 hr 20 min" or "45 min": the time to a full charge.
+    static func fullIn(_ hours: Double) -> String {
+        let m = max(5, Int((hours * 60 / 5).rounded()) * 5)
+        return m >= 60 ? String(localized: "\(m / 60) hr \(m % 60) min") : String(localized: "\(m) min")
+    }
     static func family(_ d: PairedDevice) -> String { d.model.isEmpty ? d.brand : d.model }
 }
 
@@ -193,8 +208,8 @@ private struct NunaDevicesContent: View {
         let connected = live.connected
         let family = NunaDeviceFormat.family(d)
         return VStack(alignment: .leading, spacing: 8) {
-            NunaDeviceStage(connected: connected, batteryPct: live.batteryPct, charging: live.charging == true,
-                            model: family, estimate: live.batteryEstimate.map { "~" + NunaDeviceFormat.remaining($0.remainingHours) })
+            NunaDeviceStage(connected: connected, batteryPct: live.batteryPct, charging: live.isCharging,
+                            model: family, estimate: NunaDeviceFormat.batteryLine(live))
                 .padding(.horizontal, -NunaSpacing.screenH)
             if !connected || live.backfilling {
                 VStack(spacing: 6) {
@@ -506,7 +521,7 @@ struct NunaDeviceDetailView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(verbatim: String(localized: "Battery \(Int(pct.rounded()))%")).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: live.charging == true ? String(localized: "Charging") : (live.batteryEstimate.map { String(localized: "Not charging · about \(NunaDeviceFormat.remaining($0.remainingHours))") } ?? String(localized: "Not charging")))
+                                Text(verbatim: live.isCharging ? NunaDeviceFormat.chargingLine(live) : (live.batteryEstimate.map { String(localized: "Not charging · about \(NunaDeviceFormat.remaining($0.remainingHours))") } ?? String(localized: "Not charging")))
                                     .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             }
                             Spacer()
