@@ -14,7 +14,9 @@ private func nunaFmt(_ v: Double?, _ digits: Int = 0) -> String {
 }
 
 func nunaSigned(_ v: Double, _ digits: Int = 1) -> String {
-    (v >= 0 ? "+" : "−") + String(format: "%.\(digits)f", locale: AppLanguage.activeLocale, abs(v))
+    // Rounded first, so a small negative that shows as nothing is "+0.0" and not "−0.0".
+    let p = pow(10, Double(digits)), r = (v * p).rounded() / p
+    return (r >= 0 ? "+" : "−") + String(format: "%.\(digits)f", locale: AppLanguage.activeLocale, abs(r))
 }
 
 private func nunaMiniStat(_ label: LocalizedStringKey, _ value: String, unit: String = "") -> some View {

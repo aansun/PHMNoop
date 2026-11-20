@@ -228,11 +228,26 @@ struct NunaSleepVitalsView: View {
                     vital("Resting HR", "rhr", night.daily?.restingHr.map(Double.init), others.compactMap { $0.restingHr.map(Double.init) }, "bpm", 0)
                     vital("Blood Oxygen", "spo2", repo.spo2(for: night.daily), others.compactMap { repo.spo2(for: $0) }, "%", 0)
                     vital("Respiratory", "resp_rate", night.daily?.respRateBpm, others.compactMap(\.respRateBpm), "/min", 1)
-                    vital("Skin Temp", "skin_temp", night.daily?.skinTempDevC, others.compactMap(\.skinTempDevC), "°C", 1)
+                    skinVital(night.daily?.skinTempDevC, others.compactMap(\.skinTempDevC))
                 }
                 Text("Compared with your average of the previous nights. Tap a vital to see its history.")
                     .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
             }
+        }
+    }
+
+    /// The night's skin temperature as the rise from the usual level. A deviation is shown as it is, against the average of the nights before; an
+    /// absolute temperature (an import) becomes its rise over the median of those nights, and then has nothing left to be compared with.
+    @ViewBuilder private func skinVital(_ value: Double?, _ prior: [Double]) -> some View {
+        if let value, abs(value) >= 20 {
+            let level = prior.filter { abs($0) >= 20 }
+            if level.count >= 3, let m = Repository.median(level) {
+                vital("Skin Temp", "skin_temp", value - m, [], "°C", 1)
+            } else {
+                vital("Skin Temp", "skin_temp", nil, [], "°C", 1)
+            }
+        } else {
+            vital("Skin Temp", "skin_temp", value, prior.filter { abs($0) < 20 }, "°C", 1)
         }
     }
 

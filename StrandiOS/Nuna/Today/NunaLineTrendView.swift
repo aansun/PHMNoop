@@ -121,7 +121,11 @@ struct NunaLineTrendView: View {
         series.byDay.keys.min().map { Repository.localDayKey(win.start) > $0 } ?? false
     }
 
-    private func fmt(_ v: Double) -> String { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, v) }
+    /// A small negative that rounds to nothing reads "0.0", not "-0.0".
+    private func fmt(_ v: Double) -> String {
+        let p = pow(10, Double(decimals)), r = (v * p).rounded() / p
+        return String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, r == 0 ? 0 : r)
+    }
 
     private func isPicked(_ date: Date) -> Bool { picked.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? false }
 
