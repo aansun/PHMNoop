@@ -251,9 +251,18 @@ struct NunaManualWorkoutSheet: View {
 
     private var startBinding: Binding<Date> {
         Binding(get: { start }, set: { picked in
-            let span = end.timeIntervalSince(start)
-            let newStart = min(picked, Date().addingTimeInterval(-span))
-            end = WorkoutSource.endAfterStartMove(oldStart: start, oldEnd: end, newStart: newStart)
+            let now = Date()
+            // A start can be as late as a minute ago. It used to be held at "now minus the length", which put every start later than the
+            // opening 45 minutes back where it began, so the wheel seemed to snap back to the suggestion.
+            let newStart = min(picked, now.addingTimeInterval(-60))
+            let kept = WorkoutSource.endAfterStartMove(oldStart: start, oldEnd: end, newStart: newStart)
+            if kept <= now {
+                end = kept                                   // the length stays, the end moves with the start
+            } else if newStart < end.addingTimeInterval(-60) {
+                // the end cannot follow into the future: it stays and the activity gets shorter
+            } else {
+                end = now                                    // the start passed the end: the end goes to now
+            }
             start = newStart
         })
     }

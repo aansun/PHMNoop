@@ -256,10 +256,17 @@ struct NunaNightPicker: View {
     var date: Date?
     /// False when the screen's header already says which night this is.
     var showsCaption = true
+    /// One short line between the arrows ("THU, 19 NOV"), the way the day is named on Today, instead of the long date under a caption.
+    var compact = false
     var body: some View {
         HStack {
             step("chevron.left", enabled: model.hasOlder) { model.index += 1 }
             Spacer()
+            if compact {
+                Text(verbatim: (date ?? model.night?.wakeDate).map { Self.shortDay($0) } ?? "–")
+                    .font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingHead(0.8)).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary)
+            } else {
             VStack(spacing: 2) {
                 if showsCaption {
                     Text(caption ?? (model.index == 0 ? "Last night" : "Earlier night"))
@@ -269,9 +276,16 @@ struct NunaNightPicker: View {
                 Text(verbatim: (date ?? model.night?.wakeDate).map { NunaSleepFormat.nightTitle($0) } ?? "–")
                     .font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             }
+            }
             Spacer()
             step("chevron.right", enabled: model.hasNewer) { model.index -= 1 }
         }
+    }
+
+    private static func shortDay(_ date: Date) -> String {
+        let wd = DateFormatter(); wd.locale = AppLanguage.activeLocale; wd.setLocalizedDateFormatFromTemplate("EEE")
+        let md = DateFormatter(); md.locale = AppLanguage.activeLocale; md.setLocalizedDateFormatFromTemplate("d MMM")
+        return wd.string(from: date) + ", " + md.string(from: date)
     }
 
     private func step(_ symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
