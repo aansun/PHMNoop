@@ -23,6 +23,22 @@ enum PHMNChangelog {
 
     static let releases: [Release] = [
         Release(
+            version: "3.0.2",
+            title: "Trend views that tell you if you are doing better, Strain on the scale you chose, and vital signs that agree on every screen.",
+            date: "November 2026",
+            items: [
+                "**Change against the period before.** Under the average of every Trend view: “5% vs. prior week”, month or six months, following the W / M / 6M switch. Green when it moved the better way for that reading, grey when it did not or stayed the same.",
+                "**Skin temperature as the rise.** Every screen shows how far you are from your usual (+0.3), not the wrist temperature, with your range beside it.",
+                "**Start activity.** One name for it everywhere. Anya's pick on the Strain target reads like her pick on Breathing.",
+            ],
+            fixes: [
+                "**Strain target and live ring** follow the Strain scale you chose (0–21 or 0–100). They showed 0–100 beside a 0–21 day.",
+                "**Vital signs agree.** The Today card and tile marked a low respiratory rate or resting heart rate, or a high HRV, as out of range while the detail page called it good news. One rule now.",
+                "**Skin temperature** from imported data no longer reads “+32.5” with no verdict on the Health monitor.",
+                "**Strain & Recovery chart:** figures no longer land on the day names or on each other. A “−0.0” now reads “0.0”.",
+            ]
+        ),
+        Release(
             version: "3.0.1",
             title: "Live heart rate back where you train, and an Anya that coaches the way the WHOOP app does.",
             date: "November 2026",
