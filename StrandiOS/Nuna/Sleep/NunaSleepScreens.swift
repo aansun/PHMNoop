@@ -387,36 +387,21 @@ struct NunaNapView: View {
                                      edited: nap.manual, referenceLayout: true)
     }
 
-    /// The same Need and debt card as the Sleep page, with what this day's naps add to it.
+    /// The very card the Sleep page draws for hours against need, with the day's sleep: the night and what its naps add. The need is worked out the
+    /// way the Sleep page does it, so the two pages never give two needs for the same day.
     private func impact(_ night: NunaNight) -> some View {
         let napMin = naps.reduce(0) { $0 + $1.asleepMin }
-        let need = model.need(night)
-        let total = night.asleepMin + napMin
-        let debt = model.debtMin
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Need and debt").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textSecondary)
-                HStack {
-                    Text(verbatim: NunaSleepFormat.duration(need))
-                        .font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("needed").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    if let debt, debt > 0 { NunaChip(verbatim: String(localized: "Debt \(Int(debt.rounded())) min"), color: NunaPalette.warning) }
-                }
-                if need > 0 { NunaProgressBar(fraction: total / need) }
-                line("Total sleep this day", NunaSleepFormat.duration(total))
-                line("Counted toward your need", "+" + NunaSleepFormat.duration(napMin))
-            }
-        }
-    }
-
-    private func line(_ l: LocalizedStringKey, _ v: String) -> some View {
-        HStack {
-            Text(l).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            Spacer()
-            Text(verbatim: v).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-        }
+        let asleep = (night.daily?.totalSleepMin ?? night.asleepMin) + napMin
+        let healthy = SleepModel.debtNeedMin(days: repo.days)
+        let debts = SleepDebt.debtSeries(series: model.nights.reversed().map { ($0.dayKey, $0.daily?.totalSleepMin ?? $0.asleepMin) },
+                                         needHours: healthy / 60)
+        let ledgerDebt = max(debts.first(where: { $0.day == night.dayKey })?.value ?? 0, 0)
+        let stored = model.hasStoredNeed(night)
+        let total = stored ? max(model.need(night), healthy) : healthy + ledgerDebt
+        let debt = stored ? min(ledgerDebt, total - healthy) : ledgerDebt
+        let strain = max(total - healthy - debt, 0)
+        return NunaHoursVsNeededCard(asleepMin: asleep, healthyMin: healthy, strainMin: strain, debtMin: debt,
+                                     percent: total > 0 ? min(asleep / total * 100, 100) : nil, usual: model.usual { model.hoursVsNeeded($0) })
     }
 }
 

@@ -721,6 +721,11 @@ struct NunaSleepStageSection: View {
     }
 
     @ViewBuilder private var insight: some View {
+        // A nap is not set against earlier nights, so there is no usual range to say anything about.
+        if compareWithNights { insightText }
+    }
+
+    @ViewBuilder private var insightText: some View {
         Group {
             if let s = selected {
                 let m = minutes(s)
