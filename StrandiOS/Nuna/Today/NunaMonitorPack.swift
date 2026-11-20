@@ -35,10 +35,10 @@ struct NunaMonitorPackCard: View {
         var within = 0, known = 0
         func tally(_ ok: Bool?) { if let ok { known += 1; if ok { within += 1 } } }
         guard phase.hasRange else { return (0, 0) }
-        tally(hrv.flatMap { v in hrvS.verdict(v, floor: 1).map { $0 == .inRange } })
-        tally(restingHr.flatMap { v in rhrS.verdict(v, floor: 1).map { $0 == .inRange } })
+        tally(hrv.flatMap { v in hrvS.isTypical(v, floor: 1, aboveIsGood: true) })
+        tally(restingHr.flatMap { v in rhrS.isTypical(v, floor: 1, belowIsGood: true) })
         tally(spo2.map { $0 >= 95 })
-        tally(respiratory.flatMap { v in respS.verdict(v, floor: VitalRange.respiratoryFloor).map { $0 == .inRange } })
+        tally(respiratory.flatMap { v in respS.isTypical(v, floor: VitalRange.respiratoryFloor, belowIsGood: true) })
         tally(skinTemp.flatMap { v in skinS.skinVerdict(v).map { $0 == .inRange } })
         return (within, known)
     }
