@@ -155,6 +155,8 @@ struct NunaTodayView: View {
     /// The strap's charge while it is low (20% or less, not charging), else nil; and the level whose banner was put away.
     @State private var lowBatteryPct: Int?
     @AppStorage("noop.lowBatteryBannerDismissed") private var lowBatteryDismissed = 0
+    /// A paired strap has been off for a few seconds: the "Strap not in use" notice sits under the day until it is back.
+    @State private var strapIdle = false
     @EnvironmentObject var profile: ProfileStore
     @EnvironmentObject private var updateStore: UpdateStore
     @EnvironmentObject private var intelligence: IntelligenceEngine
@@ -424,6 +426,7 @@ struct NunaTodayView: View {
         .background(NunaSavedSessionsWatcher(count: $savedSessions))
         .background(NunaLowBatteryWatcher(pct: $lowBatteryPct, onRecovered: { if lowBatteryDismissed != 0 { lowBatteryDismissed = 0 } }))
         .background(NunaPullSyncBinder(sync: sync))
+        .background(NunaStrapIdleWatcher(idle: $strapIdle))
         #if DEBUG
         // `--open-planner`: a debug build opens the Sleep planner once, at launch, to look at it without scrolling Today. Once only: a `.task` runs
         // again every time Today comes back on screen, which would push the planner again each time the person went back.
@@ -519,17 +522,21 @@ struct NunaTodayView: View {
     /// The level (20 or 10) of a low-battery banner that is due: the strap is low, and no banner at this level or a lower one was put away. Putting
     /// away the 10% banner therefore also silences the 20% one, so a reading that wobbles between 10 and 11 does not bring it back.
     private var lowBatteryLevel: Int? {
-        guard showsRings, let p = lowBatteryPct else { return nil }
+        guard showsRings, !strapIdle, let p = lowBatteryPct else { return nil }
         let level = p <= 10 ? 10 : 20
         return (lowBatteryDismissed != 0 && level >= lowBatteryDismissed) ? nil : level
     }
+
+    /// The idle notice shows while the sync banner (which says the same, with the last sync) is not up.
+    private var showsIdleBanner: Bool { showsRings && strapIdle && sync.phase == nil }
 
     private func pinnedHeight(collapse t: CGFloat) -> CGFloat {
         let bar: CGFloat = 52
         guard showsRings else { return bar + 8 }
         let banner: CGFloat = sync.phase == nil ? 0 : (NunaSyncBanner.height + 33) * (1 - t)
         let low: CGFloat = lowBatteryLevel == nil ? 0 : (NunaLowBatteryBanner.height + 16) * (1 - t)
-        return bar + 6 + banner + low + Self.brandHeight * (1 - t) + NunaScoreRings.fullHeight + (NunaScoreRings.compactHeight - NunaScoreRings.fullHeight) * t + 8
+        let idle: CGFloat = showsIdleBanner ? (NunaStrapIdleBanner.height + 16) * (1 - t) : 0
+        return bar + 6 + banner + low + idle + Self.brandHeight * (1 - t) + NunaScoreRings.fullHeight + (NunaScoreRings.compactHeight - NunaScoreRings.fullHeight) * t + 8
     }
 
     /// Bell, the day (with arrows to step it) and the strap on one slim row, then the three score rings. Stays at the top while
@@ -554,6 +561,9 @@ struct NunaTodayView: View {
             .frame(height: 46)
             if let phase = sync.phase, collapse.t < 0.05 {
                 NunaSyncBanner(phase: phase).padding(.horizontal, 4).padding(.top, 28).padding(.bottom, 5).transition(.opacity.combined(with: .move(edge: .top)))
+            }
+            if showsIdleBanner, collapse.t < 0.05 {
+                NunaStrapIdleBanner().padding(.horizontal, 4).padding(.top, 10).padding(.bottom, 6).transition(.opacity.combined(with: .move(edge: .top)))
             }
             if let level = lowBatteryLevel, let p = lowBatteryPct, collapse.t < 0.05 {
                 NunaLowBatteryBanner(pct: p) { withAnimation(.easeOut(duration: 0.2)) { lowBatteryDismissed = level } }
