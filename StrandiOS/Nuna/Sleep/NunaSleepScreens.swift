@@ -307,7 +307,7 @@ struct NunaNapView: View {
             if !model.loaded {
                 ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 200)
             } else if let night {
-                NunaNightPicker(model: model, caption: isToday ? "Today" : "Earlier day", date: night.wakeDate)
+                NunaNightPicker(model: model, date: night.wakeDate, showsCaption: false, compact: true)
                 if let nap = current {
                     stagesCard(nap)
                     impact(night)
