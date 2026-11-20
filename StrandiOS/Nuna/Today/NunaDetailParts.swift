@@ -920,20 +920,9 @@ final class NunaSeriesModel: ObservableObject {
         }
     }
 
-    /// The skin temperature's usual level when the readings are absolute (an import carries the wrist temperature itself, 20 °C or more): the
-    /// median of the earlier absolute readings. Nil under three of them, or when the readings are already deviations.
-    private var absoluteBaseline: Double? {
-        let v = byDay.keys.sorted().dropLast().suffix(30).compactMap { byDay[$0] }.filter { abs($0) >= 20 }.sorted()
-        guard v.count >= 3 else { return nil }
-        return v.count % 2 == 1 ? v[v.count / 2] : (v[v.count / 2 - 1] + v[v.count / 2]) / 2
-    }
-
-    /// Skin temperature as the rise or fall from the person's own level, in degrees, which is the only form worth showing: a stored value under 20
-    /// already is one; an absolute temperature is taken against the median of the earlier ones. Nil when neither is possible yet.
-    func skinDeviation(_ value: Double) -> Double? {
-        if abs(value) < 20 { return value }
-        return absoluteBaseline.map { value - $0 }
-    }
+    /// Skin temperature as the rise or fall from the person's own level, in degrees. `Repository.exploreSeries` hands it over that way already, so
+    /// a stored value of 20 or more (an absolute temperature that slipped through) is left out.
+    func skinDeviation(_ value: Double) -> Double? { abs(value) < 20 ? value : nil }
 
     /// The earlier nights' deviations, which the range and the verdict are read from.
     private var skinHistory: [Double] {

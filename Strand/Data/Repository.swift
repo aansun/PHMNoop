@@ -2460,6 +2460,42 @@ final class Repository: ObservableObject {
     /// byte-identical. The flag is forwarded to the non-strap `series(...)` delegation below so every source
     /// path honours it.
     func exploreSeries(key: String, source: String, days: Int = 4000, fullHistory: Bool = false) async -> [(day: String, value: Double)] {
+#if os(iOS)
+        // The iOS screens show skin temperature as the rise or fall from the person's own level, never the wrist temperature itself. A series
+        // of absolute readings (an import) is turned into that here, once, so every card, tile, trend and range reads the same numbers. The
+        // window is read 35 days wider so the first days of it still have their own level to be measured against.
+        guard key == "skin_temp" else { return await exploreSeriesRaw(key: key, source: source, days: days, fullHistory: fullHistory) }
+        let wide = await exploreSeriesRaw(key: key, source: source, days: fullHistory ? days : days + 35, fullHistory: fullHistory)
+        let rise = Self.skinTempAsRise(wide)
+        guard !fullHistory else { return rise }
+        let from = Self.dayString(Date().addingTimeInterval(-Double(days) * 86_400))
+        return rise.filter { $0.day >= from }
+#else
+        return await exploreSeriesRaw(key: key, source: source, days: days, fullHistory: fullHistory)
+#endif
+    }
+
+    /// A skin temperature series as deviations: a series of deviations is returned as is; one of absolute readings (the newest decides, as
+    /// `SkinTempDisplay.dominantKind` does) becomes each reading minus the median of the up to 30 readings before it, from the fourth reading on.
+    static func skinTempAsRise(_ series: [(day: String, value: Double)]) -> [(day: String, value: Double)] {
+        guard let last = series.last, SkinTempDisplay.kind(of: last.value) == .absolute else { return series }
+        var out: [(day: String, value: Double)] = []
+        for i in series.indices {
+            let prior = series[max(0, i - 30)..<i].map(\.value)
+            guard let level = median(prior), prior.count >= 3 else { continue }
+            out.append((series[i].day, series[i].value - level))
+        }
+        return out
+    }
+
+    /// Median of `values`, nil when empty.
+    static func median(_ values: [Double]) -> Double? {
+        guard !values.isEmpty else { return nil }
+        let v = values.sorted()
+        return v.count % 2 == 1 ? v[v.count / 2] : (v[v.count / 2 - 1] + v[v.count / 2]) / 2
+    }
+
+    private func exploreSeriesRaw(key: String, source: String, days: Int, fullHistory: Bool) async -> [(day: String, value: Double)] {
         guard source == "my-whoop" else {
             return Self.oneSkinTempScale(key: key, await series(key: key, source: source, days: days, fullHistory: fullHistory))
         }
