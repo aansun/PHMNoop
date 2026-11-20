@@ -725,7 +725,7 @@
  "This session sat right on your 30-day norms: about the same length, Strain and zones as usual.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sesi ini tepat di norma 30 hari kamu: durasi, Strain, dan zona hampir sama seperti biasa."}}}},
  "About these figures": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tentang angka-angka ini"}}}},
  "Strain adds up on a log scale, so two Strains are not simply summed. Activity strain is what this session alone would score. After activity is where your day would end: the higher your Strain already is, the less the same session adds. All figures are estimates.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strain dihitung dengan skala logaritma, jadi dua Strain tidak sekadar dijumlahkan. Strain aktivitas adalah nilai sesi ini saja. Setelah aktivitas adalah posisi hari kamu nanti: makin tinggi Strain kamu, makin sedikit tambahan dari sesi yang sama. Semua angka hanyalah perkiraan."}}}},
- "Current\neffort": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strain\nsaat ini"}}}},
+ "Current\nstrain": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strain\nsaat ini"}}}},
  "After activity\n(est.)": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Setelah aktivitas\n(est.)"}}}},
  "Choose your target": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pilih target kamu"}}}},
  "Reach a set duration.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Capai durasi tertentu."}}}},
