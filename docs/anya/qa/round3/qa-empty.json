@@ -1,0 +1,207 @@
+{
+  "breath" : {
+    "output" : "This breathing exercise is to help you feel more relaxed and ready for rest before sleep. It should bring a gentle sense of quiet comfort.\n```anya-breath\n{\"minutes\":5,\"goal\":\"sleep\",\"stages\":[{\"seconds\":4,\"phase\":\"inhale\"},{\"phase\":\"exhale\",\"seconds\":6}],\"title\":\"Soft breath for sleep\"}\n```",
+    "parsed" : true,
+    "seconds" : 3.530242919921875
+  },
+  "chat" : [
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "today",
+      "question" : "Why did my Recovery change compared with yesterday? Use my sleep, HRV and resting heart rate.",
+      "seconds" : 0.00062704086303710938
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "today",
+      "question" : "Summarise my day so far in a few sentences, using my numbers.",
+      "seconds" : 0.00027096271514892578
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "health",
+      "question" : "Explain what my HRV is telling me today, compared with my own baseline.",
+      "seconds" : 0.00024199485778808594
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "health",
+      "question" : "What is fitness age and how is mine worked out in this app?",
+      "seconds" : 0.00021505355834960938
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "trends",
+      "question" : "Why did my Recovery move over the last month? Point to the behaviours in my data.",
+      "seconds" : 0.00019907951354980469
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "trends",
+      "question" : "Which day was hardest on my body this month and what followed it?",
+      "seconds" : 0.0002079010009765625
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "sleep",
+      "question" : "Why might I have woken up several times last night? Use my sleep numbers.",
+      "seconds" : 0.00027799606323242188
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "sleep",
+      "question" : "Compare my sleep this week with last week.",
+      "seconds" : 0.00022494792938232422
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "workouts",
+      "question" : "Recommend the best workout for today using my Recovery, Strain, Sleep and recent workouts.",
+      "seconds" : 0.00022101402282714844
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "workouts",
+      "question" : "Plan my training for this week from my current load and recovery.",
+      "seconds" : 0.00021100044250488281
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "nutrition",
+      "question" : "Look at what I have eaten today against my target and macros and tell me what to do for the rest of the day.",
+      "seconds" : 0.00053298473358154297
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "nutrition",
+      "question" : "Suggest what to eat tonight given what I have eaten today, my target and today's activity.",
+      "seconds" : 0.00023901462554931641
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "breathing",
+      "question" : "Which breathing exercise fits me right now? Use my live heart rate, HRV, stress and Recovery, and what worked in my earlier breathing sessions.",
+      "seconds" : 0.00050199031829833984
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "breathing",
+      "question" : "How did my recent breathing sessions go? Look at the HRV and heart rate change in each and tell me what is working.",
+      "seconds" : 0.00023901462554931641
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "device",
+      "question" : "Why might my strap keep disconnecting from the phone?",
+      "seconds" : 0.00043499469757080078
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "device",
+      "question" : "How should I charge my strap and how long does the battery last?",
+      "seconds" : 0.00035703182220458984
+    }
+  ],
+  "compactContext" : "USER BIOMETRIC SUMMARY:\nNo wearable data is available yet. Acknowledge this and give general, encouraging guidance while inviting the user to sync their device so future advice can reference real numbers.\n\nRecent workouts: none recorded in the last 30 days.\n\nRIGHT NOW: Friday 20 November, 20:30 (evening). This is the review part of the day: when asked how the day went, say what its Strain and the night ahead imply and point to bedtime, not to a new hard session.\nNEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): Keep the evening light.",
+  "compactContextChars" : 617,
+  "compactSystemChars" : 2583,
+  "configured" : true,
+  "consent" : true,
+  "food" : {
+    "input" : "2 telur dadar dan 1 piring nasi goreng",
+    "output" : "An estimate, worked out on this iPhone.\n```anya-food\n{\"items\":[{\"proteinG\":12,\"kcal\":120,\"carbsG\":10,\"amount\":\"2 eggs\",\"name\":\"2 telur dadar\",\"fatG\":8},{\"amount\":\"1 plate\",\"carbsG\":45,\"kcal\":250,\"proteinG\":15,\"fatG\":12,\"name\":\"1 piring nasi goreng\"}]}\n```",
+    "seconds" : 3.362293004989624
+  },
+  "fullSystemChars" : 12052,
+  "morningBrief" : {
+    "output" : "No wearable data is available yet — sync your device so we can build from real numbers.  \n\nStrain: 0 — nothing logged. Sleep — not measured. HRV — not measured. Resting heart rate — not measured.  \n\nThis means stillness today — the absence of load suggests the body is waiting for gentle movement. The likely cause is lack of recent effort. The readings cannot confirm readiness for effort, but they signal pause.  \n\nKeep the evening light.",
+    "seconds" : 3.9103209972381592
+  },
+  "pages" : [
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Recovery",
+      "seconds" : 0.005865931510925293,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "No Strain yet today. Anya reads it as soon as your heart rate has spent time in the zones.",
+      "page" : "Strain",
+      "seconds" : 0.0038039684295654297,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "sleep",
+      "seconds" : 0.0028150081634521484,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "stress",
+      "seconds" : 0.0027519464492797852,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "HRV",
+      "seconds" : 0.00077795982360839844,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Resting heart rate",
+      "seconds" : 0.00084698200225830078,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Respiratory rate",
+      "seconds" : 0.00077307224273681641,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Weight",
+      "seconds" : 0.00071501731872558594,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Skin temperature",
+      "seconds" : 0.00077903270721435547,
+      "text" : "nil",
+      "verdict" : "none"
+    }
+  ],
+  "plan" : {
+    "output" : "Recovery 67, Strain 0, Sleep dash, HRV dash, resting heart rate dash.  \nYour body is ready for gentle movement and consistency—no hard push now; the low Strain and strong Recovery suggest the body is well-regulated, likely from rest and minimal effort. The lack of recorded workouts and no food log means we can’t measure energy gaps or intake precision. The dash values show no data, so we cannot confirm baseline trends or physiological stress. This is not a warning—it’s a quiet start. Sync your wearable now so we can track real readiness.  \nKeep the evening light.",
+    "parsed" : false,
+    "seconds" : 22.414008021354675
+  },
+  "program" : {
+    "output" : "Three days per week: Day 1 (Chest), Day 2 (Back), Day 3 (Legs). Start with compound lifts, build on existing work, and add the smallest weight step once each set reaches the top of the 6–12 rep range for muscle growth.\n```anya-program\n{\"days\":[{\"title\":\"Day 1: Dumbbell Bench Press\",\"items\":[{\"exercise\":\"Dumbbell Bench Press - Medium Grip\",\"restSec\":60,\"repsLow\":6,\"sets\":3,\"repsHigh\":12}]},{\"items\":[{\"sets\":3,\"repsLow\":12,\"repsHigh\":20,\"restSec\":60,\"exercise\":\"Lat Pulldown - Wide Grip\"}],\"title\":\"Day 2: Lat Pulldown\"},{\"title\":\"Day 3: Romanian Deadlift\",\"items\":[{\"exercise\":\"Romanian Deadlift - Standard\",\"repsHigh\":12,\"repsLow\":6,\"restSec\":60,\"sets\":3}]}],\"name\":\"Upper \\\/ lower, 3 days\",\"note\":\"Add the smallest weight step once each set reaches the top of the 6–12 rep range for muscle growth\"}\n```",
+    "parsed" : true,
+    "seconds" : 43.13463294506073
+  },
+  "provider" : "appleIntelligence",
+  "scale" : "whoop",
+  "scenario" : "empty"
+}

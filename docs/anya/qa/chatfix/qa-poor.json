@@ -1,0 +1,112 @@
+{
+  "chat" : [
+    {
+      "answer" : "Recovery 18, HRV 52ms, RHR 67bpm against baseline 82ms, 54bpm.  \nThese drops likely came from less deep and REM sleep, as the recent hours fell short of the usual depth and length, combined with a higher resting rate. The data doesn’t show why sleep quality shifted, only that the average hours and stages were lower.  \nEat, hydrate and keep the evening easy so you can be asleep by 23:10.",
+      "module" : "today",
+      "question" : "Why did my Recovery change compared with yesterday? Use my sleep, HRV and resting heart rate.",
+      "seconds" : 7.1381790637969971
+    },
+    {
+      "answer" : "Recovery 18, strain 19.3, sleep 5.3h, HRV 52ms, RHR 67bpm against baseline.  \nThe body is showing low readiness, likely from short sleep and elevated strain, with HRV and heart rate below normal.  \nThis means the system is under stress, probably from the recent session and reduced rest.  \nEat, hydrate and keep the evening easy so you can be asleep by 23:10.",
+      "module" : "today",
+      "question" : "Summarise my day so far in a few sentences, using my numbers.",
+      "seconds" : 5.1742430925369263
+    },
+    {
+      "answer" : "HRV 52ms against 82ms baseline.  \n\nThis likely means the body is adjusting to a shorter night, as the drop from baseline suggests less recovery time. The data cannot confirm whether this is from stress or rest, but the pattern points to reduced sleep depth.  \n\nToday, add a 10-minute walk at a steady pace right after your evening routine—this can help lift the signal, and recheck HRV in 48 hours.",
+      "module" : "health",
+      "question" : "Explain what my HRV is telling me today, compared with my own baseline.",
+      "seconds" : 5.3825529813766479
+    },
+    {
+      "answer" : "Recovery 18, HRV 52ms, RHR 67bpm against personal baseline.  \nThis means the body is pulling back—likely from a recent hard push—so the system is conserving energy. The drop in HRV and rise in heart rate suggest the body is adjusting to a reduced load. This pattern can shift if the body is under stress from movement or recovery gaps. The data cannot confirm exact triggers beyond the pattern.  \nToday, keep movement light—focus on gentle mobility—for the next 45 minutes, aiming to bring Recovery closer to 34 by tomorrow morning through rest and quiet activity.",
+      "module" : "health",
+      "question" : "What is fitness age and how is mine worked out in this app?",
+      "seconds" : 6.6118570566177368
+    },
+    {
+      "answer" : "Recovery dipped to 47 against a 65 baseline over the past week, with strain rising to 14.6 and sleep staying at 7.1h. The drop likely came from more effort recently, as strain climbed while sleep didn’t keep up. The data doesn’t show what changed the sleep pattern, but the effort load may have pulled it down. To lift Recovery, try cutting strain by 3 points over the next two weeks, especially on movement days—this could bring it back toward the 60 range. Would you like to check your sleep logs to see if timing matters?",
+      "module" : "trends",
+      "question" : "Why did my Recovery move over the last month? Point to the behaviours in my data.",
+      "seconds" : 4.5781469345092773
+    },
+    {
+      "answer" : "Recovery 47, strain 14.6, sleep 7.1h, HRV 73ms, resting heart rate dash.  \nThis week’s drop in recovery, especially the 47, points to harder movement or less rest than usual; the spike in strain may have pushed the body into a tighter state. The data does not show exact timing, but the dip in recovery follows a week of higher strain and lower sleep.  \nToday, add 2 minutes of slow movement after meals for two days—start Monday and Wednesday—to help bring recovery back up.  \n\nWould you like to track HRV over the next week?",
+      "module" : "trends",
+      "question" : "Which day was hardest on my body this month and what followed it?",
+      "seconds" : 4.7130160331726074
+    },
+    {
+      "answer" : "Sleep 5.3h, deep 0.7h, REM 0.8h, light 3.8h against 7.2h baseline. The low deep and REM time likely meant your body couldn’t fully restore through the night, possibly because of uneven rest cycles. The data doesn’t confirm alcohol’s direct effect on waking, but it could play a role. Since deep sleep drops, your recovery may feel heavier than the sleep count shows.\n\nTonight, keep the bedtime at 23:10 and wind down with a quiet routine so deep rest can build.",
+      "module" : "sleep",
+      "question" : "Why might I have woken up several times last night? Use my sleep numbers.",
+      "seconds" : 6.5216459035873413
+    },
+    {
+      "answer" : "Sleep this week hit 100% against the baseline, with 5.3h tonight after a 2h 5m deficit.  \n\nThis means the body rested well overall, but the drop in HRV and RHR from the night suggests stress may have pulled recovery down despite good sleep—likely tied to the alcohol intake. The data doesn’t confirm how that affected recovery long-term, so we can’t say if it changed the baseline trend.  \n\nTonight, keep the same quiet routine so sleep and recovery stay aligned—aim to be asleep by 23:10 and wind down by 22:00.",
+      "module" : "sleep",
+      "question" : "Compare my sleep this week with last week.",
+      "seconds" : 6.7409958839416504
+    },
+    {
+      "answer" : "Recovery 18, Strain 19.3, Sleep 5.3h, HRV 52ms, RHR 67bpm against personal baseline.  \nThis means the body is low on readiness, likely from short rest and recent effort, so pushing hard now could slow recovery.  \nThe pattern shows high load recently, but the body is not fully ready—so ease the effort.  \nEat, hydrate and keep the evening easy so you can be asleep by 23:10.",
+      "module" : "workouts",
+      "question" : "Recommend the best workout for today using my Recovery, Strain, Sleep and recent workouts.",
+      "seconds" : 6.0190830230712891
+    },
+    {
+      "answer" : "Recovery 18, Strain 19.3 against 11.8 average.  \n\nThe current load is high, and the body is not fully ready—the low readiness suggests the recent push may be straining the system, likely from the high weekly effort.  \n\nToday’s session should be gentle movement, 20 minutes, main work in zone 1, finishing at a +1-2 Strain level.  \n\nDo easy movement now to bring the readiness up so the next effort can follow with less strain.",
+      "module" : "workouts",
+      "question" : "Plan my training for this week from my current load and recovery.",
+      "seconds" : 5.6975669860839844
+    },
+    {
+      "answer" : "You’ve eaten 0 of 2.250 kcal against your target.\n\nRecovery 18, Strain 19.3, Sleep dash, HRV dash, resting heart rate dash. The low recovery and high strain suggest recent effort without full rest—likely the strength session yesterday pushed you hard with little downtime.\n\nToday’s effort hasn’t fully recovered, so shift to lighter movement—take a 10-minute walk after lunch to help bring recovery up to at least 34 by evening.",
+      "module" : "nutrition",
+      "question" : "Look at what I have eaten today against my target and macros and tell me what to do for the rest of the day.",
+      "seconds" : 4.4764599800109863
+    },
+    {
+      "answer" : "Recovery 18, Strain 19.3, Sleep dash, HRV dash, resting heart rate dash.  \nThe low readiness and high effort likely come from recent movement and limited rest—the drop in recovery suggests strain outpaced recovery. The lack of sleep and heart rate baseline means we can’t gauge full recovery, but the pattern points to insufficient rest to handle the load.  \nEat a small, balanced meal tonight—something with protein and complex carbs—so you can restore readiness before tomorrow’s steps.  \nLog your sleep and heart rate tomorrow morning to see if the trend shifts.",
+      "module" : "nutrition",
+      "question" : "Suggest what to eat tonight given what I have eaten today, my target and today's activity.",
+      "seconds" : 4.7731449604034424
+    },
+    {
+      "answer" : "Recovery is 18%, HRV is 26ms under baseline, RHR is up 8bpm.  \nThis means the body is pulling hard—likely from recent effort—so the baseline resilience is dipping, probably from high strain.  \nThe RHR rise and HRV drop suggest the system is under pressure, but the baseline numbers don’t show if sleep or hydration are missing.  \nDo 4 rounds of slow, deep breaths—each 4 seconds in, 6 out—for 2 minutes, starting now and repeating every 10 minutes.",
+      "module" : "breathing",
+      "question" : "Which breathing exercise fits me right now? Use my live heart rate, HRV, stress and Recovery, and what worked in my earlier breathing sessions.",
+      "seconds" : 4.393610954284668
+    },
+    {
+      "answer" : "Recovery is 18%, HRV 26ms under baseline, RHR up 8bpm.  \nThe dip in HRV and rise in heart rate suggest stress from recent effort, likely linked to pushing during sessions. The drop in HRV may reflect strain, but the data doesn’t show whether sleep or food played a role.  \nDo 6 minutes of slow, comfortable breathing now, repeat it at the end of each session today for 2 minutes.",
+      "module" : "breathing",
+      "question" : "How did my recent breathing sessions go? Look at the HRV and heart rate change in each and tell me what is working.",
+      "seconds" : 3.5278300046920776
+    },
+    {
+      "answer" : "The strap shows a connection status of not connected, with no recent sync since the app opened and a Bluetooth Low Energy issue noted.  \n\nThe lack of stable link likely stems from weak signal or poor pairing signal—the strap may be struggling to communicate reliably. The data does not show exact power level or sync history beyond the error.  \n\nBring the strap closer to the phone and attempt a full reconnect—do this now for 2 minutes. Keep the phone near the strap until it responds.",
+      "module" : "device",
+      "question" : "Why might my strap keep disconnecting from the phone?",
+      "seconds" : 3.7705889940261841
+    },
+    {
+      "answer" : "The strap shows connection: not connected, last sync: none since the app opened, problem: can't use Bluetooth Low Energy.  \nRecovery 18%, strain 19.3, sleep dash, HRV dash, resting heart rate 8 bpm. Low readiness and weak link to the system—the most likely cause is disrupted sync preventing full tracking. The data cannot tell how long the battery lasts since no charge info.  \nBring the strap closer to the phone, restart the app, reconnect—do this now for 2 minutes to restore the link.  \n\nTry syncing again after the restart—will this lift the red signal?",
+      "module" : "device",
+      "question" : "How should I charge my strap and how long does the battery last?",
+      "seconds" : 4.5955469608306885
+    }
+  ],
+  "compactContext" : "USER BIOMETRIC SUMMARY (the user's own wearable data):\n\nBODY STATE READ (today vs personal baseline; not a diagnosis): recovery needed. Confidence high. Evidence: Recovery 18; sleep 5.3h vs 7.2h baseline; HRV 52ms vs 82ms baseline; RHR 67bpm vs 54bpm baseline; recent strain 17.6 vs 11.3 average daily strain. Coach stance: Prefer easy movement, mobility, or extra sleep; avoid stacking another hard session.\n\nRecent days (newest first) — recovery(0-100), strain(0-21), sleep(h), deep\/REM\/light(h), eff(%), HRV(ms), RHR(bpm). A dash means NOT MEASURED, not zero:\n  2026-11-20:, recovery 18, strain 19.3, sleep 5.3h, deep 0.7h, REM 0.8h, light 3.8h, eff 70%, HRV 52ms, RHR 67bpm\n  2026-11-19:, recovery 35, strain 18.5, sleep 6.8h, deep 1.4h, REM 1.8h, light 3.6h, eff 81%, HRV 78ms, RHR 59bpm\n  2026-11-18:, recovery 74, strain 14.9, sleep 7.1h, deep 1.3h, REM 1.7h, light 4.1h, eff 91%, HRV 66ms, RHR 59bpm\n  2026-11-17:, recovery 31, strain 3.9, sleep 7.1h, deep 1.4h, REM 1.7h, light 4.0h, eff 88%, HRV 78ms, RHR 57bpm\n  2026-11-16:, recovery 86, strain 15.2, sleep 7.9h, deep 1.6h, REM 1.4h, light 5.0h, eff 84%, HRV 77ms, RHR 52bpm\n  2026-11-15:, recovery 58, strain 16.4, sleep 7.0h, deep 1.8h, REM 1.7h, light 3.5h, eff 91%, HRV 86ms, RHR 51bpm\n  2026-11-14:, recovery 28, strain 14.3, sleep 8.2h, deep 1.6h, REM 1.7h, light 4.9h, eff 88%, HRV 73ms, RHR 61bpm\n\n30-day averages:\n  recovery: 62, strain: 11.8, sleep: 7.2h, HRV: 81 ms, RHR: 55 bpm\n  SpO2: 96%, respiration: 14.5\/min, skin-temp deviation: -0.0°C, steps: —\/day, active energy: —kcal\/day\n\nRecent workouts (newest first):\n  2026-11-20 Strength Training, 58 min, strain 7.6, avg HR 121, max HR 158, 362 kcal\n  2026-11-20 HIIT, 45 min, strain 4.0, avg HR 141, max HR 170, 327 kcal\n  2026-11-20 Breathwork, 20 min, avg HR 66, max HR 78\n\nStress (SI): 24 (Baevsky Stress Index over today's R-R; higher means more sympathetic \/ under load; an autonomic-balance proxy, not a clinical figure).\n\nRIGHT NOW: Friday 20 November, 20:35 (evening). This is the review part of the day: when asked how the day went, say what its Strain and the night ahead imply and point to bedtime, not to a new hard session.\nSTRAIN (0-21 scale, as the person sees it): Strain so far today 19.3 (a usual day is about 14.3); the Strain worth aiming for at today's Recovery is 4-10; last 7 days 103.\nTODAY'S SUGGESTED SESSION (the same one the Plan card shows; do not contradict it unless the person gives a reason): Easy movement, 20 min, main work in zone 1, about +1-2 Strain. It was chosen from a Recovery of 18.\nSLEEP TONIGHT: personal need about 8h, with a recent debt of about 2h 5m; centred on the usual midsleep 03:10, being asleep by about 23:10. Debt is repaid over several nights: never ask for more than about 45 minutes of extra sleep in one night.\nNEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): The day's load is done. Eat, hydrate and keep the evening easy so you can be asleep by 23:10.",
+  "compactContextChars" : 3017,
+  "compactSystemChars" : 2583,
+  "configured" : true,
+  "consent" : true,
+  "fullSystemChars" : 12052,
+  "pages" : [
+
+  ],
+  "provider" : "appleIntelligence",
+  "scale" : "whoop",
+  "scenario" : "poor"
+}

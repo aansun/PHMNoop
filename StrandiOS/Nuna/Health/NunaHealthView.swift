@@ -360,7 +360,9 @@ struct NunaHealthView: View {
                                : String(localized: "You slept \(dur) a night over the last \(nights.count) nights, \(diff) more than you need.")
             }()
             let detail: String? = rest.isEmpty ? nil : String(localized: "Average Sleep \(Int((rest.reduce(0, +) / Double(rest.count)).rounded()))%")
-            NunaAnyaCard(verbatim: line, detail: detail) { showSleepCoach = true }
+            // The step that goes with the reading: to close the gap when the nights are short, to keep the routine when they are not.
+            let step = NunaAnyaVerdict.sleep(averageMin: avg, needMin: need)?.advice
+            NunaAnyaCard(verbatim: line, detail: [detail, step].compactMap { $0 }.joined(separator: " ")) { showSleepCoach = true }
         }
     }
 

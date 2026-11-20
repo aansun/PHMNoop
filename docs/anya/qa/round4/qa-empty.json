@@ -1,0 +1,207 @@
+{
+  "breath" : {
+    "output" : "This breathing exercise is to help you feel more relaxed and ready for rest, like a gentle pause before drifting off. It should leave you feeling soft and peaceful, not tense.\n```anya-breath\n{\"title\":\"Slow breath for bedtime\",\"goal\":\"calm\",\"minutes\":5,\"stages\":[{\"seconds\":6,\"phase\":\"inhale\"},{\"seconds\":6,\"phase\":\"exhale\"}]}\n```",
+    "parsed" : true,
+    "seconds" : 2.2054489850997925
+  },
+  "chat" : [
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "today",
+      "question" : "Why did my Recovery change compared with yesterday? Use my sleep, HRV and resting heart rate.",
+      "seconds" : 0.00052094459533691406
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "today",
+      "question" : "Summarise my day so far in a few sentences, using my numbers.",
+      "seconds" : 0.00019097328186035156
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "health",
+      "question" : "Explain what my HRV is telling me today, compared with my own baseline.",
+      "seconds" : 0.00019896030426025391
+    },
+    {
+      "answer" : "This surface does not include fitness age or how it’s calculated. The numbers here reflect readiness, sleep quality, heart rate patterns and recovery trends against personal history. You’ll find fitness age in a different report, built from broader performance patterns over time.  \n\nYou cannot tell how it’s built from this data alone—it relies on aggregated performance trends, not daily readings.  \n\nWear the strap overnight and sync in the morning so there is something to read. Keep the routine of consistent wear so the full picture builds.",
+      "module" : "health",
+      "question" : "What is fitness age and how is mine worked out in this app?",
+      "seconds" : 4.8852999210357666
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "trends",
+      "question" : "Why did my Recovery move over the last month? Point to the behaviours in my data.",
+      "seconds" : 0.00039792060852050781
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "trends",
+      "question" : "Which day was hardest on my body this month and what followed it?",
+      "seconds" : 0.00021803379058837891
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "sleep",
+      "question" : "Why might I have woken up several times last night? Use my sleep numbers.",
+      "seconds" : 0.00030803680419921875
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "sleep",
+      "question" : "Compare my sleep this week with last week.",
+      "seconds" : 0.00020992755889892578
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "workouts",
+      "question" : "Recommend the best workout for today using my Recovery, Strain, Sleep and recent workouts.",
+      "seconds" : 0.00023400783538818359
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "module" : "workouts",
+      "question" : "Plan my training for this week from my current load and recovery.",
+      "seconds" : 0.00020396709442138672
+    },
+    {
+      "answer" : "You’ve eaten 0 of 2.250 kcal today, with nothing logged in the past 14 days.  \n\nThis means your intake is far below the level your body needs to function, and the lack of recorded fuel may be the reason for the low energy signal.  \n\nTo close the gap, eat the next meal with a small portion of food—start with 100 kcal—within the next 15 minutes.  \n\nIs there a way to begin tracking today’s intake moving forward?",
+      "module" : "nutrition",
+      "question" : "Look at what I have eaten today against my target and macros and tell me what to do for the rest of the day.",
+      "seconds" : 4.0660940408706665
+    },
+    {
+      "answer" : "Your energy balance shows 0 of 2.250 kcal eaten today, with 2.250 left to reach your 2250 kcal plan—no food logged in the last 14 days. Since nothing is recorded, the gap likely stems from an unlogged meal or drink. You’ve had no recorded intake, and no activity data is present—this means we cannot assess what you ate today or how much you’ve moved. To close the gap, eat a small, familiar item now—something simple—so you can log it later.  \nWhat did you eat earlier today?",
+      "module" : "nutrition",
+      "question" : "Suggest what to eat tonight given what I have eaten today, my target and today's activity.",
+      "seconds" : 4.7056469917297363
+    },
+    {
+      "answer" : "Strain: 14, Recovery: 42, Sleep: 72, HRV: not available, resting heart rate: not available.  \nRecovery is low and Strain is above the supported range—this means the body is under pressure, likely from recent effort that hasn’t fully recovered. The rise in HRV from a long exhale suggests it worked before, but the current dip may reflect accumulated load.  \nDo the long exhale for 10 minutes now, and repeat it at the end of the day tomorrow to help restore balance.  \n\nIs there a pattern in how long the exhale helped most?",
+      "module" : "breathing",
+      "question" : "Which breathing exercise fits me right now? Use my live heart rate, HRV, stress and Recovery, and what worked in my earlier breathing sessions.",
+      "seconds" : 4.7370549440383911
+    },
+    {
+      "answer" : "Your HRV rose 15% today against the 30-day average, up from the 30-day average.  \nThat shift likely came from the long exhale, 10 min, as it showed a clear lift in your own pattern.  \nKeep the long exhale, 10 min, at 20:00—that timing and length are what held the change.  \nRepeat that exercise at 20:00 for 10 minutes today.  \nIf you notice a dip later, it’s worth checking in with how your steps felt—did the daily 8000 target feel heavier?",
+      "module" : "breathing",
+      "question" : "How did my recent breathing sessions go? Look at the HRV and heart rate change in each and tell me what is working.",
+      "seconds" : 4.7043449878692627
+    },
+    {
+      "answer" : "The connection is not connected, with no recent sync since the app opened and a problem using Bluetooth Low Energy.  \n\nThis means the link between the device and the phone is failing, likely because the wireless link can’t stay active—this often happens when the signal drops or the pairing stays weak.  \n\nBring the strap closer to the phone and attempt the connection again—do this now for a clear fix.  \n\nWould you like help checking the phone’s wireless settings next?",
+      "module" : "device",
+      "question" : "Why might my strap keep disconnecting from the phone?",
+      "seconds" : 4.0151309967041016
+    },
+    {
+      "answer" : "The strap is not connected, not syncing, and cannot use Bluetooth Low Energy — not available.  \nThe lack of connection and sync points to a missed link with the phone, likely due to a weak signal or pairing gap.  \nYou cannot tell how long the battery lasts because the data shows no charge history.  \n\nBring the strap closer to the phone and reconnect it — do this now and hold the button for two seconds to restart the link.  \n\nWould you like help confirming the connection after reconnecting?",
+      "module" : "device",
+      "question" : "How should I charge my strap and how long does the battery last?",
+      "seconds" : 4.6658529043197632
+    }
+  ],
+  "compactContext" : "USER BIOMETRIC SUMMARY:\nThere is no wearable data yet. Say so plainly, state no figure about the person (the bands in your instructions are rules, not their readings), and tell them to wear the strap overnight and sync in the morning so there is something to read. A general question can still be answered in general terms.\n\nRecent workouts: none recorded in the last 30 days.\n\nRIGHT NOW: Friday 20 November, 20:58 (evening). This is the review part of the day: when asked how the day went, say what its Strain and the night ahead imply and point to bedtime, not to a new hard session.\nNEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): Keep the evening light.",
+  "compactContextChars" : 736,
+  "compactSystemChars" : 3544,
+  "configured" : true,
+  "consent" : true,
+  "food" : {
+    "input" : "2 telur dadar dan 1 piring nasi goreng",
+    "output" : "An estimate, worked out on this iPhone.\n```anya-food\n{\"items\":[{\"fatG\":6,\"name\":\"2 telur dadar\",\"kcal\":120,\"amount\":\"2 eggs\",\"carbsG\":8,\"proteinG\":12},{\"name\":\"1 piring nasi goreng\",\"proteinG\":15,\"carbsG\":40,\"fatG\":10,\"kcal\":250,\"amount\":\"1 plate\"}]}\n```",
+    "seconds" : 2.9908620119094849
+  },
+  "fullSystemChars" : 12961,
+  "morningBrief" : {
+    "output" : "nil",
+    "seconds" : 0.0039960145950317383
+  },
+  "pages" : [
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Recovery",
+      "seconds" : 0.0040699243545532227,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "No Strain yet today. Anya reads it as soon as your heart rate has spent time in the zones.",
+      "page" : "Strain",
+      "seconds" : 0.0033230781555175781,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "sleep",
+      "seconds" : 0.0025389194488525391,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "stress",
+      "seconds" : 0.002532958984375,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "HRV",
+      "seconds" : 0.00076997280120849609,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Resting heart rate",
+      "seconds" : 0.00075602531433105469,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Respiratory rate",
+      "seconds" : 0.00087797641754150391,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Weight",
+      "seconds" : 0.00081801414489746094,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Skin temperature",
+      "seconds" : 0.000782012939453125,
+      "text" : "nil",
+      "verdict" : "none"
+    }
+  ],
+  "plan" : {
+    "output" : "Here’s what to do today to keep the rhythm and stay on track:  \nKeep the intake at 2150 kcal and aim for a drop of 0.4 kg over the next week, using the current pattern but adjusting the load so it fits the recovery and strain balance—no new foods, just consistency.\n\n```json\n{\n  \"targetKcal\": 2150,\n  \"paceKgPerWeek\": -0.4,\n  \"proteinPerKg\": 1.8,\n  \"explanation\": \"Weight: 75.0 kg, trend: no goal weight, sleep: not available, recovery: not available, training load: not available, intake: 2250 kcal, Lab Book: not shared—this sets the base for maintaining the current calorie level with the protein and fat split based on the existing intake and the need to stay within the energy range while respecting the kidney marker limit on protein—the intake holds at 2250, but we’ll keep it at 2150 to hit the target; the 0.8 g\/kg protein is kept because the kidney marker is outside its range, so protein stays at 1.8 g\/kg to avoid stress—fat is at 28% to align with the current intake, and carbs follow the ratio from the profile—this pace uses the known intake and the lack of new data to keep the weekly shift at -0.25, but we’re now narrowing it to -0.4 to match the goal and the recovery need—the lack of Lab Book data means we can’t confirm the salt level, but the intake must stay on track.\",\n  \"reasons\": [\n    \"Weight: 75.0 kg—this sets the starting point for the intake and protein needs.\",\n    \"Intake: 2250 kcal—this is the current level, but we’re adjusting it to 2150 to align with the target and energy use estimate.\",\n    \"Protein: 1.8 g\/kg—this stays at the level set by the intake because the kidney marker is outside its range, so protein must be kept modest despite the target.\",\n    \"Fat: 28%—this matches the intake split to stay within the energy distribution based on the current plan.\",\n    \"Carbs: follow the ratio—this supports the energy balance without adding new habits.\"\n  ],\n  \"cautions\": [\n    \"Lab Book: not shared—this means we can’t confirm the salt level, but the intake must stay on track.\",\n    \"Weight trend: no goal weight—this keeps the pace at -0.25, but we’re now adjusting to -0.4 to fit the recovery need.\",\n    \"Intake: nothing logged—this means we must rely only on the profile and current data, not new records.\"\n  ]\n}\n```",
+    "parsed" : true,
+    "seconds" : 18.535758972167969
+  },
+  "program" : {
+    "output" : "Three days a week, focusing on compound lifts first with dumbbells. Start with upper body emphasis, then lower body, adjusting volume based on recovery—chest is not fully recovered, so ease off volume. Add smallest weight step once each set reaches top rep range.\n```anya-program\n{\"name\":\"Upper \\\/ lower, 3 days\",\"days\":[{\"title\":\"Day 1: Upper\",\"items\":[{\"repsLow\":6,\"repsHigh\":12,\"exercise\":\"Dumbbell Bench Press - Medium Grip\",\"restSec\":60,\"sets\":3},{\"restSec\":60,\"repsLow\":6,\"exercise\":\"Dumbbell Row\",\"sets\":3,\"repsHigh\":12}]},{\"items\":[{\"sets\":4,\"repsHigh\":12,\"exercise\":\"Dumbbell Romanian Deadlift\",\"repsLow\":6,\"restSec\":60},{\"sets\":3,\"exercise\":\"Dumbbell Goblet Squat\",\"repsHigh\":12,\"restSec\":90,\"repsLow\":6}],\"title\":\"Day 2: Lower\"},{\"title\":\"Day 3: Upper\",\"items\":[{\"repsLow\":6,\"restSec\":60,\"exercise\":\"Dumbbell Bench Press - Medium Grip\",\"sets\":3,\"repsHigh\":12},{\"exercise\":\"Dumbbell Row\",\"repsLow\":6,\"repsHigh\":12,\"sets\":3,\"restSec\":60},{\"sets\":3,\"restSec\":60,\"repsHigh\":12,\"repsLow\":6,\"exercise\":\"Dumbbell Overhead Press\"}]}],\"note\":\"Add the smallest weight step once every set reaches the top of the rep range\"}\n```",
+    "parsed" : true,
+    "seconds" : 32.745555996894836
+  },
+  "provider" : "appleIntelligence",
+  "scale" : "whoop",
+  "scenario" : "empty"
+}

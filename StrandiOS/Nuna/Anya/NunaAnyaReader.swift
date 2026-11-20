@@ -18,6 +18,8 @@ struct NunaAnyaRead: Equatable {
     /// What the weather and air mean for training, when they are on. Kept apart from the detail so a screen that already shows them
     /// does not say them twice.
     var outdoor: String? = nil
+    /// The phone's judgement of the reading against the person's baseline, when the page has one to make (a metric with a better direction).
+    var verdict: NunaAnyaVerdict? = nil
 }
 
 struct NunaAnyaQuestion: Equatable, Identifiable {
@@ -127,6 +129,9 @@ enum NunaAnyaReader {
         var out = remembering(NunaAnyaRead(headline: String(localized: "Recovery \(c)%, \(tail)"),
                                            detail: bits.isEmpty ? nil : bits.joined(separator: ". ") + ".",
                                            read: read, module: module, questions: questions(.today)), values: vals)
+        let band: (NunaAnyaVerdict.Level, String) = charge >= 67 ? (.good, String(localized: "Recovery \(c)% is in the green band"))
+            : (charge >= 34 ? (.steady, String(localized: "Recovery \(c)% is in the yellow band")) : (.attention, String(localized: "Recovery \(c)% is in the red band")))
+        out.verdict = NunaAnyaVerdict(level: band.0, why: band.1, topic: .recovery)
         // The weather and air, when they are on: what they mean for training today, in plain words (the memory above keeps only the figures).
         let environment = EnvironmentStore.shared
         if environment.isActive, let s = environment.snapshot, Date().timeIntervalSince1970 - Double(s.ts) < 3 * 3600, let a = environment.advice {
@@ -134,6 +139,14 @@ enum NunaAnyaReader {
             out.read.append("Weather and air")
         }
         return out
+    }
+
+    /// Sleep performance against what the night was for: 85% and over covers what the person needs, 70 to 84 is close, under 70 is short.
+    private static func sleepVerdict(rest: Double) -> NunaAnyaVerdict {
+        let r = Int(rest.rounded())
+        if rest >= 85 { return NunaAnyaVerdict(level: .good, why: String(localized: "Sleep \(r)% covers what you need"), topic: .sleep) }
+        if rest >= 70 { return NunaAnyaVerdict(level: .steady, why: String(localized: "Sleep \(r)% is close to what you need"), topic: .sleep) }
+        return NunaAnyaVerdict(level: .attention, why: String(localized: "Sleep \(r)% is short of what you need"), topic: .sleep)
     }
 
     // MARK: Sleep
@@ -151,8 +164,10 @@ enum NunaAnyaReader {
             let parts = NunaInsightText.sleepParts(read, factors: context, wakeDay: night.dayKey)
             var vals: [String: Double] = ["rest": rest]
             if let v = m.sleepMinutes { vals["sleepMin"] = v }
-            return remembering(NunaAnyaRead(headline: parts.why, detail: parts.action, read: ["Sleep", "Sleep duration", "Sleep stages"],
-                                            module: .sleep, questions: questions(.sleep)), values: vals)
+            var out = remembering(NunaAnyaRead(headline: parts.why, detail: parts.action, read: ["Sleep", "Sleep duration", "Sleep stages"],
+                                               module: .sleep, questions: questions(.sleep)), values: vals)
+            out.verdict = sleepVerdict(rest: rest)
+            return out
         }
         let hours = m.sleepMinutes.map { NunaAnyaReader.hm($0) }
         var bits: [String] = []
@@ -165,8 +180,10 @@ enum NunaAnyaReader {
         if let v = m.sleepMinutes { vals["sleepMin"] = v }
         if let v = m.day?.efficiency { vals["efficiency"] = v }
         if let v = m.day?.deepMin, v > 0 { vals["deepMin"] = v }
-        return remembering(NunaAnyaRead(headline: head, detail: bits.isEmpty ? nil : bits.joined(separator: ". ") + ".",
-                                        read: read, module: .sleep, questions: questions(.sleep)), values: vals)
+        var out = remembering(NunaAnyaRead(headline: head, detail: bits.isEmpty ? nil : bits.joined(separator: ". ") + ".",
+                                           read: read, module: .sleep, questions: questions(.sleep)), values: vals)
+        out.verdict = sleepVerdict(rest: rest)
+        return out
     }
 
     // MARK: Health
@@ -346,9 +363,12 @@ enum NunaAnyaReader {
         let a = last7.reduce(0, +) / Double(last7.count), b = prior.reduce(0, +) / Double(prior.count)
         let diff = Int((a - b).rounded())
         let word = diff == 0 ? String(localized: "level with") : (diff > 0 ? String(localized: "\(diff) points above") : String(localized: "\(-diff) points below"))
-        return remembering(NunaAnyaRead(headline: String(localized: "Recovery averaged \(Int(a.rounded()))% this week, \(word) the month before"),
-                                        detail: String(localized: "Compared with \(prior.count) earlier days (\(Int(b.rounded()))% on average)."),
-                                        read: ["Recovery", "30 days"], module: .trends, questions: questions(.trends)), values: ["week": a, "before": b])
+        var out = remembering(NunaAnyaRead(headline: String(localized: "Recovery averaged \(Int(a.rounded()))% this week, \(word) the month before"),
+                                           detail: String(localized: "Compared with \(prior.count) earlier days (\(Int(b.rounded()))% on average)."),
+                                           read: ["Recovery", "30 days"], module: .trends, questions: questions(.trends)), values: ["week": a, "before": b])
+        // Five points either way is a trend; less is level.
+        out.verdict = NunaAnyaVerdict(level: diff <= -5 ? .attention : (diff >= 5 ? .good : .steady), why: out.headline, topic: .trend)
+        return out
     }
 
     // MARK: Breathing
@@ -385,7 +405,18 @@ enum NunaAnyaReader {
         var read = ["Strain"]
         if m.charge.pct != nil { read.append("Recovery") }
         if week != nil { read.append("Workouts 7 days") }
-        return NunaAnyaRead(headline: headline, detail: parts.isEmpty ? nil : parts.joined(separator: " "), read: read, module: .workouts, questions: questions(.workouts))
+        var out = NunaAnyaRead(headline: headline, detail: parts.isEmpty ? nil : parts.joined(separator: " "), read: read, module: .workouts, questions: questions(.workouts))
+        // Against the band of Strain today's Recovery supports (the one the Coupled screen and the plan judge by).
+        if let band = CoupledView.optimalStrainRange(recovery: m.charge.pct) {
+            let lo = band.lowerBound, hi = band.upperBound
+            let now = UnitFormatter.effortValue(e, scale: .whoop)   // the band is on the 0-21 axis
+            let shownNow = UnitFormatter.effortDisplay(e, scale: scale)
+            let range = "\(Int(UnitFormatter.effortValue(Double(lo) / UnitFormatter.effortScaleFactor, scale: scale).rounded()))-\(Int(UnitFormatter.effortValue(Double(hi) / UnitFormatter.effortScaleFactor, scale: scale).rounded()))"
+            if now > Double(hi) { out.verdict = NunaAnyaVerdict(level: .attention, why: String(localized: "Strain \(shownNow) is above the \(range) range your Recovery supports"), topic: .strain) }
+            else if now < Double(lo) { out.verdict = NunaAnyaVerdict(level: .steady, why: String(localized: "Strain \(shownNow) is under the \(range) range your Recovery supports"), topic: .strain) }
+            else { out.verdict = NunaAnyaVerdict(level: .good, why: String(localized: "Strain \(shownNow) is inside the \(range) range your Recovery supports"), topic: .strain) }
+        }
+        return out
     }
 
     private static func workouts(repo: Repository, scale: EffortScale) async -> NunaAnyaRead? {
@@ -395,10 +426,20 @@ enum NunaAnyaReader {
         guard !week.isEmpty else { return nil }
         let effort = week.compactMap(\.strain).reduce(0, +)
         let minutes = Int(week.reduce(0.0) { $0 + ($1.durationS ?? Double($1.endTs - $1.startTs)) } / 60)
-        return remembering(NunaAnyaRead(headline: String(localized: "\(week.count) sessions this week, Strain \(UnitFormatter.effortDisplay(effort, scale: scale))"),
-                                        detail: String(localized: "\(minutes) minutes of training in the last 7 days."),
-                                        read: ["Workouts 7 days", "Strain"], module: .workouts, questions: questions(.workouts)),
-                           values: ["sessions": Double(week.count), "minutes": Double(minutes), "weekEffort": Double(UnitFormatter.effortDisplay(effort, scale: scale)) ?? effort])
+        var out = remembering(NunaAnyaRead(headline: String(localized: "\(week.count) sessions this week, Strain \(UnitFormatter.effortDisplay(effort, scale: scale))"),
+                                           detail: String(localized: "\(minutes) minutes of training in the last 7 days."),
+                                           read: ["Workouts 7 days", "Strain"], module: .workouts, questions: questions(.workouts)),
+                              values: ["sessions": Double(week.count), "minutes": Double(minutes), "weekEffort": Double(UnitFormatter.effortDisplay(effort, scale: scale)) ?? effort])
+        // This week against the average of the three weeks before it: half as much again is well above usual.
+        let earlierFrom = Int(Date().addingTimeInterval(-28 * 86_400).timeIntervalSince1970)
+        let earlier = rows.filter { $0.startTs >= earlierFrom && $0.startTs < from }.compactMap(\.strain).reduce(0, +) / 3
+        if earlier > 0 {
+            let ratio = effort / earlier
+            out.verdict = ratio > 1.5
+                ? NunaAnyaVerdict(level: .attention, why: String(localized: "This week's Strain is \(Int(((ratio - 1) * 100).rounded()))% above your usual week"), topic: .load)
+                : NunaAnyaVerdict(level: .good, why: String(localized: "This week's Strain is in your usual range"), topic: .load)
+        }
+        return out
     }
 
     // MARK: One metric
@@ -414,13 +455,33 @@ enum NunaAnyaReader {
         let unit = m.unit.isEmpty ? "" : (m.unit == "%" ? "%" : " " + m.unit)
         var head = "\(m.title) \(f(latest.value))\(unit)"
         var read = [m.title]
+        var verdict: NunaAnyaVerdict?
         if earlier.count >= 5 {
             let avg = earlier.reduce(0, +) / Double(earlier.count)
             let tol = max(abs(avg) * 0.03, m.decimals == 0 ? 0.5 : 0.05)
-            let word = abs(latest.value - avg) <= tol ? String(localized: "in line with")
+            let steady = abs(latest.value - avg) <= tol
+            let word = steady ? String(localized: "in line with")
                 : (latest.value > avg ? String(localized: "above") : String(localized: "below"))
             head += ", \(word) " + String(localized: "your \(earlier.count)-day average (\(f(avg)))")
             read.append(String(localized: "\(earlier.count) days"))
+            let topic = NunaAnyaTopic.of(metricKey: m.key, title: m.title)
+            if topic == .skinTemp {
+                // The figure is already the rise from this person's usual: half a degree either way is a signal, less is the usual band.
+                let rise = latest.value
+                let shown = f(abs(rise))
+                if rise >= 0.5 { verdict = NunaAnyaVerdict(level: .attention, why: String(localized: "Skin temperature is \(shown) °C above your usual"), topic: .skinTemp) }
+                else if rise <= -0.5 { verdict = NunaAnyaVerdict(level: .steady, why: String(localized: "Skin temperature is \(shown) °C below your usual"), topic: .skinTemp) }
+                else { verdict = NunaAnyaVerdict(level: .good, why: String(localized: "Skin temperature is within your usual band"), topic: .skinTemp) }
+            } else if topic == .vitals, m.higherIsBetter == nil {
+                // A vital sign with no better direction (breathing rate): a move of more than a twentieth, and at least one unit, either way is worth attention.
+                let off = abs(latest.value - avg) > max(abs(avg) * 0.05, 1.0)
+                verdict = NunaAnyaVerdict(level: off ? .attention : .good, why: head, topic: .vitals)
+            } else if let higherIsBetter = m.higherIsBetter {
+                // A metric with a better direction gets a verdict: on the better side of its own average is good, on the worse side needs attention.
+                let better = (latest.value > avg) == higherIsBetter
+                verdict = NunaAnyaVerdict(level: steady ? .steady : (better ? .good : .attention), why: head,
+                                          topic: NunaAnyaTopic.of(metricKey: m.key, title: m.title))
+            }
         }
         var detail: String?
         if series.count >= 2 {
@@ -430,7 +491,7 @@ enum NunaAnyaReader {
             detail = tiny ? String(localized: "Same as the day before (\(f(prev))).")
                 : (d > 0 ? String(localized: "Up \(f(abs(d))) from the day before (\(f(prev))).") : String(localized: "Down \(f(abs(d))) from the day before (\(f(prev))).")) 
         }
-        return NunaAnyaRead(headline: head, detail: detail, read: read, module: .health, questions: metricQuestions(m))
+        return NunaAnyaRead(headline: head, detail: detail, read: read, module: .health, questions: metricQuestions(m), verdict: verdict)
     }
 
     private static func stressRead(_ m: NunaAnyaMetric, repo: Repository, profile: ProfileStore) async -> NunaAnyaRead? {
@@ -452,7 +513,16 @@ enum NunaAnyaReader {
         var read = ["Stress"]
         if model.hrv != nil { read.append("HRV") }
         if model.restingHr != nil { read.append("Resting HR") }
-        return NunaAnyaRead(headline: head, detail: detail, read: read, module: .health, questions: metricQuestions(m))
+        // Against the person's own baseline when there is one (calmer is good, clearly tenser needs attention), else by the band of the 0-3 scale.
+        let verdictLevel: NunaAnyaVerdict.Level
+        if let base = model.stressBaseline {
+            let d = level - base
+            verdictLevel = d <= 0.05 ? .good : (d >= 0.3 ? .attention : .steady)
+        } else {
+            verdictLevel = level < 1 ? .good : (level >= 2 ? .attention : .steady)
+        }
+        return NunaAnyaRead(headline: head, detail: detail, read: read, module: .health, questions: metricQuestions(m),
+                            verdict: NunaAnyaVerdict(level: verdictLevel, why: head, topic: .stress))
     }
 
     /// Questions about this metric, in this metric's words.

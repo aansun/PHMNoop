@@ -145,6 +145,9 @@ struct NunaRootView: View {
         // Anya reads the clock, the Plan card's session, banked Effort and tonight's sleep need with every request.
         .task {
             NunaAnyaDayContext.install(on: model.coach, repo: model.repo, profile: model.profile)
+            #if DEBUG
+            NunaAnyaQA.runIfRequested(model: model)
+            #endif
             // The daily brief is armed (and made, if its time has passed) as soon as the app is up, not only when the Anya tab is opened.
             CoachBriefScheduler.activateIfEnabled { await model.coach.generateBrief() }
         }

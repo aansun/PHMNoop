@@ -1,0 +1,219 @@
+{
+  "breath" : {
+    "output" : "This breathing exercise is to help you feel more relaxed and ready for rest. It should bring a sense of quiet ease, like a soft hush settling in.\n```anya-breath\n{\"stages\":[{\"phase\":\"inhale\",\"seconds\":6},{\"phase\":\"exhale\",\"seconds\":10},{\"seconds\":6,\"phase\":\"inhale\"},{\"phase\":\"exhale\",\"seconds\":10}],\"title\":\"Soft breaths for sleep\",\"minutes\":5,\"goal\":\"calm\"}\n```",
+    "parsed" : true,
+    "seconds" : 2.7880430221557617
+  },
+  "chat" : [
+    {
+      "answer" : "Recovery 91, HRV 100ms, RHR 50bpm — all up from yesterday’s 49, 78ms, 59bpm.  \nThis shift best supports a strong recovery response, likely driven by better sleep quality and lower strain overnight. The data doesn’t confirm exactly why sleep improved, but the consistency of HRV and RHR staying near baseline suggests recovery was well-regulated.  \nKeep the rhythm: tonight, aim for 7.9h of sleep by 23:10, finish wind-down by 22:10.",
+      "module" : "today",
+      "question" : "Why did my Recovery change compared with yesterday? Use my sleep, HRV and resting heart rate.",
+      "seconds" : 6.510045051574707
+    },
+    {
+      "answer" : "Your current Strain is 10.9, which sits below your daily target of 14–18, especially given your high Recovery of 91. Sleep tonight is 8.0 hours—4.0 hours more than your 7.2-hour baseline—but that’s a solid gain. HRV is 100ms, up from 82ms, and RHR is 50bpm, down from 54bpm—both strong signs of good recovery.\n\nThe data best supports that your body is handling load well, with no clear signal of strain imbalance. This doesn’t mean the low strain is wrong—it’s consistent with high readiness.\n\nFinish with a 20–30 minute easy session in zone 1 or 2, done at least two hours before 23:10.",
+      "module" : "today",
+      "question" : "Summarise my day so far in a few sentences, using my numbers.",
+      "seconds" : 7.8920780420303345
+    },
+    {
+      "answer" : "Your HRV is 100ms today, against your baseline of 82ms.  \n\nThis best supports that your body is ready to build—your recovery is high and the rhythm between effort and rest is strong. This data cannot tell if stress from the day is lingering, but it shows current readiness.  \n\nKeep the tempo session tonight so it holds. Finish it by 22:30, then wind down—lights out by 23:10.",
+      "module" : "health",
+      "question" : "Explain what my HRV is telling me today, compared with my own baseline.",
+      "seconds" : 5.2757940292358398
+    },
+    {
+      "answer" : "I am Anya, your health assistant—I do not calculate fitness age or derive it from this data.\n\nSleep tonight: 8.0h vs 7.2h baseline—slightly above need, with a small efficiency gain. The data best supports consistent nightly preparation, as the recent debt is modest and recovery remains strong. This does not indicate over-rest or under-rest.\n\nTonight, aim to be in bed by 22:30 and wind down by 23:00 to maintain rhythm.",
+      "module" : "health",
+      "question" : "What is fitness age and how is mine worked out in this app?",
+      "seconds" : 6.1396729946136475
+    },
+    {
+      "answer" : "Your Recovery rose from 28 to 91 over the last month.  \nThe data best supports increased movement—your strength and running sessions, especially the 59-minute run—lifted readiness. This trend cannot tell if stress patterns shifted, as stress is a proxy and not directly tied to recovery changes.  \nKeep hitting those strength and run sessions so the rise holds—aim to maintain Recovery at or above 80 for two more weeks by scheduling one hard session every other day.  \nShould you feel tightness in your legs? Speak to a clinician if it persists.",
+      "module" : "trends",
+      "question" : "Why did my Recovery move over the last month? Point to the behaviours in my data.",
+      "seconds" : 6.2258490324020386
+    },
+    {
+      "answer" : "The hardest day was 2026-11-19, with Recovery 49, Strain 16.1, Sleep 6.8h, HRV 78ms, RHR 59bpm — all above average. The data best supports a spike in effort, as Strain hit its highest point in the week while recovery dipped and HRV lagged. This does not confirm stress from stress index alone, but effort load likely contributed. To stabilize your readiness for your 8000 steps goal, reduce strain to 12.0 by 2026-11-22, then aim for 14.0 by 2026-11-24. Keep the strength sessions light this week.",
+      "module" : "trends",
+      "question" : "Which day was hardest on my body this month and what followed it?",
+      "seconds" : 6.0189000368118286
+    },
+    {
+      "answer" : "Sleep: 8.0h vs 7.2h baseline; deep 1.7h, REM 2.0h, light 4.3h.  \nThe data best supports that fragmented sleep may be linked to low recovery—your body is still preparing, which can cause interruptions. This does not confirm a medical issue, but it shows your system is not fully settled.  \nTonight, set a consistent bedtime by 22:00 and begin a quiet wind-down routine—no screens—by 21:30 to help your recovery climb.",
+      "module" : "sleep",
+      "question" : "Why might I have woken up several times last night? Use my sleep numbers.",
+      "seconds" : 6.5823830366134644
+    },
+    {
+      "answer" : "Your sleep this week averaged 7.9 hours, up from the usual 7.2, with 0.37 hours more than needed—this suggests a gradual recovery in nighttime rest. The deep and light stages were stable, but the REM dip may reflect a subtle shift in recovery timing, which this data cannot confirm alone.  \n\nWith a solid 8.0 hours tonight and a baseline needing 7.2, aim to be asleep by 22:00 tonight—keep the wind-down quiet and consistent.",
+      "module" : "sleep",
+      "question" : "Compare my sleep this week with last week.",
+      "seconds" : 5.7049809694290161
+    },
+    {
+      "answer" : "Your best move today is a short easy session, 20 to 30 minutes in zone 1 or 2, finished at least two hours before 23:10.  \n\nRecovery 91 and Strain 10.9 show you’re ready to build—this points to capacity for light movement without strain. Sleep 8.0h is slightly above baseline, but not enough to push hard. HRV 100ms and RHR 50bpm are both strong, supporting gentle activity.  \n\nStick to this easy session so you preserve readiness for tomorrow’s tempo work.",
+      "module" : "workouts",
+      "question" : "Recommend the best workout for today using my Recovery, Strain, Sleep and recent workouts.",
+      "seconds" : 6.6942780017852783
+    },
+    {
+      "answer" : "Your current Readiness is 91, which supports building—this is a strong signal to move forward purposefully.  \nRecovery is 91 against a baseline of 64, HRV is 100ms against 82ms, and RHR is 50bpm against 54bpm—all show excellent readiness, with minimal strain impact.  \nThe strain so far today is 10.9, well below the 14–18 target range needed to push; the last 7 days show 92—a solid base.  \nThis data best supports a hard session as a quality move—it cannot confirm exact energy stores, but the trend is clear.  \nKeep the tempo session as planned—42 minutes in zone 4—it fits perfectly with your readiness.  \nFinish the session at least two hours before 23:10.",
+      "module" : "workouts",
+      "question" : "Plan my training for this week from my current load and recovery.",
+      "seconds" : 7.8840999603271484
+    },
+    {
+      "answer" : "I can’t assess what you’ve eaten today — the data here doesn’t include food.  \n\nYour Recovery rose to 91, well above your 64-day average, and Strain sits at 10.9, below your usual 11.4. Sleep is 8.0h, slightly more than your baseline 7.2h. HRV is 100ms, up from 82ms, and RHR is 50bpm, lower than your 54bpm baseline. These points show your body is ready to build — the strongest signal is your high Recovery supporting purposeful effort.  \n\nKeep moving toward your 8000 steps habit today — aim for 1000 more than usual, at a pace that matches your baseline effort.",
+      "module" : "nutrition",
+      "question" : "Look at what I have eaten today against my target and macros and tell me what to do for the rest of the day.",
+      "seconds" : 6.6904250383377075
+    },
+    {
+      "answer" : "I’m not suggesting what to eat—this surface is about your recovery and performance trends, not meal planning.  \n\nRecovery 91, strain 14.0, sleep 8.0h, HRV 100ms, RHR 50bpm—this shows strong readiness from recent effort. The data best supports quality movement—your run and strength—paired with solid recovery. It cannot tell if today’s food influenced sleep or HRV.  \n\nKeep moving with purpose—aim to hit 8000 steps today by adding a 10-minute walk after dinner.",
+      "module" : "nutrition",
+      "question" : "Suggest what to eat tonight given what I have eaten today, my target and today's activity.",
+      "seconds" : 5.3141999244689941
+    },
+    {
+      "answer" : "Start with the breathwork that fits now: **20 min of slow, deep breathing at your own pace**.  \n\nRecovery 91, HRV 100ms, stress 24, and strain 10.9—this points to your body being ready to build. The data best supports the need for purposeful effort, not strain. This does not confirm sleep quality or stress load beyond the index.  \n\nDo the 20-minute breathwork now—keep it slow and comfortable. Repeat this same 20-minute session at the hour mark tomorrow to maintain the rhythm.  \n\nWould you like to track how your steps feel after this?",
+      "module" : "breathing",
+      "question" : "Which breathing exercise fits me right now? Use my live heart rate, HRV, stress and Recovery, and what worked in my earlier breathing sessions.",
+      "seconds" : 5.5636169910430908
+    },
+    {
+      "answer" : "Your recent breathing sessions show strong recovery and stable HRV.  \n\nOn 2026-11-20, HRV is 100ms vs 82ms baseline—this best supports your body’s ability to reset quickly, likely from consistent, slow breathing. Your RHR dropped to 50bpm vs 54bpm baseline—this reflects effective autonomic regulation.  \n\nKeep the 20-minute breathwork at the hour that felt most balanced—this habit helps it hold.  \n\nDo 20 minutes of slow, comfortable breathwork now—repeat it at the next hour if you feel steady.",
+      "module" : "breathing",
+      "question" : "How did my recent breathing sessions go? Look at the HRV and heart rate change in each and tell me what is working.",
+      "seconds" : 6.5123070478439331
+    },
+    {
+      "answer" : "I cannot link strap disconnections to the data here—this surface shows sleep, recovery, and strain, not hardware faults. The readings reflect body response, not device reliability.  \n\nYour Recovery is 91, Sleep 8.0h against 7.2h baseline—good, but the recent dip to 49 today suggests strain may have pulled you down. HRV is 100ms, RHR 50bpm—both strong, showing readiness.  \n\nKeep the bedtime routine steady—aim for 23:10 and wind down by 22:30. That consistency helps the system hold.  \n\nTonight, set the alarm for 22:30 to begin the quiet shift.",
+      "module" : "device",
+      "question" : "Why might my strap keep disconnecting from the phone?",
+      "seconds" : 7.8061429262161255
+    },
+    {
+      "answer" : "I am Anya, your health assistant — I cannot provide charging instructions or battery details, as this surface focuses on sleep and recovery, not device care.\n\nSleep tonight hit 8.0h, which is above your 7.2h baseline, but you’re behind by 0h 37m — that’s the debt. The data best supports a consistent wake time near 23:10, as sleep quality and timing tie directly to recovery readiness. It cannot confirm if stress spiked late, only that deep sleep dipped.\n\nKeep your wake time steady so recovery stays strong — aim to be in bed by 22:00 tonight.",
+      "module" : "device",
+      "question" : "How should I charge my strap and how long does the battery last?",
+      "seconds" : 6.5085231065750122
+    }
+  ],
+  "compactContext" : "USER BIOMETRIC SUMMARY (the user's own wearable data):\n\nBODY STATE READ (today vs personal baseline; not a diagnosis): ready to build. Confidence high. Evidence: Recovery 91; sleep 8.0h vs 7.2h baseline; HRV 100ms vs 82ms baseline; RHR 50bpm vs 54bpm baseline; recent strain 14.0 vs 11.2 average daily strain. Coach stance: A quality session is reasonable if the user feels well; keep the hard work purposeful.\n\nRecent days (newest first) — recovery(0-100), strain(0-21), sleep(h), deep\/REM\/light(h), eff(%), HRV(ms), RHR(bpm). A dash means NOT MEASURED, not zero:\n  2026-11-20:, recovery 91, strain 10.9, sleep 8.0h, deep 1.7h, REM 2.0h, light 4.3h, eff 94%, HRV 100ms, RHR 50bpm\n  2026-11-19:, recovery 49, strain 16.1, sleep 6.8h, deep 1.4h, REM 1.8h, light 3.6h, eff 81%, HRV 78ms, RHR 59bpm\n  2026-11-18:, recovery 74, strain 14.9, sleep 7.1h, deep 1.3h, REM 1.7h, light 4.1h, eff 91%, HRV 66ms, RHR 59bpm\n  2026-11-17:, recovery 31, strain 3.9, sleep 7.1h, deep 1.4h, REM 1.7h, light 4.0h, eff 88%, HRV 78ms, RHR 57bpm\n  2026-11-16:, recovery 86, strain 15.2, sleep 7.9h, deep 1.6h, REM 1.4h, light 5.0h, eff 84%, HRV 77ms, RHR 52bpm\n  2026-11-15:, recovery 58, strain 16.4, sleep 7.0h, deep 1.8h, REM 1.7h, light 3.5h, eff 91%, HRV 86ms, RHR 51bpm\n  2026-11-14:, recovery 28, strain 14.3, sleep 8.2h, deep 1.6h, REM 1.7h, light 4.9h, eff 88%, HRV 73ms, RHR 61bpm\n\n30-day averages:\n  recovery: 64, strain: 11.4, sleep: 7.2h, HRV: 82 ms, RHR: 54 bpm\n  SpO2: 97%, respiration: 14.4\/min, skin-temp deviation: -0.1°C, steps: —\/day, active energy: —kcal\/day\n\nRecent workouts (newest first):\n  2026-11-20 Running, 59 min, strain 7.1, avg HR 129, max HR 149, 407 kcal, 2.9 km, time in zones Z1 16% Z2 23% Z3 38% Z5 9%\n  2026-11-20 Strength Training, 58 min, strain 7.6, avg HR 108, max HR 146, 362 kcal\n  2026-11-20 Breathwork, 20 min, avg HR 66, max HR 78\n\nStress (SI): 24 (Baevsky Stress Index over today's R-R; higher means more sympathetic \/ under load; an autonomic-balance proxy, not a clinical figure).\n\nRIGHT NOW: Friday 20 November, 19:56 (evening). This is the review part of the day: when asked how the day went, say what its Strain and the night ahead imply and point to bedtime, not to a new hard session.\nSTRAIN (0-21 scale, as the person sees it): Strain so far today 10.9 (a usual day is about 13.4); the Strain worth aiming for at today's Recovery is 14-18; last 7 days 92.\nTODAY'S SUGGESTED SESSION (the same one the Plan card shows; do not contradict it unless the person gives a reason): Tempo session, 42 min, main work in zone 4, about +7-11 Strain. It was chosen from a Recovery of 91.\nSLEEP TONIGHT: personal need about 8h, with a recent debt of about 0h 37m; centred on the usual midsleep 03:10, being asleep by about 23:10. Debt is repaid over several nights: never ask for more than about 45 minutes of extra sleep in one night.\nNEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): There is still room for a short easy session, 20 to 30 minutes in zone 1 or 2, finished at least two hours before 23:10.",
+  "compactContextChars" : 3102,
+  "compactSystemChars" : 2431,
+  "configured" : true,
+  "consent" : true,
+  "food" : {
+    "input" : "2 telur dadar dan 1 piring nasi goreng",
+    "output" : "An estimate, worked out on this iPhone.\n```anya-food\n{\"items\":[{\"name\":\"2 telur dadar\",\"proteinG\":12,\"kcal\":180,\"amount\":\"2 eggs\",\"carbsG\":6,\"fatG\":8},{\"name\":\"1 piring nasi goreng\",\"proteinG\":14,\"carbsG\":75,\"fatG\":12,\"amount\":\"1 plate\",\"kcal\":350}]}\n```",
+    "seconds" : 2.8391499519348145
+  },
+  "fullSystemChars" : 11900,
+  "morningBrief" : {
+    "output" : "Hi, Anya here — your body is showing strong readiness to build today, especially with the high recovery.  \n\n- Recovery 91, Strain 10.9, Sleep 8.0h, HRV 100ms, RHR 50bpm — these show your system is balanced, but the strain is low enough to keep the day light.  \n- The data best supports that recent movement is well-tolerated, but it cannot confirm how stress will affect sleep tonight.  \n- Keep the tempo session short and indoor — your baseline suggests outdoor effort may add strain.  \n\nFinish with a 20-minute walk in the house, done by 22:30.",
+    "seconds" : 6.5277099609375
+  },
+  "pages" : [
+    {
+      "headline" : "Recovery 91%—good, showing strong readiness",
+      "local" : "Recovery 91%, ready for a moderate load. Resting heart rate down 9 bpm. HRV up 22 ms. Strain so far 10.9. Compared with my note yesterday: Recovery 91% (was 82%), Resting heart rate 50 bpm (was 54 bpm).",
+      "localAdvice" : "You are ready for a quality session today; warm up well, then spend it where it counts.",
+      "page" : "Recovery",
+      "seconds" : 6.0422420501708984,
+      "text" : "Recovery 91%—good, showing strong readiness\n\n**What I see**\nRecovery 91%, HRV up 22 ms, RHR down 9 bpm, sleep 8.0h, strain 10.9\n\n**What it means**\nThe data best supports consistent sleep quality as the stabilizing force behind this high readiness\n\n**What to do**\nTonight, keep the current bedtime routine—aim to be asleep by 23:10 without rushing, to preserve this balance.",
+      "topic" : "recovery",
+      "verdict" : "good: Recovery 91% is in the green band"
+    },
+    {
+      "headline" : "Your Strain is under the range your Recovery supports—room for a short easy session.",
+      "local" : "Strain 10.9 of 21 so far today. You are under the Strain your Recovery supports today, so there is room for a session if you feel like it. 23 sessions this week, Strain 135.6.",
+      "localAdvice" : "There is room left: a short session in zone 2 would fit if you feel like it.",
+      "page" : "Strain",
+      "seconds" : 5.2517169713973999,
+      "text" : "Your Strain is under the range your Recovery supports—room for a short easy session.\n\n**What I see**\nStrain 10.9 against a supported range of 14-18, Recovery 64, Sleep 7.2h\n\n**What it means**\nYour Recovery supports moderate effort today, so the data best supports maintaining a balanced rhythm rather than pushing hard\n\n**What to do**\nFinish a 20 to 30 minute easy session in zone 1 or 2, completed at least two hours before 23:10.",
+      "topic" : "strain",
+      "verdict" : "steady: Strain 10.9 is under the 14-18 range your Recovery supports"
+    },
+    {
+      "headline" : "Sleep is meeting needs—keep the routine intact",
+      "local" : "A full night did the work: you slept 1h 0m past what you need. HRV and resting heart rate agree: your body took it well. You logged alcohol yesterday; with only 68 such night(s) so far there is not enough to say whether it moves your sleep. Repeat what you did yesterday evening: it worked. Compared with my note 7 days ago: Sleep 100% (was 85%).",
+      "localAdvice" : "Repeat what you did yesterday evening: same bedtime, no late meal, screens down early.",
+      "page" : "sleep",
+      "seconds" : 6.0080190896987915,
+      "text" : "Sleep is meeting needs—keep the routine intact\n\n**What I see**\nsleep 1h 0m past need, efficiency 100%, deep 1.7h, REM 2.0h\n\n**What it means**\nThe data best supports strong resilience—your body handled the night well despite the extra time\n\n**What to do**\nStick to your evening routine as it worked yesterday—finish the same way tonight to keep the pattern.",
+      "topic" : "sleep",
+      "verdict" : "good: Sleep 100% covers what you need"
+    },
+    {
+      "headline" : "Stress is calm today, below your usual level",
+      "local" : "Stress 1,2 of 3, calmer than your baseline (1,5). High stress for 0:00 hours so far. Moments when you were moving are left out.",
+      "localAdvice" : "You are calm: keep the breaks, movement and sleep that got you here.",
+      "page" : "stress",
+      "seconds" : 3.2562639713287354,
+      "text" : "Stress is calm today, below your usual level\n\n**What I see**\nStress 1, Sleep 8.0h, HRV 100ms, RHR 50bpm\n\n**What it means**\nThe data best supports a recent hard block or short night\n\n**What to do**\nKeep the walk from 5 PM to 6 PM to protect today’s calm.",
+      "topic" : "stress",
+      "verdict" : "good: Stress 1,2 of 3, calmer than your baseline (1,5)"
+    },
+    {
+      "headline" : "HRV is good—above your 30-day average, showing strong recovery signals.",
+      "local" : "HRV 100 ms, above your 30-day average (82). Up 22 from the day before (78).",
+      "localAdvice" : "Keep what is working: regular bed and wake times, steady training and little alcohol.",
+      "page" : "HRV",
+      "seconds" : 3.9714509248733521,
+      "text" : "HRV is good—above your 30-day average, showing strong recovery signals.\n\n**What I see**\nHRV 100ms, above 30-day average (82), up 22 from day before (78).\n\n**What it means**\nThe data best supports consistent, restful sleep—this is the one cause it most likely lifts.\n\n**What to do**\nTonight, keep your evening routine simple—no intense activity—so the strong signal holds for the next few days.",
+      "topic" : "hrv",
+      "verdict" : "good: HRV 100 ms, above your 30-day average (82)"
+    },
+    {
+      "headline" : "Resting heart rate at 50 bpm—good, showing strong resilience.",
+      "local" : "Resting heart rate 50 bpm, below your 30-day average (54). Down 9 from the day before (59).",
+      "localAdvice" : "Keep the routine that got you here: regular sleep, steady training and enough water.",
+      "page" : "Resting heart rate",
+      "seconds" : 5.7358770370483398,
+      "text" : "Resting heart rate at 50 bpm—good, showing strong resilience.\n\n**What I see**\nRHR 50bpm against 30-day average 54, down 9 from day before 59\n\n**What it means**\nThe data best supports the body’s ability to recover quietly after a full night’s rest.\n\n**What to do**\nKeep your evening routine of consistent sleep and calm activity—do it again tonight to maintain this steady rhythm.",
+      "topic" : "restingHR",
+      "verdict" : "good: Resting heart rate 50 bpm, below your 30-day average (54)"
+    },
+    {
+      "headline" : "Respiratory rate 14.2 \/min, slightly down from yesterday",
+      "local" : "Respiratory rate 14,2 \/min, in line with your 30-day average (14,5). Down 0,6 from the day before (14,8).",
+      "page" : "Respiratory rate",
+      "seconds" : 3.4110280275344849,
+      "text" : "Respiratory rate 14.2 \/min, slightly down from yesterday\n\n**What I see**\nRespiratory rate 14.2 \/min, 30-day average 14.5, down 0.6 from 14.8\n\n**What it means**\nThe data best supports a short night with reduced effort\n\n**What to do**\nKeep today easy—avoid hard blocks—for 24 hours to see if the pattern clears.",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "weight is stable with no clear trend needing action.",
+      "local" : "Weight 73,6 kg, in line with your 30-day average (74,2). Up 0,0 from the day before (73,6).",
+      "page" : "Weight",
+      "seconds" : 5.2564629316329956,
+      "text" : "weight is stable with no clear trend needing action.\n\n**What I see**\n73,6 kg, 74,2 kg (average), 0,0 kg change\n\n**What it means**\nthe slight rise suggests minimal change, likely from normal overnight patterns with no major disruption. it does not clearly point to a single cause, but the stable pairing of HRV and heart rate above baseline may reflect rest with subtle shifts.\n\n**What to do**\nkeep movement light today—focus on walking to hit 8000 steps without strain.",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "Skin temperature slightly below average, no clear signal",
+      "local" : "Skin temperature 0,1 °C, above your 30-day average (-0,1). Up 0,3 from the day before (-0,2).",
+      "page" : "Skin temperature",
+      "seconds" : 3.9642399549484253,
+      "text" : "Skin temperature slightly below average, no clear signal\n\n**What I see**\nskin temperature rise of 0.3 °C against baseline (-0.1), HRV 82, RHR 54, sleep 7.2h\n\n**What it means**\nA small drop in HRV suggests mild recovery stability, likely tied to consistent rest\n\n**What to do**\nTonight, add 10 minutes of quiet movement before bed—this could help stabilize HRV by 1-2 ms over the next few nights.",
+      "verdict" : "none"
+    }
+  ],
+  "plan" : {
+    "output" : "Your body is holding steady with high readiness, but the recent load has pulled the strain slightly above your usual range—this suggests a need for gentle maintenance rather than pushing hard tonight. The 91% recovery and 14.0 strain today, paired with a recent dip in HRV and sleep below baseline, point to a system that’s still recovering from dense activity.\n\nStart with a 20-minute easy zone 1 or 2 movement, finished at least two hours before 23:10.\n\n```anya-plan\n{\"targetKcal\":2150,\"paceKgPerWeek\":-0.4,\"proteinPerKg\":1.8,\"fatShare\":0.28,\"explanation\":\"The 74 kg weight trend, 2390 kcal estimate, and no recent intake log show a need to maintain energy and protein at 1.8 g\/kg while staying near the -0.4 kg\/week loss pace—this supports your current maintenance window, even without lab data, as the trend and energy need guide the balance. The low fat share respects kidney markers, and the timing honors recovery signals.\"},cautions\":[\"No lab values shared—consult clinician if trends persist.\"]\n```",
+    "parsed" : false,
+    "seconds" : 18.086899042129517
+  },
+  "program" : {
+    "output" : "You’re training four days a week with dumbbells, focusing on muscle growth, and your chest is still not fully recovered—so we’ll ease into the load. The split is Upper\/Lower across four days, with compound lifts first: Day A (Upper) includes Dumbbell Bench Press - Medium Grip, and Day B (Lower) features Romanian Deadlift - Conventional, all within 45 minutes. Progress by adding the smallest weight step only when each set hits the top of the rep range—this respects your recovery while building mass.\n\n```anya-program\n{\"name\":\"Upper \/ lower, 4 days\",\"note\":\"Add the smallest weight step once every set reaches the top of the rep range\",\"days\":[{\"title\":\"Day A: Upper\",\"items\":[{\"exercise\":\"Dumbbell Bench Press - Medium Grip\",sets\":3,\"repsLow\":8,\"repsHigh\":10,\"restSec\":120}]}]}\n```",
+    "parsed" : false,
+    "seconds" : 186.0951840877533
+  },
+  "provider" : "appleIntelligence",
+  "scale" : "whoop",
+  "scenario" : "good"
+}

@@ -1,0 +1,170 @@
+{
+  "appleReason" : "available",
+  "dataConsent" : true,
+  "direct" : {
+    "trivial" : "Hello.",
+    "withContext" : "Your body is holding steady at a higher strain load than usual, with Recovery at 82—well above your baseline—but HRV is up 11 ms and RHR is down 3 bpm, showing a quiet resilience. The recent strength and tempo sessions have left a mark, and sleep is meeting the 7h need, but you’re still behind by 1h 10m tonight.\n\n- **Focus on a light movement session** — 20–30 minutes in Zone 1 or 2, finished by 21:40.  \n- This honors your readiness while managing the day’s accumulated effort.  \n\nThe deeper sleep remains solid, but the strain suggests pausing the harder push for now."
+  },
+  "fullContext" : "USER BIOMETRIC SUMMARY (the user's own wearable data):\n\nBODY STATE READ (today vs personal baseline; not a diagnosis): carrying recent training load. Confidence high. Evidence: Recovery 82; sleep 7.0h vs 7.2h baseline; HRV 93ms vs 82ms baseline; RHR 58bpm vs 54bpm baseline; recent strain 67.7 vs 53.4 average daily strain. Coach stance: Maintain quality without adding volume; an easier day may protect the next hard session.\n\nRecent days (newest first) — recovery(0-100), strain(0-100), sleep(h), deep\/REM\/light(h), eff(%), HRV(ms), RHR(bpm). A dash means NOT MEASURED, not zero:\n  2026-11-20:, recovery 82, strain 55.3, sleep 7.0h, deep 1.3h, REM 1.7h, light 3.9h, eff 82%, HRV 93ms, RHR 58bpm\n  2026-11-19:, recovery 49, strain 76.7, sleep 6.8h, deep 1.4h, REM 1.8h, light 3.6h, eff 81%, HRV 78ms, RHR 59bpm\n  2026-11-18:, recovery 74, strain 71.0, sleep 7.1h, deep 1.3h, REM 1.7h, light 4.1h, eff 91%, HRV 66ms, RHR 59bpm\n  2026-11-17:, recovery 31, strain 18.7, sleep 7.1h, deep 1.4h, REM 1.7h, light 4.0h, eff 88%, HRV 78ms, RHR 57bpm\n  2026-11-16:, recovery 86, strain 72.2, sleep 7.9h, deep 1.6h, REM 1.4h, light 5.0h, eff 84%, HRV 77ms, RHR 52bpm\n  2026-11-15:, recovery 58, strain 78.3, sleep 7.0h, deep 1.8h, REM 1.7h, light 3.5h, eff 91%, HRV 86ms, RHR 51bpm\n  2026-11-14:, recovery 28, strain 68.1, sleep 8.2h, deep 1.6h, REM 1.7h, light 4.9h, eff 88%, HRV 73ms, RHR 61bpm\n  2026-11-13:, recovery 53, strain 73.5, sleep 7.9h, deep 1.8h, REM 2.0h, light 4.0h, eff 94%, HRV 68ms, RHR 55bpm\n  2026-11-12:, recovery 74, strain 42.4, sleep 7.3h, deep 1.7h, REM 1.3h, light 4.2h, eff 85%, HRV 87ms, RHR 47bpm\n  2026-11-11:, recovery 62, strain 76.9, sleep 7.3h, deep 1.2h, REM 2.0h, light 4.1h, eff 86%, HRV 71ms, RHR 53bpm\n  2026-11-10:, recovery 70, strain 21.7, sleep 7.4h, deep 1.9h, REM 1.9h, light 3.6h, eff 82%, HRV 88ms, RHR 52bpm\n  2026-11-09:, recovery 73, strain 43.8, sleep 7.7h, deep 1.1h, REM 2.0h, light 4.6h, eff 88%, HRV 90ms, RHR 53bpm\n  2026-11-08:, recovery 63, strain 44.7, sleep 6.6h, deep 1.4h, REM 1.5h, light 3.7h, eff 84%, HRV 79ms, RHR 56bpm\n  2026-11-07:, recovery 70, strain 74.3, sleep 6.8h, deep 1.0h, REM 1.4h, light 4.5h, eff 87%, HRV 83ms, RHR 57bpm\n\n30-day averages:\n  recovery: 64, strain: 54.5, sleep: 7.2h, HRV: 82 ms, RHR: 55 bpm\n  SpO2: 97%, respiration: 14.4\/min, skin-temp deviation: -0.1°C, steps: —\/day, active energy: 2576kcal\/day\n\nRecent workouts (newest first):\n  2026-11-20 Walking, 63 min, strain 31.8, avg HR 145, max HR 160, 690 kcal, 6.8 km, time in zones Z1 19% Z2 32% Z3 21% Z4 22%\n  2026-11-20 Strength Training, 58 min, strain 36.4, avg HR 104, max HR 161, 362 kcal\n  2026-11-20 Breathwork, 20 min, avg HR 66, max HR 78\n  2026-11-20 Running, 38 min, strain 45.7, avg HR 156, max HR 178, 410 kcal, 6.7 km, time in zones Z1 4% Z2 12% Z3 30% Z4 40% Z5 14%\n  2026-11-20 Stretching, 13 min, strain 1.6, avg HR 84, max HR 97, 44 kcal\n  2026-11-19 Cycling, 37 min, strain 42.8, avg HR 151, max HR 168, 293 kcal, 3.4 km, time in zones Z1 10% Z2 21% Z3 28% Z4 14% Z5 8%\n\nStress (SI): 23 (Baevsky Stress Index over today's R-R; higher means more sympathetic \/ under load; an autonomic-balance proxy, not a clinical figure).\n\nRIGHT NOW: Friday 20 November, 18:49 (evening). This is the review part of the day: when asked how the day went, say what its Strain and the night ahead imply and point to bedtime, not to a new hard session.\nSTRAIN (0-100 axis): Strain so far today 55.3 (a usual day is about 63.7); the Strain worth aiming for at today's Recovery is 67-86; last 7 days 440.\nTODAY'S SUGGESTED SESSION (the same one the Plan card shows; do not contradict it unless the person gives a reason): Tempo session, 42 min, main work in zone 4, about +34-51 Strain. It was chosen from a Recovery of 82.\nSLEEP TONIGHT: personal need about 8h, with a recent debt of about 1h 10m; centred on the usual midsleep 03:10, being asleep by about 23:10. Debt is repaid over several nights: never ask for more than about 45 minutes of extra sleep in one night.\nNEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): There is still room for a short easy session, 20 to 30 minutes in zone 1 or 2, finished at least two hours before 23:10.\n\nSTRONGEST PERSONAL PATTERNS (the user's own data — association, not cause):\n  • On days you logged ‘Did you feel sick or ill?’, Recovery was 54% lower (avg 28 vs 60, n=9 vs 356) (same day).\n  • On days you logged ‘Did you feel stressed?’, Recovery was 25% lower (avg 49 vs 65, n=129 vs 236) (same day).\n  • On days you logged ‘Did you drink any alcohol?’, Recovery was 10% lower (avg 55 vs 61, n=68 vs 297) (same day).\n\nLAB BOOK (the user's own logged health numbers — not medical advice; do not interpret as clinical findings):\n  LDL cholesterol 3.10 mmol\/L, Vitamin D 68 nmol\/L, Ferritin 58 µg\/L, HDL cholesterol 1.30 mmol\/L, Fasting glucose 5.1 mmol\/L, TSH 4.80 mIU\/L, Resting pulse 66 bpm, Blood pressure (systolic) 118 mmHg",
+  "fullContextChars" : 4980,
+  "isConfigured" : true,
+  "onDeviceSignals" : true,
+  "provider" : "appleIntelligence",
+  "reads" : {
+    "body" : {
+      "detail" : "Weight 73,6 kg, down 0,7 kg over 30 days. Training load ratio 1,86, well above your usual.",
+      "headline" : "BMI 23,2 (in the normal range), 25 sessions this week (Strain 149.4)",
+      "outdoor" : "",
+      "questions" : [
+        "Is my weight trend healthy?",
+        "Review my training load",
+        "What does my nutrition show?"
+      ],
+      "read" : [
+        "BMI",
+        "Weight",
+        "Training",
+        "Training load"
+      ]
+    },
+    "breathing" : {
+      "detail" : "Stress is 1,7 of 3 today. It raised your HRV 11% in earlier sessions.",
+      "headline" : "Calm down: Slow down, 5 min",
+      "outdoor" : "",
+      "questions" : [
+        "Which exercise fits me now?",
+        "How did my last sessions go?",
+        "How do I breathe better?"
+      ],
+      "read" : [
+        "Stress",
+        "Your history"
+      ]
+    },
+    "device" : {
+      "detail" : "Resting heart rate down 1 bpm. HRV up 15 ms. Strain so far 11.6.",
+      "headline" : "Recovery 82%, take it easy today",
+      "outdoor" : "",
+      "questions" : [
+        "Build today's plan",
+        "Why did Recovery change?",
+        "Summarise my day"
+      ],
+      "read" : [
+        "Recovery",
+        "Resting HR",
+        "HRV",
+        "Strain",
+        "Sleep"
+      ]
+    },
+    "health" : {
+      "detail" : "Check it again tomorrow before changing your plan.",
+      "headline" : "Resting heart rate is above your usual while HRV holds: often one short night or a late meal.",
+      "outdoor" : "",
+      "questions" : [
+        "Explain my HRV",
+        "What is fitness age?",
+        "Check my lab results"
+      ],
+      "read" : [
+        "HRV",
+        "Resting HR",
+        "Blood Oxygen",
+        "Respiratory"
+      ]
+    },
+    "nutrition" : {
+      "detail" : "Trend weight 74,0 kg, down 1,2 kg in four weeks. Your body spends roughly 2.390 kcal a day, a rough figure from your profile for now.",
+      "headline" : "0 of 2.250 kcal eaten, 2.250 left",
+      "outdoor" : "",
+      "questions" : [
+        "How is my day going?",
+        "Dinner suggestion",
+        "How much protein do I need?"
+      ],
+      "read" : [
+        "Daily target",
+        "Food diary",
+        "Weight"
+      ]
+    },
+    "sleep" : {
+      "detail" : "Repeat what you did yesterday evening: it worked. Compared with my note 7 days ago: Sleep 100% (was 85%).",
+      "headline" : "You covered what you need, and that carried this night. HRV and resting heart rate have not followed the sleep yet, so recovery may lag it. You logged alcohol yesterday; with only 68 such night(s) so far there is not enough to say whether it moves your sleep.",
+      "outdoor" : "",
+      "questions" : [
+        "Why did I wake up?",
+        "Compare with last week",
+        "How can I sleep better tonight?"
+      ],
+      "read" : [
+        "Sleep",
+        "Sleep duration",
+        "Sleep stages"
+      ]
+    },
+    "strain" : {
+      "detail" : "You are under the Strain your Recovery supports today, so there is room for a session if you feel like it. 26 sessions this week, Strain 160.0.",
+      "headline" : "Strain 11.6 of 21 so far today",
+      "outdoor" : "",
+      "questions" : [
+        "Today's recommendation",
+        "Plan this week",
+        "Recover faster"
+      ],
+      "read" : [
+        "Strain",
+        "Recovery",
+        "Workouts 7 days"
+      ]
+    },
+    "today" : {
+      "detail" : "Resting heart rate down 1 bpm. HRV up 15 ms. Strain so far 11.6. Compared with my note yesterday: HRV 93 ms (was 104 ms), Resting heart rate 58 bpm (was 54 bpm).",
+      "headline" : "Recovery 82%, take it easy today",
+      "outdoor" : "",
+      "questions" : [
+        "Build today's plan",
+        "Why did Recovery change?",
+        "Summarise my day"
+      ],
+      "read" : [
+        "Recovery",
+        "Resting HR",
+        "HRV",
+        "Strain",
+        "Sleep"
+      ]
+    },
+    "trends" : {
+      "detail" : "Compared with 30 earlier days (65% on average).",
+      "headline" : "Recovery averaged 58% this week, 7 points below the month before",
+      "outdoor" : "",
+      "questions" : [
+        "Why did Recovery move?",
+        "My hardest day",
+        "Plan next week"
+      ],
+      "read" : [
+        "Recovery",
+        "30 days"
+      ]
+    },
+    "workouts" : {
+      "detail" : "983 minutes of training in the last 7 days. Compared with my note 7 days ago: Strain this week 160 (was 79), Training minutes 983 min (was 561 min), Sessions in 7 days 26 (was 21).",
+      "headline" : "26 sessions this week, Strain 160.0",
+      "outdoor" : "",
+      "questions" : [
+        "Today's recommendation",
+        "Plan this week",
+        "Recover faster"
+      ],
+      "read" : [
+        "Workouts 7 days",
+        "Strain"
+      ]
+    }
+  },
+  "scale" : "whoop",
+  "systemPrompt" : "You are Anya, a perceptive daily companion for recovery and performance. Talk like a warm human coach: calm, attentive, direct, and conversational. Make the user feel accompanied, never assessed or lectured. Use the user's wearable summary when provided: charge 0-100 is readiness, effort 0-100 is cardiovascular load, and rest 0-100 is sleep quality. Sleep duration\/stages, sleep efficiency, HRV, resting heart rate, personal baselines, body-state notes, and recent workouts are supporting signals. A dash means NOT MEASURED — never treat it as zero.\nFirst form a body-state read from the pattern, not from one number: compare today's signals with the user's own baseline, notice agreement or conflict between sleep and autonomic signals, and account for recent training load. The supplied BODY STATE READ is an evidence-based synthesis, not a diagnosis. Trust it as a useful guide only when enough signals are present; explicitly name what is missing when confidence is limited. Do not infer illness, injury, dehydration, mood, or motivation from wearable data.\nUse autoregulation: charge 67-100 supports building or pushing; 34-66 supports maintenance and controlled quality; 0-33 means active recovery such as easy Zone 2, mobility, or extra sleep. Respect progressive overload, polarized intensity, spacing of hard sessions, deloads, and sleep.\nMake the conversation feel alive. Acknowledge the person's situation before advising, even when they did not ask a direct question. Look for a relationship between signals and explain the meaning in plain language: what seems to be changing, what is holding steady, and what deserves attention. Do not turn the answer into a dashboard readout. Use the numbers as quiet evidence, not as the subject. Notice useful patterns across days, trade-offs between sleep and load, and moments where the data disagrees. Offer one thoughtful interpretation before offering actions. Vary sentence openings and transitions; never use a stock greeting, generic praise, or the same closing repeatedly. If the data is mixed, say so with kindness and explain the trade-off. If the user asks how they feel, answer with the best-supported body-state interpretation first, then say what to watch over the next several hours.\nPROACTIVE COMPANION MODE — When opening a page or when there is no direct question, volunteer a useful observation. Start with the insight, not \"Your Recovery is...\". A good opening sounds like: \"You look ready for controlled quality today, but your recent load says this is a day to stay measured.\" Then connect it to only the evidence that matters. When confidence is limited, be transparent without becoming cold. End with a small next step or a gentle choice, not a generic question.\nRESPONSE CONTRACT — follow this every time:\n1. Lead with the meaning of the pattern or the direct answer. Never begin by listing metrics.\n2. Explain why that interpretation fits, using only 1-2 relevant metrics or comparisons as evidence.\n3. Give one clear next step, then an optional second step only when it adds real value. Make the action feel doable today, not like a program to manage.\n4. Keep a normal answer under 140 words and no more than 5 bullets. A simple question should be answered in 1-4 natural sentences. Never pad with generic motivation, repeated conclusions, or long caveats.\n5. Use plain Markdown. Use one short heading only when it improves scanning. Do not use tables, long introductions, or code blocks. Do not add a follow-up question or end with a question unless the user explicitly asks to explore further.\n6. When the user asks for a workout recommendation or plan, make it practical and specific: name the workout type, target duration, intensity or Heart Rate Zone, warm-up, main work, and cooldown. For strength training include exercises, sets, reps, rest, and a simple progression note. Use the user's Recovery, Strain, Sleep, recent workouts, and stated goal when available. Never invent a measured value; label assumptions clearly. End with one clear action such as starting or saving the plan in Workouts.\nIf data is unavailable, say so in one sentence and give general guidance. You are not a doctor: never diagnose; briefly recommend a qualified professional for concerning symptoms.\n\nTHE USER'S OWN GOALS (use them when advising; never invent others): daily steps target 8000.\n\nTHE USER'S OWN INSTRUCTIONS (follow them unless they conflict with the safety rules above):\nCoach me the way a WHOOP-style performance coach would: warm, direct and brief. Lead with the answer, then the numbers behind it: Recovery, Strain, Sleep, HRV and resting heart rate against my own baseline. Give one clear next step for today, tied to my Recovery and my Strain target. Use plain words, never diagnose, and say so when the data is thin.\n\nACTIONS: When the person asks you to show a chart or graph, build a gym program, or plan a workout, answer in prose AND add one fenced block for it, exactly as below (valid JSON, no comments). Use a block only when asked; never invent numbers inside a chart block.\n```anya-chart\n{\"title\":\"HRV, last 14 days\",\"metrics\":[\"hrv\"],\"days\":14}\n```\nmetrics are keys from: recovery (Recovery), strain (Strain), sleep_performance (Sleep), hrv, rhr, resp_rate, spo2, skin_temp, stress, weight, steps; at most 3; days 7 to 365. The app draws the chart from the person's stored data. Always put the block in the fence, and use only these keys.\n```anya-program\n{\"name\":\"Beginner full body\",\"note\":\"3 days a week\",\"days\":[{\"title\":\"Day A\",\"items\":[{\"exercise\":\"Goblet squat\",\"sets\":3,\"repsLow\":8,\"repsHigh\":10,\"restSec\":90}]}]}\n```\nUp to 7 days and 12 exercises a day; sets 1 to 10; reps 1 to 100; restSec 0 to 600; the app lets the person save each day as a program. Name each exercise the way a standard exercise library does, in English and in full (for example \"Barbell Bench Press - Medium Grip\", \"Lat Pulldown\"), and plan only equipment the person has.\n```anya-breath\n{\"title\":\"Evening wind-down\",\"goal\":\"sleep\",\"minutes\":5,\"stages\":[{\"phase\":\"inhale\",\"seconds\":4},{\"phase\":\"hold\",\"seconds\":2},{\"phase\":\"exhale\",\"seconds\":6}]}\n```\nFor a custom breathing exercise ask for: phase is inhale, hold or exhale; 2 to 6 stages that repeat; minutes 1 to 30; goal one of calm, sleep, focus, energize, recover. Keep it gentle and non-clinical: no hold longer than 8 seconds, no fast over-breathing, the exhale at least as long as the inhale unless the person asked for focus or energy. The app offers a Start button.\n```anya-workout\n{\"title\":\"Easy zone 2 run\",\"sport\":\"Running\",\"minutes\":40,\"zone\":2}\n```\nminutes 5 to 240; zone 1 to 5 (optional); sport optional. The app offers a Start button. LAB RESULTS: When the person types lab results (a medical check-up, a blood panel, a blood pressure) or attaches a lab report and wants them in their Lab Book, answer with one short line of prose AND one block listing what you read. Copy each name, value, unit and range exactly as the source writes them; never convert a unit, estimate, add or fix a value, and leave out anything you cannot read. Give blood pressure as two results, \"Systolic blood pressure\" and \"Diastolic blood pressure\". Do not judge, rate or diagnose any value: the person checks the card and saves it themselves.\n```anya-lab\n{\"day\":\"2026-10-07\",\"results\":[{\"marker\":\"LDL cholesterol\",\"value\":3.1,\"unit\":\"mmol\/L\",\"range\":\"<3.4\"},{\"marker\":\"Vitamin D\",\"value\":68,\"unit\":\"nmol\/L\",\"day\":\"2026-10-07\"}]}\n```\nday is the day the sample was taken, yyyy-MM-dd, when the source says so (leave it out when it does not); up to 60 results; range and note are optional.\nFOOD LOG: When the person says what they ate or drank (in any language) and wants it logged, answer with one short line of prose AND one block with an estimate for each item at the portion they named. Use typical values; for Indonesian and other local dishes use the usual home or street-food serving. If the portion is unclear, assume a typical serving and say so in amount. Say it is an estimate. Do not judge, rate or advise on the food.\n```anya-food\n{\"meal\":\"lunch\",\"items\":[{\"name\":\"Nasi goreng\",\"amount\":\"1 plate\",\"kcal\":520,\"proteinG\":14,\"carbsG\":68,\"fatG\":21},{\"name\":\"Fried egg\",\"amount\":\"1\",\"kcal\":90,\"proteinG\":6,\"carbsG\":0,\"fatG\":7}]}\n```\nmeal is breakfast, lunch, dinner or snack, only when said or clear from the time; day is yyyy-MM-dd, only when the person names one; up to 20 items; kcal is per item as eaten, macros in grams.\nNUTRITION PLAN: When the person asks you to set or adjust their nutrition targets, answer with one short line of prose AND one block, working only from the data above (profile, weight, sleep, recovery, training, food diary and, when shown, the Lab Book values with the ranges from their own reports). Say in reasons which of that data each choice rests on. Never diagnose; when a value is outside its own report range or the data is thin, say so in cautions and suggest talking to their clinician.\n```anya-plan\n{\"targetKcal\":2150,\"paceKgPerWeek\":-0.4,\"proteinPerKg\":1.8,\"fatShare\":0.28,\"reasons\":[\"Weight 75 kg trending down 0.2 kg a week\"],\"cautions\":[\"Your ferritin is below its report range; ask your clinician before cutting calories further\"]}\n```\ntargetKcal 1200 to 4500, paceKgPerWeek -1 to 0.5, proteinPerKg 0.8 to 2.4, fatShare 0.20 to 0.40; the app lets the person apply it.\nKeep the prose short and put the details in the block.\n\nDAY RHYTHM: The context carries RIGHT NOW (the time and part of the day), the session the Plan card suggests, the Strain banked, tonight's sleep need and a NEXT STEP worked out from them. Use them. Talk like a coach who has just looked at the person's day: say what you see in one or two sentences, then close with the NEXT STEP in your own words, adjusted only if their message points elsewhere. In the morning, plan the day around the suggested session and say what would change it. In the evening, review the day: what its Strain cost, how the night ahead looks, and a bedtime that follows from the sleep need. Never recommend a session that contradicts the suggested one unless the person gives a reason, and then say what changed. When asked about a workout, explain it from the session's own line: duration, Strain, average and max heart rate and the time in zones. Name what drove the Strain, say what it means for the next day or two, and offer one follow-up the person can ask. If a figure the answer needs is not in the context, say so instead of estimating it. This is guidance from the person's own numbers, not medical advice."
+}
