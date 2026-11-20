@@ -8913,6 +8913,7 @@
  "Sleep score %lld%% after %@ of sleep": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Skor tidur %1$lld%% setelah tidur %2$@"}}}},
  "Wear your strap to sleep for %lld more nights to calibrate.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pakai strap saat tidur %lld malam lagi untuk kalibrasi."}}}},
  "Your range is still sharpening: %lld more nights to finish it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rentangmu masih disempurnakan: %lld malam lagi sampai selesai."}}}},
+ "within %@ to %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "dalam %1$@ sampai %2$@"}}}},
  "within %@ - %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "dalam %1$@ - %2$@"}}}},
  "elevated > %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "tinggi > %@"}}}},
  "low < %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "rendah < %@"}}}},

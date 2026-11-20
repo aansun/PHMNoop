@@ -911,17 +911,44 @@ final class NunaSeriesModel: ObservableObject {
         return VitalRange.band(history: v).map { VitalRange.verdict(value, in: $0, floor: floor) }
     }
 
-    /// Skin temperature against the person's own nights: the readings are deviations in degrees (a stored value of 20 or more is an absolute
-    /// temperature from an import and is left out), judged like the other vitals but never tighter than `VitalRange.skinTempFloor`.
-    func skinVerdict(_ value: Double) -> VitalRange.Verdict? {
-        let v = byDay.keys.sorted().dropLast().compactMap { byDay[$0] }.filter { abs($0) < 20 }
-        return VitalRange.band(history: v).map { VitalRange.verdict(value, in: $0, floor: VitalRange.skinTempFloor) }
+    /// Whether a reading counts as normal, by the one rule every vital-sign surface shares (the Today card and tile and the detail page): inside
+    /// the usual range, or outside it on the side that is good news (`aboveIsGood` for HRV, `belowIsGood` for resting heart rate and breathing).
+    /// Nil while there is no range yet.
+    func isTypical(_ value: Double, floor: Double, aboveIsGood: Bool = false, belowIsGood: Bool = false) -> Bool? {
+        verdict(value, floor: floor).map { v in
+            switch v { case .inRange: return true; case .above: return aboveIsGood; case .below: return belowIsGood }
+        }
     }
 
-    /// The range that verdict uses, as bounds (centre ± half-width, at least `skinTempFloor`).
+    /// The skin temperature's usual level when the readings are absolute (an import carries the wrist temperature itself, 20 °C or more): the
+    /// median of the earlier absolute readings. Nil under three of them, or when the readings are already deviations.
+    private var absoluteBaseline: Double? {
+        let v = byDay.keys.sorted().dropLast().suffix(30).compactMap { byDay[$0] }.filter { abs($0) >= 20 }.sorted()
+        guard v.count >= 3 else { return nil }
+        return v.count % 2 == 1 ? v[v.count / 2] : (v[v.count / 2 - 1] + v[v.count / 2]) / 2
+    }
+
+    /// Skin temperature as the rise or fall from the person's own level, in degrees, which is the only form worth showing: a stored value under 20
+    /// already is one; an absolute temperature is taken against the median of the earlier ones. Nil when neither is possible yet.
+    func skinDeviation(_ value: Double) -> Double? {
+        if abs(value) < 20 { return value }
+        return absoluteBaseline.map { value - $0 }
+    }
+
+    /// The earlier nights' deviations, which the range and the verdict are read from.
+    private var skinHistory: [Double] {
+        byDay.keys.sorted().dropLast().compactMap { byDay[$0] }.compactMap(skinDeviation)
+    }
+
+    /// Skin temperature against the person's own nights, judged like the other vitals but never tighter than `VitalRange.skinTempFloor`.
+    func skinVerdict(_ value: Double) -> VitalRange.Verdict? {
+        guard let d = skinDeviation(value) else { return nil }
+        return VitalRange.band(history: skinHistory).map { VitalRange.verdict(d, in: $0, floor: VitalRange.skinTempFloor) }
+    }
+
+    /// The range that verdict uses, as bounds (centre ± half-width, at least `skinTempFloor`), in degrees of deviation.
     var skinRange: ClosedRange<Double>? {
-        let v = byDay.keys.sorted().dropLast().compactMap { byDay[$0] }.filter { abs($0) < 20 }
-        guard let b = VitalRange.band(history: v) else { return nil }
+        guard let b = VitalRange.band(history: skinHistory) else { return nil }
         let w = max(b.spread, VitalRange.skinTempFloor)
         return (b.centre - w)...(b.centre + w)
     }

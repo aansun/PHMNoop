@@ -188,14 +188,15 @@ struct NunaHealthView: View {
         let skin = day.extras["skin_temp"]
         let skinChip: Chip? = hasRange ? skin.flatMap { v -> Chip? in
             guard let verdict = skinS.skinVerdict(v), let r = skinS.skinRange else { return nil }
-            func f(_ x: Double) -> String { String(format: "%.1f", locale: AppLanguage.activeLocale, x) }
+            func fs(_ x: Double) -> String { String(format: "%+.1f", locale: AppLanguage.activeLocale, x) }
             switch verdict {
-            case .inRange: return (String(localized: "within \(f(r.lowerBound)) - \(f(r.upperBound))"), ok, "checkmark")
-            case .above: return (String(localized: "elevated > \(f(r.upperBound))"), warn, "exclamationmark")
-            case .below: return (String(localized: "low < \(f(r.lowerBound))"), warn, "exclamationmark")
+            case .inRange: return (String(localized: "within \(fs(r.lowerBound)) to \(fs(r.upperBound))"), ok, "checkmark")
+            case .above: return (String(localized: "elevated > \(fs(r.upperBound))"), warn, "exclamationmark")
+            case .below: return (String(localized: "low < \(fs(r.lowerBound))"), warn, "exclamationmark")
             }
         } : calibrating
-        let skinText = skin.map { (($0 >= 0 ? "+" : "−") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs($0))) } ?? "–"
+        // Only the rise or fall from the usual level, never the temperature itself.
+        let skinText = skin.flatMap { skinS.skinDeviation($0) }.map { (($0 >= 0 ? "+" : "−") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs($0))) } ?? "–"
         func tile(_ key: String, icon: String, label: LocalizedStringKey, value: String, unit: String, _ chip: Chip?) -> some View {
             linked(key, NunaVitalTile(icon: icon, label: label, value: value, unit: unit, chip: chip?.text, chipColor: chip?.color ?? ok, symbol: chip?.symbol))
         }
