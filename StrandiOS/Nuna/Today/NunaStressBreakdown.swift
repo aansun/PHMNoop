@@ -451,17 +451,8 @@ struct NunaStressTrendView: View {
                             Text("hr").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                         }
                     }
-                    if let average, let prior, prior > 0 {
-                        let up = average >= prior
-                        let tint = up ? NunaStressBand.high : NunaPalette.charge
-                        HStack(spacing: 5) {
-                            Image(systemName: up ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.nuna(size: 8, weight: .bold))
-                            Text(verbatim: NunaStressBand.hm(abs(average - prior))).font(.nuna(size: 13, weight: .bold, design: NunaType.design)).textCase(nil)
-                        }
-                        .foregroundStyle(tint).padding(.horizontal, 8).frame(height: 24)
-                        .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
-                        .padding(.top, 6)
-                    }
+                    // Less time in high stress than in the period before is the better way.
+                    NunaChangeChip(average: average, prior: averageHigh(priorDays), range: range, upIsGood: false)
                 }
                 }
                 Spacer(minLength: 0)
@@ -501,7 +492,7 @@ struct NunaStressTrendView: View {
         .task(id: "\(repo.refreshSeq)-\(range)-\(pageOffset)") {
             let live = await StressDayCurve.whoopToday(repo: repo, now: Date())
             if live != todayResult { todayResult = live }
-            await history.ensure(days: windowDays + (range <= 30 ? priorDays : []), repo: repo)
+            await history.ensure(days: windowDays + priorDays, repo: repo)
         }
     }
 

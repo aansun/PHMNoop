@@ -87,6 +87,13 @@ struct NunaTimeInBedTrendView: View {
                     Text(verbatim: shown.map(NunaRestChart.hm) ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(tint)
                     if shown != nil { Text("hr").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
                 }
+                if pickedMinutes == nil {
+                    NunaChangeChip(average: average, prior: NunaTrendChange.prior(start: win.start, range: range) { d in
+                        let key = Repository.localDayKey(d)
+                        guard let b = history.bedHour[key], let w = history.wakeHour[key] else { return nil }
+                        return (w - b) * 60
+                    }, range: range, upIsGood: nil)
+                }
             }
             Spacer(minLength: 0)
             VStack(alignment: .trailing, spacing: 14) {

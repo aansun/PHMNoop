@@ -72,15 +72,7 @@ struct NunaLeanMassTrendView: View {
                         .foregroundStyle(NunaPalette.textPrimary)
                     if avg != nil { Text(verbatim: "%").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
                 }
-                if let avg, let prior, prior > 0 {
-                    let pct = Int(abs((avg - prior) / prior * 100).rounded())
-                    HStack(spacing: 5) {
-                        Image(systemName: avg >= prior ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.nuna(size: 8, weight: .bold))
-                        Text(verbatim: "\(pct)% " + String(localized: "vs. prior \(range == 7 ? String(localized: "week") : String(localized: "month"))")).font(.nuna(size: 12.5, weight: .bold)).textCase(nil)
-                    }
-                    .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 8).frame(height: 26)
-                    .background(NunaPalette.textMuted.opacity(0.2), in: RoundedRectangle(cornerRadius: 5, style: .continuous)).padding(.top, 6)
-                }
+                NunaChangeChip(average: avg, prior: average(readings(in: NunaTrendWindow(range: range, page: page + 1, endingDaysAgo: 0))), range: range, upIsGood: true)
             }
             Spacer(minLength: 0)
             VStack(alignment: .trailing, spacing: 14) {
