@@ -348,6 +348,11 @@ struct NunaAnyaSheet: View {
         guard coach.dataConsent else { coach.pendingChartImage = image; coach.pendingPrompt = prompt; openFull(); return }
         turns.append(ChatMessage(id: UUID(), role: .user, text: shown))
         sending = true; defer { sending = false }
+        // The strap's questions are answered from what the app knows about the strap, not by a model that has none of it.
+        if module == .device {
+            turns.append(ChatMessage(id: UUID(), role: .assistant, text: NunaAnyaPack.deviceAnswer(question: prompt, live: live)))
+            return
+        }
         // The page she is asked about: what it is, her own reading of it (with its verdict), and the data this module's questions need beyond the summary.
         var page = context
         if let r = read { page += "\n\n" + NunaMark.plain(NunaMark.compose(headline: r.headline, detail: r.detail)) }

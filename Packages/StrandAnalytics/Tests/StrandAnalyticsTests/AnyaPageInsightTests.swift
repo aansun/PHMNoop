@@ -53,3 +53,24 @@ final class AnyaPageInsightTests: XCTestCase {
                        "Fine.\n\n**What I see**\n93 ms.\n\n**What to do**\nKeep going.")
     }
 }
+
+final class AnyaReplyCleanerTests: XCTestCase {
+    func testDropsAHabitualDoubtAfterAStatedCause() {
+        let r = "HRV fell 26 ms, likely from a short night. I am not sure what caused it, but the drop fits reduced recovery. Sleep earlier tonight."
+        XCTAssertEqual(AnyaReplyCleaner.clean(r), "HRV fell 26 ms, likely from a short night. Sleep earlier tonight.")
+    }
+
+    func testDropsAThisSurfaceSentenceAndKeepsParagraphs() {
+        let r = "This surface does not carry a fitness age. It is a mix of HRV and resting heart rate.\n\nKeep today light."
+        XCTAssertEqual(AnyaReplyCleaner.clean(r), "It is a mix of HRV and resting heart rate.\n\nKeep today light.")
+    }
+
+    func testAReplyThatWouldBeEmptyIsLeftAlone() {
+        XCTAssertEqual(AnyaReplyCleaner.clean("I can't tell."), "I can't tell.")
+    }
+
+    func testKeepsDecimalsIntact() {
+        // A full stop inside a number ends no sentence in the text, but the split is on every full stop followed by a space only when it ends a token: figures stay readable.
+        XCTAssertEqual(AnyaReplyCleaner.clean("Strain is 11.6 today. Keep it easy."), "Strain is 11.6 today. Keep it easy.")
+    }
+}

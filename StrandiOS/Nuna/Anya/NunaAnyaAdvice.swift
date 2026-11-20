@@ -117,10 +117,11 @@ enum NunaAnyaInsightText {
                 let adviceRange = NSRange(i.advice.startIndex..., in: i.advice)
                 if problemCause.firstMatch(in: i.advice, range: adviceRange) != nil || i.advice.lowercased().contains("keep today easy") { i.advice = v.advice }
             }
+            i.see = AnyaReplyCleaner.clean(i.see); i.mean = AnyaReplyCleaner.clean(i.mean); i.advice = AnyaReplyCleaner.clean(i.advice)
             let t = titles()
             return (i.headline, i.markdown(seeTitle: t.see, meanTitle: t.mean, adviceTitle: t.advice))
         }
-        return (nil, AnyaActions.proseOnly(raw))
+        return (nil, AnyaReplyCleaner.clean(AnyaActions.proseOnly(raw)))
     }
 
     /// With no provider (or none that answered): the verdict, the reading behind it and the next step, all worked out on this phone.

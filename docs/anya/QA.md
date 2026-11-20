@@ -71,8 +71,11 @@ Two kinds of check: `docs/anya/qa/check.py` (mechanical: figures not in the data
 | 4 | Contract tightened (label comparators, no invented targets or causes, Strain cannot fall), module data packs, empty-data rules | role 23, fits 12, grounded 13, on surface 26, honest 24 | role 21, fits 12, grounded 4, on surface 25, honest 25 | plan, brief and page insights honest; general questions pass through |
 | 5 | A good reading cannot carry an invented cause (replaced in code); plan is maintenance without a goal weight | mechanical flags on pages: 1 of 9 | 0 of 9 | not rerun |
 
+| 6 to 8 | Comparisons worked out in code (today, yesterday, 30-day average, with the change and the gap), the time now, no clock times except bedtime, strap questions answered on the phone, habitual doubt sentences removed, maintenance plan without a goal weight, plan and breath fallbacks | not graded by a reviewer | not graded by a reviewer | mechanical check: pages 0 of 9 flagged, chat 2 of 16 (poor) and 1 of 16 (good), down from 8 of 16 each in round 4 |
+
 What the numbers say: Poor data improved on every check except safety (already 29/30). Good data improved only a little: the on-device model still names a cause for a green
 reading; round 5 replaces such a meaning in code, and its pages now pass the mechanical check.
 
-Known gaps (not fixed): chat answers still mislabel baselines as yesterday's figures at times; the Device module has no UI entry in v3 and answers from the strap lines only; the
-model sometimes writes a similar simile in breathing replies; the demo store has two sources that disagree (Recovery, sleep), so a few items are data artefacts.
+Known gaps: the last rounds (6 to 8) were checked mechanically, not by a second reviewer, so rerun the reviewers before relying on the numbers above for them; the nutrition plan on an empty store
+still relies on the maintenance fallback; the demo store has two sources that disagree (Recovery, sleep), so a few items are data artefacts. The Device module has no UI entry in v3; its questions are answered
+on the phone from the strap's status.

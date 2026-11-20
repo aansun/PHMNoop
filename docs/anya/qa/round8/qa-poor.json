@@ -1,0 +1,215 @@
+{
+  "chat" : [
+    {
+      "answer" : "Recovery is 18 today, compared to 35 yesterday, against the 30-day average of 63.\nRecovery dipped likely because HRV dropped 26 ms and resting heart rate rose 8 bpm, both against the baseline.\n\nWind down now, lights low and nothing hard, and be asleep by 23:10. About 2h 5m of sleep debt is carried, so this night matters.",
+      "known" : "today\n\nRecovery 18%, take it easy today. Resting heart rate up 8 bpm. HRV down 26 ms. Strain so far 19.3. Compared with my note yesterday: Recovery 18% (was 82%), HRV 52 ms (was 104 ms), Resting heart rate 67 bpm (was 54 bpm).\n\nPAGE VERDICT (worked out on this phone against the person's own baseline; do not contradict it): needs attention. Recovery 18% is in the red band\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  Recovery: today 18, yesterday 35 (change -17), 30-day average 63 (gap -45)\n  HRV: today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms)\n  Resting heart rate: today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm)\n  Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h)\n  Strain: today 19.3, yesterday 18.5 (change +0.8), 30-day average 11.3 (gap +8.0)",
+      "module" : "today",
+      "question" : "Why did my Recovery change compared with yesterday? Use my sleep, HRV and resting heart rate.",
+      "seconds" : 7.257046103477478
+    },
+    {
+      "answer" : "Your Strain so far is 19.3, which is higher than the usual level and above the range supported by your current Recovery. Recovery is 18, down from 35 yesterday, and HRV is 52 ms, 26 ms below your baseline. Resting heart rate is 67 bpm, up 8 from yesterday. These changes point to a recent hard session and not enough rest to recover.\n\nWind down now, lights low and nothing hard, and be asleep by 23:10. About 2 hours 5 minutes of sleep debt is carried, so this night matters.",
+      "known" : "today\n\nRecovery 18%, take it easy today. Resting heart rate up 8 bpm. HRV down 26 ms. Strain so far 19.3. Compared with my note yesterday: Recovery 18% (was 82%), HRV 52 ms (was 104 ms), Resting heart rate 67 bpm (was 54 bpm).\n\nPAGE VERDICT (worked out on this phone against the person's own baseline; do not contradict it): needs attention. Recovery 18% is in the red band\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  Recovery: today 18, yesterday 35 (change -17), 30-day average 63 (gap -45)\n  HRV: today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms)\n  Resting heart rate: today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm)\n  Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h)\n  Strain: today 19.3, yesterday 18.5 (change +0.8), 30-day average 11.3 (gap +8.0)",
+      "module" : "today",
+      "question" : "Summarise my day so far in a few sentences, using my numbers.",
+      "seconds" : 7.3914680480957031
+    },
+    {
+      "answer" : "HRV: today 52 ms, against yesterday 78 ms, against the 30-day average 82 ms.\nThis means your body is less adaptable right now, likely because of a short night, as the HRV dropped and heart rate rose.\n\nNo added load today—skip the workout and rest quietly before bed.",
+      "known" : "health\n\nBoth overnight signals point the same way: HRV is under its usual and resting heart rate is above it. That pairing usually follows a short night, alcohol, illness or a hard block. Keep today easy and see whether it clears.\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  HRV: today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms)\n  Resting heart rate: today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm)\n  SpO2: today 93.5%, yesterday 98.8% (change -5.3%), 30-day average 96.6% (gap -3.1%)\n  Respiration: today 17.2\/min, yesterday 14.8\/min (change +2.4\/min), 30-day average 14.5\/min (gap +2.7\/min)",
+      "module" : "health",
+      "question" : "Explain what my HRV is telling me today, compared with my own baseline.",
+      "seconds" : 5.599869966506958
+    },
+    {
+      "answer" : "I am not able to calculate fitness age or explain how it’s worked out — that information is not included in the data this surface shows. The figures here focus on HRV, resting heart rate, sleep, strain and recovery against personal baseline, not a fitness age calculation.\n\nYour HRV is today 52 ms, against yesterday 78 ms (down 26 ms) and the 30-day average 82 ms (down 30 ms). Your resting heart rate is today 67 bpm, against yesterday 59 bpm (up 8 bpm) and the 30-day average 54 bpm (up 13 bpm).\n\nThe drop in HRV and rise in heart rate likely follow a short night, as those patterns often appear together.\n\nKeep today easy — no added load — and rest tonight before bed.",
+      "known" : "health\n\nBoth overnight signals point the same way: HRV is under its usual and resting heart rate is above it. That pairing usually follows a short night, alcohol, illness or a hard block. Keep today easy and see whether it clears.\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  HRV: today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms)\n  Resting heart rate: today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm)\n  SpO2: today 93.5%, yesterday 98.8% (change -5.3%), 30-day average 96.6% (gap -3.1%)\n  Respiration: today 17.2\/min, yesterday 14.8\/min (change +2.4\/min), 30-day average 14.5\/min (gap +2.7\/min)",
+      "module" : "health",
+      "question" : "What is fitness age and how is mine worked out in this app?",
+      "seconds" : 7.9036790132522583
+    },
+    {
+      "answer" : "Recovery today is 18, yesterday 35 (change -17), 30-day average 63 (gap -45), against the 30-day average.\nThis drop likely follows the rise in strain over the week, especially the 14.6 today, which may have pulled recovery down.\nTonight, keep movement to a steady level—no added load—so recovery can begin to rise.",
+      "known" : "trends\n\nRecovery averaged 47% this week, 18 points below the month before. Compared with 30 earlier days (65% on average).\n\nPAGE VERDICT (worked out on this phone against the person's own baseline; do not contradict it): needs attention. Recovery averaged 47% this week, 18 points below the month before\n\nWEEKLY AVERAGES (oldest first):\n  2026-10-24 to 2026-10-30: recovery 67, daily strain 12.1, sleep 7.2h, HRV 84ms\n  2026-10-31 to 2026-11-06: recovery 63, daily strain 9.4, sleep 7.0h, HRV 85ms\n  2026-11-07 to 2026-11-13: recovery 66, daily strain 11.3, sleep 7.3h, HRV 81ms\n  2026-11-14 to 2026-11-20: recovery 47, daily strain 14.6, sleep 7.1h, HRV 73ms\n",
+      "module" : "trends",
+      "question" : "Why did my Recovery move over the last month? Point to the behaviours in my data.",
+      "seconds" : 5.3725820779800415
+    },
+    {
+      "answer" : "Recovery today 18, yesterday 35 (change -17), 30-day average 63 (gap -45). HRV today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms). Resting heart rate today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm).\n\nThis week’s dip in recovery followed a heavy load day, likely the one with the highest strain. The drop in HRV aligns with the body’s response to that intensity.\n\nTonight, keep the movement light—focus on stretching before bed—to help the system recover without adding stress.",
+      "known" : "trends\n\nRecovery averaged 47% this week, 18 points below the month before. Compared with 30 earlier days (65% on average).\n\nPAGE VERDICT (worked out on this phone against the person's own baseline; do not contradict it): needs attention. Recovery averaged 47% this week, 18 points below the month before\n\nWEEKLY AVERAGES (oldest first):\n  2026-10-24 to 2026-10-30: recovery 67, daily strain 12.1, sleep 7.2h, HRV 84ms\n  2026-10-31 to 2026-11-06: recovery 63, daily strain 9.4, sleep 7.0h, HRV 85ms\n  2026-11-07 to 2026-11-13: recovery 66, daily strain 11.3, sleep 7.3h, HRV 81ms\n  2026-11-14 to 2026-11-20: recovery 47, daily strain 14.6, sleep 7.1h, HRV 73ms\n",
+      "module" : "trends",
+      "question" : "Which day was hardest on my body this month and what followed it?",
+      "seconds" : 6.0572199821472168
+    },
+    {
+      "answer" : "Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h).\nSleep duration dipped, and HRV and resting heart rate haven’t caught up, so the body may have been pulling energy hard during the night.\nWind down now, lights low and nothing hard, and be asleep by 23:10. The quiet evening and early bed helped, so keep the same rhythm tonight.\n\nRepeat the quiet start and early finish—it’s what worked yesterday.",
+      "known" : "sleep\n\nA regular bedtime held this night up. HRV and resting heart rate have not followed the sleep yet, so recovery may lag it. You logged alcohol yesterday; with only 68 such night(s) so far there is not enough to say whether it moves your sleep. Repeat what you did yesterday evening: it worked. Compared with my note 7 days ago: Sleep 100% (was 85%).\n\nPAGE VERDICT (worked out on this phone against the person's own baseline; do not contradict it): good. Sleep 100% covers what you need\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h)\n  HRV: today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms)\n  Resting heart rate: today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm)",
+      "module" : "sleep",
+      "question" : "Why might I have woken up several times last night? Use my sleep numbers.",
+      "seconds" : 7.7153570652008057
+    },
+    {
+      "answer" : "Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h).\n\nThe sleep tonight is below the need, with a small drop from yesterday, but the overall pattern shows a consistent deficit compared to the usual baseline. The most likely cause is a late wind-down, as the body hasn’t fully recovered from the day’s effort.\n\nWind down now, lights low and nothing hard, and be asleep by 23:10. About 2h 5m of sleep debt is carried, so this night matters.",
+      "known" : "sleep\n\nA regular bedtime held this night up. HRV and resting heart rate have not followed the sleep yet, so recovery may lag it. You logged alcohol yesterday; with only 68 such night(s) so far there is not enough to say whether it moves your sleep. Repeat what you did yesterday evening: it worked. Compared with my note 7 days ago: Sleep 100% (was 85%).\n\nPAGE VERDICT (worked out on this phone against the person's own baseline; do not contradict it): good. Sleep 100% covers what you need\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h)\n  HRV: today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms)\n  Resting heart rate: today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm)",
+      "module" : "sleep",
+      "question" : "Compare my sleep this week with last week.",
+      "seconds" : 6.2659430503845215
+    },
+    {
+      "answer" : "The current Strain is 19.3, which is above the supported range given your Recovery of 18. This suggests the body is under more demand than the baseline allows, likely because the recent session added strain quickly. The low recovery and sleep debt point to a need to ease the load rather than push further.\n\nNow, the day is done, and the focus should be on calming the system before rest.\n\nTonight, keep the easy movement pattern so it holds — finish the 20 minutes before bed.",
+      "known" : "workouts\n\n25 sessions this week, Strain 152.1. 946 minutes of training in the last 7 days. Compared with my note 7 days ago: Strain this week 152 (was 79), Training minutes 946 min (was 561 min), Sessions in 7 days 25 (was 21).\n\nPAGE VERDICT (worked out on this phone against the person's own baseline; do not contradict it): needs attention. This week's Strain is 77% above your usual week\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  Strain: today 19.3, yesterday 18.5 (change +0.8), 30-day average 11.3 (gap +8.0)\n  Recovery: today 18, yesterday 35 (change -17), 30-day average 63 (gap -45)\n  Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h)",
+      "module" : "workouts",
+      "question" : "Recommend the best workout for today using my Recovery, Strain, Sleep and recent workouts.",
+      "seconds" : 6.4889609813690186
+    },
+    {
+      "answer" : "Your Strain is 19.3 today, which is higher than the 4–10 range your Recovery of 18 allows, and the weekly total is 152.1—80% above your usual. The drop in Recovery from 35 yesterday to 18 today likely stems from less rest than usual, with sleep now 5.3 hours short of your need. Tonight, keep the rhythm steady by going to bed before bed, even if it means shifting your routine slightly to protect your readiness.",
+      "known" : "workouts\n\n25 sessions this week, Strain 152.1. 946 minutes of training in the last 7 days. Compared with my note 7 days ago: Strain this week 152 (was 79), Training minutes 946 min (was 561 min), Sessions in 7 days 25 (was 21).\n\nPAGE VERDICT (worked out on this phone against the person's own baseline; do not contradict it): needs attention. This week's Strain is 77% above your usual week\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  Strain: today 19.3, yesterday 18.5 (change +0.8), 30-day average 11.3 (gap +8.0)\n  Recovery: today 18, yesterday 35 (change -17), 30-day average 63 (gap -45)\n  Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h)",
+      "module" : "workouts",
+      "question" : "Plan my training for this week from my current load and recovery.",
+      "seconds" : 7.1224439144134521
+    },
+    {
+      "answer" : "nil",
+      "known" : "nutrition\n\n0 of 2.250 kcal eaten, 2.250 left. Trend weight 74,0 kg, down 1,2 kg in four weeks. Your body spends roughly 2.390 kcal a day, a rough figure from your profile for now.\n\nNUTRITION (the person's own food and weight data):\nPROFILE: male, 30 years, 178 cm\nWEIGHT: trend 74.0 kg on 2026-11-20, -0.27 kg a week over the last 14 days\nGOAL WEIGHT: not set\nFOOD DIARY: nothing logged in the last 14 days\nESTIMATED DAILY ENERGY USE: 2390 kcal (from the profile, a rough estimate)\nCURRENT PLAN: 2250 kcal, pace -0.25 kg a week, protein 1.8 g\/kg, fat 28% of calories\nLAB BOOK: not shared (the person has not turned on Share patterns and Lab Book)\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  Strain: today 19.3, yesterday 18.5 (change +0.8), 30-day average 11.3 (gap +8.0)\n  Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h)",
+      "module" : "nutrition",
+      "question" : "Look at what I have eaten today against my target and macros and tell me what to do for the rest of the day.",
+      "seconds" : 6.0723960399627686
+    },
+    {
+      "answer" : "Strain: today 19.3, yesterday 18.5 (change +0.8), 30-day average 11.3 (gap +8.0). Recovery: today 18, yesterday 35 (change -17), 30-day average 63 (gap -45). Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h).\n\nI’m not sure what caused the drop in recovery, but the lack of recent logging may be a factor. The energy gap and low sleep hours suggest your body hasn’t fully recovered from today’s activity.\n\nTonight, eat a small, balanced meal with protein to help restore energy and support recovery. Do this before bed.",
+      "known" : "nutrition\n\n0 of 2.250 kcal eaten, 2.250 left. Trend weight 74,0 kg, down 1,2 kg in four weeks. Your body spends roughly 2.390 kcal a day, a rough figure from your profile for now.\n\nNUTRITION (the person's own food and weight data):\nPROFILE: male, 30 years, 178 cm\nWEIGHT: trend 74.0 kg on 2026-11-20, -0.27 kg a week over the last 14 days\nGOAL WEIGHT: not set\nFOOD DIARY: nothing logged in the last 14 days\nESTIMATED DAILY ENERGY USE: 2390 kcal (from the profile, a rough estimate)\nCURRENT PLAN: 2250 kcal, pace -0.25 kg a week, protein 1.8 g\/kg, fat 28% of calories\nLAB BOOK: not shared (the person has not turned on Share patterns and Lab Book)\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  Strain: today 19.3, yesterday 18.5 (change +0.8), 30-day average 11.3 (gap +8.0)\n  Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h)",
+      "module" : "nutrition",
+      "question" : "Suggest what to eat tonight given what I have eaten today, my target and today's activity.",
+      "seconds" : 6.5551509857177734
+    },
+    {
+      "answer" : "Now, let’s pick the right breathing exercise for you, using what’s here and what has worked before.\n\nYour HRV is 26 ms below your baseline, and your resting heart rate is up 8 bpm—this means your body is working harder than usual, and the rise in HRV from earlier sessions doesn’t seem to hold.\n\nBecause the reading is slipping and the baseline shows a drop in HRV, we need to ease things now—no added load.\n\nDo 10 minutes of slow, comfortable breathing now, repeating this pattern before bed tonight.",
+      "known" : "breathing\n\nRecover: Recovery coherence, 10 min. Recovery is 18%. HRV is 26 ms under your baseline. Resting heart rate is up 8 bpm. It raised your HRV 18% in earlier sessions.\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  HRV: today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms)\n  Resting heart rate: today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm)\n  Strain: today 19.3, yesterday 18.5 (change +0.8), 30-day average 11.3 (gap +8.0)",
+      "module" : "breathing",
+      "question" : "Which breathing exercise fits me right now? Use my live heart rate, HRV, stress and Recovery, and what worked in my earlier breathing sessions.",
+      "seconds" : 6.2139359712600708
+    },
+    {
+      "answer" : "The HRV today is 26 ms under the 30-day average, and the resting heart rate is 8 bpm higher than yesterday.\nThis means your body is pulling back from effort, likely because the recent strain has been pushing you past the maintenance zone.\nNow, do 10 minutes of slow, comfortable breathing right now, repeating it before bed tonight.",
+      "known" : "breathing\n\nRecover: Recovery coherence, 10 min. Recovery is 18%. HRV is 26 ms under your baseline. Resting heart rate is up 8 bpm. It raised your HRV 18% in earlier sessions.\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  HRV: today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms)\n  Resting heart rate: today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm)\n  Strain: today 19.3, yesterday 18.5 (change +0.8), 30-day average 11.3 (gap +8.0)",
+      "module" : "breathing",
+      "question" : "How did my recent breathing sessions go? Look at the HRV and heart rate change in each and tell me what is working.",
+      "seconds" : 4.9457859992980957
+    },
+    {
+      "answer" : "The strap is not connected right now. It has not synced since the app opened. If it keeps dropping: keep it within a few metres of the phone, check that Bluetooth is on and that the strap is not connected to another phone or app, then use Reconnect in Device Settings.",
+      "known" : "device\n\nRecovery 18%, take it easy today. Resting heart rate up 8 bpm. HRV down 26 ms. Strain so far 19.3.\n\nPAGE VERDICT (worked out on this phone against the person's own baseline; do not contradict it): needs attention. Recovery 18% is in the red band\n\nSTRAP (its live status on this phone):\n  connection: not connected\n  last sync: none since the app opened\n  last sync problem: This device can't use Bluetooth Low Energy.\n",
+      "module" : "device",
+      "question" : "Why might my strap keep disconnecting from the phone?",
+      "seconds" : 0
+    },
+    {
+      "answer" : "The strap is not connected right now. To charge it, put the strap on its charger. The Device screen shows Charging as soon as the level starts to rise, and the time to full once the pace is clear. The estimate of how long a charge lasts comes back after you take it off the charger.",
+      "known" : "device\n\nRecovery 18%, take it easy today. Resting heart rate up 8 bpm. HRV down 26 ms. Strain so far 19.3.\n\nPAGE VERDICT (worked out on this phone against the person's own baseline; do not contradict it): needs attention. Recovery 18% is in the red band\n\nSTRAP (its live status on this phone):\n  connection: not connected\n  last sync: none since the app opened\n  last sync problem: This device can't use Bluetooth Low Energy.\n",
+      "module" : "device",
+      "question" : "How should I charge my strap and how long does the battery last?",
+      "seconds" : 0
+    }
+  ],
+  "compactContext" : "USER BIOMETRIC SUMMARY (the user's own wearable data):\n\nBODY STATE READ (today vs personal baseline; not a diagnosis): recovery needed. Confidence high. Evidence: Recovery 18; sleep 5.3h vs 7.2h baseline; HRV 52ms vs 82ms baseline; RHR 67bpm vs 54bpm baseline; recent strain 17.6 vs 11.3 average daily strain. Coach stance: Prefer easy movement, mobility, or extra sleep; avoid stacking another hard session.\n\nRecent days (newest first) — recovery(0-100), strain(0-21), sleep(h), deep\/REM\/light(h), eff(%), HRV(ms), RHR(bpm). A dash means the figure is not available, not zero:\n  2026-11-20:, recovery 18, strain 19.3, sleep 5.3h, deep 0.7h, REM 0.8h, light 3.8h, eff 70%, HRV 52ms, RHR 67bpm\n  2026-11-19:, recovery 35, strain 18.5, sleep 6.8h, deep 1.4h, REM 1.8h, light 3.6h, eff 81%, HRV 78ms, RHR 59bpm\n  2026-11-18:, recovery 74, strain 14.9, sleep 7.1h, deep 1.3h, REM 1.7h, light 4.1h, eff 91%, HRV 66ms, RHR 59bpm\n  2026-11-17:, recovery 31, strain 3.9, sleep 7.1h, deep 1.4h, REM 1.7h, light 4.0h, eff 88%, HRV 78ms, RHR 57bpm\n  2026-11-16:, recovery 86, strain 15.2, sleep 7.9h, deep 1.6h, REM 1.4h, light 5.0h, eff 84%, HRV 77ms, RHR 52bpm\n  2026-11-15:, recovery 58, strain 16.4, sleep 7.0h, deep 1.8h, REM 1.7h, light 3.5h, eff 91%, HRV 86ms, RHR 51bpm\n  2026-11-14:, recovery 28, strain 14.3, sleep 8.2h, deep 1.6h, REM 1.7h, light 4.9h, eff 88%, HRV 73ms, RHR 61bpm\n\n30-day averages:\n  recovery: 62, strain: 11.8, sleep: 7.2h, HRV: 81 ms, RHR: 55 bpm\n  SpO2: 96%, respiration: 14.5\/min, skin-temp deviation: -0.0°C, steps: —\/day, active energy: —kcal\/day\n\nRecent workouts (newest first):\n  2026-11-20 Strength Training, 58 min, strain 7.6, avg HR 92, max HR 135, 362 kcal\n  2026-11-20 Breathwork, 20 min, avg HR 66, max HR 78\n  2026-11-20 Rowing, 61 min, strain 7.2, avg HR 132, max HR 145, 565 kcal, 2.6 km, time in zones Z1 21% Z2 7% Z3 36% Z4 9% Z5 5%\n\nStress (SI): 24 (Baevsky Stress Index over today's R-R; higher means more sympathetic \/ under load; an autonomic-balance proxy, not a clinical figure).\n\nRIGHT NOW: Friday 20 November, 22:00 (night). This is the review part of the day: when asked how the day went, say what its Strain and the night ahead imply and point to bedtime, not to a new hard session.\nSTRAIN (0-21 scale, as the person sees it): Strain so far today 19.3 (a usual day is about 14.3); the Strain worth aiming for at today's Recovery is 4-10; last 7 days 103.\nTODAY'S SUGGESTED SESSION (the same one the Plan card shows; do not contradict it unless the person gives a reason): Easy movement, 20 min, main work in zone 1, about +1-1 Strain. It was chosen from a Recovery of 18.\nSLEEP TONIGHT: personal need about 8h, with a recent debt of about 2h 5m; centred on the usual midsleep 03:10, being asleep by about 23:10. Debt is repaid over several nights: never ask for more than about 45 minutes of extra sleep in one night.\nNEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): Wind down now, lights low and nothing hard, and be asleep by 23:10. About 2h 5m of sleep debt is carried, so this night matters.\nTODAY (2026-11-20) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  Recovery: today 18, yesterday 35 (change -17), 30-day average 63 (gap -45)\n  HRV: today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms)\n  Resting heart rate: today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm)\n  Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h)\n  Strain: today 19.3, yesterday 18.5 (change +0.8), 30-day average 11.3 (gap +8.0)\n  SpO2: today 93.5%, yesterday 98.8% (change -5.3%), 30-day average 96.6% (gap -3.1%)\n  Respiration: today 17.2\/min, yesterday 14.8\/min (change +2.4\/min), 30-day average 14.5\/min (gap +2.7\/min)",
+  "compactContextChars" : 3121,
+  "compactSystemChars" : 3850,
+  "configured" : true,
+  "consent" : true,
+  "fullSystemChars" : 13267,
+  "pages" : [
+    {
+      "headline" : "Recovery 18% is low—this means movement should be easy today.",
+      "local" : "Recovery 18%, take it easy today. Resting heart rate up 8 bpm. HRV down 26 ms. Strain so far 19.3. Compared with my note yesterday: Recovery 18% (was 82%), HRV 52 ms (was 104 ms), Resting heart rate 67 bpm (was 54 bpm).",
+      "localAdvice" : "Your body is asking for less today: easy movement, food, water and an earlier night.",
+      "page" : "Recovery",
+      "seconds" : 8.8674989938735962,
+      "text" : "Recovery 18% is low—this means movement should be easy today.\n\n**What I see**\nRecovery 18, HRV 52 ms, RHR 67 bpm against yesterday and the 30-day average\n\n**What it means**\nThe rise in heart rate and drop in HRV suggest the body is under stress from recent activity, likely from the workouts completed today\n\n**What to do**\nSkip added effort tonight—focus on gentle movement before bed to help restore balance, even if it’s just a short walk.",
+      "topic" : "recovery",
+      "verdict" : "attention: Recovery 18% is in the red band"
+    },
+    {
+      "headline" : "Strain 19.3 today is above the level your Recovery supports—this needs attention.",
+      "local" : "Strain 19.3 of 21 so far today. You are past the Strain your Recovery supports today: food, water and an early night are the work now. 25 sessions this week, Strain 152.1.",
+      "localAdvice" : "You are above what your Recovery supports: stop adding load today, eat well and protect tonight's sleep.",
+      "page" : "Strain",
+      "seconds" : 6.9845800399780273,
+      "text" : "Strain 19.3 today is above the level your Recovery supports—this needs attention.\n\n**What I see**\nStrain: today 19.3, recovery: today 18, 30-day average strain 11.3\n\n**What it means**\nYour Recovery dipped sharply, likely from the intense sessions recently, which pulled the strain higher than your readiness allows.\n\n**What to do**\nTonight keep the easy movement habit so it holds—do it now for 20 minutes to restore balance before bed.",
+      "topic" : "strain",
+      "verdict" : "attention: Strain 19.3 is above the 4-10 range your Recovery supports"
+    },
+    {
+      "headline" : "Sleep is good—your rest met the need.",
+      "local" : "A regular bedtime held this night up. HRV and resting heart rate have not followed the sleep yet, so recovery may lag it. You logged alcohol yesterday; with only 68 such night(s) so far there is not enough to say whether it moves your sleep. Repeat what you did yesterday evening: it worked. Compared with my note 7 days ago: Sleep 100% (was 85%).",
+      "localAdvice" : "Repeat what you did yesterday evening: same bedtime, no late meal, screens down early.",
+      "page" : "sleep",
+      "seconds" : 6.8779760599136353,
+      "text" : "Sleep is good—your rest met the need.\n\n**What I see**\nSleep: today 7.9 h, against need 8 h, efficiency 84%%, deep 1.6 h, REM 1.4 h, wake-ups 2, recovery 86\n\n**What it means**\nA regular bedtime held this night up, so the quiet start and consistent hours likely kept your body in balance.\n\n**What to do**\nKeep the regular bedtime tonight—go to bed before bed tonight to maintain the rhythm that supported your rest.",
+      "topic" : "sleep",
+      "verdict" : "good: Sleep 100% covers what you need"
+    },
+    {
+      "headline" : "Stress is steady, slightly higher than usual",
+      "local" : "Stress 1,6 of 3, tenser than your baseline (1,5). High stress for 0:00 hours so far. Moments when you were moving are left out.",
+      "localAdvice" : "You are calm: keep the breaks, movement and sleep that got you here.",
+      "page" : "stress",
+      "seconds" : 7.0287940502166748,
+      "text" : "Stress is steady, slightly higher than usual\n\n**What I see**\nHRV: today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms); RHR: today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm); strain: today 19.3, yesterday 18.5 (change +0.8), 30-day average 11.3 (gap +8.0)\n\n**What it means**\nThe rise in strain suggests recent physical effort, but the HRV dip points to a shift in how the body is managing recovery\n\n**What to do**\nTonight before bed, take five minutes of slow breathing to reset the nervous system, especially as strain climbs.",
+      "topic" : "stress",
+      "verdict" : "steady: Stress 1,6 of 3, tenser than your baseline (1,5)"
+    },
+    {
+      "headline" : "HRV is below average and slipping—needs attention",
+      "local" : "HRV 52 ms, below your 30-day average (82). Down 26 from the day before (78).",
+      "localAdvice" : "Low HRV usually follows a short night, alcohol, a hard week or stress. Sleep earlier tonight, keep today easy and skip alcohol; it often recovers within a few days.",
+      "page" : "HRV",
+      "seconds" : 5.1651409864425659,
+      "text" : "HRV is below average and slipping—needs attention\n\n**What I see**\nHRV: today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms)\n\n**What it means**\nYour body is recovering slower than usual, likely because today’s activity was more demanding than recent days\n\n**What to do**\nTonight before bed, add 10 minutes of gentle movement to help your system reset—this will support your recovery without adding strain.",
+      "topic" : "hrv",
+      "verdict" : "attention: HRV 52 ms, below your 30-day average (82)"
+    },
+    {
+      "headline" : "Resting heart rate 67 bpm, above average—needs attention",
+      "local" : "Resting heart rate 67 bpm, above your 30-day average (54). Up 8 from the day before (59).",
+      "localAdvice" : "A raised resting heart rate often follows poor sleep, heat, alcohol, illness or a heavy week. Keep today easy, drink water and check again tomorrow.",
+      "page" : "Resting heart rate",
+      "seconds" : 5.4267599582672119,
+      "text" : "Resting heart rate 67 bpm, above average—needs attention\n\n**What I see**\nResting heart rate: today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm)\n\n**What it means**\nThe rise in heart rate likely stems from a recent increase in activity or stress that hasn’t settled, even if sleep stayed stable\n\n**What to do**\nTonight, keep a regular bedtime to help your system reset—no added load, just consistency before bed.",
+      "topic" : "restingHR",
+      "verdict" : "attention: Resting heart rate 67 bpm, above your 30-day average (54)"
+    },
+    {
+      "headline" : "Breathing rate is rising above usual and needs attention",
+      "local" : "Respiratory rate 17,2 \/min, above your 30-day average (14,5). Up 2,4 from the day before (14,8).",
+      "localAdvice" : "A reading outside your usual range can come from a loose fit, a blocked nose or a bad night. Check the strap fit and recheck tomorrow; if it stays off for several nights, speak to a clinician.",
+      "page" : "Respiratory rate",
+      "seconds" : 5.1922670602798462,
+      "text" : "Breathing rate is rising above usual and needs attention\n\n**What I see**\nRespiratory rate: today 17.2\/min, yesterday 14.8\/min (change +2.4\/min), 30-day average 14.5\/min (gap +2.7\/min)\n\n**What it means**\nThe increase in breathing rate may be linked to a less restful night or uneven sleeping position, but I am not sure what caused it\n\n**What to do**\nTonight, keep the strap snug and check your sleeping position before bed to help stabilize the reading",
+      "topic" : "vitals",
+      "verdict" : "attention: Respiratory rate 17,2 \/min, above your 30-day average (14,5)"
+    },
+    {
+      "headline" : "Weight is steady, in line with recent average",
+      "local" : "Weight 73,6 kg, in line with your 30-day average (74,2). Up 0,0 from the day before (73,6).",
+      "page" : "Weight",
+      "seconds" : 3.9174090623855591,
+      "text" : "Weight is steady, in line with recent average\n\n**What I see**\n73,6 kg today, 74,2 against 30-day average, 73,6 against yesterday\n\n**What it means**\nThe slight rise is likely from consistent eating and normal activity over the past few days\n\n**What to do**\nKeep the regular intake pattern tonight to maintain the steady trend.",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "Skin temperature is 0.9 °C above usual, so it needs attention",
+      "local" : "Skin temperature 0,9 °C, above your 30-day average (-0,1). Up 1,1 from the day before (-0,2).",
+      "localAdvice" : "A rise this size, with a lower HRV or a higher resting heart rate, can come before an illness: drink water, ease off today, sleep more and watch the next two nights. It is an early signal, not a diagnosis.",
+      "page" : "Skin temperature",
+      "seconds" : 7.029681921005249,
+      "text" : "Skin temperature is 0.9 °C above usual, so it needs attention\n\n**What I see**\nHRV: today 52 ms, yesterday 78 ms (change -26 ms), 30-day average 82 ms (gap -30 ms); Resting heart rate: today 67 bpm, yesterday 59 bpm (change +8 bpm), 30-day average 54 bpm (gap +13 bpm); Sleep: today 5.3 h, yesterday 6.8 h (change -1.5 h), 30-day average 7.2 h (gap -1.9 h)\n\n**What it means**\nThe drop in HRV suggests the body is struggling to recover quickly, likely from uneven movement or stress that didn’t fully reset the system\n\n**What to do**\nTonight, take no added load—focus on rest and hydration before bed to help the body settle.",
+      "topic" : "skinTemp",
+      "verdict" : "attention: Skin temperature is 0,9 °C above your usual"
+    }
+  ],
+  "provider" : "appleIntelligence",
+  "scale" : "whoop",
+  "scenario" : "poor"
+}

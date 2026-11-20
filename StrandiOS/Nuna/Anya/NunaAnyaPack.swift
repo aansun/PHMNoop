@@ -7,6 +7,25 @@ import StrandAnalytics
 /// module being asked about.
 @MainActor
 enum NunaAnyaPack {
+    /// The answer to a question about the strap, worked out on the phone from what the app itself knows (status, charging, last sync) and what the Device screen does.
+    /// A model has no strap facts to answer from and either refuses or invents a hardware step, so this module's questions are not sent to one.
+    static func deviceAnswer(question: String, live: LiveState) -> String {
+        let q = question.lowercased()
+        let battery = live.batteryPct.map { Int($0.rounded()) }
+        let status: String = {
+            guard live.connected else { return String(localized: "The strap is not connected right now.") }
+            guard let battery else { return String(localized: "The strap is connected.") }
+            return live.isCharging ? String(localized: "The strap is connected and charging, at \(battery)%.") : String(localized: "The strap is connected, at \(battery)% and not charging.")
+        }()
+        if q.contains("charg") || q.contains("battery") {
+            let steps = String(localized: "To charge it, put the strap on its charger. The Device screen shows Charging as soon as the level starts to rise, and the time to full once the pace is clear. The estimate of how long a charge lasts comes back after you take it off the charger.")
+            return status + " " + steps
+        }
+        let last = live.lastSyncedAt.map { String(localized: "Its last sync was at \(NunaDeviceFormat.clock($0)).") } ?? String(localized: "It has not synced since the app opened.")
+        let steps = String(localized: "If it keeps dropping: keep it within a few metres of the phone, check that Bluetooth is on and that the strap is not connected to another phone or app, then use Reconnect in Device Settings.")
+        return status + " " + last + " " + steps
+    }
+
     static func text(for module: NunaAnyaModule, repo: Repository, profile: ProfileStore, live: LiveState) async -> String? {
         switch module {
         case .device:

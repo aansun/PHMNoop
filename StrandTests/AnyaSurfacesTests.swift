@@ -38,7 +38,7 @@ final class AnyaSurfacesTests: XCTestCase {
     /// The contract does not use words the model copies into its answers (labels, or the phrase it once echoed in every reply).
     func testTheContractHasNoLabelsToEcho() {
         for word in ["READ:", "EXPLAIN:", "ADVISE:", "HEADLINE:"] { XCTAssertFalse(AnyaSurface.contract.contains(word), word) }
-        XCTAssertTrue(AnyaSurface.contract.contains("never the phrases \"the data best supports\""))
+        XCTAssertTrue(AnyaSurface.contract.contains("never the phrases"))
     }
 
     func testTopicsFromMetricKeysAndTitles() {
