@@ -9025,6 +9025,7 @@
  "Its last sync was at %@.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sinkron terakhirnya pukul %@."}}}},
  "It has not synced since the app opened.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum sinkron sejak app dibuka."}}}},
  "If it keeps dropping: keep it within a few metres of the phone, check that Bluetooth is on and that the strap is not connected to another phone or app, then use Reconnect in Device Settings.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kalau terus terputus: dekatkan ke ponsel (beberapa meter), pastikan Bluetooth menyala dan strap tidak terhubung ke ponsel atau app lain, lalu pakai Reconnect di Device Settings."}}}},
+ "If you have not paired it yet, add it first from Device Settings.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kalau belum dipasangkan, tambahkan dulu dari Device Settings."}}}},
  "Data caught up": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Data sudah terbaru"}}}},
  "Synced to": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tersinkron sampai"}}}},
  "e.g. 2.0-5.0": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "mis. 2.0-5.0"}}}},

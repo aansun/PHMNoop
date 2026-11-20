@@ -324,9 +324,15 @@ extension AppleIntelligenceClient {
                 generating: GeneratedProgramOutline.self, options: GenerationOptions(maximumResponseTokens: 400)).content
             var days: [[String: Any]] = []
             for (i, title) in outline.dayTitles.prefix(5).enumerated() {
-                let day = try await LanguageModelSession(instructions: rules).respond(
+                // A day with fewer than three lifts is not a session: asked again once, then taken as it is.
+                var day = try await LanguageModelSession(instructions: rules).respond(
                     to: prompt + "\n\nThe split: " + outline.dayTitles.joined(separator: "; ") + ".\nNow build ONLY day \(i + 1), \(title): the exercises with sets, rep range and rest.",
                     generating: GeneratedProgramDayItems.self, options: GenerationOptions(maximumResponseTokens: 700)).content
+                if day.items.count < 3 {
+                    day = try await LanguageModelSession(instructions: rules).respond(
+                        to: prompt + "\n\nDay \(i + 1), \(title): give at least four exercises, compound lifts first, each with sets, rep range and rest.",
+                        generating: GeneratedProgramDayItems.self, options: GenerationOptions(maximumResponseTokens: 700)).content
+                }
                 days.append(["title": title, "items": day.items.map { ["exercise": $0.exercise, "sets": $0.sets, "repsLow": min($0.repsLow, $0.repsHigh), "repsHigh": max($0.repsLow, $0.repsHigh), "restSec": $0.restSec] as [String: Any] }])
             }
             guard !days.isEmpty, let block = json(["name": outline.name, "note": outline.note, "days": days] as [String: Any]) else { return nil }

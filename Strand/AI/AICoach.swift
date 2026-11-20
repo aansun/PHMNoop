@@ -347,10 +347,16 @@ final class AICoachEngine: ObservableObject {
     Do not infer illness, injury, dehydration or mood from wearable data.
     """
 
+    static let compactPersonaNoData = """
+    You are Anya, a perceptive, warm health assistant for recovery and performance. This person has no wearable readings yet, so you state no figure about them. \
+    Answer general questions in general terms, and where an answer needs their numbers say what to do to get them: wear the strap overnight and sync in the morning.
+    """
+
     func buildSystemPrompt(compact: Bool) -> String {
         let stored = UserDefaults.standard.string(forKey: Self.systemPromptKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        let base = compact ? Self.compactPersona : ((stored?.isEmpty == false) ? stored! : Self.defaultSystemPrompt)
+        // With no readings the bands (Recovery 67-100 and so on) are left out of the persona: a model with no figure to read quotes the bands as the person's own.
+        let base = compact ? (repo.days.isEmpty ? Self.compactPersonaNoData : Self.compactPersona) : ((stored?.isEmpty == false) ? stored! : Self.defaultSystemPrompt)
         // iOS follows the user's selected app/system language. Keep the health vocabulary stable,
         // but make the coach's prose match the active language instead of relying on the provider to guess.
         #if os(iOS)
@@ -1324,6 +1330,9 @@ final class AICoachEngine: ObservableObject {
     /// nil when Anya is off or not connected, or the provider did not answer.
     func suggestNutritionPlan(snapshot: String) async -> String? {
         guard CoachBriefScheduler.coachMasterEnabled, isConfigured, dataConsent, let key = resolvedKey else { return nil }
+        // No goal weight: the plan is maintenance at the estimated energy use. That is arithmetic, not judgement, so no model is asked (a small one kept a loss pace and
+        // invented an intake); with a goal, the model works the pace out below.
+        if let kcal = Self.maintenanceKcal(in: snapshot) { return Self.maintenancePlanReply(kcal: kcal) }
         // The plan rests on the profile, the weight trend and the diary in the snapshot; the wearable summary only goes along when there is one.
         var prompt = repo.days.isEmpty ? "" : await buildFullContext(compact: runsOnDevice)
         prompt += "\n\n---\n\n" + AnyaActions.planInstruction + "\n\nNUTRITION SNAPSHOT:\n" + snapshot
@@ -1593,7 +1602,7 @@ final class AICoachEngine: ObservableObject {
         if let line = await stressIndexLine() { ctx += "\n\n" + line }
         // The clock, the Plan card's session, banked Effort and tonight's sleep need. Set by the Nuna shell only, so the
         // Default experience and the macOS app send exactly the context they always did.
-        if includeDayContext, let provider = dayContextProvider {
+        if includeDayContext, !repo.days.isEmpty, let provider = dayContextProvider {
             let block = await provider()
             if !block.isEmpty { ctx += "\n\n" + block }
         }

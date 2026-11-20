@@ -1,0 +1,223 @@
+{
+  "breath" : {
+    "output" : "This breathing exercise is to help you feel more relaxed and peaceful as you prepare for sleep. It should bring a sense of quiet ease in your body.\n```anya-breath\n{\"stages\":[{\"seconds\":6,\"phase\":\"inhale\"},{\"seconds\":6,\"phase\":\"exhale\"}],\"goal\":\"sleep\",\"minutes\":5,\"title\":\"Soft breathing before sleep\"}\n```",
+    "parsed" : true,
+    "seconds" : 2.0875279903411865
+  },
+  "chat" : [
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "known" : "today\n",
+      "module" : "today",
+      "question" : "Why did my Recovery change compared with yesterday? Use my sleep, HRV and resting heart rate.",
+      "seconds" : 0.00051200389862060547
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "known" : "today\n",
+      "module" : "today",
+      "question" : "Summarise my day so far in a few sentences, using my numbers.",
+      "seconds" : 0.00019896030426025391
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "known" : "health\n",
+      "module" : "health",
+      "question" : "Explain what my HRV is telling me today, compared with my own baseline.",
+      "seconds" : 0.00019407272338867188
+    },
+    {
+      "answer" : "The bands hold the silent records of how the body responds, but without movement data, the picture remains blank.\n\nYou are not sure what caused the lack of signal, so wear the strap tonight and sync it in the morning to gather the necessary data.",
+      "known" : "health\n",
+      "module" : "health",
+      "question" : "What is fitness age and how is mine worked out in this app?",
+      "seconds" : 4.8738249540328979
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "known" : "trends\n",
+      "module" : "trends",
+      "question" : "Why did my Recovery move over the last month? Point to the behaviours in my data.",
+      "seconds" : 0.00032305717468261719
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "known" : "trends\n",
+      "module" : "trends",
+      "question" : "Which day was hardest on my body this month and what followed it?",
+      "seconds" : 0.00021302700042724609
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "known" : "sleep\n",
+      "module" : "sleep",
+      "question" : "Why might I have woken up several times last night? Use my sleep numbers.",
+      "seconds" : 0.00026810169219970703
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "known" : "sleep\n",
+      "module" : "sleep",
+      "question" : "Compare my sleep this week with last week.",
+      "seconds" : 0.00021493434906005859
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "known" : "workouts\n",
+      "module" : "workouts",
+      "question" : "Recommend the best workout for today using my Recovery, Strain, Sleep and recent workouts.",
+      "seconds" : 0.00024104118347167969
+    },
+    {
+      "answer" : "I have no readings from your strap yet, so there is nothing for me to read. Wear it overnight and sync, then ask again.",
+      "known" : "workouts\n",
+      "module" : "workouts",
+      "question" : "Plan my training for this week from my current load and recovery.",
+      "seconds" : 0.00021195411682128906
+    },
+    {
+      "answer" : "You’ve eaten 0 of 2.250 kcal today against your target, with no food logged in the last 14 days.\nRecovery, Strain, Sleep, HRV and resting heart rate against your own baseline: not available, 0 against yesterday, not available against the 30-day average.\n\nStart logging your first meal now, aiming to eat at least 200 kcal before bed to close the gap.\nWould you like help setting up a quick log for tomorrow?",
+      "known" : "nutrition\n\n0 of 2.250 kcal eaten, 2.250 left. Your body spends roughly 2.404 kcal a day, a rough figure from your profile for now.\n\nNUTRITION (the person's own food and weight data):\nPROFILE: male, 30 years, 178 cm\nWEIGHT: 75.0 kg (from the profile, no weigh-ins)\nGOAL WEIGHT: not set\nFOOD DIARY: nothing logged in the last 14 days\nESTIMATED DAILY ENERGY USE: 2404 kcal (from the profile, a rough estimate)\nCURRENT PLAN: 2250 kcal, pace -0.25 kg a week, protein 1.8 g\/kg, fat 28% of calories\nLAB BOOK: not shared (the person has not turned on Share patterns and Lab Book)\n",
+      "module" : "nutrition",
+      "question" : "Look at what I have eaten today against my target and macros and tell me what to do for the rest of the day.",
+      "seconds" : 5.3086169958114624
+    },
+    {
+      "answer" : "Your energy balance today is at zero, with no food logged in 14 days—this means you’re not eating enough to meet your needs. Since no meals were recorded, you need to eat something now to close the gap.\n\nEat a small meal tonight with protein to help your body hold steady—do this before bed.\n\nWould you like a simple option to start with?",
+      "known" : "nutrition\n\n0 of 2.250 kcal eaten, 2.250 left. Your body spends roughly 2.404 kcal a day, a rough figure from your profile for now.\n\nNUTRITION (the person's own food and weight data):\nPROFILE: male, 30 years, 178 cm\nWEIGHT: 75.0 kg (from the profile, no weigh-ins)\nGOAL WEIGHT: not set\nFOOD DIARY: nothing logged in the last 14 days\nESTIMATED DAILY ENERGY USE: 2404 kcal (from the profile, a rough estimate)\nCURRENT PLAN: 2250 kcal, pace -0.25 kg a week, protein 1.8 g\/kg, fat 28% of calories\nLAB BOOK: not shared (the person has not turned on Share patterns and Lab Book)\n",
+      "module" : "nutrition",
+      "question" : "Suggest what to eat tonight given what I have eaten today, my target and today's activity.",
+      "seconds" : 4.6381419897079468
+    },
+    {
+      "answer" : "The long exhale, 10 min exercise is not available, but here’s what the numbers show: Recovery, 67 against yesterday, Strain, 18 against 30-day average, Sleep, not available, HRV, not available, resting heart rate, not available.\n\nRecovery is in the range that allows maintenance and controlled quality, so the body is holding steady—this often follows an easy day before.\n\nTonight, do the long exhale, 10 min exercise before bed to help keep the signal stable—repeat it tonight. Would you like to check HRV again after?",
+      "known" : "breathing\n\nSleep: Long exhale, 10 min. It is 22:00, close to sleep. It raised your HRV 15% in earlier sessions.\n",
+      "module" : "breathing",
+      "question" : "Which breathing exercise fits me right now? Use my live heart rate, HRV, stress and Recovery, and what worked in my earlier breathing sessions.",
+      "seconds" : 5.2577520608901978
+    },
+    {
+      "answer" : "Your HRV is 22, against the 30-day average, and your resting heart rate is not available.\n\nThe rise in HRV from your long exhale, 10 min, suggests that slow, comfortable breathing is helping your body reset, which points to a calm, controlled approach being effective.\n\nKeep the long exhale, 10 min, tonight before bed—this habit explains the improvement in your HRV.",
+      "known" : "breathing\n\nSleep: Long exhale, 10 min. It is 22:00, close to sleep. It raised your HRV 15% in earlier sessions.\n",
+      "module" : "breathing",
+      "question" : "How did my recent breathing sessions go? Look at the HRV and heart rate change in each and tell me what is working.",
+      "seconds" : 3.4383190870285034
+    },
+    {
+      "answer" : "The strap is not connected right now. It has not synced since the app opened. If it keeps dropping: keep it within a few metres of the phone, check that Bluetooth is on and that the strap is not connected to another phone or app, then use Reconnect in Device Settings.",
+      "known" : "device\n\nSTRAP (its live status on this phone):\n  connection: not connected\n  last sync: none since the app opened\n  last sync problem: This device can't use Bluetooth Low Energy.\n",
+      "module" : "device",
+      "question" : "Why might my strap keep disconnecting from the phone?",
+      "seconds" : 0
+    },
+    {
+      "answer" : "The strap is not connected right now. To charge it, put the strap on its charger. The Device screen shows Charging as soon as the level starts to rise, and the time to full once the pace is clear. The estimate of how long a charge lasts comes back after you take it off the charger.",
+      "known" : "device\n\nSTRAP (its live status on this phone):\n  connection: not connected\n  last sync: none since the app opened\n  last sync problem: This device can't use Bluetooth Low Energy.\n",
+      "module" : "device",
+      "question" : "How should I charge my strap and how long does the battery last?",
+      "seconds" : 0
+    }
+  ],
+  "compactContext" : "USER BIOMETRIC SUMMARY:\nThere is no wearable data yet. Say so plainly, state no figure about the person (the bands in your instructions are rules, not their readings), and tell them to wear the strap overnight and sync in the morning so there is something to read. A general question can still be answered in general terms.\n\nRecent workouts: none recorded in the last 30 days.\n\nRIGHT NOW: Friday 20 November, 22:24 (night). This is the review part of the day: when asked how the day went, say what its Strain and the night ahead imply and point to bedtime, not to a new hard session.\nNEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): Keep the evening light.\n",
+  "compactContextChars" : 734,
+  "compactSystemChars" : 3850,
+  "configured" : true,
+  "consent" : true,
+  "food" : {
+    "input" : "2 telur dadar dan 1 piring nasi goreng",
+    "output" : "An estimate, worked out on this iPhone.\n```anya-food\n{\"items\":[{\"kcal\":250,\"proteinG\":15,\"fatG\":15,\"amount\":\"2 eggs\",\"name\":\"2 telur dadar\",\"carbsG\":10},{\"kcal\":400,\"fatG\":15,\"carbsG\":70,\"name\":\"1 piring nasi goreng\",\"amount\":\"1 plate\",\"proteinG\":10}]}\n```",
+    "seconds" : 2.0722299814224243
+  },
+  "fullSystemChars" : 13267,
+  "morningBrief" : {
+    "output" : "nil",
+    "seconds" : 0.00030493736267089844
+  },
+  "pages" : [
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Recovery",
+      "seconds" : 0.0040251016616821289,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "No Strain yet today. Anya reads it as soon as your heart rate has spent time in the zones.",
+      "page" : "Strain",
+      "seconds" : 0.0032399892807006836,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "sleep",
+      "seconds" : 0.0026758909225463867,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "stress",
+      "seconds" : 0.0025459527969360352,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "HRV",
+      "seconds" : 0.00089907646179199219,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Resting heart rate",
+      "seconds" : 0.00084197521209716797,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Respiratory rate",
+      "seconds" : 0.00081598758697509766,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Weight",
+      "seconds" : 0.0007801055908203125,
+      "text" : "nil",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "nil",
+      "local" : "nil",
+      "page" : "Skin temperature",
+      "seconds" : 0.00079691410064697266,
+      "text" : "nil",
+      "verdict" : "none"
+    }
+  ],
+  "plan" : {
+    "output" : "You’re holding steady at 2250 kcal, with a pace of -0.25 kg a week and 1.8 g protein per kg, but no logged meals and a weight of 75.0 kg—this aligns with your current energy use and the lack of recorded intake, so we’ll keep the calories near 2150 to match your energy needs without adding new foods.  \n\n```json\n{\"targetKcal\":2150, \"paceKgPerWeek\":-0.4, \"proteinPerKg\":1.8, \"explanation\": \"We used the weight of 75.0 kg, the current intake of 2250 kcal, the estimated energy use of 2404 kcal, and the existing intake to set the target—the calorie drop and slow weight loss pace follow the logged load and the need to stay near 2150 to support the current effort, with protein held at 1.8 g\/kg to meet the goal while avoiding overreaching—no Lab Book data is available to guide adjustments, and the lack of intake log means we rely only on the stated numbers and the current load.\", \"reasons\":[\"Weight of 75.0 kg and current intake of 2250 kcal form the base for the target\"], \"cautions\":[\"No Lab Book data is available—consult a clinician if weight loss stalls\"], \"note\": \"Food intake log is not available—use the profile and current load to stay on track\"}\n```",
+    "parsed" : true,
+    "seconds" : 9.3974469900131226
+  },
+  "program" : {
+    "output" : "Three days per week: Day 1 Upper, Day 2 Push-Pull, Day 3 Legs and Core. Start with compound lifts, build on existing chest work, and add smallest weight step once each set reaches top rep range.\n```anya-program\n{\"name\":\"Upper \\\/ lower, 3 days\",\"note\":\"Add the smallest weight step once every set reaches the top of the rep range\",\"days\":[{\"title\":\"Day 1: Upper\",\"items\":[{\"repsHigh\":12,\"exercise\":\"Dumbbell Bench Press - Medium Grip\",\"sets\":3,\"repsLow\":6,\"restSec\":60}]},{\"items\":[{\"repsLow\":6,\"sets\":3,\"restSec\":60,\"exercise\":\"Dumbbell Incline Press - Neutral Grip\",\"repsHigh\":12},{\"repsLow\":6,\"repsHigh\":12,\"restSec\":60,\"sets\":3,\"exercise\":\"Dumbbell Row - One-Handed\"}],\"title\":\"Day 2: Push-Pull\"},{\"title\":\"Day 3: Legs and Core\",\"items\":[{\"restSec\":30,\"repsHigh\":20,\"sets\":3,\"exercise\":\"Romanian Deadlift\",\"repsLow\":12},{\"restSec\":30,\"exercise\":\"Dumbbell Squat\",\"sets\":3,\"repsHigh\":20,\"repsLow\":12},{\"repsHigh\":20,\"repsLow\":12,\"exercise\":\"Leg Raise\",\"sets\":3,\"restSec\":30}]}]}\n```",
+    "parsed" : true,
+    "seconds" : 32.355114936828613
+  },
+  "provider" : "appleIntelligence",
+  "scale" : "whoop",
+  "scenario" : "empty"
+}

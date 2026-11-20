@@ -73,9 +73,16 @@ Two kinds of check: `docs/anya/qa/check.py` (mechanical: figures not in the data
 
 | 6 to 8 | Comparisons worked out in code (today, yesterday, 30-day average, with the change and the gap), the time now, no clock times except bedtime, strap questions answered on the phone, habitual doubt sentences removed, maintenance plan without a goal weight, plan and breath fallbacks | not graded by a reviewer | not graded by a reviewer | mechanical check: pages 0 of 9 flagged, chat 2 of 16 (poor) and 1 of 16 (good), down from 8 of 16 each in round 4 |
 
+| 9 | Full run of the final build, graded by the independent reviewer | role 25, fits 11, grounded 12, on surface 27, manner 16, honest 25 (flat against round 4) | role 24, fits 18, grounded 6, on surface 27, manner 18, honest 23 | invented figures and the "no goal" plan fixed in code afterwards; mechanical check 1 flag of 26 |
+
 What the numbers say: Poor data improved on every check except safety (already 29/30). Good data improved only a little: the on-device model still names a cause for a green
 reading; round 5 replaces such a meaning in code, and its pages now pass the mechanical check.
 
 Known gaps: the last rounds (6 to 8) were checked mechanically, not by a second reviewer, so rerun the reviewers before relying on the numbers above for them; the nutrition plan on an empty store
 still relies on the maintenance fallback; the demo store has two sources that disagree (Recovery, sleep), so a few items are data artefacts. The Device module has no UI entry in v3; its questions are answered
 on the phone from the strap's status.
+
+Reviewer verdict on round 9: pages are cleaner (labelled figures, no invented targets) but the module chat answers did not improve and the poor-data manner score fell (the rule not to copy the comparison lines back
+cost style points). Remaining on both data sets: a cause is still named for a good reading in most chat answers, the weekly average is sometimes read as today's figure, and the on-device model does not answer
+how-it-works questions (fitness age). These are limits of the on-device model on free-form questions; the pages, which use guided generation and a verdict from the phone, hold up better.
+After that review: the nutrition plan with no goal weight is now computed in code (no model), the empty store gets no day block and no band legend, and a thin program day is asked again once.

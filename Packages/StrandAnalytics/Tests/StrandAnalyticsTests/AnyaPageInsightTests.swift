@@ -65,6 +65,10 @@ final class AnyaReplyCleanerTests: XCTestCase {
         XCTAssertEqual(AnyaReplyCleaner.clean(r), "It is a mix of HRV and resting heart rate.\n\nKeep today light.")
     }
 
+    func testDropsAThisSurfaceSentenceWhereverItStarts() {
+        XCTAssertEqual(AnyaReplyCleaner.clean("Not available—this surface lacks the data. Wear the strap overnight."), "Wear the strap overnight.")
+    }
+
     func testAReplyThatWouldBeEmptyIsLeftAlone() {
         XCTAssertEqual(AnyaReplyCleaner.clean("I can't tell."), "I can't tell.")
     }

@@ -23,7 +23,9 @@ enum NunaAnyaPack {
         }
         let last = live.lastSyncedAt.map { String(localized: "Its last sync was at \(NunaDeviceFormat.clock($0)).") } ?? String(localized: "It has not synced since the app opened.")
         let steps = String(localized: "If it keeps dropping: keep it within a few metres of the phone, check that Bluetooth is on and that the strap is not connected to another phone or app, then use Reconnect in Device Settings.")
-        return status + " " + last + " " + steps
+        // A strap that has never synced may not be paired yet.
+        let pair = live.lastSyncedAt == nil ? " " + String(localized: "If you have not paired it yet, add it first from Device Settings.") : ""
+        return status + " " + last + " " + steps + pair
     }
 
     static func text(for module: NunaAnyaModule, repo: Repository, profile: ProfileStore, live: LiveState) async -> String? {
