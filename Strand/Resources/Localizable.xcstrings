@@ -9103,6 +9103,8 @@
  "Thunderstorm": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Badai petir"}}}},
  "Too hot outside (feels like %@)": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Terlalu panas di luar (terasa seperti %@)"}}}},
  "Turn on Weather and air in settings to see the forecast here.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aktifkan Cuaca dan udara di pengaturan untuk melihat prakiraan di sini."}}}},
+ "Good outdoors": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cocok di luar"}}}},
+ "Outdoors, with care": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Di luar, hati-hati"}}}},
  "Data caught up": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Data sudah terbaru"}}}},
  "Synced to": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tersinkron sampai"}}}},
  "e.g. 2.0-5.0": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "mis. 2.0-5.0"}}}},

@@ -80,11 +80,11 @@ extension NunaEnvironmentFormat {
         NunaInsightText.clockHour(slot.start) + " – " + NunaInsightText.clockHour(slot.end)
     }
 
-    /// Whether a session suits time outdoors, in words for a chip.
+    /// Whether a session suits time outdoors, in a few words for a chip.
     static func fitWord(_ fit: OutdoorFit) -> String {
         switch fit {
-        case .good: return String(localized: "Good for outdoor activity")
-        case .adjust: return String(localized: "Outdoors with care")
+        case .good: return String(localized: "Good outdoors")
+        case .adjust: return String(localized: "Outdoors, with care")
         case .indoors: return String(localized: "Better indoors")
         }
     }
@@ -109,169 +109,75 @@ extension NunaEnvironmentFormat {
     }
 }
 
-// MARK: - Strain room
+// MARK: - The deck
 
-/// How much the day has room for: the Strain band today's Recovery supports (the one the Strain page and the plan judge by) and the Strain done so far.
-struct NunaStrainRoom: Equatable {
-    let load: TrainingLoad
-    /// The band on the 0-21 axis.
-    let band: ClosedRange<Int>?
-    /// Strain so far, on the 0-21 axis.
-    let soFar: Double?
-
-    static func make(chargePct: Double?, effort: Double?) -> NunaStrainRoom {
-        let band = CoupledView.optimalStrainRange(recovery: chargePct)
-        let done = effort.map { UnitFormatter.effortValue($0, scale: .whoop) }
-        return NunaStrainRoom(load: TrainingLoad.of(recoveryPct: chargePct, targetHigh: band.map { Double($0.upperBound) }, soFar: done), band: band, soFar: done)
-    }
-
-    /// "14–18", on the scale the person chose.
-    func bandText(_ scale: EffortScale) -> String? {
-        guard let band else { return nil }
-        func shown(_ v: Int) -> Int { Int(UnitFormatter.effortValue(Double(v) / UnitFormatter.effortScaleFactor, scale: scale).rounded()) }
-        return "\(shown(band.lowerBound))–\(shown(band.upperBound))"
-    }
-
-    func soFarText(_ scale: EffortScale) -> String? {
-        soFar.map { UnitFormatter.effortDisplay($0 / UnitFormatter.effortScaleFactor, scale: scale) }
-    }
-
-    var loadWord: String {
-        switch load {
-        case .recover: return String(localized: "Target reached")
-        case .easy: return String(localized: "Keep it easy")
-        case .moderate: return String(localized: "Room for a steady session")
-        case .hard: return String(localized: "Room for a hard session")
-        }
-    }
-}
-
-// MARK: - What each pick is called, and why
-
-extension ActivityPick {
-    var title: String {
-        switch kind {
-        case .easyWalk: return String(localized: "Easy walk")
-        case .run: return String(localized: "Zone 2 run")
-        case .intervalRun: return String(localized: "Interval run")
-        case .ride: return String(localized: "Steady ride")
-        case .strength: return String(localized: "Strength")
-        case .treadmill: return String(localized: "Treadmill run")
-        case .indoorRide: return String(localized: "Indoor ride")
-        case .mobility: return String(localized: "Mobility")
-        case .breathwork: return String(localized: "Breathwork")
-        }
-    }
-
-    var symbol: String {
-        switch kind {
-        case .easyWalk: return "figure.walk"
-        case .run, .intervalRun: return "figure.run"
-        case .ride, .indoorRide: return "bicycle"
-        case .strength: return "dumbbell.fill"
-        case .treadmill: return "figure.run.treadmill"
-        case .mobility: return "figure.cooldown"
-        case .breathwork: return "wind"
-        }
-    }
-
-    var intensity: String {
-        switch kind {
-        case .easyWalk: return String(localized: "Zone 1")
-        case .run, .ride, .treadmill, .indoorRide: return String(localized: "Zone 2")
-        case .intervalRun: return String(localized: "Zone 4–5 intervals")
-        case .strength: return String(localized: "Moderate")
-        case .mobility: return String(localized: "Light")
-        case .breathwork: return String(localized: "Calm")
-        }
-    }
-
-    /// "40 MIN · ZONE 2 · OUTDOORS": the facts of the session in one line.
-    var meta: String {
-        [String(localized: "\(minutes) min"), intensity, outdoors ? String(localized: "Outdoors") : String(localized: "Indoors")].joined(separator: " · ")
-    }
-
-    /// The reasons as sentences, the Strain one first: what it fits, then what the sky and the air allow.
-    func reason(strainBand: String?) -> String {
-        var parts: [String] = []
-        for why in whys.prefix(3) {
-            switch why {
-            case .fitsTarget:
-                parts.append(strainBand.map { String(localized: "Fits the Strain of \($0) your Recovery supports") } ?? String(localized: "Fits the Strain your Recovery supports"))
-            case .targetReached: parts.append(String(localized: "You have already reached today's Strain target"))
-            case .recoveryLow: parts.append(String(localized: "Your Recovery is low, so keep it light"))
-            case .coolWindow(let t): parts.append(String(localized: "the kindest stretch of the day, feels like \(NunaInsightText.degrees(t))"))
-            case .cleanAir(let aqi): parts.append(String(localized: "the air is clean (AQI \(aqi))"))
-            case .airTooPoor(let aqi): parts.append(String(localized: "AQI \(aqi) is too high to train outside"))
-            case .tooHot(let t): parts.append(String(localized: "it feels like \(NunaInsightText.degrees(t)), too hot outside"))
-            case .rainLikely(let c): parts.append(String(localized: "rain is likely (\(NunaEnvironmentFormat.percent(c)))"))
-            case .storm: parts.append(String(localized: "a storm is around"))
-            case .windStrong: parts.append(String(localized: "the wind is strong"))
-            case .shortenedForHeat: parts.append(String(localized: "a little shorter because of the heat"))
-            }
-        }
-        guard let first = parts.first else { return "" }
-        let rest = parts.dropFirst().joined(separator: ", ")
-        let sentence = rest.isEmpty ? first : first + ": " + rest
-        return sentence.prefix(1).uppercased() + sentence.dropFirst() + "."
-    }
-}
-
-// MARK: - The sessions
-
-/// The four sessions of the day as cards stacked one on the next, each tucked under the one above it. A card always shows what matters at a glance, the sky and the
-/// temperature and the air; touched, it opens to the wind, the humidity, the rain and whether the session suits time outdoors, and the others stay shut.
-struct NunaSessionStack: View {
+/// The four sessions of the day as cards laid on one another and fanned out to the right. The one in front keeps its size and shows the sky, the temperature, the
+/// range of the session, the air and whether it suits time outdoors; the others wait behind it, dimmed, with only the name of the session on the edge that shows.
+/// Touching one brings it to the front. Nothing changes size.
+struct NunaSessionDeck: View {
     let slots: [EnvironmentOutlook.Slot]
-    var large = false
-    @State private var open: Int?
+    var height: CGFloat = 318
+    @State private var active = 0
 
-    init(slots: [EnvironmentOutlook.Slot], large: Bool = false, initiallyOpen: Int? = nil) {
-        self.slots = slots; self.large = large; _open = State(initialValue: initiallyOpen)
-    }
-
-    private static let overlap: CGFloat = 16
+    /// How much of each card behind shows at the right.
+    private static let peek: CGFloat = 28
 
     var body: some View {
-        VStack(spacing: -Self.overlap) {
-            ForEach(Array(slots.enumerated()), id: \.element.id) { i, slot in
-                card(i, slot).zIndex(Double(slots.count - i))
+        GeometryReader { geo in
+            let n = slots.count
+            let width = geo.size.width - Self.peek * CGFloat(max(n - 1, 0))
+            ZStack(alignment: .topLeading) {
+                ForEach(Array(slots.enumerated()), id: \.element.id) { i, slot in
+                    let rank = (i - min(active, n - 1) + n) % max(n, 1)
+                    card(slot, rank: rank)
+                        .frame(width: width, height: height)
+                        .offset(x: CGFloat(rank) * Self.peek)
+                        .zIndex(Double(n - rank))
+                        .onTapGesture { if rank != 0 { withAnimation(.spring(response: 0.42, dampingFraction: 0.86)) { active = i } } }
+                }
             }
         }
+        .frame(height: height)
     }
 
-    /// The same soft blue from the first card to the last, lighter at the top and fainter and fainter after it, the way the day thins out into the night.
-    private func tint(_ i: Int) -> Color {
-        NunaPalette.recoveryBlue.opacity([0.22, 0.15, 0.09, 0.04][min(i, 3)])
-    }
-
-    private func card(_ i: Int, _ slot: EnvironmentOutlook.Slot) -> some View {
-        let isOpen = open == i
-        return VStack(alignment: .leading, spacing: 14) {
-            header(slot, isOpen: isOpen)
-            if isOpen { details(slot).transition(.opacity.combined(with: .move(edge: .top))) }
+    private func card(_ slot: EnvironmentOutlook.Slot, rank: Int) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 22, style: .continuous)
+        return ZStack(alignment: .topLeading) {
+            front(slot).opacity(rank == 0 ? 1 : 0)
+            if rank != 0 { edge(slot) }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 14 + (i > 0 ? Self.overlap : 0)).padding(.bottom, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(NunaPalette.card))
-        .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(tint(i)))
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Color.white.opacity(0.06), lineWidth: 1))
-        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .onTapGesture { withAnimation(.easeInOut(duration: 0.25)) { open = isOpen ? nil : i } }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(shape.fill(NunaPalette.card))
+        .background(shape.fill(NunaPalette.recoveryBlue.opacity(rank == 0 ? 0.16 : 0.05)))
+        // Behind the front card, a little darker the further back it is.
+        .overlay(shape.fill(Color.black.opacity(rank == 0 ? 0 : 0.14 + 0.07 * Double(rank))))
+        .overlay(shape.strokeBorder(Color.white.opacity(rank == 0 ? 0.08 : 0.04), lineWidth: 1))
+        .shadow(color: .black.opacity(rank == 3 ? 0 : 0.28), radius: 8, x: -3, y: 0)
+        .contentShape(shape)
         .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(Text(verbatim: NunaEnvironmentFormat.partName(slot.part)))
+        .accessibilityAddTraits(rank == 0 ? [] : .isButton)
     }
 
-    /// Always on show: the sky, the name and hours of the session, the air and the temperature.
-    private func header(_ slot: EnvironmentOutlook.Slot, isOpen: Bool) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: NunaEnvironmentFormat.symbol(conditionId: slot.conditionId, feelsLikeC: slot.peakFeelsLikeC, night: slot.part == .night))
-                .font(.system(size: large ? 28 : 24)).foregroundStyle(NunaPalette.textPrimary).frame(width: 34)
+    /// The edge of a card behind: the name of the session, turned to read along the strip, and nothing else.
+    private func edge(_ slot: EnvironmentOutlook.Slot) -> some View {
+        HStack(spacing: 0) {
+            Spacer(minLength: 0)
+            Text(verbatim: NunaEnvironmentFormat.partName(slot.part)).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .foregroundStyle(NunaPalette.textMuted).lineLimit(1).fixedSize()
+                .rotationEffect(.degrees(90))
+                .frame(width: Self.peek, height: 104)
+        }
+        .padding(.top, 18)
+    }
+
+    /// The card in front: the name and hours, the temperature large with its range, the sky, whether it suits time outdoors, and the air, wind and humidity.
+    private func front(_ slot: EnvironmentOutlook.Slot) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: NunaEnvironmentFormat.partName(slot.part)).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                // The session under way reads "Now – 17:00": it is already in progress, so its own start is not worth saying.
+                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                // The session under way reads "Now – 17:00": it is in progress, so its own start is not worth saying.
                 HStack(spacing: 4) {
                     if slot.isCurrent {
                         Text("Now").font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.charge).textCase(nil)
@@ -280,50 +186,77 @@ struct NunaSessionStack: View {
                         Text(verbatim: NunaEnvironmentFormat.range(slot)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                 }
-                .lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                .lineLimit(1)
             }
-            Spacer(minLength: 6)
-            if let aqi = slot.usAqi { airPill(aqi) }
-            Text(verbatim: NunaInsightText.degrees(slot.tempC ?? slot.feelsLikeC))
-                .font(.nuna(size: large ? 30 : 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(minWidth: 54, alignment: .trailing)
-        }
-    }
-
-    private func airPill(_ aqi: Int) -> some View {
-        HStack(spacing: 5) {
-            Circle().fill(NunaEnvironmentFormat.airColor(aqi)).frame(width: 7, height: 7)
-            Text(verbatim: "AQI \(aqi)").font(.nuna(size: 11.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-        }
-        .padding(.horizontal, 9).padding(.vertical, 5)
-        .background(NunaPalette.glassStrong, in: Capsule())
-    }
-
-    /// Shown when the card is touched: the sky in words, wind, humidity and rain, and whether it suits time outdoors with what is in the way.
-    private func details(_ slot: EnvironmentOutlook.Slot) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(verbatim: NunaEnvironmentFormat.skyText(conditionId: slot.conditionId)).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Feels like \(NunaInsightText.degrees(slot.peakFeelsLikeC))").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            HStack(alignment: .top, spacing: 6) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(verbatim: NunaInsightText.degrees(slot.tempC ?? slot.feelsLikeC))
+                        .font(.nuna(size: 50, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+                    // A session with one reading in it has no range to show: what it feels like says more.
+                    if slot.highC - slot.lowC >= 1 {
+                        HStack(spacing: 10) {
+                            bound(arrow: "arrow.down", NunaInsightText.degrees(slot.lowC), NunaPalette.recoveryBlue)
+                            bound(arrow: "arrow.up", NunaInsightText.degrees(slot.highC), NunaPalette.caution)
+                        }
+                    } else {
+                        Text("Feels like \(NunaInsightText.degrees(slot.peakFeelsLikeC))").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                }
+                Spacer(minLength: 4)
+                Image(systemName: NunaEnvironmentFormat.symbol(conditionId: slot.conditionId, feelsLikeC: slot.peakFeelsLikeC, night: slot.part == .night))
+                    .font(.system(size: 44)).foregroundStyle(NunaPalette.recoveryBlue).padding(.top, 4)
             }
-            HStack(alignment: .top, spacing: 0) {
-                fact("Wind", slot.windMps.map { String(format: "%.0f", $0 * 3.6) + " km/h" })
-                fact("Humidity", slot.humidityPct.map { "\(Int($0.rounded()))%" })
-                fact("Rain", NunaEnvironmentFormat.percent(slot.rainChance))
-            }
-            VStack(alignment: .leading, spacing: 6) {
-                NunaChip(verbatim: NunaEnvironmentFormat.fitWord(slot.fit), color: NunaEnvironmentFormat.fitColor(slot.fit))
+            Text(verbatim: NunaEnvironmentFormat.skyText(conditionId: slot.conditionId)).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+            VStack(alignment: .leading, spacing: 5) {
+                fitChip(slot.fit)
                 let why = NunaEnvironmentFormat.inTheWay(slot)
                 if !why.isEmpty {
-                    Text(verbatim: why).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                    Text(verbatim: why).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(3).fixedSize(horizontal: false, vertical: true)
                 }
             }
+            Spacer(minLength: 0)
+            NunaDivider()
+            HStack(alignment: .top, spacing: 0) {
+                airFact(slot.usAqi)
+                fact("Wind", slot.windMps.map { String(format: "%.0f", $0 * 3.6) + " km/h" })
+                fact("Humidity", slot.humidityPct.map { "\(Int($0.rounded()))%" })
+            }
         }
+        .padding(16)
+    }
+
+    private func bound(arrow: String, _ value: String, _ color: Color) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: arrow).font(.system(size: 11, weight: .heavy)).foregroundStyle(color)
+            Text(verbatim: value).font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+        }
+    }
+
+    private func fitChip(_ fit: OutdoorFit) -> some View {
+        let color = NunaEnvironmentFormat.fitColor(fit)
+        return HStack(spacing: 6) {
+            Circle().fill(color).frame(width: 7, height: 7)
+            Text(verbatim: NunaEnvironmentFormat.fitWord(fit)).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1)
+        }
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(color.opacity(0.16), in: Capsule())
+    }
+
+    private func airFact(_ aqi: Int?) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(verbatim: "AQI").font(.nuna(size: 10, weight: .heavy)).tracking(nunaTrackingLabel).foregroundStyle(NunaPalette.textSecondary)
+            HStack(spacing: 5) {
+                if let aqi { Circle().fill(NunaEnvironmentFormat.airColor(aqi)).frame(width: 7, height: 7) }
+                Text(verbatim: aqi.map { "\($0)" } ?? "–").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func fact(_ label: LocalizedStringKey, _ value: String?) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: value ?? "–").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+            Text(label).font(.nuna(size: 10, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
+            Text(verbatim: value ?? "–").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -331,8 +264,8 @@ struct NunaSessionStack: View {
 
 // MARK: - The card on Today
 
-/// Weather and air as a card of Today: the day as four stacked cards (morning to night) that show the sky, the temperature and the air at a glance and open to the
-/// rest when touched. It draws nothing until Weather and air is on and has a key, and its title opens the page with the whole day.
+/// Weather and air as a card of Today: the day as four cards fanned out to the right, the one in front showing the whole of its session. It draws nothing until
+/// Weather and air is on and has a key, and its title opens the page with the whole day.
 struct NunaWeatherAirCard: View {
     @ObservedObject private var store = EnvironmentStore.shared
 
@@ -367,35 +300,26 @@ struct NunaWeatherAirCard: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            if let outlook, !outlook.slots.isEmpty { NunaSessionStack(slots: outlook.slots) }
+            if let outlook, !outlook.slots.isEmpty { NunaSessionDeck(slots: outlook.slots) }
         }
     }
 }
 
 // MARK: - The page
 
-/// The whole day for training: the verdict, the day as a bar, what the Strain has room for, the activities that fit, and the hours with their heat, rain and air.
+/// The whole day: the four sessions as the deck, the best hours to train, the hours with their heat, rain and air, and the weather now.
 struct NunaWeatherAirView: View {
     @ObservedObject private var store = EnvironmentStore.shared
-    @StateObject private var today = NunaTodayModel()
-    @EnvironmentObject private var repo: Repository
-    @EnvironmentObject private var profile: ProfileStore
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
 
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
-    private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
     var body: some View {
         NunaDetailScreen("Weather and air", trailing: AnyView(settingsButton), centersTitle: true) {
             if let s = store.snapshot {
                 let outlook = EnvironmentOutlook.make(s, now: Int(Date().timeIntervalSince1970))
-                let room = NunaStrainRoom.make(chargePct: today.charge.pct, effort: today.effort)
-                let picks = EnvironmentTraining.picks(s, outlook: outlook, load: room.load)
-                heroCard(s, outlook: outlook)
-                strainCard(room)
-                if !picks.isEmpty { picksSection(picks, room: room) }
-                if let o = outlook, !o.steps.isEmpty { hoursCard(o, s: s) }
+                deckCard(s, outlook: outlook)
+                if let o = outlook, !o.steps.isEmpty { hoursCard(o) }
                 nowCard(s)
                 nunaFootnote("Weather and the forecast from OpenWeather; the air now from IQAir, or from OpenWeather without an IQAir key. General guidance for a healthy adult, not medical advice.")
             } else if store.isActive {
@@ -404,10 +328,7 @@ struct NunaWeatherAirView: View {
                 NunaCard { Text("Turn on Weather and air in settings to see the forecast here.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
             }
         }
-        .task {
-            await today.load(repo: repo, profile: profile)
-            await store.refreshIfNeeded()
-        }
+        .task { await store.refreshIfNeeded() }
         .refreshable { await store.refreshIfNeeded(maxAge: 0) }
         // Her line is the one the Today suggestion already gives: what the sky and the air mean for training now.
         .nunaAnyaFloating(context: "weather and air", line: anyaLine, analyses: false)
@@ -427,7 +348,7 @@ struct NunaWeatherAirView: View {
 
     // MARK: Sessions
 
-    private func heroCard(_ s: EnvironmentSnapshot, outlook: EnvironmentOutlook?) -> some View {
+    private func deckCard(_ s: EnvironmentSnapshot, outlook: EnvironmentOutlook?) -> some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
@@ -435,7 +356,7 @@ struct NunaWeatherAirView: View {
                     Spacer()
                     if let place = s.place { Text(verbatim: place).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 }
-                if let outlook, !outlook.slots.isEmpty { NunaSessionStack(slots: outlook.slots, large: true, initiallyOpen: 0) }
+                if let outlook, !outlook.slots.isEmpty { NunaSessionDeck(slots: outlook.slots, height: 332) }
                 if let best = outlook?.best {
                     NunaDivider()
                     HStack(spacing: 8) {
@@ -449,90 +370,10 @@ struct NunaWeatherAirView: View {
         }
     }
 
-    // MARK: Strain
-
-    private func strainCard(_ room: NunaStrainRoom) -> some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .firstTextBaseline) {
-                    nunaTrendsCap("Your Strain today")
-                    Spacer()
-                    Text(verbatim: room.loadWord).font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(NunaPalette.effort).textCase(nil)
-                }
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(verbatim: room.soFarText(scale) ?? "–").font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("so far").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    Spacer()
-                    if let band = room.bandText(scale) {
-                        VStack(alignment: .trailing, spacing: 1) {
-                            Text("Target").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                            Text(verbatim: band).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effort)
-                        }
-                    }
-                }
-                strainBar(room)
-            }
-        }
-    }
-
-    /// The day's Strain against the band Recovery supports: the band lit, a marker where the day stands.
-    private func strainBar(_ room: NunaStrainRoom) -> some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let axis = 21.0
-            ZStack(alignment: .leading) {
-                Capsule().fill(NunaPalette.glassStrong)
-                if let band = room.band {
-                    Capsule().fill(NunaPalette.effort.opacity(0.3))
-                        .frame(width: w * CGFloat(Double(band.upperBound - band.lowerBound) / axis))
-                        .offset(x: w * CGFloat(Double(band.lowerBound) / axis))
-                }
-                Capsule().fill(NunaPalette.effort).frame(width: max(8, w * CGFloat(min((room.soFar ?? 0) / axis, 1))))
-                // The band stays visible when the day has passed it: outlined over the bar.
-                if let band = room.band {
-                    Capsule().strokeBorder(NunaPalette.textPrimary.opacity(0.9), lineWidth: 2)
-                        .frame(width: w * CGFloat(Double(band.upperBound - band.lowerBound) / axis))
-                        .offset(x: w * CGFloat(Double(band.lowerBound) / axis))
-                }
-            }
-        }
-        .frame(height: 12)
-    }
-
-    // MARK: Picks
-
-    private func picksSection(_ picks: [ActivityPick], room: NunaStrainRoom) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            nunaRuledHeader("Picked for today")
-            ForEach(Array(picks.enumerated()), id: \.element.id) { i, pick in
-                NunaCard(highlight: i == 0) {
-                    HStack(alignment: .top, spacing: 14) {
-                        Image(systemName: pick.symbol).font(.system(size: 22, weight: .bold)).foregroundStyle(i == 0 ? NunaPalette.charge : NunaPalette.textPrimary)
-                            .frame(width: 48, height: 48).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(verbatim: pick.title).font(.nuna(size: 17, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: pick.meta).font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            if let w = pick.window {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "clock").font(.nuna(size: 12, weight: .bold))
-                                    Text(verbatim: NunaEnvironmentFormat.window(w)).font(.nuna(size: 13.5, weight: .bold, design: NunaType.design))
-                                }
-                                .foregroundStyle(NunaPalette.textPrimary)
-                            }
-                            Text(verbatim: pick.reason(strainBand: room.bandText(scale))).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                                .fixedSize(horizontal: false, vertical: true).textCase(nil)
-                        }
-                        Spacer(minLength: 0)
-                    }
-                }
-            }
-        }
-    }
-
     // MARK: Hours
 
-    /// The hours as columns: heat as bars in the colour of how they suit time outdoors, rain as a dot row, the air under them, one shared time axis.
-    private func hoursCard(_ o: EnvironmentOutlook, s: EnvironmentSnapshot) -> some View {
+    /// The hours as columns: heat as bars, rain as a dot row, the air under them, one shared time axis.
+    private func hoursCard(_ o: EnvironmentOutlook) -> some View {
         let temps = o.steps.map(\.feelsLikeC)
         let lo = (temps.min() ?? 20) - 4, hi = (temps.max() ?? 32) + 2
         func height(_ t: Double) -> CGFloat { 12 + 72 * CGFloat((t - lo) / max(hi - lo, 1)) }
@@ -594,7 +435,7 @@ struct NunaWeatherAirView: View {
                 nunaTrendsCap("Right now")
                 HStack(alignment: .center, spacing: 14) {
                     Image(systemName: NunaEnvironmentFormat.symbol(conditionId: s.conditionId, feelsLikeC: s.effectiveC, night: NunaEnvironmentFormat.isNight(s.ts)))
-                        .font(.system(size: 30)).foregroundStyle(NunaPalette.textPrimary).frame(width: 40)
+                        .font(.system(size: 30)).foregroundStyle(NunaPalette.recoveryBlue).frame(width: 40)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: s.tempC.map(NunaInsightText.degrees) ?? s.feelsLikeC.map(NunaInsightText.degrees) ?? "–")
                             .font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)

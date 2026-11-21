@@ -236,6 +236,9 @@ public struct EnvironmentOutlook: Equatable, Sendable {
         /// The feel across the session, and its highest (what decides whether it is hot).
         public let feelsLikeC: Double
         public let peakFeelsLikeC: Double
+        /// The lowest and the highest air temperature across the session (the feel, where a step has no air temperature).
+        public let lowC: Double
+        public let highC: Double
         public let rainChance: Double
         public let windMps: Double?
         public let humidityPct: Double?
@@ -273,8 +276,7 @@ public struct EnvironmentOutlook: Equatable, Sendable {
     public let steps: [Step]
     /// The kindest 3-hour stretch between 05:00 and 21:00 in the coming day, when the forecast has one (it can be tomorrow morning).
     public let best: Window?
-    /// The same, but only within today's own hours: what an activity chosen for today can be planned in.
-    public let bestToday: Window?
+
 
     /// The air at a moment: the hourly forecast's nearest hour, within 90 minutes; else the reading when it is that close.
     public static func usAqi(at ts: Int, in s: EnvironmentSnapshot) -> Int? {
@@ -341,7 +343,8 @@ public struct EnvironmentOutlook: Equatable, Sendable {
             if rain >= 0.5, fit < .adjust { fit = .adjust }
             let isCurrent = i == 0 && part == currentPart
             return Slot(part: part, start: isCurrent ? from : hs[0].ts, end: boundary(after: isCurrent ? from : hs[0].ts), isCurrent: isCurrent,
-                        tempC: mean(hs.compactMap(\.tempC)), feelsLikeC: mean(feels) ?? peak, peakFeelsLikeC: peak, rainChance: rain, windMps: wind,
+                        tempC: mean(hs.compactMap(\.tempC)), feelsLikeC: mean(feels) ?? peak, peakFeelsLikeC: peak,
+                        lowC: hs.map { $0.tempC ?? $0.feelsLikeC }.min() ?? peak, highC: hs.map { $0.tempC ?? $0.feelsLikeC }.max() ?? peak, rainChance: rain, windMps: wind,
                         humidityPct: humidity, usAqi: aqis.max(), conditionId: sky, fit: fit,
                         reasons: (advice?.reasons ?? []).sorted { EnvironmentOutlook.severity($0) < EnvironmentOutlook.severity($1) }, rainLikely: rain >= 0.5)
         }
@@ -363,14 +366,11 @@ public struct EnvironmentOutlook: Equatable, Sendable {
                    rainChance: h.rainChance, windMps: h.windMps, conditionId: h.conditionId)
         }
         let best = candidates.min { score($0) < score($1) }.map(window)
-        let today = Date(timeIntervalSince1970: TimeInterval(from))
-        let bestToday = candidates.filter { calendar.isDate(Date(timeIntervalSince1970: TimeInterval($0.ts)), inSameDayAs: today) }
-            .min { score($0) < score($1) }.map(window)
         let timeline: [Step] = steps.map { h in
             let aqi = usAqi(at: h.ts, in: s)
             return Step(ts: h.ts, feelsLikeC: h.feelsLikeC, rainChance: h.rainChance, usAqi: aqi,
                         fit: OutdoorFit.of(feelsLikeC: h.feelsLikeC, humidityPct: s.humidityPct, usAqi: aqi, rainChance: h.rainChance, windMps: h.windMps, conditionId: h.conditionId))
         }
-        return EnvironmentOutlook(slots: slots, steps: timeline, best: best, bestToday: bestToday)
+        return EnvironmentOutlook(slots: slots, steps: timeline, best: best)
     }
 }

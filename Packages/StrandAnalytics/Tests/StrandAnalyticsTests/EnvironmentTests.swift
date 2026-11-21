@@ -195,6 +195,8 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertEqual(o.slots[0].end - hotDay().ts, 5 * 3600)               // and ends when the afternoon begins, at 11:00
         XCTAssertEqual(o.slots[1].rainChance, 0.5)
         XCTAssertEqual(o.slots[1].peakFeelsLikeC, 37)
+        // No step of this fixture has an air temperature, so the range is the feel's: the afternoon runs 36 to 37 (steps at 12:00 and 15:00).
+        XCTAssertEqual(o.slots[1].lowC, 36); XCTAssertEqual(o.slots[1].highC, 37)
     }
 
     func testEachSessionSaysIfItSuitsTimeOutdoorsAndWhatIsInTheWay() throws {
@@ -227,16 +229,6 @@ final class EnvironmentTests: XCTestCase {
 
     // MARK: Training
 
-    func testTheLoadFollowsTheStrainBandAndRecovery() {
-        XCTAssertEqual(TrainingLoad.of(recoveryPct: 90, targetHigh: 18, soFar: 4), .hard)
-        XCTAssertEqual(TrainingLoad.of(recoveryPct: 55, targetHigh: 13, soFar: nil), .moderate)
-        XCTAssertEqual(TrainingLoad.of(recoveryPct: 40, targetHigh: 9, soFar: nil), .easy)
-        XCTAssertEqual(TrainingLoad.of(recoveryPct: 90, targetHigh: 18, soFar: 17.8), .recover)   // the band is used up
-        XCTAssertEqual(TrainingLoad.of(recoveryPct: 20, targetHigh: 18, soFar: nil), .easy)        // a red day caps it
-        XCTAssertEqual(TrainingLoad.of(recoveryPct: 80, targetHigh: nil, soFar: nil), .hard)
-        XCTAssertEqual(TrainingLoad.of(recoveryPct: nil, targetHigh: nil, soFar: nil), .moderate)
-    }
-
     func testEachStepIsGradedForTimeOutdoors() throws {
         let o = try XCTUnwrap(EnvironmentOutlook.make(hotDay(), calendar: utc))
         // 06:00 feels 26 (good), 15:00 feels 37 with rain 0.5 (adjust), nothing hits the indoor mark.
@@ -247,74 +239,6 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertEqual(OutdoorFit.of(feelsLikeC: 22, humidityPct: 50, usAqi: 170, rainChance: 0, windMps: 1, conditionId: 800), .indoors)
         XCTAssertEqual(OutdoorFit.of(feelsLikeC: 22, humidityPct: 50, usAqi: 120, rainChance: 0, windMps: 1, conditionId: 800), .adjust)
         XCTAssertEqual(OutdoorFit.of(feelsLikeC: 22, humidityPct: 50, usAqi: 40, rainChance: 0.1, windMps: 1, conditionId: 800), .good)
-    }
-
-    private func cleanMorning(aqi: Int = 40, feels: Double = 24) -> (EnvironmentSnapshot, EnvironmentOutlook) {
-        let t0 = 1_800_000_000 - 1_800_000_000 % 86_400 + 5 * 3600
-        let s = EnvironmentSnapshot(ts: t0, tempC: feels, feelsLikeC: feels, humidityPct: 50,
-                                    forecast: (0..<9).map { .init(ts: t0 + $0 * 3 * 3600, feelsLikeC: feels, rainChance: 0) },
-                                    airForecast: (0..<28).map { .init(ts: t0 + $0 * 3600, usAqi: aqi) })
-        return (s, EnvironmentOutlook.make(s, calendar: utc)!)
-    }
-
-    func testAHardDayWithGoodConditionsIsSpentOutdoors() {
-        let (s, o) = cleanMorning()
-        let picks = EnvironmentTraining.picks(s, outlook: o, load: .hard)
-        XCTAssertEqual(picks.first?.kind, .intervalRun)
-        XCTAssertEqual(picks.first?.outdoors, true)
-        XCTAssertNotNil(picks.first?.window)
-        XCTAssertTrue(picks.first?.whys.contains(.fitsTarget) == true)
-    }
-
-    func testBadAirTakesEveryPickIndoors() {
-        let (s, o) = cleanMorning(aqi: 170)
-        for load in [TrainingLoad.recover, .easy, .moderate, .hard] {
-            let picks = EnvironmentTraining.picks(s, outlook: o, load: load)
-            XCTAssertFalse(picks.isEmpty)
-            XCTAssertTrue(picks.allSatisfy { !$0.outdoors }, "\(load)")
-        }
-        XCTAssertTrue(EnvironmentTraining.picks(s, outlook: o, load: .hard).first?.whys.contains(.airTooPoor(usAqi: 170)) == true)
-    }
-
-    func testARecoverDayIsAWalkAndMobilityNotARun() {
-        let (s, o) = cleanMorning()
-        let kinds = EnvironmentTraining.picks(s, outlook: o, load: .recover).map(\.kind)
-        XCTAssertEqual(kinds, [.easyWalk, .mobility, .breathwork])
-    }
-
-    func testHeatShortensAnOutdoorSession() {
-        let (cool, oc) = cleanMorning(feels: 22)
-        let (hot, oh) = cleanMorning(feels: 33)
-        let a = EnvironmentTraining.picks(cool, outlook: oc, load: .moderate).first!
-        let b = EnvironmentTraining.picks(hot, outlook: oh, load: .moderate).first!
-        XCTAssertEqual(a.kind, .run); XCTAssertEqual(b.kind, .run)
-        XCTAssertLessThan(b.minutes, a.minutes)
-        XCTAssertTrue(b.whys.contains(.shortenedForHeat))
-    }
-
-    func testAnActivityForTodayIsPlannedInTodaysHoursNotTomorrowsMorning() throws {
-        let t0 = 1_800_000_000 - 1_800_000_000 % 86_400 + 20 * 3600   // 20:00 UTC
-        let feels: [Double] = [30, 28, 26, 24, 24]
-        let s = EnvironmentSnapshot(ts: t0, tempC: 30, feelsLikeC: 30,
-                                    forecast: feels.indices.map { .init(ts: t0 + $0 * 3 * 3600, feelsLikeC: feels[$0], rainChance: 0) })
-        let o = try XCTUnwrap(EnvironmentOutlook.make(s, calendar: utc))
-        XCTAssertNotEqual(o.best?.start, o.bestToday?.start)   // the kindest hours are tomorrow's
-        let pick = try XCTUnwrap(EnvironmentTraining.picks(s, outlook: o, load: .moderate).first)
-        XCTAssertEqual(pick.window?.start, o.bestToday?.start)
-    }
-
-    func testNoReasonIsListedTwice() {
-        let (s, o) = cleanMorning(aqi: 170)
-        for load in [TrainingLoad.recover, .easy, .moderate, .hard] {
-            for p in EnvironmentTraining.picks(s, outlook: o, load: load) {
-                XCTAssertEqual(p.whys.count, Set(p.whys.map { "\($0)" }).count, "\(load) \(p.kind)")
-            }
-        }
-    }
-
-    func testNoForecastMeansIndoorPicks() {
-        let s = EnvironmentSnapshot(ts: 5, tempC: 25, feelsLikeC: 25)
-        XCTAssertTrue(EnvironmentTraining.picks(s, outlook: nil, load: .moderate).allSatisfy { !$0.outdoors })
     }
 
     func testNoForecastNoOutlook() {
