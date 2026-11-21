@@ -1179,7 +1179,7 @@ struct NunaTodayView: View {
             NunaTrend.make(current: current, previous: previous, decimals: decimals, upIsGood: good, format: format)
         }
         func before(_ value: Double?, _ delta: Double?) -> Double? { value.flatMap { v in delta.map { v - $0 } } }
-        let stepsRoute = MetricCatalog.todayStepsMetric(hasMeasuredSteps: model.steps != nil).map { NunaTodayRoute.metric($0) }
+        let stepsRoute = MetricCatalog.todayStepsMetric(hasMeasuredSteps: model.steps != nil && !model.stepsFromPhone, hasImportedSteps: model.stepsFromPhone).map { NunaTodayRoute.metric($0) }
         func tile(_ m: KeyMetric, _ label: LocalizedStringKey, _ value: String, _ unit: String, _ route: NunaTodayRoute?,
                   _ icon: String, _ tint: Color?, trend: NunaTrend?) -> NunaMetricTile {
             NunaMetricTile(id: m.rawValue, label: label, value: value, unit: unit, route: route,

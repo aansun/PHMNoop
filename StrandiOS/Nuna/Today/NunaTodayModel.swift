@@ -26,6 +26,8 @@ final class NunaTodayModel: ObservableObject {
     @Published private(set) var respiratory: Double?
     @Published private(set) var spo2: Double?
     @Published private(set) var steps: Double?
+    /// True when the figure shown is the one Apple Health counted (it was higher than the strap's, or the strap had none).
+    @Published private(set) var stepsFromPhone = false
     @Published private(set) var calories: Double?
     @Published private(set) var sleepMinutes: Double?
     @Published private(set) var workouts: [WorkoutRow] = []
@@ -172,7 +174,12 @@ final class NunaTodayModel: ObservableObject {
         let apple = await appleA
         let appleSteps = apple.filter { $0.day == appleKey }.compactMap { $0.steps }.max()
         let appleKcal = apple.filter { $0.day == appleKey }.compactMap { $0.activeKcal }.max()
-        steps = row?.steps.map(Double.init) ?? appleSteps.map(Double.init) ?? estSteps
+        // Each source counts only part of the walking (the strap its arm swing, the phone what it carried), so neither is more than the truth: the higher one
+        // is the better figure. The on-device estimate is only the last resort.
+        let strapSteps = row?.steps.map(Double.init)
+        let phoneSteps = appleSteps.map(Double.init)
+        stepsFromPhone = (phoneSteps ?? 0) > (strapSteps ?? 0)
+        steps = [strapSteps, phoneSteps].compactMap { $0 }.max() ?? estSteps
         // The calories page reads the stored `energy_kcal` series first, so the card does too (the latest day for today, as the steps do).
         let kcalSeries = (await repo.exploreSeries(key: "energy_kcal", source: "my-whoop", days: 30)).filter { $0.value > 0 }
         let kcalByDay = Dictionary(kcalSeries.map { ($0.day, $0.value) }, uniquingKeysWith: { _, last in last })
@@ -193,7 +200,7 @@ final class NunaTodayModel: ObservableObject {
         // The day before the one shown, for the figures that are a day's total.
         let prevKey = Repository.localDayKey(cal.date(byAdding: .day, value: -1, to: selectedLogicalDay) ?? selectedLogicalDay)
         let prevDay = repo.days.first(where: { $0.day == prevKey })
-        if let s = prevDay?.steps.map(Double.init) ?? apple.filter({ $0.day == prevKey }).compactMap({ $0.steps }).max().map(Double.init) ?? stepsByDay[prevKey] {
+        if let s = [prevDay?.steps.map(Double.init), apple.filter({ $0.day == prevKey }).compactMap({ $0.steps }).max().map(Double.init)].compactMap({ $0 }).max() ?? stepsByDay[prevKey] {
             prev["steps"] = s
         }
         if let c = kcalByDay[prevKey] ?? apple.filter({ $0.day == prevKey }).compactMap({ $0.activeKcal }).max() ?? prevDay?.activeKcalEst { prev["calories"] = c }

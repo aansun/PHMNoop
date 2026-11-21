@@ -79,7 +79,7 @@ extension NunaTodayView {
         func num(_ v: Double?, _ d: Int = 0) -> String? {
             v.map { String(format: "%.\(d)f", locale: AppLanguage.activeLocale, $0) }
         }
-        let steps = MetricCatalog.todayStepsMetric(hasMeasuredSteps: model.steps != nil)
+        let steps = MetricCatalog.todayStepsMetric(hasMeasuredSteps: model.steps != nil && !model.stepsFromPhone, hasImportedSteps: model.stepsFromPhone)
             .map { NunaRowTarget(kind: .nuna(.metric($0))) }
         return NunaDashPrefs.items(myDashboardRaw, cardsRaw: dashboardCardsRaw).compactMap { item -> NunaLinkRow? in
             let card: DashboardCard
