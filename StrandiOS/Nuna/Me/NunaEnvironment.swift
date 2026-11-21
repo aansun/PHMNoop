@@ -27,7 +27,7 @@ struct NunaEnvironmentView: View {
                     Text(verbatim: e).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
-            NunaWeatherAirExplainer()
+            NunaWeatherAirKeysInfo()
         }
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: enabled) { _, now in

@@ -62,7 +62,7 @@ struct NunaAverageHRInfo: View {
     }
 }
 
-/// Under the Weather and air keys: why the weather and the air matter, how to tell good air, and what each key is used for.
+/// Under the Weather and air page: why the weather and the air matter and how to tell good air.
 struct NunaWeatherAirExplainer: View {
     var body: some View {
         VStack(spacing: NunaSpacing.section) {
@@ -81,6 +81,14 @@ struct NunaWeatherAirExplainer: View {
                 }
                 nunaInfoParagraph("Air is usually cleaner in the early morning and after rain, and worse at rush hour and on still, hot afternoons.")
             }
+        }
+    }
+}
+
+/// On the keys page of Weather and air: what each of the two keys is used for and what leaves the phone.
+struct NunaWeatherAirKeysInfo: View {
+    var body: some View {
+        VStack(spacing: NunaSpacing.section) {
             NunaInfoCard(title: "What each key is for") {
                 VStack(alignment: .leading, spacing: 10) {
                     nunaInfoBullet("OpenWeather gives the weather now, the forecast for the days ahead and the air forecast hour by hour.")
