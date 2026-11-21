@@ -20,6 +20,8 @@ struct NunaAnyaRead: Equatable {
     var outdoor: String? = nil
     /// The phone's judgement of the reading against the person's baseline, when the page has one to make (a metric with a better direction).
     var verdict: NunaAnyaVerdict? = nil
+    /// The detail as the page worked it out, before the "compared with my note" line is added: what the sheet says under "What the numbers say".
+    var facts: String? = nil
 }
 
 struct NunaAnyaQuestion: Equatable, Identifiable {
@@ -85,6 +87,7 @@ enum NunaAnyaReader {
     /// Writes this module's note for the day and adds what moved since the last day it noted to the read's detail.
     private static func remembering(_ read: NunaAnyaRead, values: [String: Double]) -> NunaAnyaRead {
         var r = read
+        r.facts = r.detail
         let note = r.headline + (r.detail.map { " " + $0 } ?? "")
         if let moved = NunaAnyaMemory.snapshot(r.module, headline: note, values: values) {
             r.detail = [r.detail, moved].compactMap { $0 }.joined(separator: " ")

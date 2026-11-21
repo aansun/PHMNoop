@@ -107,8 +107,11 @@ enum NunaAnyaInsightText {
     /// The provider's reply: in the four-paragraph shape it becomes a headline plus titled parts; in any other shape it stays plain prose.
     /// With a good verdict the model is not trusted to explain a cause: if its meaning names a problem, or its next step is a fix, they are replaced by what the phone
     /// knows (the reading sits on the better side of the person's own baseline) and the habit step for the topic.
-    static func fromProvider(_ raw: String, verdict: NunaAnyaVerdict? = nil) -> (headline: String?, text: String) {
+    static func fromProvider(_ raw: String, verdict: NunaAnyaVerdict? = nil, facts: String? = nil) -> (headline: String?, text: String) {
         if var i = AnyaPageInsight.parse(raw) {
+            // With a verdict the reading itself is not the model's to word: it is the verdict's sentence and the page's own figures, written in code, so it is
+            // always plain and exact. The model writes what it means and what to do.
+            if let v = verdict { i.see = seeText(v, facts: facts) }
             if let v = verdict, v.level == .good {
                 let range = NSRange(i.mean.startIndex..., in: i.mean)
                 if problemCause.firstMatch(in: i.mean, range: range) != nil {
@@ -122,6 +125,16 @@ enum NunaAnyaInsightText {
             return (i.headline, i.markdown(seeTitle: t.see, meanTitle: t.mean, adviceTitle: t.advice))
         }
         return (nil, AnyaReplyCleaner.clean(AnyaActions.proseOnly(raw)))
+    }
+
+    /// "Recovery 82% is in the green band. Resting heart rate up 7 bpm. Strain so far 15.5.": the verdict's sentence, then the page's own figures.
+    static func seeText(_ v: NunaAnyaVerdict, facts: String?) -> String {
+        var first = v.why.trimmingCharacters(in: .whitespaces)
+        if let last = first.last, !".!?".contains(last) { first += "." }
+        // Sleep and Strain carry their next step (and a sum of the week's sessions) in the page's detail: it is advice or a different figure, not what the page reads.
+        let own = v.topic != .sleep && v.topic != .strain
+        let more = own ? (facts.map { NunaMark.plain($0).trimmingCharacters(in: .whitespaces) } ?? "") : ""
+        return more.isEmpty || first.contains(more) ? first : first + " " + more
     }
 
     /// With no provider (or none that answered): the verdict, the reading behind it and the next step, all worked out on this phone.

@@ -39,7 +39,7 @@ final class NunaAnyaFloatingModel: ObservableObject {
             // The page, the phone's own verdict on it (so she explains a judgement instead of making one up) and what she noted before.
             let page = context + (local.map { "\n\n" + $0 } ?? "") + (verdict.map { "\n\n" + $0.providerLine } ?? "") + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? "")
             if let raw = await coach.generatePageInsight(topic: verdict?.topic ?? NunaAnyaTopic.of(metricKey: metric?.key ?? "", title: metric?.title ?? context), pageContext: page) {
-                let shown = NunaAnyaInsightText.fromProvider(raw, verdict: verdict)
+                let shown = NunaAnyaInsightText.fromProvider(raw, verdict: verdict, facts: read?.facts ?? read?.detail)
                 explanation = shown.text; headline = shown.headline
             }
         }
