@@ -45,6 +45,8 @@ enum AnyaDayContext {
         /// nil when the wearer has not turned weather and air on, or the reading is old.
         var outdoorLine: String?
         var outdoorLevel: String?
+        /// The forecast from the same two services: the parts of the coming day, the best time to train and the days after. nil without a reading.
+        var outdoorForecast: String?
         /// The Strain scale the wearer reads. Every Strain figure in the block is converted to it, so Anya quotes what the screen shows.
         var effortScale: EffortScale = .hundred
     }
@@ -151,6 +153,10 @@ enum AnyaDayContext {
         // The weather and air, read a moment ago: a reason to shorten, move or shift a session, never a forecast for later in the week.
         if let o = i.outdoorLine {
             lines.append("OUTDOORS (read recently, treat as now): \(o) When the person asks what to do today, or how a session went, let these conditions shape the answer: heat and bad air raise heart rate for the same pace, so judge by effort, and move the session indoors or to a kinder hour when the level says so.")
+        }
+        // The forecast of the coming day and days, so a question about tonight or tomorrow is answered from data, not guessed.
+        if let f = i.outdoorForecast {
+            lines.append("WEATHER AND AIR FORECAST: \(f) When the person asks about the weather or the air later today, tonight, tomorrow or the days ahead, answer from this: name the part of the day, the temperature range, the chance of rain and the air quality, and say whether it suits time outdoors. The air quality now is measured by the IQAir station nearest the person; the hours after it are an OpenWeather forecast, so they can differ from the reading now without the air having changed.")
         }
         if let step = nextStep(i) {
             lines.append("NEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): \(step)")
