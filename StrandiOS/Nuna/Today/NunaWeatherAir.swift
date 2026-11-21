@@ -491,6 +491,22 @@ struct NunaWeatherAirView: View {
         range == 5 ? date.formatted(.dateTime.weekday(.abbreviated).day()) : NunaInsightText.clockHour(Int(date.timeIntervalSince1970))
     }
 
+    /// A label under the plot, the way the other trend views write it: the weekday over the day for the days, the hour alone for the hours.
+    private func axisLabel(_ d: Date) -> some View {
+        let templates: [String] = range == 5 ? ["EEE", "d"] : []
+        return VStack(spacing: 2) {
+            if range == 5 {
+                ForEach(templates, id: \.self) { t in
+                    let f = DateFormatter()
+                    Text(verbatim: { f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate(t); return f.string(from: d) }())
+                        .font(.nuna(size: 12.5, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textSecondary)
+                }
+            } else {
+                Text(verbatim: label(d)).font(.nuna(size: 12.5, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textSecondary)
+            }
+        }
+    }
+
     /// The name of a moment at the top: "Now" for the reading now, "Today" for the first day, else its hour or day.
     private func activeLabel(_ p: Point, first: Bool) -> String {
         if first, range == 1, page == 0 { return String(localized: "Now") }
@@ -637,7 +653,7 @@ struct NunaWeatherAirView: View {
         let first = pts.first!.date, last = pts.last!.date
         let pad: TimeInterval = range == 5 ? 18 * 3600 : 1800
         let domain = first.addingTimeInterval(-pad)...last.addingTimeInterval(pad)
-        let every = pts.count > 9 ? 3 : 1
+        let every = range == 5 ? 1 : (pts.count > 9 ? 3 : 2)
         let tickDates = pts.enumerated().filter { $0.offset % every == 0 }.map(\.element.date)
         let twoLines = metric == .weather && range == 5
         let bands: [(ClosedRange<Double>, Color)] = [(0...50, NunaPalette.charge), (50...100, NunaPalette.warning), (100...150, NunaPalette.caution), (150...300, NunaPalette.alert)]
@@ -689,15 +705,9 @@ struct NunaWeatherAirView: View {
                 AxisValueLabel { if let d = v.as(Double.self) { Text(verbatim: fmt(d)).font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textMuted) } }
             }
         }
-        .chartXAxis {
-            AxisMarks(values: tickDates) { v in
-                AxisValueLabel(centered: true) {
-                    if let d = v.as(Date.self) {
-                        Text(verbatim: label(d)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).padding(.top, 6)
-                    }
-                }
-            }
-        }
+        // The time labels sit under the plot, as in the other trend views: hidden axis, room under the plot, labels drawn in the overlay.
+        .chartXAxis(.hidden)
+        .chartPlotStyle { $0.padding(.bottom, 50) }
         .chartOverlay { proxy in
             GeometryReader { geo in
                 if let frame = proxy.plotFrame.map({ geo[$0] }) {
@@ -712,6 +722,12 @@ struct NunaWeatherAirView: View {
                                     Text(verbatim: fmt(lo)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.recoveryBlue)
                                         .fixedSize().position(x: frame.minX + x, y: frame.minY + y + 20)
                                 }
+                            }
+                        }
+                        .allowsHitTesting(false)
+                        ZStack {
+                            ForEach(tickDates, id: \.self) { d in
+                                if let x = proxy.position(forX: d) { axisLabel(d).position(x: frame.minX + x, y: frame.maxY + 26) }
                             }
                         }
                         .allowsHitTesting(false)
@@ -730,7 +746,7 @@ struct NunaWeatherAirView: View {
                 }
             }
         }
-        .frame(height: 330)
+        .frame(height: 340)
         .accessibilityLabel(Text(title(metric)))
     }
 }
