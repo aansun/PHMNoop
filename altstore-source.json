@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "3.1.0",
+          "buildVersion": "443",
+          "date": "2026-11-21",
+          "localizedDescription": "Weather and air on Today, an Anya that writes like a coach and knows the forecast, and steps that no longer lose a walk.",
+          "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.1.0/PHMN-v3.1.0-ios-unsigned.ipa",
+          "size": 86799267,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "3.0.2",
           "buildVersion": "419",
           "date": "2026-11-20",
@@ -132,12 +141,12 @@
           "NSSpeechRecognitionUsageDescription": "PHMN transcribes your question on-device so you can ask the coach out loud instead of typing. Audio never leaves your iPhone."
         }
       },
-      "version": "3.0.2",
-      "buildVersion": "419",
-      "versionDate": "2026-11-20",
-      "versionDescription": "Strain on the scale you chose, vital signs that agree on every screen, and a Strain & Recovery chart you can read.",
-      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.0.2/PHMN-v3.0.2-ios-unsigned.ipa",
-      "size": 86499179,
+      "version": "3.1.0",
+      "buildVersion": "443",
+      "versionDate": "2026-11-21",
+      "versionDescription": "Weather and air on Today, an Anya that writes like a coach and knows the forecast, and steps that no longer lose a walk.",
+      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.1.0/PHMN-v3.1.0-ios-unsigned.ipa",
+      "size": 86799267,
       "minOSVersion": "17.0"
     }
   ],
