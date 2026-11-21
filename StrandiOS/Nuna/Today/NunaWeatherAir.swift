@@ -344,24 +344,25 @@ struct NunaWeatherAirView: View {
 
     // MARK: Sessions
 
+    /// The deck stands on the page by itself, with no card behind it and no title: the place above it, the best hours to train under it.
     private func deckCard(_ s: EnvironmentSnapshot, outlook: EnvironmentOutlook?) -> some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    nunaTrendsCap("The day in four sessions")
-                    Spacer()
-                    if let place = s.place { Text(verbatim: place).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+        VStack(alignment: .leading, spacing: 14) {
+            if let place = s.place {
+                HStack(spacing: 6) {
+                    Image(systemName: "mappin.and.ellipse").font(.nuna(size: 12, weight: .bold))
+                    Text(verbatim: place).font(.nuna(size: 13, weight: .semibold)).textCase(nil)
                 }
-                if let outlook, !outlook.slots.isEmpty { NunaSessionDeck(slots: outlook.slots, height: 332) }
-                if let best = outlook?.best {
-                    NunaDivider()
-                    HStack(spacing: 8) {
-                        Image(systemName: "figure.run").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.charge)
-                        Text("Best time to train").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        Spacer(minLength: 6)
-                        Text(verbatim: NunaEnvironmentFormat.window(best)).font(.nuna(size: 14, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    }
+                .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 4)
+            }
+            if let outlook, !outlook.slots.isEmpty { NunaSessionDeck(slots: outlook.slots, height: 332) }
+            if let best = outlook?.best {
+                HStack(spacing: 8) {
+                    Image(systemName: "figure.run").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.charge)
+                    Text("Best time to train").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    Spacer(minLength: 6)
+                    Text(verbatim: NunaEnvironmentFormat.window(best)).font(.nuna(size: 14, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 }
+                .padding(.horizontal, 4)
             }
         }
     }
