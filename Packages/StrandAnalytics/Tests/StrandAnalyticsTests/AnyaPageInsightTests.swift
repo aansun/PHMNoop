@@ -54,6 +54,16 @@ final class AnyaPageInsightTests: XCTestCase {
     }
 }
 
+final class AnyaPageInsightParagraphTests: XCTestCase {
+    func testReadsAsParagraphsWithNoTitles() {
+        let i = AnyaPageInsight(headline: "HRV is high", see: "It is 93 ms, above your 30-day average of 88 ms", mean: "Your body is recovering well", advice: "Keep the same bedtime tonight")
+        XCTAssertEqual(i.paragraphs(), "HRV is high. It is 93 ms, above your 30-day average of 88 ms.\n\nYour body is recovering well.\n\nKeep the same bedtime tonight.")
+    }
+    func testLeavesOutWhatIsMissing() {
+        XCTAssertEqual(AnyaPageInsight(headline: "Fine.", advice: "Rest.").paragraphs(), "Fine.\n\nRest.")
+    }
+}
+
 final class AnyaReplyCleanerTests: XCTestCase {
     func testDropsTheNarratedLookingAtTheStart() {
         XCTAssertEqual(AnyaReplyCleaner.clean("I can see that HRV fell 26 ms. Keep today light."), "HRV fell 26 ms. Keep today light.")

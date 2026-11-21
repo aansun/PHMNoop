@@ -178,11 +178,11 @@ extension AppleIntelligenceClient {
 struct GeneratedPageInsight {
     @Guide(description: "One plain sentence of at most 14 words: what the reading is and whether it is good, fair or needs attention for this person")
     var headline: String
-    @Guide(description: "The figure against this person's own baseline, citing two or three numbers at most, exactly as given")
+    @Guide(description: "One or two complete sentences in everyday spoken language that put the key figures beside this person's own usual, exactly as given, and say how they fit together, for example 'Your HRV is 93 ms, a little above your 30-day average of 88 ms.' Never a list of numbers, never a bare label, never the words today or yesterday as column names")
     var see: String
-    @Guide(description: "What it most likely means for this person, from their own data: the likeliest cause, in plain words, without a preamble such as 'the data shows'")
+    @Guide(description: "Two complete sentences on what it most likely means for this person and why, from their own data, connecting the signals that point the same way. Name a cause only when a number supports it. No preamble such as 'the data shows'")
     var mean: String
-    @Guide(description: "One concrete next step of your own for this reading, with when and how much: a change that would move a poor or slipping reading, or the habit to keep for a good one. Not advice for another page")
+    @Guide(description: "One or two complete sentences: a concrete next step of your own for this reading that starts with a verb, says when and how much, and why it helps; a change that would move a poor or slipping reading, or the habit to keep for a good one. Not advice for another page")
     var advice: String
 }
 

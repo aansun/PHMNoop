@@ -1528,9 +1528,10 @@ final class AICoachEngine: ObservableObject {
     static let pageInsightShape = """
     Answer in exactly four paragraphs, each starting with its label in English capitals as written here, and everything after the label in the reply language:
     HEADLINE: one plain sentence of at most 14 words saying what the reading is and whether it is good, fair or needs attention for THIS person.
-    SEE: the figure against their baseline, two or three numbers at most.
-    MEAN: what it most likely means, from their own data.
-    DO: one concrete next step. Leave out the labels you have nothing honest to put under, but never HEADLINE.
+    SEE: one or two complete sentences in everyday spoken language that put the key figures beside THIS person's own usual and say how they fit together. Never a list of numbers and never a bare label.
+    MEAN: two complete sentences on what it most likely means and why, from their own data.
+    DO: one or two complete sentences with one concrete next step that starts with a verb, says when and how much, and why it helps. Leave out the labels you have nothing honest to put under, but never HEADLINE.
+    Together they read as a short note from a coach, in paragraphs, in the reply language.
     """
 
     private func contextualPageInstruction(_ page: String?) -> String {

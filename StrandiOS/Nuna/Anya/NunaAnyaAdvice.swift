@@ -109,9 +109,9 @@ enum NunaAnyaInsightText {
     /// knows (the reading sits on the better side of the person's own baseline) and the habit step for the topic.
     static func fromProvider(_ raw: String, verdict: NunaAnyaVerdict? = nil, facts: String? = nil) -> (headline: String?, text: String) {
         if var i = AnyaPageInsight.parse(raw) {
-            // With a verdict the reading itself is not the model's to word: it is the verdict's sentence and the page's own figures, written in code, so it is
-            // always plain and exact. The model writes what it means and what to do.
-            if let v = verdict { i.see = seeText(v, facts: facts) }
+            // The model words the reading in full sentences. Only when it gave none is the verdict's own sentence and the page's figures, written in code, used.
+            // A reading that is a run of figures ("Recovery is 18, yesterday 35, 30-day average 63, HRV is 52 ms, ...") is the context read back, not a sentence: the same fallback.
+            if let v = verdict, i.see.trimmingCharacters(in: .whitespaces).isEmpty || figureCount(i.see) > 5 { i.see = seeText(v, facts: facts, headline: i.headline) }
             if let v = verdict, v.level == .good {
                 let range = NSRange(i.mean.startIndex..., in: i.mean)
                 if problemCause.firstMatch(in: i.mean, range: range) != nil {
@@ -121,28 +121,36 @@ enum NunaAnyaInsightText {
                 if problemCause.firstMatch(in: i.advice, range: adviceRange) != nil || i.advice.lowercased().contains("keep today easy") { i.advice = v.advice }
             }
             i.see = AnyaReplyCleaner.clean(i.see); i.mean = AnyaReplyCleaner.clean(i.mean); i.advice = AnyaReplyCleaner.clean(i.advice)
-            let t = titles()
-            return (i.headline, i.markdown(seeTitle: t.see, meanTitle: t.mean, adviceTitle: t.advice))
+            return (i.headline, i.paragraphs())
         }
         return (nil, AnyaReplyCleaner.clean(AnyaActions.proseOnly(raw)))
     }
 
+    /// How many figures a text carries.
+    static func figureCount(_ text: String) -> Int {
+        let re = try! NSRegularExpression(pattern: #"\d+(?:[.,:]\d+)?"#)
+        return re.numberOfMatches(in: text, range: NSRange(text.startIndex..., in: text))
+    }
+
     /// "Recovery 82% is in the green band. Resting heart rate up 7 bpm. Strain so far 15.5.": the verdict's sentence, then the page's own figures.
-    static func seeText(_ v: NunaAnyaVerdict, facts: String?) -> String {
+    static func seeText(_ v: NunaAnyaVerdict, facts: String?, headline: String = "") -> String {
         var first = v.why.trimmingCharacters(in: .whitespaces)
         if let last = first.last, !".!?".contains(last) { first += "." }
+        // The headline already says the verdict's figure ("Recovery is 18, ..."): saying it again right after it would read as a stutter.
+        let figure = try! NSRegularExpression(pattern: #"\d+(?:[.,]\d+)?"#).firstMatch(in: first, range: NSRange(first.startIndex..., in: first))
+            .flatMap { Range($0.range, in: first).map { String(first[$0]) } }
+        if let figure, headline.contains(figure) { first = "" }
         // Sleep and Strain carry their next step (and a sum of the week's sessions) in the page's detail: it is advice or a different figure, not what the page reads.
         let own = v.topic != .sleep && v.topic != .strain
         let more = own ? (facts.map { NunaMark.plain($0).trimmingCharacters(in: .whitespaces) } ?? "") : ""
-        return more.isEmpty || first.contains(more) ? first : first + " " + more
+        return [first, more].filter { !$0.isEmpty }.joined(separator: " ")
     }
 
     /// With no provider (or none that answered): the verdict, the reading behind it and the next step, all worked out on this phone.
     static func fromVerdict(_ v: NunaAnyaVerdict, reading: String?) -> (headline: String?, text: String) {
         let l = v.localInsight(reading: reading ?? "")
-        let t = titles()
         let i = AnyaPageInsight(headline: l.headline, see: l.see, mean: "", advice: l.advice)
-        return (l.headline, i.markdown(seeTitle: t.see, meanTitle: t.mean, adviceTitle: t.advice))
+        return (l.headline, i.paragraphs())
     }
 }
 
