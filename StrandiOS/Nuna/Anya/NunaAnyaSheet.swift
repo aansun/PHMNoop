@@ -367,7 +367,7 @@ struct NunaAnyaSheet: View {
         explaining = true; defer { explaining = false }
         let page = context + (cardLine.map { "\n\n" + NunaMark.plain($0.headline + ($0.detail.map { ". " + $0 } ?? "")) } ?? "")
             + (read?.verdict.map { "\n\n" + $0.providerLine } ?? "") + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? "")
-        if let raw = await coach.generatePageInsight(topic: read?.verdict?.topic ?? NunaAnyaTopic.of(metricKey: metric?.key ?? "", title: metric?.title ?? context), pageContext: page) { explanation = NunaAnyaInsightText.fromProvider(raw, verdict: read?.verdict).text }
+        if let raw = await coach.generatePageInsight(topic: read?.verdict?.topic ?? NunaAnyaTopic.of(metricKey: metric?.key ?? "", title: metric?.title ?? context), pageContext: page) { explanation = NunaAnyaInsightText.fromProvider(raw, verdict: read?.verdict, facts: read?.facts ?? read?.detail).text }
     }
 
     private func openFull() {
