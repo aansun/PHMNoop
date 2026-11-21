@@ -31,11 +31,16 @@ public enum SourceIdentity {
         guard let address, !address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return nil
         }
-        guard let row = rows.first(where: {
+        let matches = rows.filter {
             guard let pid = $0.peripheralId else { return false }
             return pid.caseInsensitiveCompare(address) == .orderedSame
-        }) else { return nil }
-        guard isWhoop(row), row.id != currentId else { return nil }
+        }
+        guard !matches.isEmpty else { return nil }
+        // One strap can be registered twice: the seeded legacy row, left archived, and the row added later when the same strap was paired again, both carrying its
+        // peripheral id. The row in use stays; otherwise the active one, then one that is not archived, so the oldest (archived) row never claims the link.
+        if matches.contains(where: { $0.id == currentId }) { return nil }
+        let whoops = matches.filter(isWhoop)
+        guard let row = whoops.first(where: { $0.status == .active }) ?? whoops.first(where: { $0.status != .archived }) ?? whoops.first else { return nil }
         return row.id
     }
 

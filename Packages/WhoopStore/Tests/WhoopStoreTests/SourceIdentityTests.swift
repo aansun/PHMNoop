@@ -25,6 +25,23 @@ final class SourceIdentityTests: XCTestCase {
                                               rows: [ring, strap], currentId: "oura-abc"), "whoop-123")
     }
 
+    private func row(_ id: String, _ brand: String, _ peripheralId: String?, status: DeviceStatus) -> PairedDevice {
+        PairedDevice(id: id, brand: brand, model: "m", peripheralId: peripheralId,
+                     sourceKind: .liveBLE, capabilities: [.hr], status: status, addedAt: 0, lastSeenAt: 0)
+    }
+
+    /// One strap registered twice (the archived seeded row and the row added later for it, same peripheral): the active id in use stays, and a link never
+    /// moves to the archived one. This is what filed a morning's steps under "my-whoop" while the strap's own id held the rest of the day.
+    func testTheSameStrapRegisteredTwiceKeepsTheActiveId() {
+        let old = row("my-whoop", "WHOOP", "AA:BB:CC:DD:EE:02", status: .archived)
+        let current = row("whoop-123", "WHOOP", "AA:BB:CC:DD:EE:02", status: .active)
+        XCTAssertNil(SourceIdentity.resolve(address: "AA:BB:CC:DD:EE:02", rows: [old, current], currentId: "whoop-123"))
+        // Even when the id in use is something else, the active row beats the archived one.
+        XCTAssertEqual(SourceIdentity.resolve(address: "AA:BB:CC:DD:EE:02", rows: [old, current], currentId: "oura-abc"), "whoop-123")
+        // An archived row alone is still found, as before.
+        XCTAssertEqual(SourceIdentity.resolve(address: "AA:BB:CC:DD:EE:02", rows: [old], currentId: "oura-abc"), "my-whoop")
+    }
+
     /// The legacy single-WHOOP path, and the reason this returns nil rather than guessing: the seeded row
     /// has not adopted an address yet. The coordinator adopts one on this same connect, so the NEXT connect
     /// resolves — and until then the id stays exactly what it is today.

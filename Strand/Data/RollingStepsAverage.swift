@@ -33,16 +33,21 @@ struct RollingStepsAverage: Equatable {
 }
 
 extension Repository {
-    /// Shared by the detail and rolling tile: measured strap, phone import, then strap estimate.
+    /// Shared by the detail and rolling tile: the higher of the measured strap and the phone import, then the strap estimate.
     func resolvedSteps(from: String, to: String) async -> MetricSeriesResolution {
         async let strap = resolvedSeries(key: "steps", source: Self.whoopSource, from: from, to: to)
         async let phone = resolvedSeries(key: "steps", source: "apple-health", from: from, to: to)
         async let estimate = resolvedSeries(key: "steps_est", source: Self.whoopSource, from: from, to: to)
         let resolutions = await [strap, phone, estimate]
         var byDay: [String: ResolvedMetricPoint] = [:]
-        for resolution in resolutions {
-            for point in resolution.points where byDay[point.day] == nil { byDay[point.day] = point }
+        // The strap and the phone each count only part of the walking, so for a day both have, the higher one is the better figure (the strap on a tie).
+        // The strap estimate fills a day neither has.
+        for resolution in resolutions.prefix(2) {
+            for point in resolution.points {
+                if let have = byDay[point.day] { if point.value > have.value { byDay[point.day] = point } } else { byDay[point.day] = point }
+            }
         }
+        for point in resolutions[2].points where byDay[point.day] == nil { byDay[point.day] = point }
         return MetricSeriesResolution(requestedSource: Self.whoopSource,
                                       candidates: resolutions.flatMap(\.candidates),
                                       points: byDay.values.sorted { $0.day < $1.day })
