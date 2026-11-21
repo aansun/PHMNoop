@@ -268,6 +268,7 @@ struct NunaWeatherAirView: View {
                     }
                     .padding(.horizontal, 4)
                 }
+                NunaWeatherAirExplainer()
                 nunaFootnote("Weather and the forecast from OpenWeather; the air now from IQAir, or from OpenWeather without an IQAir key. General guidance for a healthy adult, not medical advice.")
             } else if store.isActive {
                 ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 200)
