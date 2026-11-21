@@ -130,7 +130,8 @@ public struct EnvironmentClient: Sendable {
                       let feels = Self.number(main["feels_like"]) else { return nil }
                 return EnvironmentSnapshot.Hour(ts: ts, feelsLikeC: feels, rainChance: Self.number(row["pop"]) ?? 0,
                                                 tempC: Self.number(main["temp"]), windMps: Self.number((row["wind"] as? [String: Any])?["speed"]),
-                                                conditionId: ((row["weather"] as? [[String: Any]])?.first?["id"] as? NSNumber)?.intValue)
+                                                conditionId: ((row["weather"] as? [[String: Any]])?.first?["id"] as? NSNumber)?.intValue,
+                                                humidityPct: Self.number(main["humidity"]))
             }
         }
         // The air for the same hours: also a bonus, from the same key.

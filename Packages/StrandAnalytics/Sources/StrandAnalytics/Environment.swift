@@ -20,9 +20,10 @@ public struct EnvironmentSnapshot: Codable, Equatable, Sendable {
         public var tempC: Double?
         public var windMps: Double?
         public var conditionId: Int?
-        public init(ts: Int, feelsLikeC: Double, rainChance: Double, tempC: Double? = nil, windMps: Double? = nil, conditionId: Int? = nil) {
+        public var humidityPct: Double?
+        public init(ts: Int, feelsLikeC: Double, rainChance: Double, tempC: Double? = nil, windMps: Double? = nil, conditionId: Int? = nil, humidityPct: Double? = nil) {
             self.ts = ts; self.feelsLikeC = feelsLikeC; self.rainChance = rainChance
-            self.tempC = tempC; self.windMps = windMps; self.conditionId = conditionId
+            self.tempC = tempC; self.windMps = windMps; self.conditionId = conditionId; self.humidityPct = humidityPct
         }
     }
 
@@ -202,33 +203,48 @@ public struct EnvironmentAdvice: Equatable, Sendable {
 
 // MARK: - The day ahead
 
-/// The next 24 hours in five parts of the day, and the best stretch of them for a session: what the card and the page about the weather and the
+/// The next 24 hours in four sessions of the day, and the best stretch of them for a session: what the card and the page about the weather and the
 /// air show. Pure arithmetic over a snapshot's forecast; it says nothing the forecast does not.
 public struct EnvironmentOutlook: Equatable, Sendable {
     public enum Part: Int, CaseIterable, Sendable {
-        case morning, noon, afternoon, evening, night
+        case morning, afternoon, evening, night
 
-        /// Morning 5-11, noon 11-15, afternoon 15-18, evening 18-22, night 22-5 (local hours).
+        /// Morning 5-11, afternoon 11-17, evening 17-22, night 22-5 (local hours).
         public static func of(hour: Int) -> Part {
             switch hour {
             case 5..<11: return .morning
-            case 11..<15: return .noon
-            case 15..<18: return .afternoon
-            case 18..<22: return .evening
+            case 11..<17: return .afternoon
+            case 17..<22: return .evening
             default: return .night
             }
         }
+
+        /// The hour each session starts at.
+        public static let startHours = [5, 11, 17, 22]
     }
 
+    /// One session of the day with everything the panel says about it and whether it suits time outdoors.
     public struct Slot: Equatable, Sendable, Identifiable {
         public var id: Int { start }
         public let part: Part
-        /// Unix seconds of the first forecast step in this part.
+        /// Unix seconds: when the session starts (for the one under way, now) and when it ends.
         public let start: Int
+        public let end: Int
+        /// True for the session that is under way.
+        public let isCurrent: Bool
+        public let tempC: Double?
+        /// The feel across the session, and its highest (what decides whether it is hot).
         public let feelsLikeC: Double
+        public let peakFeelsLikeC: Double
         public let rainChance: Double
+        public let windMps: Double?
+        public let humidityPct: Double?
         public let usAqi: Int?
         public let conditionId: Int?
+        public let fit: OutdoorFit
+        /// What is in the way of time outdoors in this session, the worst first; empty when nothing is.
+        public let reasons: [EnvironmentAdvice.Reason]
+        public let rainLikely: Bool
     }
 
     public struct Window: Equatable, Sendable {
@@ -267,24 +283,67 @@ public struct EnvironmentOutlook: Equatable, Sendable {
         return nil
     }
 
+    /// The worst first: a storm, then the air, then heat, then the rest.
+    static func severity(_ r: EnvironmentAdvice.Reason) -> Int {
+        switch r {
+        case .storm: return 0
+        case .air(_, let band): return band >= .unhealthy ? 1 : 3
+        case .veryHot: return 1
+        case .freezing: return 1
+        case .hot: return 2
+        case .cold: return 3
+        case .rain: return 4
+        case .wind: return 5
+        }
+    }
+
     public static func make(_ s: EnvironmentSnapshot, calendar: Calendar = .current, now: Int? = nil) -> EnvironmentOutlook? {
         let from = now ?? s.ts
         let steps = s.forecast.filter { $0.ts >= from - 3600 && $0.ts <= from + 24 * 3600 }.sorted { $0.ts < $1.ts }
         guard !steps.isEmpty else { return nil }
         func hour(_ ts: Int) -> Int { calendar.component(.hour, from: Date(timeIntervalSince1970: TimeInterval(ts))) }
 
-        // Group the steps by part of day, keeping the order the parts first come in (a part that returns after a night is a different slot).
-        var groups: [(Part, [EnvironmentSnapshot.Hour])] = []
-        for step in steps {
-            let p = Part.of(hour: hour(step.ts))
-            if let last = groups.last, last.0 == p { groups[groups.count - 1].1.append(step) } else { groups.append((p, [step])) }
+        // The reading now is the first point of the session under way; every forecast step follows it. Group them by session, in the order they come (a session
+        // that returns after a night is another slot, and only four are kept).
+        var points: [EnvironmentSnapshot.Hour] = []
+        if s.hasWeather {
+            let rainNow = s.conditionId.map { (300..<600).contains($0) } == true ? 0.8 : 0.0
+            points.append(.init(ts: from, feelsLikeC: s.effectiveC ?? 0, rainChance: rainNow, tempC: s.tempC, windMps: s.windMps, conditionId: s.conditionId, humidityPct: s.humidityPct))
         }
-        let slots: [Slot] = groups.map { part, hs in
-            let feels = hs.map(\.feelsLikeC).reduce(0, +) / Double(hs.count)
-            let aqis = hs.compactMap { usAqi(at: $0.ts, in: s) }
-            // The sky of the part is the one of its wettest step.
+        points += steps.filter { $0.ts > from }
+        var groups: [(Part, [EnvironmentSnapshot.Hour])] = []
+        for point in points {
+            let p = Part.of(hour: hour(point.ts))
+            if let last = groups.last, last.0 == p { groups[groups.count - 1].1.append(point) } else { groups.append((p, [point])) }
+        }
+        func boundary(after ts: Int) -> Int {
+            let date = Date(timeIntervalSince1970: TimeInterval(ts))
+            let next = Part.startHours.compactMap { calendar.nextDate(after: date, matching: DateComponents(hour: $0, minute: 0, second: 0), matchingPolicy: .nextTime) }.min()
+            return Int((next ?? date.addingTimeInterval(6 * 3600)).timeIntervalSince1970)
+        }
+        let currentPart = Part.of(hour: hour(from))
+        let slots: [Slot] = groups.prefix(4).enumerated().map { i, g in
+            let (part, hs) = g
+            func mean(_ v: [Double]) -> Double? { v.isEmpty ? nil : v.reduce(0, +) / Double(v.count) }
+            let feels = hs.map(\.feelsLikeC)
+            let aqis = hs.compactMap { h in h.ts == from && h.ts == points.first?.ts ? (s.usAqi ?? usAqi(at: h.ts, in: s)) : usAqi(at: h.ts, in: s) }
+            // The sky of the session is the one of its wettest step.
             let sky = hs.max { $0.rainChance < $1.rainChance }?.conditionId ?? hs.first?.conditionId
-            return Slot(part: part, start: hs[0].ts, feelsLikeC: feels, rainChance: hs.map(\.rainChance).max() ?? 0, usAqi: aqis.max(), conditionId: sky)
+            let rain = hs.map(\.rainChance).max() ?? 0
+            let peak = feels.max() ?? 0
+            let wind = mean(hs.compactMap(\.windMps))
+            let humidity = mean(hs.compactMap(\.humidityPct)) ?? s.humidityPct
+            // What is in the way is read by the same rules as the advice, on the worst of the session.
+            let probe = EnvironmentSnapshot(ts: hs[0].ts, tempC: mean(hs.compactMap(\.tempC)), feelsLikeC: peak, humidityPct: humidity,
+                                            windMps: hs.compactMap(\.windMps).max(), conditionId: sky, usAqi: aqis.max())
+            let advice = EnvironmentAdvice.analyze(probe, calendar: calendar, hours: 0...23)
+            var fit: OutdoorFit = advice.map { $0.level == .indoors ? .indoors : ($0.level == .adjust ? .adjust : .good) } ?? .good
+            if rain >= 0.5, fit < .adjust { fit = .adjust }
+            let isCurrent = i == 0 && part == currentPart
+            return Slot(part: part, start: isCurrent ? from : hs[0].ts, end: boundary(after: isCurrent ? from : hs[0].ts), isCurrent: isCurrent,
+                        tempC: mean(hs.compactMap(\.tempC)), feelsLikeC: mean(feels) ?? peak, peakFeelsLikeC: peak, rainChance: rain, windMps: wind,
+                        humidityPct: humidity, usAqi: aqis.max(), conditionId: sky, fit: fit,
+                        reasons: (advice?.reasons ?? []).sorted { EnvironmentOutlook.severity($0) < EnvironmentOutlook.severity($1) }, rainLikely: rain >= 0.5)
         }
 
         // The kindest step to be out in: not hot or cold, clean air, dry.

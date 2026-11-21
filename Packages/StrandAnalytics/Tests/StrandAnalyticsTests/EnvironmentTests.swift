@@ -186,12 +186,31 @@ final class EnvironmentTests: XCTestCase {
                                    forecast: feels.indices.map { .init(ts: t0 + $0 * 3 * 3600, feelsLikeC: feels[$0], rainChance: rain[$0]) }, airForecast: air)
     }
 
-    func testTheDayIsSplitIntoPartsInTheOrderTheyCome() throws {
+    func testTheDayIsFourSessionsInTheOrderTheyCome() throws {
         let o = try XCTUnwrap(EnvironmentOutlook.make(hotDay(), calendar: utc))
-        // 06, 09 morning; 12 noon; 15 afternoon; 18, 21 evening; 00, 03 night; 06 morning again.
-        XCTAssertEqual(o.slots.map(\.part), [.morning, .noon, .afternoon, .evening, .night, .morning])
-        XCTAssertEqual(o.slots[0].feelsLikeC, 28, accuracy: 0.001)
-        XCTAssertEqual(o.slots[2].rainChance, 0.5)
+        // From 06:00: the morning is under way, then the afternoon (12, 15), the evening (18, 21) and the night (00, 03).
+        XCTAssertEqual(o.slots.map(\.part), [.morning, .afternoon, .evening, .night])
+        XCTAssertTrue(o.slots[0].isCurrent); XCTAssertFalse(o.slots[1].isCurrent)
+        XCTAssertEqual(o.slots[0].start, hotDay().ts)                       // the one under way starts now
+        XCTAssertEqual(o.slots[0].end - hotDay().ts, 5 * 3600)               // and ends when the afternoon begins, at 11:00
+        XCTAssertEqual(o.slots[1].rainChance, 0.5)
+        XCTAssertEqual(o.slots[1].peakFeelsLikeC, 37)
+    }
+
+    func testEachSessionSaysIfItSuitsTimeOutdoorsAndWhatIsInTheWay() throws {
+        let o = try XCTUnwrap(EnvironmentOutlook.make(hotDay(), calendar: utc))
+        XCTAssertEqual(o.slots[0].fit, .good)            // 26 to 30 and dry
+        XCTAssertEqual(o.slots[0].reasons, [])
+        XCTAssertEqual(o.slots[1].fit, .adjust)          // a peak of 37 and a 50% chance of rain
+        XCTAssertTrue(o.slots[1].reasons.contains(.hot(feelsLikeC: 37)))
+        XCTAssertTrue(o.slots[1].rainLikely)
+        XCTAssertEqual(o.slots[3].fit, .good)
+        // Dirty air makes the session one to spend indoors, and is the first thing named.
+        let t0 = hotDay().ts
+        var s = hotDay(air: (0..<28).map { .init(ts: t0 + $0 * 3600, usAqi: 170) }); s.usAqi = 170
+        let dirty = try XCTUnwrap(EnvironmentOutlook.make(s, calendar: utc))
+        XCTAssertTrue(dirty.slots.allSatisfy { $0.fit == .indoors })
+        if case .air(let aqi, _)? = dirty.slots[0].reasons.first { XCTAssertEqual(aqi, 170) } else { XCTFail("the air should lead") }
     }
 
     func testTheBestStretchIsTheCoolDryCleanOne_andTheAirCanMoveIt() throws {
