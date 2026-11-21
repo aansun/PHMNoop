@@ -116,7 +116,7 @@ extension NunaEnvironmentFormat {
 /// Touching one brings it to the front. Nothing changes size.
 struct NunaSessionDeck: View {
     let slots: [EnvironmentOutlook.Slot]
-    var height: CGFloat = 318
+    var height: CGFloat = 344
     @State private var active = 0
 
     /// How much of each card behind shows at the right.
@@ -171,10 +171,11 @@ struct NunaSessionDeck: View {
         .padding(.top, 18)
     }
 
-    /// The card in front: the name and hours, the temperature large with its range, the sky, whether it suits time outdoors, and the air, wind and humidity.
+    /// The card in front, centred from top to bottom: the session, the temperature large with its range, the sky large, its name, whether it suits time outdoors,
+    /// and the air, wind and humidity in one small row at the foot. All of it sits in this one card.
     private func front(_ slot: EnvironmentOutlook.Slot) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
+        VStack(spacing: 9) {
+            VStack(spacing: 2) {
                 Text(verbatim: NunaEnvironmentFormat.partName(slot.part)).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                 // The session under way reads "Now – 17:00": it is in progress, so its own start is not worth saying.
@@ -188,41 +189,55 @@ struct NunaSessionDeck: View {
                 }
                 .lineLimit(1)
             }
-            HStack(alignment: .top, spacing: 6) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(verbatim: NunaInsightText.degrees(slot.tempC ?? slot.feelsLikeC))
-                        .font(.nuna(size: 50, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-                    // A session with one reading in it has no range to show: what it feels like says more.
-                    if slot.highC - slot.lowC >= 1 {
-                        HStack(spacing: 10) {
-                            bound(arrow: "arrow.down", NunaInsightText.degrees(slot.lowC), NunaPalette.recoveryBlue)
-                            bound(arrow: "arrow.up", NunaInsightText.degrees(slot.highC), NunaPalette.caution)
-                        }
-                    } else {
-                        Text("Feels like \(NunaInsightText.degrees(slot.peakFeelsLikeC))").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                }
-                Spacer(minLength: 4)
-                Image(systemName: NunaEnvironmentFormat.symbol(conditionId: slot.conditionId, feelsLikeC: slot.peakFeelsLikeC, night: slot.part == .night))
-                    .font(.system(size: 44)).foregroundStyle(NunaPalette.recoveryBlue).padding(.top, 4)
+            // 32°C: the figure large and the unit small beside it, as on a weather face.
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(verbatim: "\(Int((slot.tempC ?? slot.feelsLikeC).rounded()))").font(.nuna(size: 60, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: "°C").font(.nuna(size: 22, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             }
-            Text(verbatim: NunaEnvironmentFormat.skyText(conditionId: slot.conditionId)).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
-            VStack(alignment: .leading, spacing: 5) {
+            .lineLimit(1).minimumScaleFactor(0.7)
+            // A session with one reading in it has no range to show: what it feels like says more.
+            if slot.highC - slot.lowC >= 1 {
+                HStack(spacing: 14) {
+                    bound(arrow: "arrow.down", NunaInsightText.degrees(slot.lowC), NunaPalette.recoveryBlue)
+                    bound(arrow: "arrow.up", NunaInsightText.degrees(slot.highC), NunaPalette.caution)
+                }
+            } else {
+                Text("Feels like \(NunaInsightText.degrees(slot.peakFeelsLikeC))").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+            Image(systemName: NunaEnvironmentFormat.symbol(conditionId: slot.conditionId, feelsLikeC: slot.peakFeelsLikeC, night: slot.part == .night))
+                .font(.system(size: 58)).foregroundStyle(NunaPalette.recoveryBlue).frame(height: 62).padding(.top, 4)
+            Text(verbatim: NunaEnvironmentFormat.skyText(conditionId: slot.conditionId)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1)
+            VStack(spacing: 5) {
                 fitChip(slot.fit)
                 let why = NunaEnvironmentFormat.inTheWay(slot)
                 if !why.isEmpty {
-                    Text(verbatim: why).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(3).fixedSize(horizontal: false, vertical: true)
+                    Text(verbatim: why).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .multilineTextAlignment(.center).lineLimit(3).fixedSize(horizontal: false, vertical: true)
                 }
             }
             Spacer(minLength: 0)
-            NunaDivider()
-            HStack(alignment: .top, spacing: 0) {
-                airFact(slot.usAqi)
-                fact("Wind", slot.windMps.map { String(format: "%.0f", $0 * 3.6) + " km/h" })
-                fact("Humidity", slot.humidityPct.map { "\(Int($0.rounded()))%" })
+            // Air, wind and humidity: small, with their own symbols, in one row.
+            HStack(spacing: 12) {
+                if let aqi = slot.usAqi {
+                    HStack(spacing: 4) {
+                        Circle().fill(NunaEnvironmentFormat.airColor(aqi)).frame(width: 7, height: 7)
+                        Text(verbatim: "AQI \(aqi)")
+                    }
+                }
+                if let w = slot.windMps { miniFact("wind", String(format: "%.0f", w * 3.6) + " km/h") }
+                if let h = slot.humidityPct { miniFact("drop.fill", "\(Int(h.rounded()))%") }
             }
+            .font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
         }
-        .padding(16)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 12).padding(.vertical, 16)
+    }
+
+    private func miniFact(_ symbol: String, _ value: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: symbol).font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.recoveryBlue)
+            Text(verbatim: value)
+        }
     }
 
     private func bound(arrow: String, _ value: String, _ color: Color) -> some View {
@@ -242,24 +257,6 @@ struct NunaSessionDeck: View {
         .background(color.opacity(0.16), in: Capsule())
     }
 
-    private func airFact(_ aqi: Int?) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(verbatim: "AQI").font(.nuna(size: 10, weight: .heavy)).tracking(nunaTrackingLabel).foregroundStyle(NunaPalette.textSecondary)
-            HStack(spacing: 5) {
-                if let aqi { Circle().fill(NunaEnvironmentFormat.airColor(aqi)).frame(width: 7, height: 7) }
-                Text(verbatim: aqi.map { "\($0)" } ?? "–").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func fact(_ label: LocalizedStringKey, _ value: String?) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(label).font(.nuna(size: 10, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
-            Text(verbatim: value ?? "–").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
 }
 
 // MARK: - The card on Today
@@ -354,7 +351,7 @@ struct NunaWeatherAirView: View {
                 }
                 .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 4)
             }
-            if let outlook, !outlook.slots.isEmpty { NunaSessionDeck(slots: outlook.slots, height: 332) }
+            if let outlook, !outlook.slots.isEmpty { NunaSessionDeck(slots: outlook.slots, height: 356) }
             if let best = outlook?.best {
                 HStack(spacing: 8) {
                     Image(systemName: "figure.run").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.charge)
