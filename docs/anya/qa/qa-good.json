@@ -1,0 +1,104 @@
+{
+  "chat" : [
+
+  ],
+  "compactContext" : "USER BIOMETRIC SUMMARY (the user's own wearable data):\n\nBODY STATE READ (today vs personal baseline; not a diagnosis): ready to build. Confidence high. Evidence: Recovery 91; sleep 8.0h vs 7.4h baseline; HRV 100ms vs 84ms baseline; RHR 50bpm vs 55bpm baseline; recent strain 8.7 vs 9.5 average daily strain. Coach stance: A quality session is reasonable if the user feels well; keep the hard work purposeful.\n\nRecent days (newest first) — recovery(0-100), strain(0-21), sleep(h), deep\/REM\/light(h), eff(%), HRV(ms), RHR(bpm). A dash means the figure is not available, not zero:\n  2026-11-21:, recovery 91, strain 10.9, sleep 8.0h, deep 1.7h, REM 2.0h, light 4.3h, eff 94%, HRV 100ms, RHR 50bpm\n  2026-11-20:, recovery 49, strain 9.0, sleep 7.5h, deep 0.8h, REM 1.7h, light 5.0h, eff 82%, HRV 77ms, RHR 50bpm\n  2026-11-19:, recovery 74, strain 6.3, sleep 8.2h, deep 1.6h, REM 1.2h, light 5.3h, eff 86%, HRV 86ms, RHR 52bpm\n  2026-11-18:, recovery 31, strain 10.9, sleep 8.0h, deep 1.0h, REM 2.1h, light 4.9h, eff 86%, HRV 104ms, RHR 57bpm\n  2026-11-17:, recovery 86, strain 18.4, sleep 7.8h, deep 1.1h, REM 1.8h, light 4.9h, eff 86%, HRV 75ms, RHR 52bpm\n  2026-11-16:, recovery 58, strain 7.5, sleep 7.0h, deep 1.4h, REM 1.7h, light 3.9h, eff 83%, HRV 88ms, RHR 57bpm\n  2026-11-15:, recovery 28, strain 8.6, sleep 7.4h, deep 1.5h, REM 1.8h, light 4.1h, eff 89%, HRV 98ms, RHR 58bpm\n\n30-day averages:\n  recovery: 64, strain: 9.7, sleep: 7.4h, HRV: 85 ms, RHR: 55 bpm\n  SpO2: 97%, respiration: 14.6\/min, skin-temp deviation: -0.0°C, steps: —\/day, active energy: —kcal\/day\n\nRecent workouts (newest first):\n  2026-11-21 Walking, 50 min, strain 11.6, avg HR 139, max HR 155, 548 kcal, 5.0 km, time in zones Z1 11% Z2 34% Z3 25% Z4 23% Z5 2%\n  2026-11-21 Strength Training, 58 min, strain 7.6, avg HR 102, max HR 152, 362 kcal\n  2026-11-21 Breathwork, 20 min, avg HR 66, max HR 78\n\nStress (SI): 21 (Baevsky Stress Index over today's R-R; higher means more sympathetic \/ under load; an autonomic-balance proxy, not a clinical figure).\n\nRIGHT NOW: Saturday 21 November, 10:34 (morning). This is the planning part of the day: when asked what to do today, anchor on the suggested session below and the Strain already banked.\nSTRAIN (0-21 scale, as the person sees it): Strain so far today 10.9 (a usual day is about 9.0); the Strain worth aiming for at today's Recovery is 14-18; last 7 days 72.\nTODAY'S SUGGESTED SESSION (the same one the Plan card shows; do not contradict it unless the person gives a reason): Tempo session, 42 min, main work in zone 4, about +7-11 Strain. It was chosen from a Recovery of 91.\nSLEEP TONIGHT: personal need about 8h, no meaningful debt; centred on the usual midsleep 03:11, being asleep by about 23:11. Debt is repaid over several nights: never ask for more than about 45 minutes of extra sleep in one night.\nNEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): A quality session fits today: Tempo session, 42 min. Warm up properly and stop if it feels wrong.\nTODAY (2026-11-21) AGAINST YESTERDAY AND THE 30-DAY AVERAGE, worked out for you, each figure with its own label:\n  Recovery: today 91, yesterday 49 (change +42), 30-day average 63 (gap +28)\n  HRV: today 100 ms, yesterday 77 ms (change +23 ms), 30-day average 84 ms (gap +16 ms)\n  Resting heart rate: today 50 bpm, yesterday 50 bpm (change +0 bpm), 30-day average 55 bpm (gap -5 bpm)\n  Sleep: today 8.0 h, yesterday 7.5 h (change +0.5 h), 30-day average 7.4 h (gap +0.6 h)\n  Strain: today 10.9, yesterday 9.0 (change +1.9), 30-day average 9.5 (gap +1.4)\n  SpO2: today 98.0%, yesterday 96.5% (change +1.5%), 30-day average 96.5% (gap +1.5%)\n  Respiration: today 14.2\/min, yesterday 14.4\/min (change -0.2\/min), 30-day average 14.6\/min (gap -0.4\/min)",
+  "compactContextChars" : 3058,
+  "compactSystemChars" : 4175,
+  "configured" : true,
+  "consent" : true,
+  "fullSystemChars" : 13592,
+  "pages" : [
+    {
+      "headline" : "Recovery is good, showing strong readiness for moderate effort.",
+      "local" : "Recovery 91%, ready for a moderate load. HRV up 23 ms. Strain so far 10.9.",
+      "localAdvice" : "You are ready for a quality session today; warm up well, then spend it where it counts.",
+      "page" : "Recovery",
+      "seconds" : 12.724743008613586,
+      "text" : "Recovery is good, showing strong readiness for moderate effort. Your Recovery is 91%, a bit higher than your usual 64 and well above the 30-day average 63, while HRV is 100 ms, up from your typical 84 ms, and sleep is 8.0 h, matching your usual 7.4 h.\n\nThis means your body is responding well to recent activity, with improved HRV and solid sleep, suggesting rest and recovery are supporting performance.\n\nKeep your regular bedtime tonight, as the consistent sleep pattern is the visible habit behind this good score.",
+      "topic" : "recovery",
+      "verdict" : "good: Recovery 91% is in the green band"
+    },
+    {
+      "headline" : "Your Strain is under the range your Recovery supports today, showing steady effort",
+      "local" : "Strain 10.9 of 21 so far today. You are under the Strain your Recovery supports today, so there is room for a session if you feel like it. 21 sessions this week, Strain 116.0.",
+      "localAdvice" : "There is room left: a short session in zone 2 would fit if you feel like it.",
+      "page" : "Strain",
+      "seconds" : 8.2028290033340454,
+      "text" : "Your Strain is under the range your Recovery supports today, showing steady effort. Your Recovery is 91, which is well above your usual 64, and your Strain is 10.9, below the 14-18 range your body can handle with this readiness.\n\nYour HRV is 93 ms, a little above your 30-day average, and your recovery is high, meaning your body is well-rested from recent activity.\n\nFinish the day with a light session tonight, keeping the tempo low and stopping before bed, to maintain the rhythm your recovery supports.",
+      "topic" : "strain",
+      "verdict" : "steady: Strain 10.9 is under the 14-18 range your Recovery supports"
+    },
+    {
+      "headline" : "Sleep is good, covering what you need",
+      "local" : "You covered what you need, and that carried this night. HRV and resting heart rate agree: your body took it well. You logged alcohol yesterday; with only 59 such night(s) so far there is not enough to say whether it moves your sleep. Repeat what you did yesterday evening: it worked. Compared with my note earlier: Sleep 480 min (was 419 min).",
+      "localAdvice" : "Repeat what you did yesterday evening: same bedtime, no late meal, screens down early.",
+      "page" : "sleep",
+      "seconds" : 8.2595640420913696,
+      "text" : "Sleep is good, covering what you need. Your HRV is 93 ms, above your 30-day average of 84 ms, and your resting heart rate stays at 50 bpm, the same as yesterday, showing your body handled the night well.\n\nYour HRV and heart rate stayed steady, which means your body remained calm and balanced despite the activity. The consistency in these signs suggests your autonomic system worked smoothly.\n\nRepeat what you did yesterday evening: it worked. Keep the quiet pattern so it holds, and go to bed before bed tonight.",
+      "topic" : "sleep",
+      "verdict" : "good: Sleep 95% covers what you need"
+    },
+    {
+      "headline" : "Stress is calmer than your usual, so you’re in a good place.",
+      "local" : "Stress 1,4 of 3, calmer than your baseline (1,5). High stress for 1:00 hours so far. Moments when you were moving are left out.",
+      "localAdvice" : "You are calm: keep the breaks, movement and sleep that got you here.",
+      "page" : "stress",
+      "seconds" : 5.4846040010452271,
+      "text" : "Stress is calmer than your usual, so you’re in a good place. HRV is 100 ms, above your 30-day average of 85 ms, and resting heart rate is 50 bpm, matching your usual.\n\nYour body is functioning well, with HRV and heart rate staying steady, which shows recovery is holding strong.\n\nKeep your regular bedtime tonight so the calm continues.",
+      "topic" : "stress",
+      "verdict" : "good: Stress 1,4 of 3, calmer than your baseline (1,5)"
+    },
+    {
+      "headline" : "HRV is 100 ms, above your 30-day average, showing strong recovery signals",
+      "local" : "HRV 100 ms, above your 30-day average (84). Up 23 from the day before (77).",
+      "localAdvice" : "Keep what is working: regular bed and wake times, steady training and little alcohol.",
+      "page" : "HRV",
+      "seconds" : 5.9578069448471069,
+      "text" : "HRV is 100 ms, above your 30-day average, showing strong recovery signals. HRV is 100 ms, 23 ms higher than yesterday’s 77 ms and 16 ms above your 30-day average of 84 ms.\n\nIt sits on the better side of your own baseline, so the routine behind it is working.\n\nStart tonight with a quiet walk for 15 minutes to keep this rhythm alive, as your body’s recovery is showing clearly.",
+      "topic" : "hrv",
+      "verdict" : "good: HRV 100 ms, above your 30-day average (84)"
+    },
+    {
+      "headline" : "Resting heart rate is 50 bpm, below your 30-day average",
+      "local" : "Resting heart rate 50 bpm, below your 30-day average (55). Same as the day before (50).",
+      "localAdvice" : "Keep the routine that got you here: regular sleep, steady training and enough water.",
+      "page" : "Resting heart rate",
+      "seconds" : 6.3217380046844482,
+      "text" : "Resting heart rate is 50 bpm, below your 30-day average. Your HRV is 100 ms, a little above your 30-day average of 85 ms, while your RHR stays at 50 bpm, the same as yesterday. These numbers show your body remains calm and steady.\n\nIt sits on the better side of your own baseline, so the routine behind it is working.\n\nKeep repeating what you did yesterday evening: it worked, so maintain that routine to keep the steady rhythm.",
+      "topic" : "restingHR",
+      "verdict" : "good: Resting heart rate 50 bpm, below your 30-day average (55)"
+    },
+    {
+      "headline" : "Respiratory rate is 14.2\/min, in line with your 30-day average",
+      "local" : "Respiratory rate 14,2 \/min, in line with your 30-day average (14,6). Down 0,2 from the day before (14,4).",
+      "localAdvice" : "Your usual range holds. Keep the strap snug and worn overnight so the reading stays reliable.",
+      "page" : "Respiratory rate",
+      "seconds" : 5.834272027015686,
+      "text" : "Respiratory rate is 14.2\/min, in line with your 30-day average. Respiratory rate is 14.2\/min, down 0.2 from the day before and matching your 30-day average of 14.6.\n\nYour breathing stays calm, which suggests your body is recovering well after the recent effort.\n\nYour usual range holds. Keep the strap snug and worn overnight so the reading stays reliable.",
+      "topic" : "vitals",
+      "verdict" : "good: Respiratory rate 14,2 \/min, in line with your 30-day average (14,6)"
+    },
+    {
+      "headline" : "Your weight is in line with your usual, up slightly from the day before.",
+      "local" : "Weight 72,4 kg, in line with your 30-day average (73,0). Up 0,1 from the day before (72,3).",
+      "page" : "Weight",
+      "seconds" : 5.3041350841522217,
+      "text" : "Your weight is in line with your usual, up slightly from the day before. Your weight is 72,4 kg, matching your 30-day average of 73,0 kg and 0,1 kg higher than yesterday’s 72,3 kg.\n\nThis trend shows stability with a small increase, likely from consistent intake and normal activity levels.\n\nKeep the current routine intact, as the balance of weight, food and movement supports the existing path.",
+      "verdict" : "none"
+    },
+    {
+      "headline" : "Skin temperature is within your usual band, so nothing to change.",
+      "local" : "Skin temperature 0,1 °C, above your 30-day average (-0,0). Down 0,1 from the day before (0,2).",
+      "localAdvice" : "Your skin temperature is within your usual band: nothing to change.",
+      "page" : "Skin temperature",
+      "seconds" : 6.1616050004959106,
+      "text" : "Skin temperature is within your usual band, so nothing to change. Your skin temperature is 0,1 °C below your 30-day average of -0,0 °C, and 0,2 °C lower than the day before.\n\nIt sits on the better side of your own baseline, so the routine behind it is working.\n\nKeep your current bedtime routine tonight so the body maintains this steady state.",
+      "topic" : "skinTemp",
+      "verdict" : "good: Skin temperature is within your usual band"
+    }
+  ],
+  "provider" : "appleIntelligence",
+  "scale" : "whoop",
+  "scenario" : "good"
+}

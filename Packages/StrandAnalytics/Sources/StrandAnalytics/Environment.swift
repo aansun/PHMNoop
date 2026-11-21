@@ -271,6 +271,10 @@ public struct EnvironmentOutlook: Equatable, Sendable {
         public let rainChance: Double
         /// The worst air of the day, when the forecast covers it.
         public let usAqi: Int?
+        /// The highest feel of the day, the average wind and humidity: what is said about the day beside its temperature.
+        public let peakFeelsLikeC: Double
+        public let windMps: Double?
+        public let humidityPct: Double?
     }
 
     /// One 3-hour step of the forecast with how well it suits time outdoors: what the timeline draws.
@@ -404,7 +408,9 @@ public struct EnvironmentOutlook: Equatable, Sendable {
             let midday = hs.min { abs(hour($0.ts) - 13) < abs(hour($1.ts) - 13) }
             let sky = (storm ?? wet ?? midday)?.conditionId
             let aqis = s.airForecast.filter { $0.ts >= day && $0.ts < day + 86_400 }.map(\.usAqi) + (day == midnight(from) ? [s.usAqi].compactMap { $0 } : [])
-            return Day(start: day, lowC: temps.min() ?? 0, highC: temps.max() ?? 0, conditionId: sky, rainChance: hs.map(\.rainChance).max() ?? 0, usAqi: aqis.max())
+            func mean(_ v: [Double]) -> Double? { v.isEmpty ? nil : v.reduce(0, +) / Double(v.count) }
+            return Day(start: day, lowC: temps.min() ?? 0, highC: temps.max() ?? 0, conditionId: sky, rainChance: hs.map(\.rainChance).max() ?? 0, usAqi: aqis.max(),
+                       peakFeelsLikeC: hs.map(\.feelsLikeC).max() ?? temps.max() ?? 0, windMps: mean(hs.compactMap(\.windMps)), humidityPct: mean(hs.compactMap(\.humidityPct)) ?? s.humidityPct)
         }
         return EnvironmentOutlook(slots: slots, steps: timeline, days: days, best: best)
     }

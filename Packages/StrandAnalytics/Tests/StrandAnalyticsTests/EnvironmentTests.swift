@@ -265,6 +265,7 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertEqual(o.days[0].usAqi, 120)                // the worst air of the day
         XCTAssertEqual(o.days[2].usAqi, 60)
         XCTAssertEqual(o.days[1].start - o.days[0].start, 86_400)
+        XCTAssertEqual(o.days[0].peakFeelsLikeC, 32)         // the feel runs two above the air in this fixture
     }
 
     func testNoForecastNoOutlook() {

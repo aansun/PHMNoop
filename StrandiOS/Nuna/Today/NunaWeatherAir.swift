@@ -92,8 +92,12 @@ extension NunaEnvironmentFormat {
 
     /// What is in the way in a session, as two short phrases at most; empty when nothing is.
     static func inTheWay(_ slot: EnvironmentOutlook.Slot) -> String {
+        inTheWay(reasons: slot.reasons, rainLikely: slot.rainLikely, rainChance: slot.rainChance)
+    }
+
+    static func inTheWay(reasons: [EnvironmentAdvice.Reason], rainLikely: Bool, rainChance: Double) -> String {
         var parts: [String] = []
-        for r in slot.reasons.prefix(2) {
+        for r in reasons.prefix(2) {
             switch r {
             case .veryHot(let t): parts.append(String(localized: "Too hot outside (feels like \(NunaInsightText.degrees(t)))"))
             case .hot: parts.append(String(localized: "Hot: go shorter and easier"))
@@ -105,8 +109,37 @@ extension NunaEnvironmentFormat {
             case .wind: parts.append(String(localized: "Strong wind"))
             }
         }
-        if slot.rainLikely, !slot.reasons.contains(.rain), parts.count < 2 { parts.append(String(localized: "Rain is likely (\(percent(slot.rainChance)))")) }
+        if rainLikely, !reasons.contains(.rain), parts.count < 2 { parts.append(String(localized: "Rain is likely (\(percent(rainChance)))")) }
         return parts.joined(separator: " · ")
+    }
+
+    /// Whether the weather and the air of one moment suit time outdoors, and what is in the way, by the rules of the advice.
+    static func advise(feels: Double?, humidity: Double?, wind: Double?, condition: Int?, aqi: Int?, rain: Double) -> (fit: OutdoorFit, text: String) {
+        let probe = EnvironmentSnapshot(ts: 0, tempC: feels, feelsLikeC: feels, humidityPct: humidity, windMps: wind, conditionId: condition, usAqi: aqi)
+        let advice = EnvironmentAdvice.analyze(probe, hours: 0...23)
+        var fit: OutdoorFit = advice.map { $0.level == .indoors ? .indoors : ($0.level == .adjust ? .adjust : .good) } ?? .good
+        if rain >= 0.5, fit < .adjust { fit = .adjust }
+        // The worst first: a storm, the air or the heat, then the cold, the rain and the wind.
+        func rank(_ r: EnvironmentAdvice.Reason) -> Int {
+            switch r {
+            case .storm: return 0
+            case .air(_, let band): return band >= .unhealthy ? 1 : 3
+            case .veryHot, .freezing: return 1
+            case .hot: return 2
+            case .cold: return 3
+            case .rain: return 4
+            case .wind: return 5
+            }
+        }
+        let reasons = (advice?.reasons ?? []).sorted { rank($0) < rank($1) }
+        // In a sentence after the colon the reasons run on in lower case: "too hot outside, air is unhealthy".
+        let why = inTheWay(reasons: reasons, rainLikely: rain >= 0.5, rainChance: rain)
+            .components(separatedBy: " · ").map { $0.prefix(1).lowercased() + $0.dropFirst() }.joined(separator: ", ")
+        switch fit {
+        case .good: return (fit, String(localized: "Good for outdoor activity."))
+        case .adjust: return (fit, why.isEmpty ? String(localized: "Outdoors, with care.") : String(localized: "Outdoors, with care: \(why).") )
+        case .indoors: return (fit, why.isEmpty ? String(localized: "Better indoors.") : String(localized: "Better indoors: \(why)."))
+        }
     }
 }
 
@@ -270,11 +303,11 @@ struct NunaWeatherAirCard: View {
 
 // MARK: - The page
 
-/// The weather and the air as a trend view: the metric to read (temperature or air quality), the hours (H) or the days (D) switch and a date stepper, the average
-/// with its range, a sentence, and a line of the forecast with the sky of each point under it. Touching a point shows its time and figure at the top.
+/// The weather and the air as a trend view: the metric to read (weather or air quality), the hours (H) or the days (D) switch and a date stepper, the moment that is
+/// on show with its figure (the one now, until a point is touched), a sentence about it, and a line of the forecast. Touching a point makes it the one on show.
 struct NunaWeatherAirView: View {
     @ObservedObject private var store = EnvironmentStore.shared
-    @State private var metric = Metric.temperature
+    @State private var metric = Metric.weather
     /// 1 is the hours (H), 5 the days (D).
     @State private var range = 1
     /// For the hours: which day-long window of the forecast, 0 being the next 24 hours.
@@ -283,14 +316,21 @@ struct NunaWeatherAirView: View {
     @State private var touchBeganOnPicked: Bool?
     @State private var menuOpen = false
 
-    private enum Metric: Hashable { case temperature, air }
+    private enum Metric: Hashable { case weather, air }
 
+    /// One moment of the forecast with everything the page says about it.
     private struct Point: Identifiable {
         let date: Date
         let value: Double
-        /// For the days of the temperature: the low under the high.
+        /// For the days of the weather: the low under the high.
         let low: Double?
         let symbol: String
+        let feels: Double?
+        let windMps: Double?
+        let humidity: Double?
+        let rain: Double
+        let aqi: Int?
+        let condition: Int?
         var id: Date { date }
     }
 
@@ -302,12 +342,18 @@ struct NunaWeatherAirView: View {
             if let s = store.snapshot {
                 let outlook = EnvironmentOutlook.make(s, now: Int(Date().timeIntervalSince1970))
                 let pts = points(s, outlook)
+                let active = picked.flatMap { d in pts.first { $0.date == d } } ?? pts.first
                 metricBox
-                header(pts, s)
-                Text(verbatim: sentence(pts, s)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
-                if range == 5, metric == .temperature { legend }
-                if pts.count >= 2 { chart(pts) } else { needKey }
+                header(pts, active)
+                if let active {
+                    Text(verbatim: sentence(active)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
+                } else {
+                    Text(verbatim: metric == .air ? String(localized: "The air forecast needs an OpenWeather key.") : String(localized: "Nothing in the forecast for this period yet."))
+                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).padding(.horizontal, 2)
+                }
+                if range == 5, metric == .weather { legend }
+                if pts.count >= 2 { chart(pts, active: active) } else { needKey }
                 if let best = outlook?.best {
                     HStack(spacing: 8) {
                         Image(systemName: "figure.run").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.charge)
@@ -328,13 +374,6 @@ struct NunaWeatherAirView: View {
         .task { await store.refreshIfNeeded() }
         .refreshable { await store.refreshIfNeeded(maxAge: 0) }
         .onChange(of: metric) { _, _ in picked = nil }
-        // Her line is the one the Today suggestion already gives: what the sky and the air mean for training now.
-        .nunaAnyaFloating(context: "weather and air", line: anyaLine, analyses: false)
-    }
-
-    private var anyaLine: String? {
-        guard let s = store.snapshot, let a = store.advice else { return nil }
-        return NunaInsightText.environment(a, s)
     }
 
     private var settingsButton: some View {
@@ -349,10 +388,10 @@ struct NunaWeatherAirView: View {
     /// The name box of a trend view, which is also where the metric is chosen: touched, it opens the two to pick from.
     private var metricBox: some View {
         VStack(spacing: 10) {
-            Button { withAnimation(.easeOut(duration: 0.2)) { menuOpen.toggle() } } label: { box(metric, chevron: true) }.buttonStyle(.plain)
+            Button { withAnimation(.easeOut(duration: 0.2)) { menuOpen.toggle() } } label: { box(metric) }.buttonStyle(.plain)
             if menuOpen {
                 VStack(spacing: 0) {
-                    ForEach([Metric.temperature, .air], id: \.self) { m in
+                    ForEach([Metric.weather, .air], id: \.self) { m in
                         Button { metric = m; withAnimation(.easeOut(duration: 0.2)) { menuOpen = false } } label: {
                             HStack(spacing: 14) {
                                 Image(systemName: icon(m)).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
@@ -371,52 +410,64 @@ struct NunaWeatherAirView: View {
         }
     }
 
-    private func box(_ m: Metric, chevron: Bool) -> some View {
+    private func box(_ m: Metric) -> some View {
         HStack(spacing: 16) {
             Image(systemName: icon(m)).font(.nuna(size: 21, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 32)
             Text(title(m)).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             Spacer(minLength: 0)
-            if chevron { Image(systemName: menuOpen ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary) }
+            Image(systemName: menuOpen ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
         }
         .padding(.horizontal, 18).frame(height: 60)
         .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
         .contentShape(Rectangle())
     }
 
-    private func icon(_ m: Metric) -> String { m == .temperature ? "thermometer.medium" : "aqi.medium" }
-    private func title(_ m: Metric) -> LocalizedStringKey { m == .temperature ? "Temperature" : "Air quality" }
+    private func icon(_ m: Metric) -> String { m == .weather ? "cloud.sun" : "aqi.medium" }
+    private func title(_ m: Metric) -> LocalizedStringKey { m == .weather ? "Weather" : "Air quality" }
 
     // MARK: Points
 
     private func points(_ s: EnvironmentSnapshot, _ o: EnvironmentOutlook?) -> [Point] {
         let cal = Calendar.current
         let from = Int(Date().timeIntervalSince1970)
-        func sky(_ ts: Int) -> String {
-            let near = s.forecast.min { abs($0.ts - ts) < abs($1.ts - ts) }
-            return NunaEnvironmentFormat.symbol(conditionId: near?.conditionId ?? s.conditionId, feelsLikeC: near?.feelsLikeC ?? s.effectiveC, night: NunaEnvironmentFormat.isNight(ts))
+        func near(_ ts: Int) -> EnvironmentSnapshot.Hour? { s.forecast.min { abs($0.ts - ts) < abs($1.ts - ts) } }
+        func symbol(_ ts: Int) -> String {
+            let n = near(ts)
+            return NunaEnvironmentFormat.symbol(conditionId: n?.conditionId ?? s.conditionId, feelsLikeC: n?.feelsLikeC ?? s.effectiveC, night: NunaEnvironmentFormat.isNight(ts))
         }
+        func date(_ ts: Int) -> Date { Date(timeIntervalSince1970: TimeInterval(ts)) }
         if range == 5 {
             return (o?.days ?? []).compactMap { d in
-                let noon = cal.date(byAdding: .hour, value: 12, to: Date(timeIntervalSince1970: TimeInterval(d.start))) ?? Date(timeIntervalSince1970: TimeInterval(d.start))
-                let symbol = NunaEnvironmentFormat.symbol(conditionId: d.conditionId, feelsLikeC: d.highC)
+                let noon = cal.date(byAdding: .hour, value: 12, to: date(d.start)) ?? date(d.start)
+                let sym = NunaEnvironmentFormat.symbol(conditionId: d.conditionId, feelsLikeC: d.highC)
+                let value: Double
                 switch metric {
-                case .temperature: return Point(date: noon, value: d.highC, low: d.lowC, symbol: symbol)
-                case .air: return d.usAqi.map { Point(date: noon, value: Double($0), low: nil, symbol: symbol) }
+                case .weather: value = d.highC
+                case .air: guard let aqi = d.usAqi else { return nil }; value = Double(aqi)
                 }
+                return Point(date: noon, value: value, low: metric == .weather ? d.lowC : nil, symbol: sym, feels: d.peakFeelsLikeC, windMps: d.windMps,
+                             humidity: d.humidityPct, rain: d.rainChance, aqi: d.usAqi, condition: d.conditionId)
             }
         }
         let start = from + page * 86_400, end = start + 86_400
         switch metric {
-        case .temperature:
+        case .weather:
             var out: [Point] = []
-            if page == 0, let t = s.tempC ?? s.effectiveC { out.append(Point(date: Date(timeIntervalSince1970: TimeInterval(from)), value: t, low: nil, symbol: sky(from))) }
+            if page == 0, let t = s.tempC ?? s.effectiveC {
+                let rainNow = s.conditionId.map { (300..<600).contains($0) } == true ? 0.8 : 0.0
+                out.append(Point(date: date(from), value: t, low: nil, symbol: symbol(from), feels: s.effectiveC, windMps: s.windMps, humidity: s.humidityPct,
+                                 rain: rainNow, aqi: s.usAqi, condition: s.conditionId))
+            }
             out += s.forecast.filter { $0.ts > from && $0.ts >= start && $0.ts <= end }.sorted { $0.ts < $1.ts }.map {
-                Point(date: Date(timeIntervalSince1970: TimeInterval($0.ts)), value: $0.tempC ?? $0.feelsLikeC, low: nil, symbol: sky($0.ts))
+                Point(date: date($0.ts), value: $0.tempC ?? $0.feelsLikeC, low: nil, symbol: symbol($0.ts), feels: $0.feelsLikeC, windMps: $0.windMps,
+                      humidity: $0.humidityPct ?? s.humidityPct, rain: $0.rainChance, aqi: EnvironmentOutlook.usAqi(at: $0.ts, in: s), condition: $0.conditionId)
             }
             return out
         case .air:
-            return s.airForecast.filter { $0.ts >= start - 1800 && $0.ts <= end }.sorted { $0.ts < $1.ts }.map {
-                Point(date: Date(timeIntervalSince1970: TimeInterval($0.ts)), value: Double($0.usAqi), low: nil, symbol: sky($0.ts))
+            return s.airForecast.filter { $0.ts >= start - 1800 && $0.ts <= end }.sorted { $0.ts < $1.ts }.map { h in
+                let n = near(h.ts)
+                return Point(date: date(h.ts), value: Double(h.usAqi), low: nil, symbol: symbol(h.ts), feels: n?.feelsLikeC ?? s.effectiveC, windMps: n?.windMps ?? s.windMps,
+                             humidity: n?.humidityPct ?? s.humidityPct, rain: n?.rainChance ?? 0, aqi: h.usAqi, condition: n?.conditionId ?? s.conditionId)
             }
         }
     }
@@ -438,26 +489,36 @@ struct NunaWeatherAirView: View {
         range == 5 ? date.formatted(.dateTime.weekday(.abbreviated).day()) : NunaInsightText.clockHour(Int(date.timeIntervalSince1970))
     }
 
+    /// The name of a moment at the top: "Now" for the reading now, "Today" for the first day, else its hour or day.
+    private func activeLabel(_ p: Point, first: Bool) -> String {
+        if first, range == 1, page == 0 { return String(localized: "Now") }
+        if first, range == 5 { return String(localized: "Today") }
+        return label(p.date)
+    }
+
     private func fmt(_ v: Double) -> String { "\(Int(v.rounded()))" }
+
+    private func skyColor(_ symbol: String) -> Color { symbol.hasPrefix("sun") ? NunaPalette.caution : (symbol.contains("moon") ? NunaPalette.textSecondary : NunaPalette.recoveryBlue) }
 
     // MARK: Header
 
-    private func header(_ pts: [Point], _ s: EnvironmentSnapshot) -> some View {
-        let pickedPoint = picked.flatMap { d in pts.first { $0.date == d } }
-        let average: Double? = pts.isEmpty ? nil : pts.map(\.value).reduce(0, +) / Double(pts.count)
-        let shown = pickedPoint?.value ?? average
-        let tint = pickedPoint == nil ? NunaPalette.textPrimary : color
-        let unit = metric == .temperature ? "°C" : "AQI"
-        let caption: String = pickedPoint.map { label($0.date) } ?? (range == 5 && metric == .temperature ? String(localized: "Avg. high") : String(localized: "Average"))
+    private func header(_ pts: [Point], _ active: Point?) -> some View {
+        let isFirst = active.map { a in pts.first.map { $0.date == a.date } ?? false } ?? false
+        let unit = metric == .weather ? "°C" : "AQI"
+        let tint = picked == nil ? NunaPalette.textPrimary : color
         return HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(pickedPoint == nil ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                Text(verbatim: active.map { activeLabel($0, first: isFirst) } ?? "–").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(picked == nil ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: shown.map(fmt) ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(tint)
-                    if shown != nil { Text(verbatim: unit).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
+                    Text(verbatim: active.map { fmt($0.value) } ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(tint)
+                    if active != nil { Text(verbatim: unit).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
+                    // The sky of the moment on show, beside the temperature.
+                    if metric == .weather, let active {
+                        Image(systemName: active.symbol).font(.system(size: 30)).foregroundStyle(skyColor(active.symbol)).padding(.leading, 10).alignmentGuide(.firstTextBaseline) { $0[.bottom] - 4 }
+                    }
                 }
-                if pickedPoint == nil, let average { chip(pts, average) }
+                if let active { chip(pts, active) }
             }
             Spacer(minLength: 0)
             VStack(alignment: .trailing, spacing: 14) {
@@ -469,11 +530,12 @@ struct NunaWeatherAirView: View {
         .padding(.horizontal, 2)
     }
 
-    /// Under the figure: the low and the high of the window for the temperature, the band the average falls in for the air.
-    @ViewBuilder private func chip(_ pts: [Point], _ average: Double) -> some View {
+    /// Under the figure: for the weather, the low and the high (of the window for the hours, of the day for the days); for the air, the band it falls in.
+    @ViewBuilder private func chip(_ pts: [Point], _ active: Point) -> some View {
         switch metric {
-        case .temperature:
-            let lo = pts.map { $0.low ?? $0.value }.min() ?? average, hi = pts.map(\.value).max() ?? average
+        case .weather:
+            let lo = range == 5 ? (active.low ?? active.value) : (pts.map(\.value).min() ?? active.value)
+            let hi = range == 5 ? active.value : (pts.map(\.value).max() ?? active.value)
             HStack(spacing: 10) {
                 HStack(spacing: 3) {
                     Image(systemName: "arrow.down").font(.system(size: 10, weight: .heavy)).foregroundStyle(NunaPalette.recoveryBlue)
@@ -487,7 +549,7 @@ struct NunaWeatherAirView: View {
             .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 9).padding(.vertical, 4)
             .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
         case .air:
-            let aqi = Int(average.rounded())
+            let aqi = Int(active.value.rounded())
             HStack(spacing: 6) {
                 Circle().fill(NunaEnvironmentFormat.airColor(aqi)).frame(width: 7, height: 7)
                 Text(verbatim: NunaEnvironmentFormat.bandName(AirQuality.band(usAqi: aqi))).font(.nuna(size: 12, weight: .bold)).textCase(nil)
@@ -497,22 +559,20 @@ struct NunaWeatherAirView: View {
         }
     }
 
-    private func sentence(_ pts: [Point], _ s: EnvironmentSnapshot) -> String {
-        guard pts.count >= 2 else { return metric == .air ? String(localized: "The air forecast needs an OpenWeather key.") : String(localized: "Nothing in the forecast for this period yet.") }
+    /// What is said about the moment on show: the feel, the wind and the humidity (or the air), and whether it is a good time to be outdoors.
+    private func sentence(_ p: Point) -> String {
+        let verdict = NunaEnvironmentFormat.advise(feels: p.feels, humidity: p.humidity, wind: p.windMps, condition: p.condition, aqi: p.aqi, rain: p.rain).text
+        var facts: [String] = []
         switch metric {
-        case .temperature:
-            let hi = pts.max { $0.value < $1.value }!
-            if range == 5 {
-                let lo = pts.compactMap(\.low).min() ?? hi.value
-                return String(localized: "Warmest on \(label(hi.date)) at \(NunaInsightText.degrees(hi.value)), with nights down to \(NunaInsightText.degrees(lo)).")
-            }
-            let lo = pts.min { $0.value < $1.value }!
-            return String(localized: "Warmest around \(label(hi.date)) at \(NunaInsightText.degrees(hi.value)), coolest around \(label(lo.date)) at \(NunaInsightText.degrees(lo.value)).")
+        case .weather:
+            if let f = p.feels { facts.append(String(localized: "Feels like \(NunaInsightText.degrees(f))")) }
+            if let w = p.windMps { facts.append(String(localized: "wind \(String(format: "%.0f", w * 3.6)) km/h")) }
+            if let h = p.humidity { facts.append(String(localized: "humidity \(Int(h.rounded()))%")) }
+            let head = facts.isEmpty ? "" : facts.joined(separator: ", ").prefix(1).uppercased() + facts.joined(separator: ", ").dropFirst() + ". "
+            return head + verdict
         case .air:
-            let worst = pts.max { $0.value < $1.value }!, best = pts.min { $0.value < $1.value }!
-            var text = String(localized: "The air is at its worst around \(label(worst.date)) (AQI \(fmt(worst.value))) and at its best around \(label(best.date)) (AQI \(fmt(best.value))).")
-            if worst.value >= 101 { text += " " + String(localized: "Above 100, go easier outside if you are sensitive to the air.") }
-            return text
+            let aqi = Int(p.value.rounded())
+            return String(localized: "Air quality is \(NunaInsightText.airWord(AirQuality.band(usAqi: aqi))) (AQI \(aqi)).") + " " + verdict
         }
     }
 
@@ -558,14 +618,14 @@ struct NunaWeatherAirView: View {
         return hi.date == lo.date ? [hi] : [hi, lo]
     }
 
-    private func chart(_ pts: [Point]) -> some View {
+    private func chart(_ pts: [Point], active: Point?) -> some View {
         let (low, high, ticks) = axis(pts)
         let first = pts.first!.date, last = pts.last!.date
         let pad: TimeInterval = range == 5 ? 18 * 3600 : 1800
         let domain = first.addingTimeInterval(-pad)...last.addingTimeInterval(pad)
         let every = pts.count > 9 ? 3 : 1
         let tickDates = pts.enumerated().filter { $0.offset % every == 0 }.map(\.element.date)
-        let symbols = Dictionary(uniqueKeysWithValues: pts.map { ($0.date, $0.symbol) })
+        let twoLines = metric == .weather && range == 5
         let bands: [(ClosedRange<Double>, Color)] = [(0...50, NunaPalette.charge), (50...100, NunaPalette.warning), (100...150, NunaPalette.caution), (150...300, NunaPalette.alert)]
         return Chart {
             if metric == .air {
@@ -579,12 +639,12 @@ struct NunaWeatherAirView: View {
             }
             ForEach(pts) { p in
                 // One line is filled down to the axis; the high and the low of the days are two lines and stay unfilled, so the fill does not cover the low.
-                if !(metric == .temperature && range == 5) {
+                if !twoLines {
                     AreaMark(x: .value("Time", p.date), yStart: .value("Base", low), yEnd: .value("Value", p.value))
                         .foregroundStyle(LinearGradient(colors: [color.opacity(0.26), .clear], startPoint: .top, endPoint: .bottom))
                 }
                 LineMark(x: .value("Time", p.date), y: .value("Value", p.value), series: .value("Series", "high"))
-                    .foregroundStyle(metric == .temperature && range == 5 ? NunaPalette.caution : color).lineStyle(StrokeStyle(lineWidth: 2.2, lineJoin: .round))
+                    .foregroundStyle(twoLines ? NunaPalette.caution : color).lineStyle(StrokeStyle(lineWidth: 2.2, lineJoin: .round))
                 if let lo = p.low {
                     LineMark(x: .value("Time", p.date), y: .value("Low", lo), series: .value("Series", "low"))
                         .foregroundStyle(NunaPalette.recoveryBlue).lineStyle(StrokeStyle(lineWidth: 2.2, lineJoin: .round))
@@ -593,16 +653,17 @@ struct NunaWeatherAirView: View {
             if pts.count <= 9 {
                 ForEach(pts) { p in
                     PointMark(x: .value("Time", p.date), y: .value("Value", p.value))
-                        .symbol { Circle().fill(NunaPalette.canvas).overlay(Circle().stroke(metric == .temperature && range == 5 ? NunaPalette.caution : color, lineWidth: 2.5)).frame(width: 11, height: 11) }
+                        .symbol { Circle().fill(NunaPalette.canvas).overlay(Circle().stroke(twoLines ? NunaPalette.caution : color, lineWidth: 2.5)).frame(width: 11, height: 11) }
                     if let lo = p.low {
                         PointMark(x: .value("Time", p.date), y: .value("Low", lo))
                             .symbol { Circle().fill(NunaPalette.canvas).overlay(Circle().stroke(NunaPalette.recoveryBlue, lineWidth: 2.5)).frame(width: 11, height: 11) }
                     }
                 }
             }
-            if let picked, let p = pts.first(where: { $0.date == picked }) {
-                RuleMark(x: .value("Picked", picked)).foregroundStyle(Color.white.opacity(0.85)).lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
-                PointMark(x: .value("Time", picked), y: .value("Value", p.value))
+            // The moment on show is filled; a dashed line joins it to the axis once it has been touched.
+            if let active {
+                if picked != nil { RuleMark(x: .value("Picked", active.date)).foregroundStyle(Color.white.opacity(0.85)).lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3])) }
+                PointMark(x: .value("Time", active.date), y: .value("Value", active.value))
                     .symbol { Circle().fill(color).overlay(Circle().stroke(Color.white, lineWidth: 2)).frame(width: 12, height: 12) }
             }
         }
@@ -618,12 +679,7 @@ struct NunaWeatherAirView: View {
             AxisMarks(values: tickDates) { v in
                 AxisValueLabel(centered: true) {
                     if let d = v.as(Date.self) {
-                        VStack(spacing: 5) {
-                            Image(systemName: symbols[d] ?? "cloud").font(.system(size: 17))
-                                .foregroundStyle((symbols[d] ?? "").hasPrefix("sun") ? NunaPalette.caution : NunaPalette.recoveryBlue)
-                            Text(verbatim: label(d)).font(.nuna(size: 10.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                        .padding(.top, 6)
+                        Text(verbatim: label(d)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).padding(.top, 6)
                     }
                 }
             }
@@ -661,7 +717,7 @@ struct NunaWeatherAirView: View {
             }
         }
         .frame(height: 330)
-        .accessibilityLabel(Text(metric == .temperature ? "Temperature" : "Air quality"))
+        .accessibilityLabel(Text(title(metric)))
     }
 }
 #endif
