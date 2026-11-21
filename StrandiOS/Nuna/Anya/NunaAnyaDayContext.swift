@@ -38,10 +38,12 @@ enum NunaAnyaDayContext {
         // The weather and air, when they are on and were read in the last three hours; a fresh read is started for next time.
         let env = EnvironmentStore.shared
         var outdoor: (line: String, level: String)?
+        var forecast: String?
         if env.isActive {
             Task { await env.refreshIfNeeded() }
             if let snap = env.snapshot, now.timeIntervalSince1970 - Double(snap.ts) < 3 * 3600, let advice = EnvironmentAdvice.analyze(snap) {
                 outdoor = (Self.outdoorLine(snap, advice), advice.level == .good ? "good" : (advice.level == .adjust ? "adjust" : "indoors"))
+                forecast = Self.forecastLine(snap, now: now)
             }
         }
 
@@ -67,8 +69,52 @@ enum NunaAnyaDayContext {
             sessionFeelings: feelings,
             outdoorLine: outdoor?.line,
             outdoorLevel: outdoor?.level,
+            outdoorForecast: forecast,
             effortScale: AICoachEngine.strainScale())
         return AnyaDayContext.block(input)
+    }
+
+    /// The coming day by part, the kindest time to train and the days after it, in plain English for Anya. Short on purpose: the on-device model has little room.
+    static func forecastLine(_ s: EnvironmentSnapshot, now: Date) -> String? {
+        guard let o = EnvironmentOutlook.make(s, now: Int(now.timeIntervalSince1970)), !o.slots.isEmpty || !o.days.isEmpty else { return nil }
+        let clock = DateFormatter(); clock.dateFormat = "HH:mm"
+        let day = DateFormatter(); day.dateFormat = "EEE d MMM"
+        func hhmm(_ ts: Int) -> String { clock.string(from: Date(timeIntervalSince1970: TimeInterval(ts))) }
+        func fit(_ f: OutdoorFit) -> String { f == .good ? "fine outdoors" : (f == .adjust ? "outdoors with care" : "better indoors") }
+        func name(_ p: EnvironmentOutlook.Part) -> String {
+            switch p { case .morning: return "morning"; case .afternoon: return "afternoon"; case .evening: return "evening"; case .night: return "night" }
+        }
+        func figures(low: Double, high: Double, rain: Double, aqi: Int?) -> String {
+            var t = "\(Int(low.rounded()))-\(Int(high.rounded())) C, rain \(Int((rain * 100).rounded()))%"
+            if let aqi { t += ", AQI \(aqi)" }
+            return t
+        }
+        var parts: [String] = []
+        let slots = o.slots.map { sl in
+            "\(sl.isCurrent ? "now to " + hhmm(sl.end) : name(sl.part) + " " + hhmm(sl.start) + "-" + hhmm(sl.end)): "
+                + figures(low: sl.lowC, high: sl.highC, rain: sl.rainChance, aqi: sl.usAqi) + ", " + fit(sl.fit)
+        }
+        if !slots.isEmpty { parts.append("Next 24 hours: " + slots.joined(separator: "; ") + ".") }
+        if let b = o.best {
+            let sameDay = Calendar.current.isDate(Date(timeIntervalSince1970: TimeInterval(b.start)), inSameDayAs: now)
+            parts.append("Best time to train: \(sameDay ? "today" : "tomorrow") \(hhmm(b.start))-\(hhmm(b.end)).")
+        }
+        let days = o.days.dropFirst().prefix(4).map { d in
+            day.string(from: Date(timeIntervalSince1970: TimeInterval(d.start))) + ": " + figures(low: d.lowC, high: d.highC, rain: d.rainChance, aqi: d.usAqi)
+        }
+        if !days.isEmpty { parts.append("Days after: " + days.joined(separator: "; ") + ".") }
+        return parts.joined(separator: " ")
+    }
+
+    private static func bandWords(_ b: AirQuality.Band) -> String {
+        switch b {
+        case .good: return "good"
+        case .moderate: return "moderate"
+        case .unhealthyForSensitive: return "unhealthy for sensitive groups"
+        case .unhealthy: return "unhealthy"
+        case .veryUnhealthy: return "very unhealthy"
+        case .hazardous: return "hazardous"
+        }
     }
 
     /// The reading and what it means for training, in plain English for Anya.
@@ -83,7 +129,10 @@ enum NunaAnyaDayContext {
         if let w = s.windMps { weather.append("wind \(Int(w.rounded())) m/s") }
         if let t = s.conditionText { weather.append(t) }
         if !weather.isEmpty { parts.append(weather.joined(separator: ", ") + ".") }
-        if let aqi = s.usAqi { parts.append("Air quality US AQI \(aqi) (\(AirQuality.band(usAqi: aqi)))" + (s.pm25.map { ", PM2.5 \(Int($0.rounded())) ug/m3" } ?? "") + ".") }
+        if let aqi = s.usAqi {
+            let source = s.airSource == "iqair" ? " measured by the nearest IQAir station" : " from OpenWeather"
+            parts.append("Air quality now US AQI \(aqi) (\(Self.bandWords(AirQuality.band(usAqi: aqi))))" + (s.pm25.map { ", PM2.5 \(Int($0.rounded())) ug/m3" } ?? "") + source + ".")
+        }
         let level = a.level == .good ? "good" : (a.level == .adjust ? "adjust: go shorter and easier" : "indoors: better to train inside today")
         parts.append("Training conditions: \(level).")
         var why: [String] = []

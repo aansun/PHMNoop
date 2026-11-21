@@ -175,6 +175,20 @@ final class AnyaNextStepTests: XCTestCase {
         XCTAssertTrue(step(input(7, charge: 25, kind: "recovery")).hasPrefix("Keep today easy"))
     }
 
+    /// The forecast line reaches Anya with its instruction and the sources of the air figures; without a forecast neither is there.
+    func testForecastLineCarriesTheInstructionAndTheSources() {
+        var i = AnyaDayContext.Input(now: date(2026, 10, 13, 15, 0), calendar: cal)
+        i.outdoorLine = "Jakarta: 32 degrees C. Air quality now US AQI 132 (unhealthy for sensitive groups) measured by the nearest IQAir station."
+        i.outdoorLevel = "indoors"
+        i.outdoorForecast = "Next 24 hours: evening 17:00-22:00: 26-30 C, rain 40%, AQI 98, outdoors with care."
+        let block = AnyaDayContext.block(i)
+        XCTAssertTrue(block.contains("WEATHER AND AIR FORECAST: Next 24 hours: evening 17:00-22:00"), block)
+        XCTAssertTrue(block.contains("measured by the IQAir station nearest the person"), block)
+        XCTAssertTrue(block.contains("OpenWeather forecast"), block)
+        i.outdoorForecast = nil
+        XCTAssertFalse(AnyaDayContext.block(i).contains("WEATHER AND AIR FORECAST"))
+    }
+
     func testNoChargeYetAsksForSync() {
         XCTAssertTrue(step(input(7, charge: nil, kind: nil)).contains("wear the strap overnight and sync"))
     }
