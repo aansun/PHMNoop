@@ -119,6 +119,18 @@ enum NunaWorkoutFormat {
         return "\(m) min"
     }
 
+    /// The distance of a session in progress: kilometres (or miles) to two decimals, the way the saved activity states it. The live tile used to round to a
+    /// tenth, which read up to 50 m more than the summary that follows.
+    static func liveDistance(_ meters: Double, _ system: UnitSystem) -> (value: String, unit: String) {
+        system == .imperial ? (String(format: "%.2f", locale: AppLanguage.activeLocale, meters / 1609.344), "mi")
+                            : (String(format: "%.2f", locale: AppLanguage.activeLocale, meters / 1000), "km")
+    }
+
+    static func liveDistanceText(_ meters: Double, _ system: UnitSystem) -> String {
+        let d = liveDistance(meters, system)
+        return d.value + " " + d.unit
+    }
+
     static func distance(_ meters: Double?, _ system: UnitSystem) -> String? {
         guard let m = meters, m > 50 else { return nil }
         return system == .imperial ? String(format: "%.1f mi", locale: AppLanguage.activeLocale, m / 1609.344)
