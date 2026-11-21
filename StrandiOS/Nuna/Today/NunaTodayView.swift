@@ -1072,7 +1072,7 @@ struct NunaTodayView: View {
                 .buttonStyle(.plain)
             }
         case .weatherAir:
-            NunaWeatherAirCard(chargePct: model.charge.pct, effort: model.effort)
+            NunaWeatherAirCard()
         case .liveSession:
             EmptyView()
         }
