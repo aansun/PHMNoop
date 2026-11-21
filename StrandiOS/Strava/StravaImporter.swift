@@ -39,7 +39,15 @@ enum StravaImporter {
     }()
 
     static func judge(_ activity: StravaActivitySummary, now: Int, existing: [WorkoutRow], hrIds: [String], store: WhoopStore, honourHandled: Bool) async -> Verdict {
-        if let external = activity.externalId, external.hasPrefix("noop-") { return .alreadyHere }
+        // An activity PHMN uploaded itself is left out, but only while the workout it came from is still here. If that row is gone (deleted, or lost with the
+        // database), nothing is "already here" and the import brings it back; the upload record still says it was sent, so it is not uploaded twice.
+        if let external = activity.externalId, external.hasPrefix("noop-") {
+            if let origin = uploadedWorkoutStart(from: external), !existing.contains(where: { $0.startTs == origin }) {
+                // fall through to the checks below
+            } else {
+                return .alreadyHere
+            }
+        }
         if honourHandled, let id = activity.id, StravaHandled.contains(id) { return .alreadyHere }
         guard let startText = activity.startDate, let start = parser.date(from: startText),
               let elapsed = activity.elapsedTime, elapsed > 0 else { return .skipped }
@@ -49,6 +57,15 @@ enum StravaImporter {
         let stats = try? await store.hrWindowStats(primaryId: hrIds[0], secondaryId: hrIds.count > 1 ? hrIds[1] : hrIds[0], from: startTs, to: endTs)
         guard let stats, stats.n >= minSamples, let avg = stats.avg, let peak = stats.max else { return .noHeartRate }
         return .candidate(activity: activity, startTs: startTs, endTs: endTs, avgHr: Int(avg.rounded()), peakHr: Int(peak))
+    }
+
+    /// The start of the workout an upload was made from: its external id is "noop-<start seconds>-<sport>", with ".fit" after it on some activities.
+    /// nil when the id is not in that shape, so an id this cannot read keeps being treated as PHMN's own and left out.
+    static func uploadedWorkoutStart(from externalId: String) -> Int? {
+        guard externalId.hasPrefix("noop-") else { return nil }
+        let rest = externalId.dropFirst("noop-".count)
+        guard let dash = rest.firstIndex(of: "-"), let start = Int(rest[rest.startIndex..<dash]) else { return nil }
+        return start
     }
 
     static func run(days: Int, repo: Repository, client: StravaAPIClient) async throws -> StravaImportSummary {
