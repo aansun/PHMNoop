@@ -29,18 +29,26 @@ final class EnvironmentStore: ObservableObject {
         // `--demo-environment`: a hot, hazy morning, with no request and no key, to look at the screens that read it.
         if Self.isDemo {
             let now = Int(Date().timeIntervalSince1970)
-            // A hot, hazy day in Jakarta: nine 3-hour steps with the sky of each, and the air hour by hour (worst in the morning rush, best after the afternoon rain).
-            let skies: [(feels: Double, temp: Double, id: Int, rain: Double, wind: Double)] = [
-                (37, 32, 803, 0.1, 2.4), (39, 33, 802, 0.1, 2.8), (36, 31, 500, 0.6, 3.6), (31, 28, 501, 0.7, 3.0), (29, 27, 803, 0.2, 2.2),
-                (28, 26, 802, 0.1, 1.8), (27, 26, 800, 0.0, 1.6), (30, 28, 801, 0.0, 2.0), (35, 31, 803, 0.1, 2.5),
-            ]
-            let aqi: [Int] = [132, 128, 120, 112, 104, 98, 92, 86, 78, 74, 70, 68, 66, 74, 82, 90, 96, 98, 92, 84, 76, 68, 62, 58, 56, 60, 72, 88]
+            // Five hot, hazy days in Jakarta: 3-hour steps (a daily swing in the heat, a wet afternoon on the second and fourth day, a storm on the fifth) and the air hour by
+            // hour (worst in the morning rush, better after the rain).
+            let skyByDay: [Int] = [803, 501, 802, 500, 211]
+            let steps: [EnvironmentSnapshot.Hour] = (1...40).map { k in
+                let ts = now + k * 3 * 3600
+                let hour = Calendar.current.component(.hour, from: Date(timeIntervalSince1970: TimeInterval(ts)))
+                let day = (k * 3) / 24
+                let swing = 4.0 * Foundation.sin(Double.pi * Double(hour - 8) / 12)
+                let temp = 29.0 + (hour >= 6 && hour <= 20 ? swing : -3) - Double(day % 2)
+                let wet = (day == 1 || day == 3) && (12...18).contains(hour)
+                let id = wet ? 501 : (day == 4 && (13...19).contains(hour) ? 211 : (hour >= 19 || hour < 5 ? 800 : skyByDay[min(day, 4)] == 501 ? 802 : skyByDay[min(day, 4)]))
+                return .init(ts: ts, feelsLikeC: temp + 4, rainChance: wet || id == 211 ? 0.7 : 0.1, tempC: temp, windMps: 2.5 + Double(hour % 4), conditionId: id, humidityPct: 72)
+            }
+            let air: [EnvironmentSnapshot.AirHour] = (0..<96).map { i in
+                let hour = Calendar.current.component(.hour, from: Date(timeIntervalSince1970: TimeInterval(now + i * 3600)))
+                let rush = (6...9).contains(hour) ? 40 : ((17...19).contains(hour) ? 25 : 0)
+                return .init(ts: now + i * 3600, usAqi: 62 + rush + (i / 24) * 7 + (i % 5))
+            }
             snapshot = EnvironmentSnapshot(ts: now, place: "Jakarta", tempC: 32, feelsLikeC: 38, humidityPct: 72, windMps: 2.4, conditionId: 803,
-                                           conditionText: "broken clouds", usAqi: 132, pm25: 48, airSource: "iqair",
-                                           forecast: skies.enumerated().map { i, x in
-                                               .init(ts: now + (i + 1) * 3 * 3600, feelsLikeC: x.feels, rainChance: x.rain, tempC: x.temp, windMps: x.wind, conditionId: x.id)
-                                           },
-                                           airForecast: aqi.enumerated().map { i, v in .init(ts: now + i * 3600, usAqi: v) })
+                                           conditionText: "broken clouds", usAqi: 132, pm25: 48, airSource: "iqair", forecast: steps, airForecast: air)
             // And one from this morning, when the demo walk was done, so that session can be read against it.
             let morning = Calendar.current.date(bySettingHour: 9, minute: 40, second: 0, of: Date()).map { Int($0.timeIntervalSince1970) } ?? now
             var then = snapshot!; then.ts = morning
