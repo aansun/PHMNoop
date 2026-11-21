@@ -9039,6 +9039,7 @@
  "Outdoors, with care.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Di luar ruangan boleh, tetap hati-hati."}}}},
  "Better indoors.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lebih baik di dalam ruangan."}}}},
  "Air quality is %@ (AQI %lld).": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kualitas udara %@ (AQI %lld)."}}}},
+ "At %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pukul %@"}}}},
  "Best time to train": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu terbaik untuk berlatih"}}}},
  "Conditions": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kondisi"}}}},
  "Ease it": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pelan-pelan"}}}},
