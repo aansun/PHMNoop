@@ -55,6 +55,13 @@ final class AnyaPageInsightTests: XCTestCase {
 }
 
 final class AnyaReplyCleanerTests: XCTestCase {
+    func testDropsTheNarratedLookingAtTheStart() {
+        XCTAssertEqual(AnyaReplyCleaner.clean("I can see that HRV fell 26 ms. Keep today light."), "HRV fell 26 ms. Keep today light.")
+        XCTAssertEqual(AnyaReplyCleaner.clean("Looking at your data, resting heart rate is 61."), "Resting heart rate is 61.")
+        XCTAssertEqual(AnyaReplyCleaner.clean("Saya lihat HRV kamu turun 26 ms. Tidurlah lebih awal."), "HRV kamu turun 26 ms. Tidurlah lebih awal.")
+        XCTAssertEqual(AnyaReplyCleaner.clean("HRV fell. I noticed that sleep was short."), "HRV fell. Sleep was short.")
+    }
+
     func testDropsAHabitualDoubtAfterAStatedCause() {
         let r = "HRV fell 26 ms, likely from a short night. I am not sure what caused it, but the drop fits reduced recovery. Sleep earlier tonight."
         XCTAssertEqual(AnyaReplyCleaner.clean(r), "HRV fell 26 ms, likely from a short night. Sleep earlier tonight.")

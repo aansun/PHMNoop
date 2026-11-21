@@ -98,7 +98,7 @@ extension NunaAnyaVerdict {
 /// Turns a provider reply (or a local verdict) into what the pill and the sheet show: a headline for the pill, the full text for the sheet.
 enum NunaAnyaInsightText {
     static func titles() -> (see: String, mean: String, advice: String) {
-        (String(localized: "What I see"), String(localized: "What it means"), String(localized: "What to do"))
+        (String(localized: "What the numbers say"), String(localized: "What it means"), String(localized: "What to do"))
     }
 
     /// Words that name a problem. A good reading has none to explain, so a meaning that carries one is the model's invention, not the data's.
