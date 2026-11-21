@@ -114,9 +114,11 @@ struct NOOPBannerLockScreen: View {
             }
             .font(NOOPBannerPalette.din(24)).monospacedDigit()
             .foregroundStyle(paused ? NOOPBannerPalette.paused : NOOPBannerPalette.ink)
-            .lineLimit(1)
-            // A timer text takes all the width it is offered; give it its own.
-            .frame(width: elapsed >= 3600 ? 86 : (elapsed >= 600 ? 63 : 45), alignment: .leading)
+            // If a figure still runs a little wide it shrinks to fit instead of ending in dots.
+            .lineLimit(1).minimumScaleFactor(0.7)
+            // A timer text takes all the width it is offered; give it its own. m:ss needs about 50 pt in this font (the old 45 cut "9:38" to "9...."), mm:ss about 64 and h:mm:ss about 82.
+            // `elapsed` is the age when the view was last drawn, and the clock runs on without a redraw, so each step is taken a minute early.
+            .frame(width: elapsed >= 3540 ? 90 : (elapsed >= 540 ? 68 : 56), alignment: .leading)
         }
         .padding(.horizontal, 13).frame(height: 38)
         .background(paused ? NOOPBannerPalette.pausedPill : NOOPBannerPalette.pill, in: Capsule())
