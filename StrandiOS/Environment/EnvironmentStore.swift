@@ -64,8 +64,8 @@ final class EnvironmentStore: ObservableObject {
     #endif
 
     var isEnabled: Bool { Self.isDemo || EnvironmentExperiment.isEnabled }
-    var hasKeys: Bool { Self.isDemo || EnvironmentKeyStore.hasAny }
-    /// On and with a key: the only state in which anything is requested.
+    var hasKeys: Bool { Self.isDemo || EnvironmentKeyStore.hasBoth }
+    /// On and with both keys: the only state in which anything is requested.
     var isActive: Bool { isEnabled && hasKeys }
 
     var advice: EnvironmentAdvice? { snapshot.flatMap { EnvironmentAdvice.analyze($0) } }

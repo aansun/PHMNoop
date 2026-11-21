@@ -36,6 +36,8 @@ enum EnvironmentKeyStore {
     static func clear(_ a: Account) { SecItemDelete(baseQuery(a) as CFDictionary) }
     static func has(_ a: Account) -> Bool { read(a) != nil }
     static var hasAny: Bool { has(.openWeather) || has(.iqAir) }
+    /// Weather and air need both: OpenWeather for the weather and the forecast, IQAir for the air measured now.
+    static var hasBoth: Bool { has(.openWeather) && has(.iqAir) }
 }
 
 /// Weather and air are off until they are turned on, and while they are off no request is made to either service.
