@@ -236,7 +236,7 @@ enum AnyaSurface: Equatable {
     /// What a page's insight is asked for: the contract, the surface's own focus and steps, and the words allowed.
     static func pageInstruction(_ topic: Topic) -> String {
         let p = profile(.page(topic))
-        return contract + "\n\nTHIS SURFACE: " + p.focus + ". Read: " + p.reads + ". If the PAGE VERDICT says needs attention, or steady but slipping: " + p.improve + ". If it says good: " + p.maintain + ". With no verdict, describe the direction without calling it good or bad. Avoid: " + p.watch + ". At most \(p.words) words in all."
+        return contract + "\n\nTHIS SURFACE: " + p.focus + ". Read: " + p.reads + ". If the PAGE VERDICT says needs attention, or steady but slipping: " + p.improve + ". If it says good: " + p.maintain + ". With no verdict, describe the direction without calling it good or bad. Avoid: " + p.watch + ". At most \(p.words + 30) words in all, as complete sentences, never fragments."
     }
 
     /// How a question asked inside a module is answered: the answer first, then why, then the step.

@@ -65,6 +65,22 @@ public struct AnyaPageInsight: Equatable, Sendable {
             .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: "*_")))
     }
 
+    /// The sheet's text as a short note in paragraphs, with no titles: the headline and the reading together, then what it means, then what to do. It is
+    /// read like a message from a coach, so a part that is missing is simply left out.
+    public func paragraphs() -> String {
+        func sentence(_ t: String) -> String {
+            let x = t.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let last = x.last else { return "" }
+            return ".!?".contains(last) ? x : x + "."
+        }
+        var out: [String] = []
+        let lead = [sentence(headline), sentence(see)].filter { !$0.isEmpty }.joined(separator: " ")
+        if !lead.isEmpty { out.append(lead) }
+        if !mean.isEmpty { out.append(sentence(mean)) }
+        if !advice.isEmpty { out.append(sentence(advice)) }
+        return out.joined(separator: "\n\n")
+    }
+
     /// The sheet's text: the headline first, then each part that is there under its own title (titles passed in so the app can localise them).
     public func markdown(seeTitle: String, meanTitle: String, adviceTitle: String) -> String {
         var parts = [headline]
