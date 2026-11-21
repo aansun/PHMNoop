@@ -122,7 +122,7 @@ public struct EnvironmentClient: Sendable {
 
         guard withForecast else { return }
         // The forecast is a bonus: when it fails, the reading above still stands.
-        if let f = try? await get(.openWeather, host: Self.openWeatherHost, path: "/data/2.5/forecast", query: q.merging(["cnt": "9"]) { $1 }),
+        if let f = try? await get(.openWeather, host: Self.openWeatherHost, path: "/data/2.5/forecast", query: q.merging(["cnt": "40"]) { $1 }),
            let list = f["list"] as? [[String: Any]] {
             s.forecast = list.compactMap { row in
                 guard let ts = (row["dt"] as? NSNumber)?.intValue,
@@ -138,7 +138,7 @@ public struct EnvironmentClient: Sendable {
         if let a = try? await get(.openWeather, host: Self.openWeatherHost, path: "/data/2.5/air_pollution/forecast",
                                   query: ["lat": q["lat"] ?? "", "lon": q["lon"] ?? "", "appid": key]),
            let list = a["list"] as? [[String: Any]] {
-            let horizon = s.ts + 28 * 3600
+            let horizon = s.ts + 100 * 3600
             s.airForecast = list.compactMap { row in
                 guard let ts = (row["dt"] as? NSNumber)?.intValue, ts <= horizon,
                       let pm = Self.number((row["components"] as? [String: Any])?["pm2_5"]), let aqi = AirQuality.usAqi(pm25: pm) else { return nil }

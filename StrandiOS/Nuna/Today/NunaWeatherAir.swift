@@ -310,17 +310,13 @@ struct NunaWeatherAirCard: View {
 /// The whole day: the four sessions as the deck, the best hours to train, the hours with their heat, rain and air, and the weather now.
 struct NunaWeatherAirView: View {
     @ObservedObject private var store = EnvironmentStore.shared
-    @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
-
-    private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
 
     var body: some View {
         NunaDetailScreen("Weather and air", trailing: AnyView(settingsButton), centersTitle: true) {
             if let s = store.snapshot {
                 let outlook = EnvironmentOutlook.make(s, now: Int(Date().timeIntervalSince1970))
                 deckCard(s, outlook: outlook)
-                if let o = outlook, !o.steps.isEmpty { hoursCard(o) }
-                nowCard(s)
+                if let o = outlook, !o.steps.isEmpty { forecastCard(o, s) }
                 nunaFootnote("Weather and the forecast from OpenWeather; the air now from IQAir, or from OpenWeather without an IQAir key. General guidance for a healthy adult, not medical advice.")
             } else if store.isActive {
                 ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 200)
@@ -370,104 +366,84 @@ struct NunaWeatherAirView: View {
         }
     }
 
-    // MARK: Hours
+    // MARK: Forecast
 
-    /// The hours as columns: heat as bars, rain as a dot row, the air under them, one shared time axis.
-    private func hoursCard(_ o: EnvironmentOutlook) -> some View {
-        let temps = o.steps.map(\.feelsLikeC)
-        let lo = (temps.min() ?? 20) - 4, hi = (temps.max() ?? 32) + 2
-        func height(_ t: Double) -> CGFloat { 12 + 72 * CGFloat((t - lo) / max(hi - lo, 1)) }
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                nunaTrendsCap("Hour by hour")
-                HStack(alignment: .bottom, spacing: 5) {
-                    ForEach(o.steps) { step in
-                        VStack(spacing: 6) {
-                            Text(verbatim: NunaInsightText.degrees(step.feelsLikeC)).font(.nuna(size: 12, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                .lineLimit(1).minimumScaleFactor(0.6)
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(step.fit == .good ? NunaPalette.rest.opacity(0.75) : NunaEnvironmentFormat.fitColor(step.fit).opacity(0.8)).frame(height: height(step.feelsLikeC))
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                }
-                .frame(height: 112, alignment: .bottom)
-                // Rain, as a dot that fills with the chance of it.
-                row(label: String(localized: "Rain"), o.steps) { step in
-                    ZStack {
-                        Circle().strokeBorder(NunaPalette.rest.opacity(0.4), lineWidth: 1.5)
-                        Circle().fill(NunaPalette.rest).scaleEffect(CGFloat(max(step.rainChance, 0.0)))
-                    }
-                    .frame(width: 16, height: 16)
-                }
-                row(label: "AQI", o.steps) { step in
-                    VStack(spacing: 3) {
-                        if let aqi = step.usAqi {
-                            Capsule().fill(NunaEnvironmentFormat.airColor(aqi)).frame(width: 22, height: 8)
-                            Text(verbatim: "\(aqi)").font(.nuna(size: 10.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        } else {
-                            Text(verbatim: "–").font(.nuna(size: 10.5, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                        }
-                    }
-                }
-                HStack(spacing: 5) {
-                    ForEach(o.steps) { step in
-                        Text(verbatim: NunaInsightText.clockHour(step.ts)).font(.nuna(size: 9.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                            .lineLimit(1).minimumScaleFactor(0.5).frame(maxWidth: .infinity)
-                    }
-                }
-            }
-        }
-    }
-
-    private func row<Content: View>(label: String, _ steps: [EnvironmentOutlook.Step], @ViewBuilder _ cell: @escaping (EnvironmentOutlook.Step) -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(verbatim: label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            HStack(spacing: 5) { ForEach(steps) { cell($0).frame(maxWidth: .infinity) } }
-        }
-    }
-
-    // MARK: Now
-
-    private func nowCard(_ s: EnvironmentSnapshot) -> some View {
+    /// The forecast in two rows: the hours coming up (time, sky, temperature and air) and the days (date, sky, low and high and air).
+    private func forecastCard(_ o: EnvironmentOutlook, _ s: EnvironmentSnapshot) -> some View {
         NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                nunaTrendsCap("Right now")
-                HStack(alignment: .center, spacing: 14) {
-                    Image(systemName: NunaEnvironmentFormat.symbol(conditionId: s.conditionId, feelsLikeC: s.effectiveC, night: NunaEnvironmentFormat.isNight(s.ts)))
-                        .font(.system(size: 30)).foregroundStyle(NunaPalette.recoveryBlue).frame(width: 40)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: s.tempC.map(NunaInsightText.degrees) ?? s.feelsLikeC.map(NunaInsightText.degrees) ?? "–")
-                            .font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        if let text = s.conditionText {
-                            Text(verbatim: text.prefix(1).uppercased() + text.dropFirst()).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        }
-                    }
-                    Spacer(minLength: 0)
-                    if let aqi = s.usAqi {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text(verbatim: "AQI \(aqi)").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaEnvironmentFormat.airColor(aqi))
-                            Text(verbatim: NunaEnvironmentFormat.bandName(AirQuality.band(usAqi: aqi))).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            VStack(alignment: .leading, spacing: 18) {
+                nunaTrendsCap("Forecast")
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Hourly forecast").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 6) {
+                            hourColumn(time: String(localized: "Now"), conditionId: s.conditionId, feels: s.effectiveC, night: NunaEnvironmentFormat.isNight(s.ts),
+                                       temp: s.tempC ?? s.effectiveC, aqi: s.usAqi, strong: true)
+                            ForEach(o.steps) { step in
+                                hourColumn(time: NunaInsightText.clockHour(step.ts), conditionId: step.conditionId, feels: step.feelsLikeC,
+                                           night: NunaEnvironmentFormat.isNight(step.ts), temp: step.tempC ?? step.feelsLikeC, aqi: step.usAqi, strong: false)
+                            }
                         }
                     }
                 }
                 NunaDivider()
-                HStack(alignment: .top, spacing: 0) {
-                    fact("Feels like", s.feelsLikeC.map(NunaInsightText.degrees))
-                    fact("Humidity", s.humidityPct.map { "\(Int($0.rounded()))%" })
-                    fact("Wind", UnitFormatter.speedFromKilometersPerHour(s.windMps.map { $0 * 3.6 }, system: system))
-                    fact("PM2.5", s.pm25.map { "\(Int($0.rounded()))" })
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Daily forecast").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    HStack(alignment: .top, spacing: 0) {
+                        ForEach(Array(o.days.enumerated()), id: \.element.id) { i, day in dayColumn(day, today: i == 0).frame(maxWidth: .infinity) }
+                    }
                 }
             }
         }
     }
 
-    private func fact(_ label: LocalizedStringKey, _ value: String?) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: value ?? "–").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+    /// A sun is warm, every other sky is cool.
+    private func skyColor(_ conditionId: Int?, night: Bool) -> Color {
+        (conditionId ?? 800) == 800 && !night ? NunaPalette.caution : (night && (conditionId ?? 800) == 800 ? NunaPalette.textSecondary : NunaPalette.recoveryBlue)
+    }
+
+    private func hourColumn(time: String, conditionId: Int?, feels: Double?, night: Bool, temp: Double?, aqi: Int?, strong: Bool) -> some View {
+        VStack(spacing: 8) {
+            Text(verbatim: time).font(.nuna(size: 13, weight: strong ? .heavy : .semibold)).foregroundStyle(strong ? NunaPalette.textPrimary : NunaPalette.textSecondary).textCase(nil)
+            Image(systemName: NunaEnvironmentFormat.symbol(conditionId: conditionId, feelsLikeC: feels, night: night)).font(.system(size: 24))
+                .foregroundStyle(skyColor(conditionId, night: night)).frame(height: 28)
+            Text(verbatim: temp.map(NunaInsightText.degrees) ?? "–").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            airDot(aqi)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(width: 52)
+    }
+
+    private func dayColumn(_ day: EnvironmentOutlook.Day, today: Bool) -> some View {
+        let date = Date(timeIntervalSince1970: TimeInterval(day.start))
+        return VStack(spacing: 8) {
+            Text(verbatim: today ? String(localized: "Today") : date.formatted(.dateTime.day().month(.abbreviated)))
+                .font(.nuna(size: 12.5, weight: today ? .heavy : .semibold)).foregroundStyle(today ? NunaPalette.textPrimary : NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.7)
+            Image(systemName: NunaEnvironmentFormat.symbol(conditionId: day.conditionId, feelsLikeC: day.highC)).font(.system(size: 24))
+                .foregroundStyle(skyColor(day.conditionId, night: false)).frame(height: 28)
+            VStack(spacing: 4) {
+                HStack(spacing: 2) {
+                    Image(systemName: "arrow.down").font(.system(size: 10, weight: .heavy)).foregroundStyle(NunaPalette.recoveryBlue)
+                    Text(verbatim: NunaInsightText.degrees(day.lowC)).font(.nuna(size: 13.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                }
+                HStack(spacing: 2) {
+                    Image(systemName: "arrow.up").font(.system(size: 10, weight: .heavy)).foregroundStyle(NunaPalette.caution)
+                    Text(verbatim: NunaInsightText.degrees(day.highC)).font(.nuna(size: 13.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                }
+            }
+            airDot(day.usAqi)
+        }
+    }
+
+    /// The air as a coloured dot and its index; a dash when the forecast does not reach.
+    private func airDot(_ aqi: Int?) -> some View {
+        HStack(spacing: 4) {
+            if let aqi {
+                Circle().fill(NunaEnvironmentFormat.airColor(aqi)).frame(width: 7, height: 7)
+                Text(verbatim: "\(aqi)").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+            } else {
+                Text(verbatim: "–").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+            }
+        }
     }
 }
 #endif

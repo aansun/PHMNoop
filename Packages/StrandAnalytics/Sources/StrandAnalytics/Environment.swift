@@ -260,12 +260,27 @@ public struct EnvironmentOutlook: Equatable, Sendable {
         public let conditionId: Int?
     }
 
+    /// One day of the forecast: its low and high, its sky and the air: what the daily forecast shows.
+    public struct Day: Equatable, Sendable, Identifiable {
+        public var id: Int { start }
+        /// Unix seconds of the local midnight that starts the day.
+        public let start: Int
+        public let lowC: Double
+        public let highC: Double
+        public let conditionId: Int?
+        public let rainChance: Double
+        /// The worst air of the day, when the forecast covers it.
+        public let usAqi: Int?
+    }
+
     /// One 3-hour step of the forecast with how well it suits time outdoors: what the timeline draws.
     public struct Step: Equatable, Sendable, Identifiable {
         public var id: Int { ts }
         public let ts: Int
         public let feelsLikeC: Double
+        public let tempC: Double?
         public let rainChance: Double
+        public let conditionId: Int?
         public let usAqi: Int?
         public let fit: OutdoorFit
     }
@@ -274,6 +289,8 @@ public struct EnvironmentOutlook: Equatable, Sendable {
     public let slots: [Slot]
     /// Every 3-hour step of the coming 24 hours, in order, each with how well it suits time outdoors.
     public let steps: [Step]
+    /// Today and the days after it (up to five), from the whole forecast.
+    public let days: [Day]
     /// The kindest 3-hour stretch between 05:00 and 21:00 in the coming day, when the forecast has one (it can be tomorrow morning).
     public let best: Window?
 
@@ -368,9 +385,27 @@ public struct EnvironmentOutlook: Equatable, Sendable {
         let best = candidates.min { score($0) < score($1) }.map(window)
         let timeline: [Step] = steps.map { h in
             let aqi = usAqi(at: h.ts, in: s)
-            return Step(ts: h.ts, feelsLikeC: h.feelsLikeC, rainChance: h.rainChance, usAqi: aqi,
+            return Step(ts: h.ts, feelsLikeC: h.feelsLikeC, tempC: h.tempC, rainChance: h.rainChance, conditionId: h.conditionId, usAqi: aqi,
                         fit: OutdoorFit.of(feelsLikeC: h.feelsLikeC, humidityPct: s.humidityPct, usAqi: aqi, rainChance: h.rainChance, windMps: h.windMps, conditionId: h.conditionId))
         }
-        return EnvironmentOutlook(slots: slots, steps: timeline, best: best)
+        // The days, from every step the forecast has (the reading now is a point of today).
+        func midnight(_ ts: Int) -> Int { Int(calendar.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(ts))).timeIntervalSince1970) }
+        var byDay: [Int: [EnvironmentSnapshot.Hour]] = [:]
+        for h in s.forecast.sorted(by: { $0.ts < $1.ts }) where h.ts >= from - 3600 { byDay[midnight(h.ts), default: []].append(h) }
+        if s.hasWeather {
+            byDay[midnight(from), default: []].append(.init(ts: from, feelsLikeC: s.effectiveC ?? 0, rainChance: 0, tempC: s.tempC, windMps: s.windMps, conditionId: s.conditionId, humidityPct: s.humidityPct))
+        }
+        let days: [Day] = byDay.keys.sorted().prefix(5).compactMap { day in
+            guard let hs = byDay[day], !hs.isEmpty else { return nil }
+            let temps = hs.map { $0.tempC ?? $0.feelsLikeC }
+            // The sky of the day: a storm if there is one, else a wet step if the rain is likely, else the sky around the middle of the day.
+            let storm = hs.first { $0.conditionId.map { (200..<300).contains($0) } == true }
+            let wet = hs.filter { $0.rainChance >= 0.4 && $0.conditionId.map { (300..<600).contains($0) } == true }.max { $0.rainChance < $1.rainChance }
+            let midday = hs.min { abs(hour($0.ts) - 13) < abs(hour($1.ts) - 13) }
+            let sky = (storm ?? wet ?? midday)?.conditionId
+            let aqis = s.airForecast.filter { $0.ts >= day && $0.ts < day + 86_400 }.map(\.usAqi) + (day == midnight(from) ? [s.usAqi].compactMap { $0 } : [])
+            return Day(start: day, lowC: temps.min() ?? 0, highC: temps.max() ?? 0, conditionId: sky, rainChance: hs.map(\.rainChance).max() ?? 0, usAqi: aqis.max())
+        }
+        return EnvironmentOutlook(slots: slots, steps: timeline, days: days, best: best)
     }
 }

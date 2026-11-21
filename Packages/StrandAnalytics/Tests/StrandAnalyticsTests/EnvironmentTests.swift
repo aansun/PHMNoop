@@ -241,6 +241,32 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertEqual(OutdoorFit.of(feelsLikeC: 22, humidityPct: 50, usAqi: 40, rainChance: 0.1, windMps: 1, conditionId: 800), .good)
     }
 
+    func testTheForecastIsSummedUpDayByDay() throws {
+        // Three days of 3-hourly steps from 06:00 UTC: each day has a low, a high, a sky and the worst air of it.
+        let t0 = 1_800_000_000 - 1_800_000_000 % 86_400 + 6 * 3600
+        var steps: [EnvironmentSnapshot.Hour] = []
+        for k in 0..<22 {
+            let ts = t0 + k * 3 * 3600
+            let hourOfDay = (ts % 86_400) / 3600
+            let temp = 22.0 + (hourOfDay >= 9 && hourOfDay <= 15 ? 8 : 0)
+            // The second day is wet from 12:00 to 18:00.
+            let day = (ts - (t0 - 6 * 3600)) / 86_400
+            let wet = day == 1 && (12...18).contains(hourOfDay)
+            steps.append(.init(ts: ts, feelsLikeC: temp + 2, rainChance: wet ? 0.7 : 0, tempC: temp, conditionId: wet ? 501 : 800))
+        }
+        let air = (0..<96).map { EnvironmentSnapshot.AirHour(ts: t0 + $0 * 3600, usAqi: $0 < 24 ? 120 : 60) }
+        let s = EnvironmentSnapshot(ts: t0, tempC: 24, feelsLikeC: 26, usAqi: 120, forecast: steps, airForecast: air)
+        let o = try XCTUnwrap(EnvironmentOutlook.make(s, calendar: utc))
+        XCTAssertEqual(o.days.count, 3)
+        XCTAssertEqual(o.days[0].lowC, 22); XCTAssertEqual(o.days[0].highC, 30)
+        XCTAssertEqual(o.days[0].conditionId, 800)
+        XCTAssertEqual(o.days[1].conditionId, 501)          // the wet afternoon names the day
+        XCTAssertEqual(o.days[1].rainChance, 0.7)
+        XCTAssertEqual(o.days[0].usAqi, 120)                // the worst air of the day
+        XCTAssertEqual(o.days[2].usAqi, 60)
+        XCTAssertEqual(o.days[1].start - o.days[0].start, 86_400)
+    }
+
     func testNoForecastNoOutlook() {
         XCTAssertNil(EnvironmentOutlook.make(EnvironmentSnapshot(ts: 5, tempC: 30), calendar: utc))
     }
