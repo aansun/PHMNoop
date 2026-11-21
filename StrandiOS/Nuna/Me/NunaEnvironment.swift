@@ -23,6 +23,21 @@ struct NunaEnvironmentView: View {
             if enabled {
                 keyCard(.openWeather, title: "OpenWeather", site: "openweathermap.org", url: "https://home.openweathermap.org/api_keys", text: $owKey, saved: owSaved)
                 keyCard(.iqAir, title: "IQAir", site: "iqair.com", url: "https://dashboard.iqair.com/personal/api-keys", text: $iqKey, saved: iqSaved)
+                if owSaved, iqSaved, let line = EnvironmentLocation.shared.lastFixDescription ?? EnvironmentTransport.lastFailureDescription.map({ _ in "–" }) {
+                    NunaCard(small: true) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            nunaTrendsCap("Location used")
+                            Text(verbatim: line).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                            if let failure = EnvironmentTransport.lastFailureDescription {
+                                Text(verbatim: failure).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.alertText).textCase(nil)
+                            }
+                            if let place = store.snapshot?.place {
+                                Text(verbatim: place).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
                 if let e = store.lastError, owSaved, iqSaved {
                     Text(verbatim: e).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }

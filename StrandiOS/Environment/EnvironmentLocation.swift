@@ -73,9 +73,34 @@ final class EnvironmentLocation: NSObject, CLLocationManagerDelegate {
             Task { try? await Task.sleep(nanoseconds: 8_000_000_000); if self.waitToken == token { self.finish() } }
         }
         manager.stopUpdatingLocation()
-        if let fix { remember(fix.coordinate); return fix.coordinate }
-        if let cached = manager.location, Self.isUsable(cached, maxAge: 1_800) { return cached.coordinate }
+        if let fix { remember(fix.coordinate); note(fix.coordinate, accuracy: fix.horizontalAccuracy, source: String(localized: "fresh fix")); return fix.coordinate }
+        if let cached = manager.location, Self.isUsable(cached, maxAge: 1_800) {
+            note(cached.coordinate, accuracy: cached.horizontalAccuracy, source: String(localized: "recent fix"))
+            return cached.coordinate
+        }
+        if let old = saved { note(old, accuracy: nil, source: String(localized: "saved place, no fix")) }
         return saved
+    }
+
+    private static let infoKey = "noop.environment.lastFixInfo"
+
+    private func note(_ c: CLLocationCoordinate2D, accuracy: CLLocationAccuracy?, source: String) {
+        var info: [String: Any] = ["lat": EnvironmentClient.rounded(c.latitude), "lon": EnvironmentClient.rounded(c.longitude), "ts": Date().timeIntervalSince1970, "source": source]
+        if let accuracy, accuracy >= 0 { info["acc"] = accuracy }
+        UserDefaults.standard.set(info, forKey: Self.infoKey)
+    }
+
+    /// The place the last reading was asked for, how tight the fix was and when, for the Weather and air page: "-1.82, 115.91 · ±35 m · 19.54 · fresh fix".
+    var lastFixDescription: String? {
+        guard let i = UserDefaults.standard.dictionary(forKey: Self.infoKey), let lat = i["lat"] as? Double, let lon = i["lon"] as? Double else { return nil }
+        var parts = [String(format: "%.2f, %.2f", lat, lon)]
+        if let acc = i["acc"] as? Double { parts.append("±\(Int(acc.rounded())) m") }
+        if let ts = i["ts"] as? Double {
+            let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("HH:mm")
+            parts.append(f.string(from: Date(timeIntervalSince1970: ts)))
+        }
+        if let src = i["source"] as? String { parts.append(src) }
+        return parts.joined(separator: " · ")
     }
 
     private static func isUsable(_ l: CLLocation, maxAge: TimeInterval) -> Bool {

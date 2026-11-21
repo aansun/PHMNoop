@@ -23,6 +23,14 @@ enum EnvironmentTransport {
         }
     }
 
+    private static let failureKey = "noop.environment.lastTransportFailure"
+
+    /// What the last request that failed on the wire was, for the Weather and air page: "api.openweathermap.org NSURLErrorDomain -1009 (...)". nil once one succeeds.
+    static var lastFailureDescription: String? {
+        guard let i = UserDefaults.standard.dictionary(forKey: failureKey), let host = i["host"] as? String, let code = i["code"] as? String else { return nil }
+        return "\(host) · \(code) · \(i["text"] as? String ?? "")"
+    }
+
     static func live() -> EnvironmentClient.Transport {
         { host, path, query in
             guard hosts.contains(host) else { throw EnvironmentClient.Failure.noData }
@@ -33,8 +41,19 @@ enum EnvironmentTransport {
             var req = URLRequest(url: url)
             req.httpMethod = "GET"
             req.setValue("application/json", forHTTPHeaderField: "accept")
-            let (data, response) = try await session.data(for: req)
-            return EnvironmentClient.Response(status: (response as? HTTPURLResponse)?.statusCode ?? 0, body: data)
+            do {
+                let (data, response) = try await session.data(for: req)
+                UserDefaults.standard.removeObject(forKey: failureKey)
+                return EnvironmentClient.Response(status: (response as? HTTPURLResponse)?.statusCode ?? 0, body: data)
+            } catch let e as URLError where e.code == .cancelled {
+                // The screen that asked went away: that is no failure of the service, and must not read as "could not reach".
+                throw CancellationError()
+            } catch {
+                let ns = error as NSError
+                UserDefaults.standard.set(["host": host, "path": path, "code": "\(ns.domain) \(ns.code)", "text": ns.localizedDescription, "ts": Date().timeIntervalSince1970],
+                                          forKey: failureKey)
+                throw error
+            }
         }
     }
 }

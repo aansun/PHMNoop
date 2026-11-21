@@ -58,6 +58,7 @@ public struct EnvironmentClient: Sendable {
         var lastFailure: Failure?
 
         func note(_ e: Error) {
+            if e is CancellationError { return }
             guard let f = e as? Failure else { lastFailure = .noData; return }
             if case .unauthorized = f { refused = refused ?? f }
             lastFailure = f
@@ -73,6 +74,7 @@ public struct EnvironmentClient: Sendable {
         if !snap.hasAir, let key = openWeatherKey {
             do { try await applyOpenWeatherAir(&snap, lat: lat, lon: lon, key: key) } catch { note(error) }
         }
+        if Task.isCancelled { throw CancellationError() }
         if let refused { throw refused }
         guard snap.hasWeather || snap.hasAir else { throw lastFailure ?? Failure.noData }
         return snap

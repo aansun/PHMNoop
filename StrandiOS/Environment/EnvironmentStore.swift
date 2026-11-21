@@ -103,6 +103,11 @@ final class EnvironmentStore: ObservableObject {
         guard isActive, !Self.isDemo, !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }
+        // On a task of its own: a screen that asked and then went away (its task cancelled) must not cut the reading short.
+        await Task { await self.read() }.value
+    }
+
+    private func read() async {
         guard let place = await EnvironmentLocation.shared.current() else {
             lastError = String(localized: "No location yet. Allow location for PHMN in Settings, then try again.")
             return
@@ -111,6 +116,8 @@ final class EnvironmentStore: ObservableObject {
             let s = try await client().snapshot(latitude: place.latitude, longitude: place.longitude)
             snapshot = s; lastError = nil
             remember(s)
+        } catch is CancellationError {
+            // Nothing went wrong with the services: the reading is simply not made.
         } catch {
             lastError = message(for: error)
         }
