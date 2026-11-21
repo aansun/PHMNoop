@@ -122,12 +122,26 @@ public struct EnvironmentClient: Sendable {
 
         guard withForecast else { return }
         // The forecast is a bonus: when it fails, the reading above still stands.
-        if let f = try? await get(.openWeather, host: Self.openWeatherHost, path: "/data/2.5/forecast", query: q.merging(["cnt": "5"]) { $1 }),
+        if let f = try? await get(.openWeather, host: Self.openWeatherHost, path: "/data/2.5/forecast", query: q.merging(["cnt": "9"]) { $1 }),
            let list = f["list"] as? [[String: Any]] {
             s.forecast = list.compactMap { row in
                 guard let ts = (row["dt"] as? NSNumber)?.intValue,
-                      let feels = Self.number((row["main"] as? [String: Any])?["feels_like"]) else { return nil }
-                return EnvironmentSnapshot.Hour(ts: ts, feelsLikeC: feels, rainChance: Self.number(row["pop"]) ?? 0)
+                      let main = row["main"] as? [String: Any],
+                      let feels = Self.number(main["feels_like"]) else { return nil }
+                return EnvironmentSnapshot.Hour(ts: ts, feelsLikeC: feels, rainChance: Self.number(row["pop"]) ?? 0,
+                                                tempC: Self.number(main["temp"]), windMps: Self.number((row["wind"] as? [String: Any])?["speed"]),
+                                                conditionId: ((row["weather"] as? [[String: Any]])?.first?["id"] as? NSNumber)?.intValue)
+            }
+        }
+        // The air for the same hours: also a bonus, from the same key.
+        if let a = try? await get(.openWeather, host: Self.openWeatherHost, path: "/data/2.5/air_pollution/forecast",
+                                  query: ["lat": q["lat"] ?? "", "lon": q["lon"] ?? "", "appid": key]),
+           let list = a["list"] as? [[String: Any]] {
+            let horizon = s.ts + 28 * 3600
+            s.airForecast = list.compactMap { row in
+                guard let ts = (row["dt"] as? NSNumber)?.intValue, ts <= horizon,
+                      let pm = Self.number((row["components"] as? [String: Any])?["pm2_5"]), let aqi = AirQuality.usAqi(pm25: pm) else { return nil }
+                return EnvironmentSnapshot.AirHour(ts: ts, usAqi: aqi)
             }
         }
     }

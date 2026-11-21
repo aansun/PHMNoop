@@ -29,10 +29,18 @@ final class EnvironmentStore: ObservableObject {
         // `--demo-environment`: a hot, hazy morning, with no request and no key, to look at the screens that read it.
         if Self.isDemo {
             let now = Int(Date().timeIntervalSince1970)
+            // A hot, hazy day in Jakarta: nine 3-hour steps with the sky of each, and the air hour by hour (worst in the morning rush, best after the afternoon rain).
+            let skies: [(feels: Double, temp: Double, id: Int, rain: Double, wind: Double)] = [
+                (37, 32, 803, 0.1, 2.4), (39, 33, 802, 0.1, 2.8), (36, 31, 500, 0.6, 3.6), (31, 28, 501, 0.7, 3.0), (29, 27, 803, 0.2, 2.2),
+                (28, 26, 802, 0.1, 1.8), (27, 26, 800, 0.0, 1.6), (30, 28, 801, 0.0, 2.0), (35, 31, 803, 0.1, 2.5),
+            ]
+            let aqi: [Int] = [132, 128, 120, 112, 104, 98, 92, 86, 78, 74, 70, 68, 66, 74, 82, 90, 96, 98, 92, 84, 76, 68, 62, 58, 56, 60, 72, 88]
             snapshot = EnvironmentSnapshot(ts: now, place: "Jakarta", tempC: 32, feelsLikeC: 38, humidityPct: 72, windMps: 2.4, conditionId: 803,
                                            conditionText: "broken clouds", usAqi: 132, pm25: 48, airSource: "iqair",
-                                           forecast: [.init(ts: now + 3 * 3600, feelsLikeC: 37, rainChance: 0.1),
-                                                      .init(ts: now + 5 * 3600, feelsLikeC: 30, rainChance: 0.1)])
+                                           forecast: skies.enumerated().map { i, x in
+                                               .init(ts: now + (i + 1) * 3 * 3600, feelsLikeC: x.feels, rainChance: x.rain, tempC: x.temp, windMps: x.wind, conditionId: x.id)
+                                           },
+                                           airForecast: aqi.enumerated().map { i, v in .init(ts: now + i * 3600, usAqi: v) })
             // And one from this morning, when the demo walk was done, so that session can be read against it.
             let morning = Calendar.current.date(bySettingHour: 9, minute: 40, second: 0, of: Date()).map { Int($0.timeIntervalSince1970) } ?? now
             var then = snapshot!; then.ts = morning
@@ -114,6 +122,8 @@ final class EnvironmentStore: ObservableObject {
         else { history.append(s) }
         let floor = s.ts - Self.keepSeconds
         history = Array(history.filter { $0.ts >= floor }.suffix(Self.maxEntries))
+        // Only the latest reading keeps its forecast; the older ones are there to say what the weather was, so the stored history stays small.
+        for i in history.indices.dropLast() { history[i].forecast = []; history[i].airForecast = [] }
         if let data = try? JSONEncoder().encode(history) { UserDefaults.standard.set(data, forKey: Self.historyKey) }
     }
 

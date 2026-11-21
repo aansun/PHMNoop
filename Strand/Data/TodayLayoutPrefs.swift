@@ -47,6 +47,9 @@ enum TodaySection: String, CaseIterable, Identifiable {
     /// selection in order; empty (and effectively invisible) until the user adds a card in Customise.
     /// Appended LAST so `decodeOrder`'s back-fill lands it predictably for existing saved orders.
     case addedCards
+    /// Nuna only: the weather and the air, with the day ahead and the best hours to train. Draws nothing until Weather and air is on and has a key. Not drawn by
+    /// the Default looks (they render nothing for it and their Arrange sheets leave it out), and an older Android build drops the unknown id when it reads a saved order.
+    case weatherAir
 
     var id: String { rawValue }
 
@@ -67,6 +70,7 @@ enum TodaySection: String, CaseIterable, Identifiable {
         case .menstrualCycle: return String(localized: "Menstrual Cycle")
         case .journal:        return String(localized: "Journal")
         case .addedCards:     return String(localized: "Added Cards")
+        case .weatherAir:     return String(localized: "Weather and air")
         }
     }
 
@@ -74,7 +78,7 @@ enum TodaySection: String, CaseIterable, Identifiable {
     /// widget (#656) is last by default, where it was first added, above the data-sources card.
     static let defaultOrder: [TodaySection] = [
         .hero, .stateChips, .liveSession, .synthesis, .keyMetrics, .workouts, .heartRate, .recoveryVitals, .vitalMonitor, .weekCompare, .yourCards,
-        .menstrualCycle, .journal, .addedCards,
+        .menstrualCycle, .journal, .addedCards, .weatherAir,
     ]
 }
 

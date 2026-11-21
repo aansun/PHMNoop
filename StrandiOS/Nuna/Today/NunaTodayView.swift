@@ -25,7 +25,7 @@ enum NunaTodayDefaults {
     /// week, then the add-or-arrange card. The state chips, key metrics, heart rate, start session, cycle and added cards stay out until the
     /// person adds them.
     static let order: [TodaySection] = [
-        .hero, .synthesis, .vitalMonitor, .workouts, .journal, .yourCards, .weekCompare, .recoveryVitals,
+        .hero, .synthesis, .weatherAir, .vitalMonitor, .workouts, .journal, .yourCards, .weekCompare, .recoveryVitals,
         .stateChips, .keyMetrics, .heartRate, .liveSession, .menstrualCycle, .addedCards,
     ]
     static let hidden: [TodaySection] = [.stateChips, .keyMetrics, .heartRate, .liveSession, .menstrualCycle, .addedCards]
@@ -461,6 +461,13 @@ struct NunaTodayView: View {
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             pushToday(.sleep(0))
         }
+        // `--open-weather` opens the weather and air page, once.
+        .task {
+            guard CommandLine.arguments.contains("--open-weather"), !NunaTodayDebug.openedPlanner else { return }
+            NunaTodayDebug.openedPlanner = true
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            pushToday(.weatherAir)
+        }
         // `--open-plan` opens the plan overview, once.
         .task {
             guard CommandLine.arguments.contains("--open-plan"), !NunaTodayDebug.openedPlanner else { return }
@@ -661,6 +668,7 @@ struct NunaTodayView: View {
         case .heartRate: return "Heart rate"
         case .liveSession: return "Start activity"
         case .addedCards: return "Added cards"
+        case .weatherAir: return "Weather and air"
         }
     }
 
@@ -795,6 +803,7 @@ struct NunaTodayView: View {
         case .heartRate: previewRow(NunaIcons.heartRate, NunaPalette.alertText, String(localized: "Heart rate"), "Live").background(inner)
         case .liveSession: previewRow("play", NunaPalette.charge, String(localized: "Start activity"), "Live session").background(inner)
         case .addedCards: previewRow("square.stack", nil, String(localized: "Added cards"), "From Sleep and Trends").background(inner)
+        case .weatherAir: previewRow("cloud.sun", nil, String(localized: "Weather and air"), "The day ahead and the best hours to train").background(inner)
         }
     }
 
@@ -1062,6 +1071,8 @@ struct NunaTodayView: View {
                 }
                 .buttonStyle(.plain)
             }
+        case .weatherAir:
+            NunaWeatherAirCard(chargePct: model.charge.pct, effort: model.effort)
         case .liveSession:
             EmptyView()
         }

@@ -21,6 +21,7 @@ extension TodaySection {
         case .heartRate: return String(localized: "Heart rate")
         case .liveSession: return String(localized: "Start activity")
         case .addedCards: return String(localized: "Added cards")
+        case .weatherAir: return String(localized: "Weather and air")
         }
     }
 
@@ -40,6 +41,7 @@ extension TodaySection {
         case .heartRate: return String(localized: "Live heart rate")
         case .liveSession: return String(localized: "Start a live session")
         case .addedCards: return String(localized: "From Sleep and Trends")
+        case .weatherAir: return String(localized: "The day ahead and the best hours to train")
         }
     }
 }
