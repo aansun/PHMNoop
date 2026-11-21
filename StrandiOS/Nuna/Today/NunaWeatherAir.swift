@@ -234,8 +234,6 @@ struct NunaWeatherAirView: View {
         let rain: Double
         let aqi: Int?
         let condition: Int?
-        /// For the air: where the figure comes from, "iqair" or "openweather" for the reading now, "forecast" for the hours and days ahead.
-        var source: String? = nil
         var id: Date { date }
     }
 
@@ -353,7 +351,7 @@ struct NunaWeatherAirView: View {
                 case .air: guard let aqi = d.usAqi else { return nil }; value = Double(aqi)
                 }
                 return Point(date: noon, value: value, low: metric == .weather ? d.lowC : nil, symbol: sym, feels: d.peakFeelsLikeC, windMps: d.windMps,
-                             humidity: d.humidityPct, rain: d.rainChance, aqi: d.usAqi, condition: d.conditionId, source: "forecast")
+                             humidity: d.humidityPct, rain: d.rainChance, aqi: d.usAqi, condition: d.conditionId)
             }
         }
         let start = from + page * 86_400, end = start + 86_400
@@ -375,13 +373,13 @@ struct NunaWeatherAirView: View {
             // The reading now is the measured one (from the IQAir station when there is a key); the hours after it are the forecast.
             if page == 0, let aqi = s.usAqi {
                 out.append(Point(date: date(from), value: Double(aqi), low: nil, symbol: symbol(from), feels: s.effectiveC, windMps: s.windMps, humidity: s.humidityPct,
-                                 rain: s.conditionId.map { (300..<600).contains($0) } == true ? 0.8 : 0, aqi: aqi, condition: s.conditionId, source: s.airSource ?? "openweather"))
+                                 rain: s.conditionId.map { (300..<600).contains($0) } == true ? 0.8 : 0, aqi: aqi, condition: s.conditionId))
             }
             let cutoff = page == 0 && s.usAqi != nil ? from + 1800 : start - 1800
             out += s.airForecast.filter { $0.ts >= cutoff && $0.ts <= end }.sorted { $0.ts < $1.ts }.map { h in
                 let n = near(h.ts)
                 return Point(date: date(h.ts), value: Double(h.usAqi), low: nil, symbol: symbol(h.ts), feels: n?.feelsLikeC ?? s.effectiveC, windMps: n?.windMps ?? s.windMps,
-                             humidity: n?.humidityPct ?? s.humidityPct, rain: n?.rainChance ?? 0, aqi: h.usAqi, condition: n?.conditionId ?? s.conditionId, source: "forecast")
+                             humidity: n?.humidityPct ?? s.humidityPct, rain: n?.rainChance ?? 0, aqi: h.usAqi, condition: n?.conditionId ?? s.conditionId)
             }
             return out
         }
@@ -481,27 +479,12 @@ struct NunaWeatherAirView: View {
             .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
         case .air:
             let aqi = Int(active.value.rounded())
-            VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 6) {
                 Circle().fill(NunaEnvironmentFormat.airColor(aqi)).frame(width: 7, height: 7)
                 Text(verbatim: NunaEnvironmentFormat.bandName(AirQuality.band(usAqi: aqi))).font(.nuna(size: 12, weight: .bold)).textCase(nil)
             }
             .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 9).padding(.vertical, 4)
             .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-            if let source = airSourceName(active.source) {
-                Text(verbatim: source).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-            }
-        }
-    }
-
-    /// Where an air figure comes from, in words.
-    private func airSourceName(_ source: String?) -> String? {
-        switch source {
-        case "iqair": return String(localized: "Measured by IQAir")
-        case "openweather": return String(localized: "From OpenWeather")
-        case "forecast": return String(localized: "OpenWeather forecast")
-        default: return nil
         }
     }
 

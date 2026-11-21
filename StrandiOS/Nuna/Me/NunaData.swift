@@ -24,7 +24,7 @@ struct NunaDataHubView: View {
     private var integrations: [Integration] {
         [Integration(id: "strava", route: .strava, title: "Strava", icon: "figure.run", connected: strava && StravaTokenStore.isConnected),
          Integration(id: "hevy", route: .hevy, title: "Hevy", icon: "dumbbell", connected: hevy && HevyKeyStore.hasKey),
-         Integration(id: "environment", route: .environment, title: "Weather and air", icon: "cloud.sun", connected: environment && EnvironmentKeyStore.hasAny)]
+         Integration(id: "environment", route: .environment, title: "Weather and air", icon: "cloud.sun", connected: environment && EnvironmentKeyStore.hasBoth)]
     }
 
     var body: some View {

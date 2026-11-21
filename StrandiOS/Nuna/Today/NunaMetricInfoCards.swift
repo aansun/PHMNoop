@@ -62,6 +62,36 @@ struct NunaAverageHRInfo: View {
     }
 }
 
+/// Under the Weather and air keys: why the weather and the air matter, how to tell good air, and what each key is used for.
+struct NunaWeatherAirExplainer: View {
+    var body: some View {
+        VStack(spacing: NunaSpacing.section) {
+            NunaInfoCard(title: "Why weather and air matter") {
+                nunaInfoParagraph("Heat, humidity, rain and wind change how hard the same session feels. Your heart works harder in the heat, and recovery slows after a hot or humid day.")
+                nunaInfoParagraph("The air matters as much. Fine particles in polluted air reach deep into your lungs, and hard breathing outdoors takes in more of them.")
+                nunaInfoParagraph("Knowing both before you go out helps you choose when, where and how hard to train.")
+            }
+            NunaInfoCard(title: "How to tell if the air is good") {
+                nunaInfoParagraph("Air quality is given as an index (AQI). The lower the number, the cleaner the air.")
+                VStack(alignment: .leading, spacing: 10) {
+                    nunaInfoBullet("0 to 50, good: clean air, train as usual")
+                    nunaInfoBullet("51 to 100, moderate: fine for most people; if you are sensitive, go a little easier")
+                    nunaInfoBullet("101 to 150, unhealthy for sensitive groups: keep it shorter and easier if you have asthma or a heart or lung condition")
+                    nunaInfoBullet("151 and above, unhealthy: move the session indoors")
+                }
+                nunaInfoParagraph("Air is usually cleaner in the early morning and after rain, and worse at rush hour and on still, hot afternoons.")
+            }
+            NunaInfoCard(title: "What each key is for") {
+                VStack(alignment: .leading, spacing: 10) {
+                    nunaInfoBullet("OpenWeather gives the weather now, the forecast for the days ahead and the air forecast hour by hour.")
+                    nunaInfoBullet("IQAir gives the air quality measured at the nearest station, used for the reading now.")
+                }
+                nunaInfoParagraph("Both keys are needed. Your place, rounded to about a kilometre, is sent to each service and nothing else about you. The keys stay in this iPhone's Keychain and each goes only to its own service. Turning this off forgets what was read.")
+            }
+        }
+    }
+}
+
 /// Under the VO₂ max trend page: what it is, how it compares with other people your age, and how the figure is estimated.
 struct NunaVO2MaxInfo: View {
     /// VO₂ max (ml/kg/min) by age for the 95th, 50th and 5th percentile, read off the published fitness-by-age graph by Jayson Gifford (Brigham Young University).

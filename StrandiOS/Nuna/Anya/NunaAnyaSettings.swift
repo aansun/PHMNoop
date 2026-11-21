@@ -90,7 +90,7 @@ struct NunaAnyaSettingsView: View {
             NunaSettingsSection("What Anya reads") {
                 NunaSettingsCard {
                     NavigationLink(value: NunaAnyaRoute.environment) {
-                        NunaListRow("Weather and air", subtitle: LocalizedStringKey(EnvironmentExperiment.isEnabled && EnvironmentKeyStore.hasAny ? String(localized: "On") : String(localized: "Off")), systemImage: "cloud.sun", showsChevron: true)
+                        NunaListRow("Weather and air", subtitle: LocalizedStringKey(EnvironmentExperiment.isEnabled && EnvironmentKeyStore.hasBoth ? String(localized: "On") : String(localized: "Off")), systemImage: "cloud.sun", showsChevron: true)
                     }.buttonStyle(.plain)
                 }
             }
