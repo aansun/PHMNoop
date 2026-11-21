@@ -23,6 +23,30 @@ enum PHMNChangelog {
 
     static let releases: [Release] = [
         Release(
+            version: "3.1.0",
+            title: "Weather and air on Today, an Anya that writes like a coach and knows the forecast, and steps that no longer lose a walk.",
+            date: "November 2026",
+            items: [
+                "**Weather and air.** A one-row card on Today with the sky now, the place, the temperature, the air quality and whether it suits time outdoors. It opens a trend-style page: Weather or Air quality, hours (H) or days (D), the moment on show with a sentence about the feels-like, wind and humidity, and cards on why the weather and the air matter.",
+                "**Weather and air keys.** An OpenWeather key and an IQAir key under Data and integrations, each pasted and checked in one step, with a link to get one. Both are needed.",
+                "**Anya knows the forecast.** She is told the coming day by part, the best time to train, the days after and which service measured the air.",
+                "**Anya in plain paragraphs.** Her note on every page reads as a few full sentences: the reading against your usual, what it most likely means, and one step to take.",
+                "**Steps from the better count.** Today and the Steps page show the higher of the strap's count and Apple Health's.",
+                "**Naps like Sleep.** The Naps page has the Sleep page's header, day name, stage card and Hours vs. needed card. Deleting asks once and shows one Undo.",
+                "**Strap not in use.** While the strap is off, Today hides the battery and says so; pulling to refresh tells you to wear it.",
+                "**Charging.** Charging is read from the battery level rising, and the screen shows the time to full.",
+            ],
+            fixes: [
+                "**A strap listed twice no longer splits its day.** Part of the heart rate and steps was filed under an archived row of the same strap, so a walk could be missing from the day's steps and Strain.",
+                "**Import from Strava** brings back an activity PHMN uploaded when its workout is no longer in the app.",
+                "**Charging animation and estimate** run while the strap charges, and the time left no longer stays at its first figure.",
+                "**Distance during an activity** shows two decimals like the summary after it.",
+                "**Live Activity clock** shows the whole time before ten minutes, not “9….”.",
+                "**Add activity:** moving the start later than 45 minutes ago no longer snaps back to the suggestion.",
+                "**“Sleep deleted”** no longer appears three times at once on Sleep and Naps.",
+            ]
+        ),
+        Release(
             version: "3.0.2",
             title: "Strain on the scale you chose, vital signs that agree on every screen, and a Strain & Recovery chart you can read.",
             date: "November 2026",
