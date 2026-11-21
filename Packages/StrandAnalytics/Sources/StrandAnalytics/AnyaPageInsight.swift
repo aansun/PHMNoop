@@ -101,7 +101,30 @@ public enum AnyaReplyCleaner {
             flush()
             out.append(kept.joined(separator: " "))
         }
-        let cleaned = out.joined(separator: "\n").replacingOccurrences(of: "\n\n\n", with: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        let joined = out.joined(separator: "\n").replacingOccurrences(of: "\n\n\n", with: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleaned = dropNarration(joined)
         return cleaned.isEmpty ? reply : cleaned
+    }
+
+    /// An opener that narrates the looking ("I see that", "Looking at your data,", "Saya lihat") instead of saying the thing. It is taken off the start of each
+    /// line and sentence and the next word is capitalised, so "I can see that HRV fell" reads "HRV fell".
+    private static let narration = try! NSRegularExpression(
+        pattern: #"(^|(?<=[.!?]) )(?:i (?:can )?see(?: that)?|i(?:'ve| have)? noticed(?: that)?|i looked at your (?:data|numbers)(?: and)?|from what i can see|looking at your (?:data|numbers)|based on your (?:data|numbers)|it looks like|saya (?:bisa |dapat )?(?:lihat|melihat|perhatikan|memperhatikan)(?: bahwa)?|aku (?:lihat|melihat|perhatikan)(?: bahwa)?|terlihat bahwa|berdasarkan data ?(?:mu|kamu)?)[,:]?\s+"#,
+        options: [.caseInsensitive, .anchorsMatchLines])
+
+    static func dropNarration(_ text: String) -> String {
+        var s = text
+        // Repeat: a reply can open with one and carry the next after a full stop.
+        for _ in 0..<4 {
+            let ns = s as NSString
+            guard let m = narration.firstMatch(in: s, range: NSRange(location: 0, length: ns.length)) else { break }
+            let after = m.range.location + m.range.length
+            guard after < ns.length else { break }
+            let lead = ns.substring(with: NSRange(location: m.range.location, length: m.range.length))
+            let keepPrefix = lead.hasPrefix(" ") ? " " : ""
+            let first = ns.substring(with: NSRange(location: after, length: 1)).uppercased()
+            s = ns.substring(to: m.range.location) + keepPrefix + first + ns.substring(from: after + 1)
+        }
+        return s
     }
 }

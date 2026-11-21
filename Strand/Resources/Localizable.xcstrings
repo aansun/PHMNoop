@@ -8975,7 +8975,7 @@
  "Put it on to sync": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pakai strap untuk sinkron"}}}},
  "Charging · full in about %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Mengisi · penuh dalam sekitar %@"}}}},
  "Full in about %@.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Penuh dalam sekitar %@."}}}},
- "What I see": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Yang saya lihat"}}}},
+ "What the numbers say": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kata datamu"}}}},
  "What it means": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Artinya"}}}},
  "Recovery %lld%% is in the green band": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Recovery %lld%% ada di zona hijau"}}}},
  "Recovery %lld%% is in the yellow band": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Recovery %lld%% ada di zona kuning"}}}},
