@@ -173,24 +173,30 @@ struct NunaWeatherAirCard: View {
             .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
+    /// "32°, AQI 132: Better indoors".
+    private func line(_ s: EnvironmentSnapshot, fit: OutdoorFit) -> String {
+        var facts: [String] = []
+        if let t = s.tempC ?? s.effectiveC { facts.append(NunaInsightText.degrees(t)) }
+        if let aqi = s.usAqi { facts.append("AQI \(aqi)") }
+        let head = facts.joined(separator: ", ")
+        return head.isEmpty ? NunaEnvironmentFormat.fitWord(fit) : head + ": " + NunaEnvironmentFormat.fitWord(fit)
+    }
+
     @ViewBuilder private func content(_ s: EnvironmentSnapshot) -> some View {
         let now = Int(Date().timeIntervalSince1970)
         let symbol = NunaEnvironmentFormat.symbol(conditionId: s.conditionId, feelsLikeC: s.effectiveC, night: NunaEnvironmentFormat.isNight(now))
         let fit = NunaEnvironmentFormat.advise(feels: s.effectiveC, humidity: s.humidityPct, wind: s.windMps, condition: s.conditionId, aqi: s.usAqi,
                                                rain: s.conditionId.map { (300..<600).contains($0) } == true ? 0.8 : 0).fit
-        Image(systemName: symbol).font(.system(size: 22, weight: .light)).foregroundStyle(NunaPalette.textSecondary).frame(width: 26)
-        if let t = s.tempC ?? s.effectiveC {
-            Text(verbatim: NunaInsightText.degrees(t)).font(.nuna(size: 17, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize()
+        // The sky inside a ring that takes the colour of the air quality.
+        Image(systemName: symbol).font(.system(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
+            .frame(width: 34, height: 34)
+            .overlay(Circle().stroke(s.usAqi.map { NunaEnvironmentFormat.airColor($0) } ?? NunaPalette.textMuted, lineWidth: 2.5))
+        VStack(alignment: .leading, spacing: 1) {
+            Text(verbatim: s.place.flatMap { $0.isEmpty ? nil : String(localized: "Today in \($0)") } ?? String(localized: "Today"))
+                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1)
+            Text(verbatim: line(s, fit: fit)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                .lineLimit(1).minimumScaleFactor(0.8)
         }
-        if let aqi = s.usAqi {
-            HStack(spacing: 5) {
-                Circle().fill(NunaEnvironmentFormat.airColor(aqi)).frame(width: 7, height: 7)
-                Text(verbatim: "AQI \(aqi)").font(.nuna(size: 14, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-            }
-            .fixedSize()
-        }
-        Text(verbatim: NunaEnvironmentFormat.fitWord(fit)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaEnvironmentFormat.fitColor(fit)).textCase(nil)
-            .lineLimit(1).minimumScaleFactor(0.8)
         Spacer(minLength: 4)
         Image(systemName: "chevron.right").font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
     }
