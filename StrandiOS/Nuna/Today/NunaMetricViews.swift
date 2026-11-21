@@ -31,6 +31,8 @@ enum NunaTodayRoute: Hashable {
     case nutrition
     case labBook
     case cycle
+    /// The weather and the air: the sky now, the day ahead in parts, every three hours, the air hour by hour and the best hours to train.
+    case weatherAir
     case rhythm
     case smartAlarm
     case windDown
@@ -78,6 +80,7 @@ extension View {
             case .nutrition: NunaNutritionView()
             case .labBook: NunaLabBookView()
             case .cycle: NunaCycleView()
+            case .weatherAir: NunaWeatherAirView()
             case .rhythm: NunaRhythmView()
             case .smartAlarm: NunaSmartAlarmView()
             case .windDown: NunaWindDownView()

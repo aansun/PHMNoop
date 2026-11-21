@@ -170,7 +170,8 @@ enum NunaEnvironmentFormat {
     static func airColor(_ aqi: Int) -> Color {
         switch AirQuality.band(usAqi: aqi) {
         case .good: return NunaPalette.charge
-        case .moderate, .unhealthyForSensitive: return NunaPalette.warning
+        case .moderate: return NunaPalette.warning
+        case .unhealthyForSensitive: return NunaPalette.caution
         default: return NunaPalette.alert
         }
     }
