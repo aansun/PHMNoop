@@ -108,6 +108,14 @@ public struct EnvironmentClient: Sendable {
         return obj
     }
 
+    /// The same request for an answer that is a JSON list.
+    private func getList(_ provider: Provider, host: String, path: String, query: [String: String]) async throws -> [[String: Any]] {
+        let r: Response
+        do { r = try await transport(host, path, query) } catch is CancellationError { throw CancellationError() } catch { throw Failure.network(provider) }
+        guard (200..<300).contains(r.status), let list = try? JSONSerialization.jsonObject(with: r.body) as? [[String: Any]] else { throw Failure.noData }
+        return list
+    }
+
     private func applyOpenWeather(_ s: inout EnvironmentSnapshot, lat: Double, lon: Double, key: String, withForecast: Bool = true) async throws {
         let q = ["lat": Self.fixed(lat), "lon": Self.fixed(lon), "units": "metric", "appid": key]
         let now = try await get(.openWeather, host: Self.openWeatherHost, path: "/data/2.5/weather", query: q)
@@ -119,6 +127,13 @@ public struct EnvironmentClient: Sendable {
             s.conditionText = w["description"] as? String
         }
         if let name = now["name"] as? String, !name.isEmpty { s.place = name }
+        // The weather's own name for the place can be a province when no named place is near the point ("South Kalimantan" for a spot in East Kalimantan).
+        // OpenWeather's reverse geocoding, on the same key and host, names the nearest locality: it is the better label when it answers.
+        if let places = try? await getList(.openWeather, host: Self.openWeatherHost, path: "/geo/1.0/reverse",
+                                           query: ["lat": q["lat"] ?? "", "lon": q["lon"] ?? "", "limit": "1", "appid": key]),
+           let first = places.first, let name = first["name"] as? String, !name.isEmpty {
+            s.place = name
+        }
 
         guard withForecast else { return }
         // The forecast is a bonus: when it fails, the reading above still stands.

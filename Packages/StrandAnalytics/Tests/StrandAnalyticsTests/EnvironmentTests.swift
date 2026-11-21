@@ -127,6 +127,19 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertEqual(EnvironmentClient.distanceKm(lat1: 0, lon1: 0, lat2: 0, lon2: 1).rounded(), 111)
     }
 
+    /// The weather names a province when no place is near the point; the reverse geocoding names the locality, and the weather's name stands when it does not answer.
+    func testThePlaceIsTheNearestLocalityWhenTheGeocodingAnswers() async throws {
+        let province = #"{"name":"South Kalimantan","weather":[{"id":803,"description":"broken clouds"}],"main":{"temp":28,"feels_like":31,"humidity":74},"wind":{"speed":2}}"#
+        let geo = #"[{"name":"Batu Sopang","lat":-1.82,"lon":115.91,"country":"ID","state":"East Kalimantan"}]"#
+        let withGeo = try await EnvironmentClient(openWeatherKey: "ow", iqAirKey: nil, transport: transport(Log(), [
+            "api.openweathermap.org/data/2.5/weather": (200, province), "api.openweathermap.org/data/2.5/air_pollution": (200, owAir),
+            "api.openweathermap.org/geo/1.0/reverse": (200, geo)])).snapshot(latitude: -1.82, longitude: 115.91)
+        XCTAssertEqual(withGeo.place, "Batu Sopang")
+        let without = try await EnvironmentClient(openWeatherKey: "ow", iqAirKey: nil, transport: transport(Log(), [
+            "api.openweathermap.org/data/2.5/weather": (200, province), "api.openweathermap.org/data/2.5/air_pollution": (200, owAir)])).snapshot(latitude: -1.82, longitude: 115.91)
+        XCTAssertEqual(without.place, "South Kalimantan")
+    }
+
     func testOpenWeatherAloneFillsTheAirFromParticles() async throws {
         let c = EnvironmentClient(openWeatherKey: "ow", iqAirKey: nil, transport: transport(Log(), [
             "api.openweathermap.org/data/2.5/weather": (200, owNow), "api.openweathermap.org/data/2.5/air_pollution": (200, owAir),
