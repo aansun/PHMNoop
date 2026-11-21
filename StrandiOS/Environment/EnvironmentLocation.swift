@@ -3,21 +3,28 @@ import Foundation
 import CoreLocation
 import StrandAnalytics
 
-/// Where the person is, once, for the weather: a single coarse fix on request (kilometre accuracy, never tracking), kept rounded to
-/// about a kilometre. Without permission or a fix, the last place that was known stands in.
+/// Where the person is, once, for the weather: a short burst of fixes on request (never tracking), accepted only when it is recent and tight enough to
+/// mean the place the person is in, and kept rounded to about a kilometre. Without permission or a good fix, the last place that was known stands in.
 @MainActor
 final class EnvironmentLocation: NSObject, CLLocationManagerDelegate {
     static let shared = EnvironmentLocation()
 
     private let manager = CLLocationManager()
-    private var fixWaiters: [CheckedContinuation<CLLocationCoordinate2D?, Never>] = []
+    private var fixWaiters: [CheckedContinuation<CLLocation?, Never>] = []
     private var authWaiters: [CheckedContinuation<Void, Never>] = []
+    private var best: CLLocation?
+    /// Which wait a timer belongs to, so an earlier wait's timer cannot end a later one.
+    private var waitToken = 0
     private static let savedKey = "noop.environment.lastLocation"
+    /// A fix tighter than this ends the wait at once; the best one inside `usableAccuracy` is taken when the time is up.
+    private static let goodAccuracy: CLLocationAccuracy = 500
+    private static let usableAccuracy: CLLocationAccuracy = 5_000
 
     private override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyKilometer
+        // A kilometre of accuracy lets iOS answer from a cell tower, which can be tens of kilometres off away from a city; a hundred metres uses Wi-Fi and GPS.
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
     }
 
     var isAuthorized: Bool { [.authorizedWhenInUse, .authorizedAlways].contains(manager.authorizationStatus) }
@@ -40,7 +47,8 @@ final class EnvironmentLocation: NSObject, CLLocationManagerDelegate {
         if manager.authorizationStatus == .notDetermined { manager.requestWhenInUseAuthorization() }
     }
 
-    /// One coarse fix. Waits for the permission prompt when it is showing, and gives up after ten seconds without a fix.
+    /// The place now. Waits for the permission prompt when it is showing, asks for exact location once when the person gave only an approximate one, takes
+    /// fixes for up to eight seconds and keeps the tightest recent one. A cached or loose fix is not taken for the place the person is in.
     func current() async -> CLLocationCoordinate2D? {
         if manager.authorizationStatus == .notDetermined {
             manager.requestWhenInUseAuthorization()
@@ -50,18 +58,37 @@ final class EnvironmentLocation: NSObject, CLLocationManagerDelegate {
             }
         }
         guard isAuthorized else { return saved }
-        let fix: CLLocationCoordinate2D? = await withCheckedContinuation { cont in
-            fixWaiters.append(cont)
-            manager.requestLocation()
-            Task { try? await Task.sleep(nanoseconds: 10_000_000_000); self.resolve(nil) }
+        if manager.accuracyAuthorization == .reducedAccuracy {
+            // Approximate location is a box of many kilometres: ask, once for this use, for the exact one.
+            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+                manager.requestTemporaryFullAccuracyAuthorization(withPurposeKey: "Weather") { _ in cont.resume() }
+            }
         }
-        if let fix { remember(fix); return fix }
-        return manager.location.map { $0.coordinate } ?? saved
+        best = nil
+        waitToken += 1
+        let token = waitToken
+        let fix: CLLocation? = await withCheckedContinuation { cont in
+            fixWaiters.append(cont)
+            manager.startUpdatingLocation()
+            Task { try? await Task.sleep(nanoseconds: 8_000_000_000); if self.waitToken == token { self.finish() } }
+        }
+        manager.stopUpdatingLocation()
+        if let fix { remember(fix.coordinate); return fix.coordinate }
+        if let cached = manager.location, Self.isUsable(cached, maxAge: 1_800) { return cached.coordinate }
+        return saved
     }
 
-    private func resolve(_ c: CLLocationCoordinate2D?) {
+    private static func isUsable(_ l: CLLocation, maxAge: TimeInterval) -> Bool {
+        l.horizontalAccuracy >= 0 && l.horizontalAccuracy <= usableAccuracy && -l.timestamp.timeIntervalSinceNow <= maxAge
+    }
+
+    /// Ends the wait with the best fix so far (nil when none was usable).
+    private func finish() {
+        guard !fixWaiters.isEmpty else { return }
         let waiting = fixWaiters; fixWaiters = []
-        waiting.forEach { $0.resume(returning: c) }
+        let result = best
+        manager.stopUpdatingLocation()
+        waiting.forEach { $0.resume(returning: result) }
     }
 
     private func resumeAuth() {
@@ -70,12 +97,16 @@ final class EnvironmentLocation: NSObject, CLLocationManagerDelegate {
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let c = locations.last?.coordinate
-        Task { @MainActor in self.resolve(c) }
+        Task { @MainActor in
+            for l in locations where Self.isUsable(l, maxAge: 120) {
+                if self.best == nil || l.horizontalAccuracy < self.best!.horizontalAccuracy { self.best = l }
+            }
+            if let b = self.best, b.horizontalAccuracy <= Self.goodAccuracy { self.finish() }
+        }
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        Task { @MainActor in self.resolve(nil) }
+        // A failed fix leaves the wait to run out its time: another one may still arrive.
     }
 
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {

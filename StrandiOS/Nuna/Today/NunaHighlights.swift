@@ -462,12 +462,18 @@ struct NunaHighlightsCard: View {
             // A card with a picture is the compact one: smaller words, no three-line floor, 138 pt tall with its words centred.
             let compact = h.art != nil
             VStack(alignment: .leading, spacing: compact ? 8 : 6) {
-                Text(verbatim: h.title).font(.nunaWords(size: compact ? 13.5 : 14.5, semibold: true)).tracking(0).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text(verbatim: h.title).font(.nunaWords(size: (compact || NunaThemePrefs.skin == .whp) ? 13.5 : 14.5, semibold: true)).tracking(0).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 // Always at least three lines tall (a hidden three-line stand-in sets the floor), so every card is four lines with its title.
+                // In WHP the card is set as the WHOOP app sets it (measured off its card): a 13.5 pt title over a 12 pt message in a lighter grey, the same on
+                // every card whether or not it carries art. The other skins keep their own sizes.
+                let whp = NunaThemePrefs.skin == .whp
+                let bodySize: CGFloat = (compact || whp) ? 12 : 15
+                let bodyGap: CGFloat = whp ? 1.4 : 2
+                let bodyColor: Color = whp ? Color(hex: "#C0C4C7") : NunaPalette.textSecondary
                 ZStack(alignment: .topLeading) {
-                    if !compact { Text(verbatim: "A\nA\nA").font(.nunaWords(size: 15)).tracking(0).lineSpacing(2).hidden().accessibilityHidden(true) }
-                    Text(verbatim: h.message).font(.nunaWords(size: compact ? 12 : 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .lineSpacing(2).fixedSize(horizontal: false, vertical: true)
+                    if !compact { Text(verbatim: "A\nA\nA").font(.nunaWords(size: bodySize)).tracking(0).lineSpacing(bodyGap).hidden().accessibilityHidden(true) }
+                    Text(verbatim: h.message).font(.nunaWords(size: bodySize)).tracking(0).foregroundStyle(bodyColor).textCase(nil)
+                        .lineSpacing(bodyGap).fixedSize(horizontal: false, vertical: true)
                 }
                 if let t = h.actionTitle, let a = h.action {
                     Button { perform(a) } label: {

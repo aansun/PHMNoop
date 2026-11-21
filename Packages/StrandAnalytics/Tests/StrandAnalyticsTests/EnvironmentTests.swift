@@ -106,6 +106,27 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertFalse(log.calls.contains { $0.path == "/data/2.5/air_pollution" })   // IQAir answered, so no second request for the air now
     }
 
+    /// IQAir answers with its nearest city. A station tens of kilometres away is not the air here, so OpenWeather's reading at the exact place stands in;
+    /// a station close by is taken, and one that sends no coordinates is taken as before.
+    func testAFarIQAirStationIsLeftOutAndANearOneIsKept() async throws {
+        func body(lon: Double, lat: Double) -> String {
+            #"{"status":"success","data":{"city":"Far","location":{"type":"Point","coordinates":["# + "\(lon),\(lat)" + #"]},"current":{"pollution":{"aqius":132,"mainus":"p2"},"weather":{"tp":30,"hu":70,"ws":3.1}}}}"#
+        }
+        let routes: (String) -> [String: (Int, String)] = { iq in
+            ["api.openweathermap.org/data/2.5/weather": (200, self.owNow), "api.openweathermap.org/data/2.5/air_pollution": (200, self.owAir),
+             "api.airvisual.com/v2/nearest_city": (200, iq)]
+        }
+        // About 100 km east of the place asked.
+        let far = try await EnvironmentClient(openWeatherKey: "ow", iqAirKey: "iq", transport: transport(Log(), routes(body(lon: 1.9, lat: 0.0))))
+            .snapshot(latitude: 0.0, longitude: 1.0)
+        XCTAssertEqual(far.airSource, "openweather"); XCTAssertEqual(far.usAqi, AirQuality.usAqi(pm25: 40.2))
+        // About 3 km away.
+        let near = try await EnvironmentClient(openWeatherKey: "ow", iqAirKey: "iq", transport: transport(Log(), routes(body(lon: 1.03, lat: 0.0))))
+            .snapshot(latitude: 0.0, longitude: 1.0)
+        XCTAssertEqual(near.airSource, "iqair"); XCTAssertEqual(near.usAqi, 132)
+        XCTAssertEqual(EnvironmentClient.distanceKm(lat1: 0, lon1: 0, lat2: 0, lon2: 1).rounded(), 111)
+    }
+
     func testOpenWeatherAloneFillsTheAirFromParticles() async throws {
         let c = EnvironmentClient(openWeatherKey: "ow", iqAirKey: nil, transport: transport(Log(), [
             "api.openweathermap.org/data/2.5/weather": (200, owNow), "api.openweathermap.org/data/2.5/air_pollution": (200, owAir),

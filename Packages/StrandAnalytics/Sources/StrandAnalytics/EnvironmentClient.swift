@@ -168,6 +168,13 @@ public struct EnvironmentClient: Sendable {
             throw Failure.noData
         }
         guard let data = r["data"] as? [String: Any], let current = data["current"] as? [String: Any] else { throw Failure.noData }
+        // IQAir answers with its nearest CITY, which can be far from the place asked: a reading from a station tens of kilometres away is not the air here.
+        // Past that distance it is left out, and OpenWeather's reading at the exact place stands in. A body without coordinates is taken as it comes.
+        if let coords = (data["location"] as? [String: Any])?["coordinates"] as? [Any], coords.count == 2,
+           let sLon = Self.number(coords[0]), let sLat = Self.number(coords[1]),
+           Self.distanceKm(lat1: lat, lon1: lon, lat2: sLat, lon2: sLon) > Self.maxStationKm {
+            return
+        }
         if let aqi = (current["pollution"] as? [String: Any])?["aqius"] as? NSNumber { s.usAqi = aqi.intValue; s.airSource = "iqair" }
         // IQAir also carries the weather at its station: used only for what OpenWeather did not give.
         let w = current["weather"] as? [String: Any]
@@ -178,6 +185,17 @@ public struct EnvironmentClient: Sendable {
     }
 
     // MARK: Helpers
+
+    /// The farthest IQAir station whose air is taken as the air at the place asked.
+    public static let maxStationKm = 30.0
+
+    /// Great-circle distance in kilometres.
+    static func distanceKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double) -> Double {
+        let r = 6371.0, p = Double.pi / 180
+        let a = sin((lat2 - lat1) * p / 2) * sin((lat2 - lat1) * p / 2)
+            + cos(lat1 * p) * cos(lat2 * p) * sin((lon2 - lon1) * p / 2) * sin((lon2 - lon1) * p / 2)
+        return 2 * r * asin(min(1, sqrt(a)))
+    }
 
     private static func number(_ v: Any?) -> Double? {
         if let n = v as? NSNumber { let d = n.doubleValue; return d.isFinite ? d : nil }
