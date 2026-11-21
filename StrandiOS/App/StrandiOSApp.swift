@@ -623,7 +623,7 @@ struct StrandiOSApp: App {
             guard model.activeWorkout != nil,
                   model.gpsRecorder.isRecording,
                   model.gpsRecorder.pointCount > 0 else { return nil }
-            return UnitFormatter.distanceFromMeters(model.gpsRecorder.distanceM, system: distanceSystem)
+            return NunaWorkoutFormat.liveDistanceText(model.gpsRecorder.distanceM, distanceSystem)
         }()
         let pace: String? = distance.map { _ in
             UnitFormatter.paceFromSecPerKm(model.gpsRecorder.paceSecPerKm, system: distanceSystem)

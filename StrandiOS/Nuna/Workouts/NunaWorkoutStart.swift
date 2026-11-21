@@ -1547,7 +1547,7 @@ struct NunaLiveWorkoutView: View {
         if goal.distanceOn {
             // The distance so far is on the statistics row; the bar and this line only say what the target is, unless it is the only one.
             let goalText = UnitFormatter.distanceFromMeters(goal.km * 1000, system: distanceSystem)
-            targetParts.append(goal.timeOn || goal.zoneOn ? goalText : UnitFormatter.distanceFromMeters(distance, system: distanceSystem) + " / " + goalText)
+            targetParts.append(goal.timeOn || goal.zoneOn ? goalText : NunaWorkoutFormat.liveDistanceText(distance, distanceSystem) + " / " + goalText)
         }
         // The zone only, as a number: the range in bpm is on the Heart rate tab.
         if goal.zoneOn { targetParts.append(String(localized: "Zone \(goal.zone)")) }
@@ -1666,7 +1666,7 @@ struct NunaLiveWorkoutView: View {
         // A treadmill has no GPS: its own distance when the machine reports one, otherwise steps times a stride taken from the wearer's height.
         let treadmillMeters: Double? = StravaActivityType.isTreadmill(w.sport) ? treadmillDistance(w, steps: sessionSteps, seconds: activeSeconds) : nil
         let meters: Double? = gps.pointCount > 0 ? gps.distanceM : treadmillMeters
-        let dist = meters.map { split(UnitFormatter.distanceFromMeters($0, system: sys)) } ?? (dash, sys == .imperial ? "mi" : "km")
+        let dist = meters.map { NunaWorkoutFormat.liveDistance($0, sys) } ?? (dash, sys == .imperial ? "mi" : "km")
         // Pace: the GPS's, else the machine's speed, else the session average from the distance so far.
         let averagePace: Double? = treadmillMeters.flatMap { $0 >= 20 && activeSeconds >= 20 ? activeSeconds / ($0 / 1000) : nil }
         let paceSeconds = gps.paceSecPerKm ?? sensorSpeed.map { 3600 / $0 } ?? averagePace
