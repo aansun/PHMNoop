@@ -154,7 +154,7 @@ struct NunaWeatherAirCard: View {
         Group {
             if store.isActive {
                 if let s = store.snapshot {
-                    NavigationLink(value: NunaTodayRoute.weatherAir) { row { content(s) } }.buttonStyle(.plain)
+                    NavigationLink(value: NunaTodayRoute.weatherAir) { row(air: s.usAqi) { content(s) } }.buttonStyle(.plain)
                 } else {
                     row {
                         ProgressView().controlSize(.small)
@@ -167,10 +167,14 @@ struct NunaWeatherAirCard: View {
         .task { await store.refreshIfNeeded() }
     }
 
-    private func row<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        HStack(spacing: 12) { content() }
+    /// Like the Daily Outlook row: a wash from left to right. Here it starts in the colour of the air quality and settles into the colour of the card.
+    private func row<Content: View>(air: Int? = nil, @ViewBuilder _ content: () -> Content) -> some View {
+        let start = air.map { NunaEnvironmentFormat.airColor($0).opacity(0.62) }
+        return HStack(spacing: 12) { content() }
             .padding(.horizontal, 18).frame(height: 47).frame(maxWidth: .infinity)
-            .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(start.map { AnyShapeStyle(LinearGradient(colors: [$0, NunaPalette.cardSurface], startPoint: .leading, endPoint: .trailing)) }
+                        ?? AnyShapeStyle(NunaPalette.cardSurface),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     /// "32°, AQI 132: Better indoors".
@@ -187,13 +191,11 @@ struct NunaWeatherAirCard: View {
         let symbol = NunaEnvironmentFormat.symbol(conditionId: s.conditionId, feelsLikeC: s.effectiveC, night: NunaEnvironmentFormat.isNight(now))
         let fit = NunaEnvironmentFormat.advise(feels: s.effectiveC, humidity: s.humidityPct, wind: s.windMps, condition: s.conditionId, aqi: s.usAqi,
                                                rain: s.conditionId.map { (300..<600).contains($0) } == true ? 0.8 : 0).fit
-        // The sky inside a ring that takes the colour of the air quality.
-        Image(systemName: symbol).font(.system(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
-            .frame(width: 34, height: 34)
-            .overlay(Circle().stroke(s.usAqi.map { NunaEnvironmentFormat.airColor($0) } ?? NunaPalette.textMuted, lineWidth: 2.5))
+        // The sky now: rain and storm have their own, a clear sky is the sun (a full one when it is hot) or the moon at night.
+        Image(systemName: symbol).font(.system(size: 28, weight: .light)).foregroundStyle(NunaPalette.textPrimary).frame(width: 36)
         VStack(alignment: .leading, spacing: 1) {
             Text(verbatim: s.place.flatMap { $0.isEmpty ? nil : String(localized: "Today in \($0)") } ?? String(localized: "Today"))
-                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1)
+                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary.opacity(0.78)).textCase(nil).lineLimit(1)
             Text(verbatim: line(s, fit: fit)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 .lineLimit(1).minimumScaleFactor(0.8)
         }
