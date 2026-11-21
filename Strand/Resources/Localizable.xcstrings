@@ -9108,6 +9108,7 @@
  "Forecast": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Prakiraan"}}}},
  "Hourly forecast": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Prakiraan per jam"}}}},
  "Daily forecast": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Prakiraan harian"}}}},
+ "%@ in %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%1$@ di %2$@"}}}},
  "Data caught up": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Data sudah terbaru"}}}},
  "Synced to": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tersinkron sampai"}}}},
  "e.g. 2.0-5.0": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "mis. 2.0-5.0"}}}},

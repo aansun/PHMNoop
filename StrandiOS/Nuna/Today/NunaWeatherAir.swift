@@ -109,66 +109,31 @@ extension NunaEnvironmentFormat {
     }
 }
 
-// MARK: - The deck
+// MARK: - The sessions
 
-/// The four sessions of the day as cards laid on one another and fanned out to the right. The one in front keeps its size and shows the sky, the temperature, the
-/// range of the session, the air and whether it suits time outdoors; the others wait behind it, dimmed, with only the name of the session on the edge that shows.
-/// Touching one brings it to the front. Nothing changes size.
+/// The four sessions of the day as pages to slide through, left and right, each one a card with no background of its own, and four dots under them to say which is
+/// on show. The first is the session under way. Every page has the same size, so nothing moves when you slide.
 struct NunaSessionDeck: View {
     let slots: [EnvironmentOutlook.Slot]
+    /// The place, said in the top line of the page: "Jakarta in Afternoon".
+    var place: String?
     var height: CGFloat = 344
     @State private var active = 0
 
-    /// How much of each card behind shows at the right.
-    private static let peek: CGFloat = 28
-
     var body: some View {
-        GeometryReader { geo in
-            let n = slots.count
-            let width = geo.size.width - Self.peek * CGFloat(max(n - 1, 0))
-            ZStack(alignment: .topLeading) {
-                ForEach(Array(slots.enumerated()), id: \.element.id) { i, slot in
-                    let rank = (i - min(active, n - 1) + n) % max(n, 1)
-                    card(slot, rank: rank)
-                        .frame(width: width, height: height)
-                        .offset(x: CGFloat(rank) * Self.peek)
-                        .zIndex(Double(n - rank))
-                        .onTapGesture { if rank != 0 { withAnimation(.spring(response: 0.42, dampingFraction: 0.86)) { active = i } } }
+        VStack(spacing: 10) {
+            TabView(selection: $active) {
+                ForEach(Array(slots.enumerated()), id: \.element.id) { i, slot in front(slot).tag(i) }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: height)
+            HStack(spacing: 8) {
+                ForEach(0..<slots.count, id: \.self) { i in
+                    Circle().fill(NunaPalette.textPrimary.opacity(i == active ? 0.9 : 0.25)).frame(width: 7, height: 7)
                 }
             }
+            .accessibilityHidden(true)
         }
-        .frame(height: height)
-    }
-
-    private func card(_ slot: EnvironmentOutlook.Slot, rank: Int) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 22, style: .continuous)
-        return ZStack(alignment: .topLeading) {
-            front(slot).opacity(rank == 0 ? 1 : 0)
-            if rank != 0 { edge(slot) }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(shape.fill(NunaPalette.card))
-        .background(shape.fill(NunaPalette.recoveryBlue.opacity(rank == 0 ? 0.16 : 0.05)))
-        // Behind the front card, a little darker the further back it is.
-        .overlay(shape.fill(Color.black.opacity(rank == 0 ? 0 : 0.14 + 0.07 * Double(rank))))
-        .overlay(shape.strokeBorder(Color.white.opacity(rank == 0 ? 0.08 : 0.04), lineWidth: 1))
-        .shadow(color: .black.opacity(rank == 3 ? 0 : 0.28), radius: 8, x: -3, y: 0)
-        .contentShape(shape)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text(verbatim: NunaEnvironmentFormat.partName(slot.part)))
-        .accessibilityAddTraits(rank == 0 ? [] : .isButton)
-    }
-
-    /// The edge of a card behind: the name of the session, turned to read along the strip, and nothing else.
-    private func edge(_ slot: EnvironmentOutlook.Slot) -> some View {
-        HStack(spacing: 0) {
-            Spacer(minLength: 0)
-            Text(verbatim: NunaEnvironmentFormat.partName(slot.part)).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                .foregroundStyle(NunaPalette.textMuted).lineLimit(1).fixedSize()
-                .rotationEffect(.degrees(90))
-                .frame(width: Self.peek, height: 104)
-        }
-        .padding(.top, 18)
     }
 
     /// The card in front, centred from top to bottom: the session, the temperature large with its range, the sky large, its name, whether it suits time outdoors,
@@ -176,8 +141,9 @@ struct NunaSessionDeck: View {
     private func front(_ slot: EnvironmentOutlook.Slot) -> some View {
         VStack(spacing: 9) {
             VStack(spacing: 2) {
-                Text(verbatim: NunaEnvironmentFormat.partName(slot.part)).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                Text(verbatim: place.map { String(localized: "\($0) in \(NunaEnvironmentFormat.partName(slot.part))") } ?? NunaEnvironmentFormat.partName(slot.part))
+                    .font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
                 // The session under way reads "Now – 17:00": it is in progress, so its own start is not worth saying.
                 HStack(spacing: 4) {
                     if slot.isCurrent {
@@ -204,7 +170,7 @@ struct NunaSessionDeck: View {
             } else {
                 Text("Feels like \(NunaInsightText.degrees(slot.peakFeelsLikeC))").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
-            Image(systemName: NunaEnvironmentFormat.symbol(conditionId: slot.conditionId, feelsLikeC: slot.peakFeelsLikeC, night: slot.part == .night))
+            Image(systemName: NunaEnvironmentFormat.symbol(conditionId: slot.conditionId, feelsLikeC: slot.peakFeelsLikeC, night: slot.part == .night || NunaEnvironmentFormat.isNight(slot.start)))
                 .font(.system(size: 58)).foregroundStyle(NunaPalette.recoveryBlue).frame(height: 62).padding(.top, 4)
             Text(verbatim: NunaEnvironmentFormat.skyText(conditionId: slot.conditionId)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1)
             VStack(spacing: 5) {
@@ -291,13 +257,12 @@ struct NunaWeatherAirCard: View {
                 HStack {
                     nunaTrendsCap("Weather and air")
                     Spacer()
-                    if let place = s.place { Text(verbatim: place).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                     Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            if let outlook, !outlook.slots.isEmpty { NunaSessionDeck(slots: outlook.slots) }
+            if let outlook, !outlook.slots.isEmpty { NunaSessionDeck(slots: outlook.slots, place: s.place) }
         }
     }
 }
@@ -341,17 +306,10 @@ struct NunaWeatherAirView: View {
 
     // MARK: Sessions
 
-    /// The deck stands on the page by itself, with no card behind it and no title: the place above it, the best hours to train under it.
+    /// The deck stands on the page by itself, with no card behind it and no title (the place is in the top line of the card in front), the best hours to train under it.
     private func deckCard(_ s: EnvironmentSnapshot, outlook: EnvironmentOutlook?) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            if let place = s.place {
-                HStack(spacing: 6) {
-                    Image(systemName: "mappin.and.ellipse").font(.nuna(size: 12, weight: .bold))
-                    Text(verbatim: place).font(.nuna(size: 13, weight: .semibold)).textCase(nil)
-                }
-                .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 4)
-            }
-            if let outlook, !outlook.slots.isEmpty { NunaSessionDeck(slots: outlook.slots, height: 356) }
+            if let outlook, !outlook.slots.isEmpty { NunaSessionDeck(slots: outlook.slots, place: s.place, height: 356) }
             if let best = outlook?.best {
                 HStack(spacing: 8) {
                     Image(systemName: "figure.run").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.charge)
