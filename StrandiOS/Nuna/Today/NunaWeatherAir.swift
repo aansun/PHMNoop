@@ -346,11 +346,13 @@ struct NunaWeatherAirView: View {
                 metricBox
                 header(pts, active)
                 if let active {
-                    Text(verbatim: sentence(active)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
+                    Text(verbatim: lead(pts, active, place: s.place) + sentence(active)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil).multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2)
                 } else {
                     Text(verbatim: metric == .air ? String(localized: "The air forecast needs an OpenWeather key.") : String(localized: "Nothing in the forecast for this period yet."))
-                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).padding(.horizontal, 2)
+                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2)
                 }
                 if range == 5, metric == .weather { legend }
                 if pts.count >= 2 { chart(pts, active: active) } else { needKey }
@@ -557,6 +559,18 @@ struct NunaWeatherAirView: View {
             .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 9).padding(.vertical, 4)
             .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
+    }
+
+    /// The place and the moment that open the sentence: "Now in Jakarta. ", "Today in Jakarta. ", "At 18.03 in Jakarta. ". Nothing without a place.
+    private func lead(_ pts: [Point], _ p: Point, place: String?) -> String {
+        guard let place, !place.isEmpty else { return "" }
+        let first = pts.first.map { $0.date == p.date } ?? false
+        let when: String
+        if first, range == 1, page == 0 { when = String(localized: "Now") }
+        else if first, range == 5 { when = String(localized: "Today") }
+        else if range == 5 { when = String(localized: "On \(label(p.date))") }
+        else { when = String(localized: "At \(label(p.date))") }
+        return String(localized: "\(when) in \(place)") + ". "
     }
 
     /// What is said about the moment on show: the feel, the wind and the humidity (or the air), and whether it is a good time to be outdoors.
