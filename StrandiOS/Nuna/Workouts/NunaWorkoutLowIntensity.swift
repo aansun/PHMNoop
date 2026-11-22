@@ -87,6 +87,9 @@ struct NunaLowFigures: View {
     let row: WorkoutRow
     let averages: NunaWorkoutAverages?
     let stress: [NunaWorkoutStress.Point]
+    /// The steps of an activity on foot (a walk, a run on the treadmill): when they are known they take the place of the stress change, as they do in
+    /// the log of a mapped session. The stress is still on its own tab.
+    var steps: Int? = nil
 
     var body: some View {
         let secs = row.durationS ?? Double(row.endTs - row.startTs)
@@ -105,9 +108,15 @@ struct NunaLowFigures: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             VStack(alignment: .leading, spacing: 6) {
-                Text(verbatim: change.map { NunaWorkoutStress.text($0) } ?? "–").font(.nuna(size: 36, weight: .bold, design: NunaType.design))
-                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
-                caption("Stress change")
+                if let steps {
+                    Text(verbatim: NunaTrendsFormat.num(Double(steps))).font(.nuna(size: 36, weight: .bold, design: NunaType.design))
+                        .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                    caption("Steps")
+                } else {
+                    Text(verbatim: change.map { NunaWorkoutStress.text($0) } ?? "–").font(.nuna(size: 36, weight: .bold, design: NunaType.design))
+                        .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                    caption("Stress change")
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

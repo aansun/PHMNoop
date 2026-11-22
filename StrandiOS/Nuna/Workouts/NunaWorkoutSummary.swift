@@ -142,7 +142,7 @@ struct NunaWorkoutSummaryView: View {
     /// A session in which the heart rate stayed in zone 0 and zone 1: the minutes and the stress change, Anya's line, the stress and the heart
     /// rate on two tabs, the milestone, the heart-rate figures and the impact on recovery.
     @ViewBuilder private func lowContent(_ r: WorkoutRow, shown: WorkoutRow, mins: [Double]?, averages: NunaWorkoutAverages?) -> some View {
-        NunaLowFigures(row: r, averages: averages, stress: stress)
+        NunaLowFigures(row: r, averages: averages, stress: stress, steps: data.steps)
         if let line = anyaLine(shown, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }
         NunaCapsuleTabs(options: [(value: LowTab.stress, title: "Stress"), (value: LowTab.heartRate, title: "Heart rate")], selection: $lowTab)
         switch lowTab {
