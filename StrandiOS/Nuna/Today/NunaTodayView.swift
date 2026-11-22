@@ -193,6 +193,7 @@ struct NunaTodayView: View {
     @State private var showDate = false
     @State private var showCoach = false
     @State private var showOutlook = false
+    @State private var debugBattery = false
     @State private var editing = false
     @State private var showManual = false
     /// The saved session the Anya card opens straight to.
@@ -447,6 +448,14 @@ struct NunaTodayView: View {
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             router.openMetric(args[i + 1])
         }
+        // `--open-battery` opens the strap's battery page, once (with `--demo-battery`, a charge and a week of readings).
+        .task {
+            guard CommandLine.arguments.contains("--open-battery"), !NunaTodayDebug.openedPlanner else { return }
+            NunaTodayDebug.openedPlanner = true
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            debugBattery = true
+        }
+        .fullScreenCover(isPresented: $debugBattery) { NavigationStack { NunaDeviceBatteryView() } }
         // `--open-nap` opens the nap page on today's first nap, once.
         .task {
             guard CommandLine.arguments.contains("--open-nap"), !NunaTodayDebug.openedPlanner else { return }
