@@ -150,8 +150,19 @@ struct NunaWorkoutSummaryView: View {
             if stress.count >= 2 { NunaWorkoutStressArea(points: stress, start: r.startTs, end: r.endTs) }
             else { Text("There is not enough heart rate in this session to read the stress.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
         case .heartRate:
-            if data.hr.count >= 2 { NunaWorkoutHRArea(buckets: data.hr, start: r.startTs, end: r.endTs, around: data.hrAround, plotHeight: 200) }
-            else { Text("There is no heart rate for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+            // A session that is not truly low (a minute or more in zone 2 or above, as a brisk walk is) also shows its zones under the chart,
+            // as the log of a mapped session does. A session that stayed in zone 0 and 1 keeps the plain chart.
+            let reachedHigherZones = (mins?.dropFirst().reduce(0, +) ?? 0) >= 1
+            if data.hr.count >= 2 {
+                NunaWorkoutHRArea(buckets: data.hr, start: r.startTs, end: r.endTs, around: data.hrAround,
+                                  highlightZone: reachedHigherZones ? zonePick : nil, zoneSet: profile.hrZoneSet, plotHeight: 200)
+            } else { Text("There is no heart rate for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+            if reachedHigherZones {
+                NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: r.startTs, end: r.endTs,
+                                    typical: NunaWorkoutLogZones.typical(for: r, in: m.rows), durationS: nil,
+                                    belowMinutes: NunaWorkoutZoneMath.below(r, measured: data.zoneMin))
+                zoneFootnote
+            }
         }
         NunaActivityMilestoneCard(count: m.rows.filter { $0.sport == r.sport && $0.startTs <= r.startTs }.count)
         NunaSessionMetrics(items: sessionMetrics(r, averages: averages))
