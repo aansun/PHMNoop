@@ -85,6 +85,20 @@ struct NunaWeatherAirExplainer: View {
     }
 }
 
+/// Under the strap's battery page: how to look after the battery, and what the figures on the page are.
+struct NunaBatteryCareInfo: View {
+    var body: some View {
+        NunaInfoCard(title: "Looking after the battery") {
+            VStack(alignment: .leading, spacing: 10) {
+                nunaInfoBullet("Charge the strap while you are awake, in the shower or at your desk, so no sleep data is lost.")
+                nunaInfoBullet("Avoid heat: do not charge in direct sunlight.")
+                nunaInfoBullet("Dry the contacts: clean and dry them before charging.")
+            }
+            nunaInfoParagraph("The percentage is read from the strap. The time left is estimated from the readings of this session only and gets better the longer the strap stays connected.")
+        }
+    }
+}
+
 /// On the keys page of Weather and air: what each of the two keys is used for and what leaves the phone.
 struct NunaWeatherAirKeysInfo: View {
     var body: some View {

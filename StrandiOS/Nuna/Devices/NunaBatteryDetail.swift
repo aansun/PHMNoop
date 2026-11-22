@@ -111,20 +111,7 @@ struct NunaDeviceBatteryView: View {
                 }
                 .padding(.horizontal, 4)
             }
-            VStack(alignment: .leading, spacing: 10) {
-                nunaRuledHeader("Looking after the battery")
-                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                    VStack(spacing: 0) {
-                        NunaListRow("Recovery while you are awake", description: "In the shower or at your desk, so no sleep data is lost", systemImage: NunaIcons.sleep)
-                        NunaDivider()
-                        NunaListRow("Avoid heat", description: "Do not charge in direct sunlight", systemImage: "sun.max")
-                        NunaDivider()
-                        NunaListRow("Dry the contacts", description: "Clean and dry them before charging", systemImage: "drop")
-                    }
-                }
-            }
-            Text("The percentage is read from the strap. The time left is estimated from the readings of this session only and gets better the longer the strap stays connected.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            NunaBatteryCareInfo()
         }
         .task {
             #if DEBUG
@@ -137,29 +124,19 @@ struct NunaDeviceBatteryView: View {
 
     // MARK: Ring
 
-    private func hero(_ pct: Double?) -> some View {
+    private var charging: Bool {
         #if DEBUG
-        let charging = Self.demo ? !Self.demoDischarging : live.isCharging
-        #else
-        let charging = live.isCharging
+        if Self.demo { return !Self.demoDischarging }
         #endif
+        return live.isCharging
+    }
+
+    /// Only the ring: the level in it, filled to it, with the state of the strap above.
+    private func hero(_ pct: Double?) -> some View {
         let caption: LocalizedStringKey = charging ? "Charging" : (live.connected || Self.isDemo ? "Not charging" : "Not connected")
-        let estimate = estimateValue(charging: charging)
-        return ZStack {
-            ring(pct: pct, caption: caption)
-            VStack(spacing: 2) {
-                Text(verbatim: estimate ?? "–").font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1).minimumScaleFactor(0.7)
-                Text(charging ? "To full" : "Left").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(blue)
-            }
-            .padding(.horizontal, 20).padding(.vertical, 12)
-            .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(NunaPalette.canvas))
-            .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(NunaPalette.glassStrong))
-            .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
-            .shadow(color: blue.opacity(0.25), radius: 14, y: 6)
-            .offset(x: 92, y: 96)
-        }
-        .frame(maxWidth: .infinity).frame(height: 292)
-        .accessibilityElement(children: .combine)
+        return ring(pct: pct, caption: caption)
+            .frame(maxWidth: .infinity).frame(height: 270)
+            .accessibilityElement(children: .combine)
     }
 
     private static var isDemo: Bool {
@@ -258,9 +235,9 @@ struct NunaDeviceBatteryView: View {
             NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text("Battery charge:").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        Text(verbatim: (bars ? dayBars.last?.value : active?.value).map { "\(Int($0.rounded()))%" } ?? "–")
-                            .font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(charging ? "Time to full:" : "Time left:").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        Text(verbatim: estimateValue(charging: charging) ?? "–")
+                            .font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                         Spacer()
                         HStack(spacing: 2) {
                             modeButton("percent", on: !bars) { bars = false }
@@ -313,10 +290,17 @@ struct NunaDeviceBatteryView: View {
                     .chartOverlay { proxy in
                         GeometryReader { geo in
                             if let frame = proxy.plotFrame.map({ geo[$0] }), !bars {
-                                Rectangle().fill(Color.clear).contentShape(Rectangle()).frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
-                                    .gesture(DragGesture(minimumDistance: 0).onChanged { g in
-                                        if let d: Date = proxy.value(atX: g.location.x - frame.minX) { picked = d }
-                                    }.onEnded { _ in picked = nil })
+                                ZStack {
+                                    if let a = active, let x = proxy.position(forX: a.date), let y = proxy.position(forY: a.value) {
+                                        Text(verbatim: "\(Int(a.value.rounded()))%").font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                            .fixedSize().position(x: min(max(frame.minX + x, frame.minX + 14), frame.maxX - 14), y: max(frame.minY + y - 20, frame.minY + 8))
+                                            .allowsHitTesting(false)
+                                    }
+                                    Rectangle().fill(Color.clear).contentShape(Rectangle()).frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
+                                        .gesture(DragGesture(minimumDistance: 0).onChanged { g in
+                                            if let d: Date = proxy.value(atX: g.location.x - frame.minX) { picked = d }
+                                        }.onEnded { _ in picked = nil })
+                                }
                             }
                         }
                     }
