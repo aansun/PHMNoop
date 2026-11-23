@@ -3317,6 +3317,14 @@ final class IntelligenceEngine: ObservableObject {
                                  editsByStart: [Int: CachedSleepSession],
                                  habitualMidsleepSec: Int?) -> DailyMetric {
         guard !editsByStart.isEmpty else { return daily }
+        // An edited night is the person's word. The edit replaces its detected twin by the twin's onset; but the same night found again with an onset
+        // a few seconds off (the detector runs again as the data grows) has another key and was counted as a second block, and the longer one, the
+        // detected one, won the main-night pick: the day kept the total from before the edit (9 h after a correction to 7 h). A detected block that
+        // overlaps an edited one is that night again, so it is left out.
+        let editedSpans = editsByStart.values.map { (start: $0.effectiveStartTs, end: $0.endTs) }
+        let detected = detected.filter { d in
+            editsByStart[d.startTs] != nil || !editedSpans.contains { $0.start < d.endTs && d.effectiveStartTs < $0.end }
+        }
         let detectedTuples = detected.map { (startTs: $0.startTs, stagesJSON: $0.stagesJSON) }
         let editedStages = editsByStart.mapValues { $0.stagesJSON }
         // A hand-logged nap is a userEdited row with NO detected twin , it would never be
