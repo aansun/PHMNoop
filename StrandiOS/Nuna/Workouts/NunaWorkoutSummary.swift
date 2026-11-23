@@ -20,6 +20,7 @@ struct NunaWorkoutSummaryView: View {
     @EnvironmentObject private var intelligence: IntelligenceEngine
     @State private var confirmDelete = false
     @State private var showCoach = false
+    @State private var showBreathAnya = false
     @State private var showEdit = false
     @State private var showEditActivity = false
     /// The zone picked in the zone list, lit on the heart-rate curve.
@@ -59,7 +60,7 @@ struct NunaWorkoutSummaryView: View {
                 await data.load(startTs: r.startTs, endTs: r.endTs, sport: r.sport, source: r.source, knownSteps: r.steps, repo: repo, zoneSet: profile.hrZoneSet, ticksPerStep: profile.stepTicksPerStep)
                 stravaState = NunaStravaCheck.state(r)
                 let z = NunaWorkoutZoneMath.minutes(r, measured: data.zoneMin)
-                stress = NunaLowIntensity.applies(row: r, zoneMinutes: z, hasHeartRate: data.hr.count >= 2, hasRoute: data.route.count >= 2)
+                stress = NunaLowIntensity.applies(row: r, zoneMinutes: z, hasHeartRate: data.hr.count >= 2, hasRoute: data.route.count >= 2) || r.sport == NunaBreathRecovery.sport
                     ? await NunaWorkoutStress.series(repo: repo, from: r.startTs, to: r.endTs) : []
                 // A session that has just finished is read against the conditions now, when none was taken near it.
                 if Int(Date().timeIntervalSince1970) - r.endTs < 90 * 60, environment.snapshot(near: (r.startTs + r.endTs) / 2) == nil {
@@ -82,6 +83,7 @@ struct NunaWorkoutSummaryView: View {
             Button("OK", role: .cancel) {}
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
+        .sheet(isPresented: $showBreathAnya) { NunaAnyaSheet(context: "Breathing") }
         .environment(\.nunaAnyaCardContext, "workouts")
         // Anya as one slim row, as on Today; what she says beyond the headline is in the sheet it opens.
         .environment(\.nunaAnyaRow, true)
@@ -112,7 +114,7 @@ struct NunaWorkoutSummaryView: View {
                 NunaWorkoutLogStats(row: shown.row, steps: data.steps, averages: averages, distanceEstimated: shown.estimated, routeShown: false, stepsAtTop: data.steps != nil)
                 heartRateAndZones(r, mins: mins)
             }
-            if let line = anyaLine(shown.row, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }
+            anyaCard(shown.row, mins: mins, averages: averages)
         }
     }
 
@@ -143,7 +145,7 @@ struct NunaWorkoutSummaryView: View {
     /// rate on two tabs, the milestone, the heart-rate figures and the impact on recovery.
     @ViewBuilder private func lowContent(_ r: WorkoutRow, shown: WorkoutRow, mins: [Double]?, averages: NunaWorkoutAverages?) -> some View {
         NunaLowFigures(row: r, averages: averages, stress: stress, steps: data.steps)
-        if let line = anyaLine(shown, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }
+        anyaCard(shown, mins: mins, averages: averages)
         NunaCapsuleTabs(options: [(value: LowTab.stress, title: "Stress"), (value: LowTab.heartRate, title: "Heart rate")], selection: $lowTab)
         switch lowTab {
         case .stress:
@@ -186,6 +188,17 @@ struct NunaWorkoutSummaryView: View {
     }
 
     // MARK: Anya
+
+    /// Anya's card under the figures. A breathing session gets her own reading of it (what the heart rate, HRV and stress did) in a warm voice, and
+    /// when the same exercise keeps coming back, the offer to keep it as a favourite; every other session gets the workout read.
+    @ViewBuilder private func anyaCard(_ r: WorkoutRow, mins: [Double]?, averages: NunaWorkoutAverages?) -> some View {
+        if let rec = NunaBreathCoach.record(for: r) {
+            NunaBreathInsightCard(insight: NunaBreathCoach.insight(for: rec, stress: stress)) { showBreathAnya = true }
+            if let offer = NunaBreathCoach.offer(for: rec) { NunaBreathFavoriteOffer(offer: offer) }
+        } else if let line = anyaLine(r, mins: mins, averages: averages) {
+            NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true }
+        }
+    }
 
     /// Everything the log says, for Anya to read: the zone line first, then distance and pace, steps, calories, heart rate and Effort, each
     /// against the wearer's own 30-day average of the sport when there is one.

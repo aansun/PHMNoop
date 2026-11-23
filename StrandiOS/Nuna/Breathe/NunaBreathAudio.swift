@@ -46,10 +46,11 @@ final class BreathVoice: NSObject, ObservableObject {
 
     func stop() { synthesizer.stopSpeaking(at: .immediate) }
 
-    func say(_ text: String) {
+    /// With `queued` the words wait for what is being said (the first step after "Let's begin") instead of cutting it off.
+    func say(_ text: String, queued: Bool = false) {
         guard active, !text.isEmpty else { return }
         // A step said late is worse than not said: the one in progress is cut off by the next.
-        synthesizer.stopSpeaking(at: .immediate)
+        if !queued || !synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
         let u = AVSpeechUtterance(string: text)
         u.voice = Self.voice()
         u.rate = AVSpeechUtteranceDefaultSpeechRate * 0.82
@@ -83,41 +84,75 @@ final class NunaBreathCue: ObservableObject {
         }
     }
 
-    func deactivate() { apply(.off) }
+    func deactivate() { guard !releasing else { return }; apply(.off) }
 
     /// The cue for the step that begins now. `previous` tells a hold after the inhale (lungs full) from one after the exhale (lungs empty).
-    func cue(_ phase: BreathPhase, previous: BreathPhase?, label: String?) {
+    func cue(_ phase: BreathPhase, previous: BreathPhase?, label: String?, queued: Bool = false) {
         switch mode {
         case .off: break
         case .tone:
             switch phase {
-            case .inhale: tones.play(.inhale)
-            case .exhale: tones.play(.exhale)
-            case .hold: tones.play(previous == .exhale ? .holdEmpty : .holdFull)
+            case .inhale: tones.play(.inhale, queued: queued)
+            case .exhale: tones.play(.exhale, queued: queued)
+            case .hold: tones.play(previous == .exhale ? .holdEmpty : .holdFull, queued: queued)
             case .textOnly: break
             }
         case .voice:
             switch phase {
-            case .inhale: voice.say(String(localized: "Breathe in"))
-            case .exhale: voice.say(String(localized: "Breathe out"))
-            case .hold: voice.say(String(localized: "Hold"))
-            case .textOnly: if let l = label, !l.isEmpty { voice.say(String(localized: String.LocalizationValue(l))) }
+            case .inhale: voice.say(String(localized: "Breathe in"), queued: queued)
+            case .exhale: voice.say(String(localized: "Breathe out"), queued: queued)
+            case .hold: voice.say(String(localized: "Hold"), queued: queued)
+            case .textOnly: if let l = label, !l.isEmpty { voice.say(String(localized: String.LocalizationValue(l)), queued: queued) }
             }
         }
     }
 
-    /// Said once when the time is up.
+    /// The marks of the session itself, which the wearer hears whichever way the steps are cued: the start, a pause, a carry-on and the end.
+    func started() {
+        switch mode {
+        case .off: break
+        case .tone: tones.play(.begin)
+        case .voice: voice.say(String(localized: "Let's begin. Get comfortable and breathe with me."))
+        }
+    }
+
+    func paused() {
+        switch mode {
+        case .off: break
+        case .tone: tones.play(.pause)
+        case .voice: voice.say(String(localized: "Paused."))
+        }
+    }
+
+    func resumed() {
+        switch mode {
+        case .off: break
+        case .tone: tones.play(.begin)
+        case .voice: voice.say(String(localized: "Continuing."))
+        }
+    }
+
+    /// Said (or sounded) once the last breath is out.
     func finished() {
-        if mode == .voice { voice.say(String(localized: "Well done. Breathe normally.")) }
+        switch mode {
+        case .off: break
+        case .tone: tones.play(.complete)
+        case .voice: voice.say(String(localized: "The exercise is complete. Well done. Now breathe normally."))
+        }
     }
 
     func silence() { voice.stop() }
 
-    /// Lets the closing words finish before the audio session is released.
+    /// Set while the closing words are still being spoken: the screen that ends under them must not cut them off.
+    private var releasing = false
+
+    /// Lets the closing words finish before the audio session is released, also after the screen that began them is gone.
     func releaseAfterFinishing() {
-        guard mode == .voice else { deactivate(); return }
+        guard mode != .off else { deactivate(); return }
+        releasing = true
         finished()
-        Task { try? await Task.sleep(nanoseconds: 3_500_000_000); deactivate() }
+        let wait: UInt64 = mode == .voice ? 6_000_000_000 : 3_200_000_000
+        Task { try? await Task.sleep(nanoseconds: wait); releasing = false; deactivate() }
     }
 }
 #endif

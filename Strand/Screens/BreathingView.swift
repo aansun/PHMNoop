@@ -987,7 +987,9 @@ private final class ControllerBox: ObservableObject {
 @MainActor
 final class BreathTonePlayer: ObservableObject {
 
-    enum Tone { case inhale, exhale, holdFull, holdEmpty }
+    /// `begin`, `pause` and `complete` are the session's own marks, told apart from the phase cues: two notes rising as it starts (and as it
+    /// carries on), two falling when it is paused, and four slow rising notes when it is done.
+    enum Tone: Hashable { case inhale, exhale, holdFull, holdEmpty, begin, pause, complete }
 
     private let engine = AVAudioEngine()
     private let player = AVAudioPlayerNode()
@@ -996,6 +998,7 @@ final class BreathTonePlayer: ObservableObject {
     /// A short double blip for a hold: higher after the inhale (lungs full), lower after the exhale (lungs empty).
     private var holdFullBuffer: AVAudioPCMBuffer?
     private var holdEmptyBuffer: AVAudioPCMBuffer?
+    private var markBuffers: [Tone: AVAudioPCMBuffer] = [:]
     private var active = false
 
     /// Phase tone frequencies (Hz). A gentle rising/falling pair — a soft cue, not a chime.
@@ -1020,6 +1023,11 @@ final class BreathTonePlayer: ObservableObject {
         if exhaleBuffer == nil { exhaleBuffer = makeTone(frequency: exhaleHz, format: format) }
         if holdFullBuffer == nil { holdFullBuffer = makeBlips(frequency: 523, format: format) }
         if holdEmptyBuffer == nil { holdEmptyBuffer = makeBlips(frequency: 262, format: format) }
+        if markBuffers.isEmpty {
+            markBuffers[.begin] = makeSequence(frequencies: [392, 523], note: 0.24, format: format)
+            markBuffers[.pause] = makeSequence(frequencies: [523, 392], note: 0.2, format: format)
+            markBuffers[.complete] = makeSequence(frequencies: [392, 494, 587, 784], note: 0.42, format: format)
+        }
 
         engine.attach(player)
         engine.connect(player, to: engine.mainMixerNode, format: format)
@@ -1048,7 +1056,8 @@ final class BreathTonePlayer: ObservableObject {
 
     /// Play the phase tone. No-op if the engine isn't up (e.g. start-up race) — the haptic + visual cues
     /// still carry the pace, so a missed tone is harmless.
-    func play(_ tone: Tone) {
+    /// With `queued` the tone waits for the one still sounding instead of cutting it off (the first phase cue after the start mark).
+    func play(_ tone: Tone, queued: Bool = false) {
         guard active else { return }
         let buffer: AVAudioPCMBuffer?
         switch tone {
@@ -1056,9 +1065,29 @@ final class BreathTonePlayer: ObservableObject {
         case .exhale: buffer = exhaleBuffer
         case .holdFull: buffer = holdFullBuffer
         case .holdEmpty: buffer = holdEmptyBuffer
+        case .begin, .pause, .complete: buffer = markBuffers[tone]
         }
         guard let buffer else { return }
-        player.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
+        player.scheduleBuffer(buffer, at: nil, options: queued ? [] : .interrupts, completionHandler: nil)
+    }
+
+    /// Soft notes one after the other, each fading out under the next, as one buffer: the marks of the session's start, pause and end.
+    private func makeSequence(frequencies: [Double], note: Double, format: AVAudioFormat) -> AVAudioPCMBuffer? {
+        let noteN = Int(note * sampleRate), tail = Int(0.25 * sampleRate)
+        let total = noteN * frequencies.count + tail
+        guard total > 0, let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(total)),
+              let channel = buffer.floatChannelData?[0] else { return nil }
+        buffer.frameLength = AVAudioFrameCount(total)
+        for i in 0..<total { channel[i] = 0 }
+        let attack = Int(0.02 * sampleRate), ring = noteN + tail
+        for (k, f) in frequencies.enumerated() {
+            let begin = k * noteN
+            for j in 0..<ring where begin + j < total {
+                let env: Float = j < attack ? Float(j) / Float(attack) : Float(max(0, 1 - Double(j - attack) / Double(ring - attack)))
+                channel[begin + j] += Float(sin(2.0 * Double.pi * f * Double(j) / sampleRate)) * env * env * 0.22
+            }
+        }
+        return buffer
     }
 
     /// Two short soft blips with a gap between them: "hold", told apart from the long tones of the inhale and the exhale.

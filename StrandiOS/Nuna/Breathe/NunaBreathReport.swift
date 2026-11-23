@@ -27,8 +27,8 @@ struct NunaBreathReportView: View {
         NunaDetailScreen(LocalizedStringKey(title), titleSymbol: "lungs.fill", subtitle: NunaWorkoutFormat.span(record.startTs, end), titleActivity: goal.activity,
                          trailing: AnyView(actionsMenu), onBack: onDone) {
             figures(averages)
-            let v = Self.verdict(record)
-            NunaAnyaCard(verbatim: v.headline, detail: v.detail) { showAnya = true }
+            NunaBreathInsightCard(insight: NunaBreathCoach.insight(for: record)) { showAnya = true }
+            if !readOnly, let offer = NunaBreathCoach.offer(for: record) { NunaBreathFavoriteOffer(offer: offer) }
             if hasCurves {
                 NunaCapsuleTabs(options: [(value: Tab.stats, title: "Key statistics"), (value: Tab.curves, title: "Heart rate")], selection: $tab)
                 if tab == .stats { keyStatistics(averages) } else { charts }
@@ -152,25 +152,6 @@ struct NunaBreathReportView: View {
             if let title { NunaLogSectionTitle(title: title) }
             NunaWorkoutHRArea(buckets: points, start: record.startTs, end: max(end, record.startTs + 1), step: step, tint: tint)
         }
-    }
-
-    /// A reading worked out from this session's own numbers.
-    static func verdict(_ r: NunaBreathRecord) -> (headline: String, detail: String?) {
-        var detail: [String] = []
-        if let a = r.hrStart, let b = r.hrEnd, a - b >= 3 {
-            detail.append(String(localized: "Heart rate came down from \(Int(a.rounded())) to \(Int(b.rounded())) bpm."))
-        } else if let a = r.hrStart, let b = r.hrEnd, b - a >= 3 {
-            detail.append(String(localized: "Heart rate rose from \(Int(a.rounded())) to \(Int(b.rounded())) bpm, which is normal for energising or focus breathing."))
-        }
-        guard let p = r.rmssdChangePct else {
-            return (String(localized: "No HRV was recorded this time"),
-                    ([String(localized: "Wear the strap snug and sit still so it can pick up your beats.")] + detail).joined(separator: " "))
-        }
-        if p >= 10 { return (String(localized: "Your HRV rose \(Int(p.rounded()))% while you breathed. Your body settled."), detail.joined(separator: " ").nilIfEmpty) }
-        if p <= -10 { return (String(localized: "Your HRV was \(Int(abs(p).rounded()))% lower than at the start."),
-                              ([String(localized: "That can happen with focus or energising techniques, or when you were already calm. A longer exhale tends to lift it.")] + detail).joined(separator: " ")) }
-        return (String(localized: "Your HRV stayed close to where it began."),
-                ([String(localized: "Short sessions often change little. Try ten minutes at a slower pace.")] + detail).joined(separator: " "))
     }
 }
 

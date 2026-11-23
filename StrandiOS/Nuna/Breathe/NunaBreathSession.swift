@@ -50,6 +50,11 @@ struct NunaBreathSessionView: View {
     @State private var hrSeries: [Double] = []
     @State private var rmssdSeries: [Double] = []
     @State private var confirmEnd = false
+    /// The time is up but the breath in progress is not: the session goes on to the end of the out-breath and stops there, never in the middle of a hold or an in-breath.
+    @State private var closing = false
+    @State private var closingSince = Date()
+    /// Set when time ran out during the pause after an out-breath: the breath is already out, so that pause is the last step.
+    @State private var closeAtPhaseEnd = false
     /// Time is read from the wall clock, never counted from ticks, and the timer lives in this view's state. Held as a plain constant it was made
     /// again whenever the parent redrew (the strap's heart rate does that every second), which cancelled the one-second timer before it fired
     /// and left the clock crawling on a phone with the strap connected.
@@ -171,6 +176,9 @@ struct NunaBreathSessionView: View {
                     Text(verbatim: follows && phaseLeft > 0 ? "\(phaseLeft)" : " ").font(.nuna(size: big ? 110 : 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
                     Text(verbatim: phaseWord).font(.nuna(size: big ? 22 : 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         .multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
+                    if closing && !paused {
+                        Text("Finishing this breath…").font(.nuna(size: big ? 16 : 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                    }
                 }
             }
             .frame(maxWidth: .infinity)
@@ -274,10 +282,12 @@ struct NunaBreathSessionView: View {
         pausedTotal = 0; pausedAt = nil
         rmssdSum = 0; rmssdCount = 0; rmssdPeak = 0; hrSeries = []; rmssdSeries = []
         startedAt = Date()
+        closing = false; closeAtPhaseEnd = false
+        cue.started()
         if guided {
             phase = .textOnly; phaseDeadline = .distantFuture
         } else {
-            arm(from: Date(), buzz: true)
+            arm(from: Date(), buzz: true, firstAfterStart: true)
         }
     }
 
@@ -298,8 +308,21 @@ struct NunaBreathSessionView: View {
                 rmssdSeries.append(rmssd ?? 0)
             }
         }
-        if seconds >= request.seconds { finish(); return }
+        if seconds >= request.seconds, !closing, !beginClosing(now) { return }
+        // A hold that will not end (or a protocol whose steps never reach an out-breath) cannot keep the session open for ever.
+        if closing, now.timeIntervalSince(closingSince) > 180 { finish(); return }
         advance(now)
+    }
+
+    /// The time is up. A session paced by steps carries on until the breath in progress is out; one with no steps, or none that breathe out, ends now.
+    /// Returns false when it ended here.
+    private func beginClosing(_ now: Date) -> Bool {
+        guard !guided, !stages.isEmpty, stages.contains(where: { $0.type == .exhale }) else { finish(); return false }
+        closing = true; closingSince = now
+        let here = stages[stageIndex % stages.count].type
+        let before = stages[(stageIndex + stages.count - 1) % stages.count].type
+        closeAtPhaseEnd = here == .hold && before == .exhale
+        return true
     }
 
     private func advance(_ now: Date) {
@@ -307,13 +330,15 @@ struct NunaBreathSessionView: View {
         let left = Int(ceil(phaseDeadline.timeIntervalSince(now)))
         if left != phaseLeft { phaseLeft = max(0, left) }
         guard now >= phaseDeadline, !stages.isEmpty else { return }
-        if stages[stageIndex % stages.count].type == .exhale { breaths += 1 }
+        let endedExhale = stages[stageIndex % stages.count].type == .exhale
+        if endedExhale { breaths += 1 }
+        if closing, endedExhale || closeAtPhaseEnd { finish(); return }
         stageIndex += 1
         // A phase that ended long ago (the screen was off) is not announced late, and the pace resumes from now.
         arm(from: now, buzz: now.timeIntervalSince(phaseDeadline) < 1.5)
     }
 
-    private func arm(from now: Date, buzz: Bool, remaining: TimeInterval? = nil) {
+    private func arm(from now: Date, buzz: Bool, remaining: TimeInterval? = nil, firstAfterStart: Bool = false) {
         guard !stages.isEmpty else { return }
         let stage = stages[stageIndex % stages.count]
         phase = stage.type; phaseLabel = stage.label
@@ -327,7 +352,7 @@ struct NunaBreathSessionView: View {
             if loops > 0, haptics { model.buzz(loops: UInt8(clamping: loops), gate: HapticPrefs.breathing) }
             // A hold is told by its own cue, and by whether the lungs are full or empty: the step before says which.
             let before = stages[(stageIndex + stages.count - 1) % stages.count].type
-            cue.cue(stage.type, previous: before, label: stage.label)
+            cue.cue(stage.type, previous: before, label: stage.label, queued: firstAfterStart)
         }
     }
 
@@ -337,6 +362,7 @@ struct NunaBreathSessionView: View {
             paused = false
             if let began = pausedAt { pausedTotal += Date().timeIntervalSince(began) }
             pausedAt = nil
+            cue.resumed()
             if !guided { arm(from: Date(), buzz: false, remaining: max(pausedLeft, 0.3)) }
         } else {
             pausedLeft = max(0, phaseDeadline.timeIntervalSinceNow)
@@ -344,7 +370,7 @@ struct NunaBreathSessionView: View {
             paused = true
             pausedAt = Date()
             phaseDeadline = .distantFuture
-            model.stopHaptics(); cue.silence()
+            model.stopHaptics(); cue.silence(); cue.paused()
         }
     }
 
