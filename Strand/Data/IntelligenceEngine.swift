@@ -2177,6 +2177,12 @@ final class IntelligenceEngine: ObservableObject {
             // every night. `effectiveStartTs` (the #318 user-corrected onset) is preserved on the row.
             let dayEditedRows = Self.editedRowsForDay(editedRows, day: night.daily.day, tzOffsetSeconds: tzOffset)
             let editsByStart = Dictionary(dayEditedRows.map { ($0.startTs, $0) }, uniquingKeysWith: { a, _ in a })
+            // One line when a night has an edit, so a day whose total does not follow it can be read off the log: how many edits were found for the day,
+            // their keys, and the keys and spans of the detected blocks they are matched with (rounded to the minute, no heart rate).
+            if !editedRows.isEmpty {
+                diagnosticSink?("sleep-edit day=\(night.daily.day) editsForDay=\(dayEditedRows.count)/\(editedRows.count) editKeys=\(dayEditedRows.map(\.startTs)) "
+                                + "detected=\(night.cachedSleep.map { "\($0.startTs)..\($0.endTs)" })", nil)
+            }
             var daily = sleepEditedDaily(night.daily, detected: night.cachedSleep, editsByStart: editsByStart,
                                          habitualMidsleepSec: habitualMidsleepSec)
             daily = DayCycleIntelligenceIntegration.applying(physiologicalSteps, to: daily)
