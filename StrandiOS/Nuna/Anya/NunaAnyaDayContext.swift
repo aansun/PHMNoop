@@ -47,6 +47,11 @@ enum NunaAnyaDayContext {
             }
         }
 
+        var stressNote: String?
+        if case .calibrating(let nights) = await StressEngine.shared.status(repo: repo) {
+            stressNote = "The stress reading is calibrating (\(min(nights, StressEngine.requiredNights)) of \(StressEngine.requiredNights) nights read)."
+        }
+
         // The band the Today card judges the day by: Charge sets how much Effort is worth aiming for.
         let band = CoupledView.optimalStrainRange(recovery: plan.map { Double($0.charge) })
         let input = AnyaDayContext.Input(
@@ -70,6 +75,7 @@ enum NunaAnyaDayContext {
             outdoorLine: outdoor?.line,
             outdoorLevel: outdoor?.level,
             outdoorForecast: forecast,
+            stressNote: stressNote,
             effortScale: AICoachEngine.strainScale())
         return AnyaDayContext.block(input)
     }

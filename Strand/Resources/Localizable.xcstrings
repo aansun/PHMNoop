@@ -9074,6 +9074,7 @@
  "Dry the contacts: clean and dry them before charging.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Keringkan kontaknya: bersihkan dan keringkan sebelum mengisi daya."}}}},
  "Time left:": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sisa waktu:"}}}},
  "Time to full:": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu sampai penuh:"}}}},
+ "Stress is still calibrating: %lld of %lld nights read. I will read it once it is ready.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Stres masih dikalibrasi: %lld dari %lld malam terbaca. Aku akan membacanya setelah siap."}}}},
  "Best time to train": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu terbaik untuk berlatih"}}}},
  "Conditions": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kondisi"}}}},
  "Ease it": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pelan-pelan"}}}},

@@ -189,6 +189,17 @@ final class AnyaNextStepTests: XCTestCase {
         XCTAssertFalse(AnyaDayContext.block(i).contains("WEATHER AND AIR FORECAST"))
     }
 
+    /// While stress is calibrating the block says there is no stress reading and forbids a figure; once it is ready, the line is gone.
+    func testStressStillCalibratingIsSaidAndNothingIsEstimated() {
+        var i = AnyaDayContext.Input(now: date(2026, 10, 13, 15, 0), calendar: cal)
+        i.stressNote = "The stress reading is calibrating (4 of 14 nights read)."
+        let block = AnyaDayContext.block(i)
+        XCTAssertTrue(block.contains("STRESS: The stress reading is calibrating (4 of 14 nights read)."), block)
+        XCTAssertTrue(block.contains("never state, estimate or infer a stress level"), block)
+        i.stressNote = nil
+        XCTAssertFalse(AnyaDayContext.block(i).contains("STRESS:"))
+    }
+
     func testNoChargeYetAsksForSync() {
         XCTAssertTrue(step(input(7, charge: nil, kind: nil)).contains("wear the strap overnight and sync"))
     }

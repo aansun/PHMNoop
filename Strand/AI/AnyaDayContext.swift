@@ -47,6 +47,8 @@ enum AnyaDayContext {
         var outdoorLevel: String?
         /// The forecast from the same two services: the parts of the coming day, the best time to train and the days after. nil without a reading.
         var outdoorForecast: String?
+        /// Set while the stress reading is still calibrating: there is no stress figure, and she must not give one.
+        var stressNote: String?
         /// The Strain scale the wearer reads. Every Strain figure in the block is converted to it, so Anya quotes what the screen shows.
         var effortScale: EffortScale = .hundred
     }
@@ -157,6 +159,9 @@ enum AnyaDayContext {
         // The forecast of the coming day and days, so a question about tonight or tomorrow is answered from data, not guessed.
         if let f = i.outdoorForecast {
             lines.append("WEATHER AND AIR FORECAST: \(f) When the person asks about the weather or the air later today, tonight, tomorrow or the days ahead, answer from this: name the part of the day, the temperature range, the chance of rain and the air quality, and say whether it suits time outdoors. The air quality now is measured by the IQAir station nearest the person; the hours after it are an OpenWeather forecast, so they can differ from the reading now without the air having changed.")
+        }
+        if let n = i.stressNote {
+            lines.append("STRESS: \(n) There is no stress reading yet: never state, estimate or infer a stress level or a stress figure from anything else; if asked about stress, say it is still calibrating and how far along it is.")
         }
         if let step = nextStep(i) {
             lines.append("NEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): \(step)")

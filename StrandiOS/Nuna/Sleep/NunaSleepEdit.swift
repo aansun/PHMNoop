@@ -184,6 +184,7 @@ struct NunaSleepTimeSheet: View {
                                       storedStagesJSON: target.stagesJSON, newStartTs: start, newEndTs: end)
             await intelligence.analyzeRecent()
             await repo.refresh()
+            NunaAnyaFloatingModel.forgetAnalyses()
             await onDone(nil)
             dismiss()
         }
@@ -195,6 +196,7 @@ struct NunaSleepTimeSheet: View {
             let snapshot = await repo.deleteSleepSession(detectedStartTs: target.detectedStartTs, endTs: target.wakeTs)
             await intelligence.analyzeRecent()
             await repo.refresh()
+            NunaAnyaFloatingModel.forgetAnalyses()
             await onDone(snapshot)
             dismiss()
         }

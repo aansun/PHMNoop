@@ -20,6 +20,10 @@ final class NunaAnyaFloatingModel: ObservableObject {
     private static var cache: [String: (at: Date, local: String?, explanation: String?, headline: String?)] = [:]
     private static let keep: TimeInterval = 30 * 60
 
+    /// Drops the analyses kept for the day, so the next time a page opens it is read again. Called when something she read has been corrected (a sleep
+    /// that was edited), so she does not keep saying the old figure for up to half an hour.
+    static func forgetAnalyses() { cache.removeAll() }
+
     func analyse(context: String, metric: NunaAnyaMetric?, pageLine: String?, repo: Repository, profile: ProfileStore, coach: AICoachEngine, scale: EffortScale) async {
         guard phase != .analysing else { return }
         let key = "\(context)|\(Repository.localDayKey(Date()))|\(coach.isConfigured && coach.dataConsent)"
@@ -33,8 +37,16 @@ final class NunaAnyaFloatingModel: ObservableObject {
 #endif
         let read = await NunaAnyaReader.read(context: context, metric: metric, repo: repo, profile: profile, scale: scale)
         local = read.map { NunaMark.plain(NunaMark.compose(headline: $0.headline, detail: $0.detail)) } ?? pageLine
+        // No reading on the page (stress while it is still calibrating, a page with no data yet): there is nothing to explain, and a provider handed
+        // only the name of the page makes figures up. She says what is missing instead, or nothing.
+        if read == nil, pageLine == nil, context.lowercased().contains("stress") {
+            let status = await StressEngine.shared.status(repo: repo)
+            if case .calibrating(let nights) = status {
+                local = String(localized: "Stress is still calibrating: \(min(nights, StressEngine.requiredNights)) of \(StressEngine.requiredNights) nights read. I will read it once it is ready.")
+            }
+        }
         let verdict = read?.verdict
-        if coach.isConfigured, coach.dataConsent {
+        if read != nil || pageLine != nil, coach.isConfigured, coach.dataConsent {
             let module = NunaAnyaModule(context: context)
             // The page, the phone's own verdict on it (so she explains a judgement instead of making one up) and what she noted before.
             let page = context + (local.map { "\n\n" + $0 } ?? "") + (verdict.map { "\n\n" + $0.providerLine } ?? "") + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? "")
