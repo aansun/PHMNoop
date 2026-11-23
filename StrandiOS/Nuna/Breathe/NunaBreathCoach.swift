@@ -29,15 +29,20 @@ enum NunaBreathCoach {
     }
 
     /// What the session did, in Anya's voice. `stress` is the stress series of the session when it has one.
-    static func insight(for r: NunaBreathRecord, stress: [NunaWorkoutStress.Point] = [], all: [NunaBreathRecord] = NunaBreathLog.all(), now: Date = Date()) -> Insight {
+    static func insight(for r: NunaBreathRecord, stress: [NunaWorkoutStress.Point] = [], heartRate: [Double] = [], all: [NunaBreathRecord] = NunaBreathLog.all(), now: Date = Date()) -> Insight {
+        // Resonance and Calm me keep no heart-rate series of their own: the strap's readings over the session stand in for them.
+        func mean(_ v: ArraySlice<Double>) -> Double { v.reduce(0, +) / Double(v.count) }
+        let fromStrap = heartRate.count >= 6
+        let hrFirst = r.hrStart ?? (fromStrap ? mean(heartRate.prefix(3)) : nil)
+        let hrLast = r.hrEnd ?? (fromStrap ? mean(heartRate.suffix(3)) : nil)
         let hrDrop: (Int, Int)? = {
-            guard let a = r.hrStart, let b = r.hrEnd, a - b >= 3 else { return nil }
+            guard let a = hrFirst, let b = hrLast, a - b >= 3 else { return nil }
             return (Int(a.rounded()), Int(b.rounded()))
         }()
         let pct = r.rmssdChangePct
         let hrvUp = (pct ?? 0) >= 10
         let calmer = (stressChange(stress) ?? 0) <= -0.2
-        let hasHeart = r.hrStart != nil || r.rmssdStart != nil || !stress.isEmpty
+        let hasHeart = hrFirst != nil || r.rmssdStart != nil || !stress.isEmpty
 
         var detail: [String] = []
         let headline: String

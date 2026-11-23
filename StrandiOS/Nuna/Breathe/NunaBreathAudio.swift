@@ -76,6 +76,7 @@ final class NunaBreathCue: ObservableObject {
 
     /// Brings the chosen audio up and the other down; holds the audio session only while one is wanted.
     func apply(_ new: NunaBreathAudioMode) {
+        epoch += 1
         mode = new
         switch new {
         case .off: tones.deactivate(); voice.deactivate()
@@ -145,6 +146,8 @@ final class NunaBreathCue: ObservableObject {
 
     /// Set while the closing words are still being spoken: the screen that ends under them must not cut them off.
     private var releasing = false
+    /// Bumped whenever the audio is set up again (a new session starts), so a release scheduled by the last one does not take it down.
+    private var epoch = 0
 
     /// Lets the closing words finish before the audio session is released, also after the screen that began them is gone.
     func releaseAfterFinishing() {
@@ -152,7 +155,12 @@ final class NunaBreathCue: ObservableObject {
         releasing = true
         finished()
         let wait: UInt64 = mode == .voice ? 6_000_000_000 : 3_200_000_000
-        Task { try? await Task.sleep(nanoseconds: wait); releasing = false; deactivate() }
+        let mine = epoch
+        Task {
+            try? await Task.sleep(nanoseconds: wait)
+            releasing = false
+            if epoch == mine { deactivate() }
+        }
     }
 }
 #endif

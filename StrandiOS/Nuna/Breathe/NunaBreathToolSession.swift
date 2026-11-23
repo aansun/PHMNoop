@@ -43,8 +43,16 @@ private struct NunaToolSessionBody: View {
     @State private var discarding = false
     @State private var lastRow: WorkoutRow?
     @State private var saved: NunaWorkoutKey?
+    /// Sound, as in every breathing session: a mark at the start and at the end, and for Resonance the in- and out-breath. Calm me is a beat on the strap,
+    /// so it has the marks only.
+    @AppStorage(NunaBreathAudioMode.key) private var audioModeRaw = ""
+    @StateObject private var cue = NunaBreathCue()
+    @State private var lastPhase: BreathPhase?
 
     private var c: BiofeedbackController { controller }
+    private var audioMode: NunaBreathAudioMode {
+        NunaBreathAudioMode(rawValue: audioModeRaw) ?? (UserDefaults.standard.bool(forKey: NunaBreathPrefs.audioKey) ? .tone : .off)
+    }
     private var finished: Bool { hasRun && !c.running }
     private var zone: Int { model.bpm.map { model.profile.hrZoneSet.zoneNumber(forBPM: Double($0)) } ?? 0 }
     private var zoneColor: Color { model.bpm == nil ? NunaPalette.effortModerate : NunaHeartBeat.zoneColors[min(max(zone, 1), 5) - 1] }
@@ -116,12 +124,25 @@ private struct NunaToolSessionBody: View {
         }
         .statusBarHidden(full && c.running)
         .preferredColorScheme(NunaTheme.colorScheme)
-        .onAppear { begin() }
-        .onDisappear { c.stop() }
+        .onAppear { cue.apply(audioMode); begin() }
+        .onDisappear { c.stop(); cue.deactivate() }
         .onChange(of: c.running) { _, now in
-            if now { hasRun = true; logged = false; startedAt = Date(); movePhase() } else if hasRun { record() }
+            if now {
+                hasRun = true; logged = false; startedAt = Date(); movePhase()
+                cue.apply(audioMode); lastPhase = nil
+                cue.started()
+                if tool == .resonance { cue.cue(c.phase, previous: nil, label: nil, queued: true); lastPhase = c.phase }
+            } else if hasRun {
+                let kept = !discarding && c.elapsedSeconds >= 20
+                record()
+                // The end is told the same way as in every session, and is let finish after this screen goes.
+                if kept { cue.releaseAfterFinishing() } else { cue.deactivate() }
+            }
         }
-        .onChange(of: c.phase) { _, _ in movePhase() }
+        .onChange(of: c.phase) { _, now in
+            movePhase()
+            if c.running, tool == .resonance { cue.cue(now, previous: lastPhase, label: nil); lastPhase = now }
+        }
         .nunaEndFlow(isPresented: $confirmEnd, save: { c.stop() }, discard: { discarding = true; c.stop() })
     }
 
@@ -161,7 +182,7 @@ private struct NunaToolSessionBody: View {
         let buzz = live.bonded ? String(localized: "strap buzz on") : String(localized: "silent session")
         return HStack(alignment: .center) {
             // A running session has no way out but End, so there is one window to be in; this keeps the title centred.
-            Color.clear.frame(width: 44, height: 44)
+            Color.clear.frame(width: 84, height: 44)
             Spacer(minLength: 8)
             VStack(spacing: 2) {
                 Text(verbatim: tool.title).font(.nuna(size: NunaTypeSize.sub, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
@@ -172,6 +193,14 @@ private struct NunaToolSessionBody: View {
                 Image(systemName: "arrow.up.left.and.arrow.down.right").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 44, height: 44).contentShape(Rectangle())
             }.buttonStyle(.plain).accessibilityLabel(Text("Full screen")).opacity(c.running ? 1 : 0).disabled(!c.running)
+            NunaMenu {
+                ForEach(NunaBreathAudioMode.allCases) { m in
+                    NunaMenuItem(m.title, selected: audioMode == m) { audioModeRaw = m.rawValue; cue.apply(m) }
+                }
+            } label: {
+                Image(systemName: audioMode == .off ? "speaker.slash" : (audioMode == .voice ? "person.wave.2" : "speaker.wave.2")).font(.nuna(size: 15, weight: .bold))
+                    .foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle())
+            }.accessibilityLabel(Text("Audio cues"))
         }
     }
 

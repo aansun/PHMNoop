@@ -193,7 +193,7 @@ struct NunaWorkoutSummaryView: View {
     /// when the same exercise keeps coming back, the offer to keep it as a favourite; every other session gets the workout read.
     @ViewBuilder private func anyaCard(_ r: WorkoutRow, mins: [Double]?, averages: NunaWorkoutAverages?) -> some View {
         if let rec = NunaBreathCoach.record(for: r) {
-            NunaBreathInsightCard(insight: NunaBreathCoach.insight(for: rec, stress: stress)) { showBreathAnya = true }
+            NunaBreathInsightCard(insight: NunaBreathCoach.insight(for: rec, stress: stress, heartRate: data.hr.map(\.bpm))) { showBreathAnya = true }
             if let offer = NunaBreathCoach.offer(for: rec) { NunaBreathFavoriteOffer(offer: offer) }
         } else if let line = anyaLine(r, mins: mins, averages: averages) {
             NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true }
