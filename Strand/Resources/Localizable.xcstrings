@@ -9580,7 +9580,6 @@
  "Well done for pausing to breathe.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hebat, kamu sudah berhenti sejenak untuk bernapas."}}}},
  "I did not get heart readings this time, so I cannot say how much it helped. Wear the strap snug next time and I will read it with you.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kali ini tidak ada bacaan detak jantung, jadi aku belum bisa menilai manfaatnya. Pakai strap lebih pas lain kali, nanti aku bacakan bersamamu."}}}},
  "That is your %lld breathing session this week. A lovely rhythm.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ini sesi napasmu yang ke-%lld minggu ini. Ritme yang bagus."}}}},
- "Added to your favorites. Find it under My Exercises.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sudah masuk favorit. Cari di Latihanku."}}}},
  "You have done %@ %lld times lately. Want to keep it as a favorite? It will sit under My Exercises, one tap away.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu sudah melakukan %@ sebanyak %lld kali belakangan ini. Mau dijadikan favorit? Latihannya akan ada di Latihanku, tinggal sekali tap."}}}},
  "Add to favorites": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jadikan favorit"}}}},
  "Finishing this breath…": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menyelesaikan napas ini…"}}}},

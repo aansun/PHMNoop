@@ -108,67 +108,31 @@ enum NunaBreathCoach {
 }
 
 /// Anya's line after a session, kept as simple as on every other page: one slim row with her short reading. Her fuller words (what the heart rate, HRV
-/// and stress did, and the encouragement) are in the sheet the row opens.
+/// and stress did, the encouragement and, when the same exercise keeps coming back, the offer to keep it as a favourite) are in the sheet the row opens,
+/// where the offer is one tap: "Add to favorites" adds it to My Exercises, "Not now" is remembered so she asks once.
 struct NunaBreathInsightCard: View {
     let insight: NunaBreathCoach.Insight
+    var offer: NunaBreathCoach.Offer?
     let onAnya: () -> Void
 
     var body: some View {
-        NunaAnyaCard(verbatim: insight.headline, detail: insight.detail, action: onAnya)
+        NunaAnyaCard(verbatim: insight.headline, detail: detail, moreActions: actions, action: onAnya)
             .environment(\.nunaAnyaRow, true)
             .environment(\.nunaAnyaCardContext, "Breathing")
     }
-}
 
-/// Anya offering to keep an exercise the wearer keeps coming back to: one tap adds it to the favourites (My Exercises); "Not now" is remembered so she asks once.
-struct NunaBreathFavoriteOffer: View {
-    let offer: NunaBreathCoach.Offer
-    @State private var added = false
-    @State private var gone = false
+    private var detail: String? {
+        guard let offer else { return insight.detail }
+        let ask = String(localized: "You have done \(offer.item.title) \(offer.times) times lately. Want to keep it as a favorite? It will sit under My Exercises, one tap away.")
+        return [insight.detail, ask].compactMap { $0 }.joined(separator: " ")
+    }
 
-    private static let wing = [Color(red: 0.44, green: 0.90, blue: 0.83), Color(red: 0.15, green: 0.65, blue: 0.62), Color(red: 0.11, green: 0.56, blue: 0.53)]
-
-    var body: some View {
-        if !gone {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .top, spacing: 12) {
-                    ZStack {
-                        Circle().strokeBorder(LinearGradient(colors: Self.wing, startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5)
-                        AnyaMark(size: 19)
-                    }
-                    .frame(width: 34, height: 34).accessibilityHidden(true)
-                    Text(verbatim: added
-                         ? String(localized: "Added to your favorites. Find it under My Exercises.")
-                         : String(localized: "You have done \(offer.item.title) \(offer.times) times lately. Want to keep it as a favorite? It will sit under My Exercises, one tap away."))
-                        .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                        .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-                }
-                if !added {
-                    HStack(spacing: 10) {
-                        Button {
-                            if !NunaBreathFavorites.contains(offer.item.id) { NunaBreathFavorites.toggle(offer.item.id) }
-                            withAnimation(.easeInOut(duration: 0.2)) { added = true }
-                        } label: {
-                            Label("Add to favorites", systemImage: "heart.fill")
-                                .font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                                .padding(.horizontal, 18).frame(height: 42)
-                                .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-                        }.buttonStyle(.plain)
-                        Button {
-                            NunaBreathCoach.dismissOffer(offer.item.id)
-                            withAnimation(.easeInOut(duration: 0.2)) { gone = true }
-                        } label: {
-                            Text("Not now").font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                                .padding(.horizontal, 14).frame(height: 42)
-                        }.buttonStyle(.plain)
-                    }
-                }
-            }
-            .padding(18)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(LinearGradient(colors: Self.wing, startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5))
-        }
+    private var actions: [NunaAnyaCardAction] {
+        guard let offer else { return [] }
+        return [
+            NunaAnyaCardAction(title: "Add to favorites") { if !NunaBreathFavorites.contains(offer.item.id) { NunaBreathFavorites.toggle(offer.item.id) } },
+            NunaAnyaCardAction(title: "Not now") { NunaBreathCoach.dismissOffer(offer.item.id) },
+        ]
     }
 }
 #endif
