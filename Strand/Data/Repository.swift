@@ -1828,10 +1828,16 @@ final class Repository: ObservableObject {
     /// refreshed) edited rows so the caller recomputes daily aggregates from the corrected stages.
     func selfHealEditedStages(from windowStart: Int, to windowEnd: Int) async -> [CachedSleepSession] {
         guard let store = await ensureStore() else { return [] }
+        // The edits live under whichever computed id owns the night: the canonical one ("my-whoop-noop") that scoring writes to, or the active
+        // strap's, which differs after a strap was removed and added again. Reading only the active one lost every edit made to a night kept
+        // under the canonical id, so the day's total ignored it. Active id first; a night in both counts once.
         func editedRows() async -> [CachedSleepSession] {
-            ((try? await store.sleepSessions(deviceId: computedDeviceId, from: windowStart,
-                                             to: windowEnd, limit: 100_000)) ?? [])
-                .filter { $0.userEdited }
+            var seen = Set<Int>(), out: [CachedSleepSession] = []
+            for id in computedReadIds {
+                let rows = ((try? await store.sleepSessions(deviceId: id, from: windowStart, to: windowEnd, limit: 100_000)) ?? []).filter { $0.userEdited }
+                for r in rows where seen.insert(r.startTs).inserted { out.append(r) }
+            }
+            return out.sorted { $0.startTs < $1.startTs }
         }
         let edited = await editedRows()
         guard !edited.isEmpty else { return [] }
@@ -1841,7 +1847,7 @@ final class Repository: ObservableObject {
             // isn't dense yet, or when the result already matches what's stored (steady state , no write).
             guard let newJSON = await restageFromRaw(start: row.effectiveStartTs, end: row.endTs),
                   newJSON != row.stagesJSON else { continue }
-            let n = (try? await store.updateSleepStages(deviceId: computedDeviceId,
+            let n = (try? await store.updateSleepStages(deviceId: row.deviceId ?? computedDeviceId,
                                                         detectedStartTs: row.startTs,
                                                         stagesJSON: newJSON)) ?? 0
             if n > 0 { healed = true }
