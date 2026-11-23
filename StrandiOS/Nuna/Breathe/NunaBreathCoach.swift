@@ -102,16 +102,16 @@ enum NunaBreathCoach {
     }
 }
 
-/// Anya's note after a session: what the numbers say, in her words. The whole note opens her sheet about breathing.
+/// Anya's line after a session, kept as simple as on every other page: one slim row with her short reading. Her fuller words (what the heart rate, HRV
+/// and stress did, and the encouragement) are in the sheet the row opens.
 struct NunaBreathInsightCard: View {
     let insight: NunaBreathCoach.Insight
     let onAnya: () -> Void
 
     var body: some View {
         NunaAnyaCard(verbatim: insight.headline, detail: insight.detail, action: onAnya)
-            // The note carries its own words in full (no slim row), and its own tap.
-            .environment(\.nunaAnyaRow, false)
-            .environment(\.nunaAnyaCardContext, nil)
+            .environment(\.nunaAnyaRow, true)
+            .environment(\.nunaAnyaCardContext, "Breathing")
     }
 }
 

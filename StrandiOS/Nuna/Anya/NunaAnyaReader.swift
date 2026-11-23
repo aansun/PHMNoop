@@ -379,6 +379,11 @@ enum NunaAnyaReader {
     /// The Breathing module's read: the advisor's pick for right now, with the figures behind it and a note on the last session.
     private static func breathing(repo: Repository, profile: ProfileStore) async -> NunaAnyaRead? {
         let s = await NunaBreathAdviceMaker.make(repo: repo, profile: profile)
+        // Just after a session she reads that session first: what it did for the wearer, in her own words.
+        if let last = NunaBreathLog.all().first, Date().timeIntervalSince1970 - Double(last.startTs + last.seconds) < 3 * 3600 {
+            let i = NunaBreathCoach.insight(for: last)
+            return NunaAnyaRead(headline: i.headline, detail: i.detail, read: s.read, module: .breathing, questions: questions(.breathing))
+        }
         var detail = s.detail
         if let last = NunaBreathLog.all().first, let pct = last.rmssdChangePct {
             let note = String(localized: "Last session: HRV \(String(format: "%+.0f", locale: AppLanguage.activeLocale, pct))% over \(last.durationText).")
