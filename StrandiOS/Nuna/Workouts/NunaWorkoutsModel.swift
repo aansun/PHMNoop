@@ -176,7 +176,7 @@ struct NunaWorkoutRow: View {
     var body: some View {
         let subtitle = [NunaWorkoutFormat.day(row.startTs), NunaWorkoutFormat.distance(row.distanceM, system), NunaWorkoutFormat.duration(row.durationS)]
             .compactMap { $0 }.joined(separator: " · ")
-        NunaListRow(LocalizedStringKey(WorkoutSource.displaySport(row.sport)), subtitle: LocalizedStringKey(subtitle),
+        NunaListRow(nunaSportKey(WorkoutSource.displaySport(row.sport)), subtitle: LocalizedStringKey(subtitle),
                     systemImage: NunaWorkoutKind.isStrength(row) ? "dumbbell" : sportSymbol(row.sport)) {
             if let s = row.strain { NunaChip(verbatim: "+" + UnitFormatter.effortDisplay(s, scale: effortScale), color: NunaPalette.effortText) }
         }

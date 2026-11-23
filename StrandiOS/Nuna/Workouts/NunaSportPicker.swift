@@ -2,6 +2,10 @@
 import SwiftUI
 import StrandDesign
 
+/// A sport or activity name as a title: sport names are data (stored and shown in English everywhere, so they can be searched and match
+/// Today), so they never go through the translation table. `"\(name)"` is an interpolated key, which has no table entry and reads as is.
+func nunaSportKey(_ name: String) -> LocalizedStringKey { "\(name)" }
+
 /// What a pick belongs to: an activity that adds Effort (the sport catalogue), one that helps Charge (recovery work) or one that is rest
 /// (a nap, a night). The recovery and rest names are this app's own and are kept in `NunaActivityKind`.
 enum NunaActivityKind: String, CaseIterable, Identifiable {
@@ -75,7 +79,7 @@ struct NunaSportPicker: View {
             HStack(spacing: 14) {
                 NunaActivityGlyph(name: name, size: 28)
                     .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary).frame(width: 34, height: 34)
-                Text(LocalizedStringKey(name)).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingHead(1)).textCase(.uppercase)
+                Text(verbatim: name).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingHead(1)).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
                 Spacer(minLength: 8)
                 if route { Image(systemName: "location").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }

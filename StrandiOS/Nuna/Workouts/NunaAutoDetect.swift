@@ -45,7 +45,7 @@ struct NunaAutoDetectView: View {
                 NunaTitleRow(title: "Latest suggestion") { EmptyView() }
                 NunaCard(small: true) {
                     if let s = suggestion {
-                        NunaListRow(LocalizedStringKey(s.sport + " · " + String(localized: "\(s.durationMin) min")),
+                        NunaListRow(nunaSportKey(s.sport + " · " + String(localized: "\(s.durationMin) min")),
                                     subtitle: LocalizedStringKey(NunaWorkoutFormat.day(s.startSec) + " " + NunaWorkoutFormat.clock(s.startSec) + " · " + String(localized: "average \(s.avgBpm) bpm")), systemImage: "figure.run") { NunaChip("Waiting") }
                     } else {
                         NunaListRow("Nothing waiting", subtitle: "No unlogged workout was found in the last two days", systemImage: "checkmark")

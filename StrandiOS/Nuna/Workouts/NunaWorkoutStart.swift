@@ -253,7 +253,7 @@ struct NunaWorkoutStartView: View {
                 HStack(spacing: 10) {
                     Image(systemName: NunaSportPicker.symbol(for: chosen))
                         .font(.nuna(size: 18, weight: .bold))
-                    Text(LocalizedStringKey(chosen))
+                    Text(verbatim: chosen)
                         .font(.nuna(size: 15, weight: .heavy))
                         .lineLimit(1)
                     Image(systemName: "chevron.down")
@@ -827,7 +827,7 @@ private struct NunaWorkoutTargetSheet: View {
             .buttonStyle(.plain)
             .accessibilityLabel(Text("Close target settings"))
             Image(systemName: NunaSportPicker.symbol(for: sport)).font(.nuna(size: NunaTypeSize.h2, weight: .semibold))
-            Text(LocalizedStringKey(sport)).font(.nuna(size: NunaTypeSize.h3, weight: .bold)).lineLimit(1)
+            Text(verbatim: sport).font(.nuna(size: NunaTypeSize.h3, weight: .bold)).lineLimit(1)
             Spacer(minLength: 8)
             if !goal.isFree {
                 Button { clear() } label: {
@@ -1408,7 +1408,7 @@ struct NunaLiveWorkoutView: View {
     // MARK: header + ring
 
     private func header(_ w: AppModel.ActiveWorkout) -> some View {
-        let title = String(localized: String.LocalizationValue(w.sport))
+        let title = w.sport
         // A running session has no way out but End (reached through Pause), so there is one window to be in, and the page says only what it is.
         return Text(verbatim: title).font(.nuna(size: NunaTypeSize.sub, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
             .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
