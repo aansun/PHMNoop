@@ -53,7 +53,7 @@ struct NunaExerciseDetailView: View {
 
     var body: some View {
         if let e = NunaExerciseLibrary.exercise(id: exerciseId) {
-            NunaDetailScreen(LocalizedStringKey(e.name)) { content(e) }
+            NunaDetailScreen(nunaSportKey(e.name)) { content(e) }
                 .task {
                     if opensOnHistory, !tabChosen { tab = .history; tabChosen = true }
                     await history.load(libraryId: e.id, repo: repo); pinnedNote = NunaExerciseNotes.note(for: e.id)

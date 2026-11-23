@@ -552,7 +552,7 @@ struct NunaTrainingLoadView: View {
                         VStack(spacing: 0) {
                             ForEach(Array(top.enumerated()), id: \.element.key) { i, kv in
                                 if i > 0 { NunaDivider() }
-                                NunaListRow(LocalizedStringKey(kv.key), subtitle: LocalizedStringKey(NunaWorkoutFormat.day(kv.value.ts)), systemImage: "bolt") {
+                                NunaListRow(nunaSportKey(kv.key), subtitle: LocalizedStringKey(NunaWorkoutFormat.day(kv.value.ts)), systemImage: "bolt") {
                                     Text(verbatim: String(format: "%.1f kg", locale: AppLanguage.activeLocale, kv.value.kg)).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                                 }
                             }
