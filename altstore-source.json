@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "3.1.1",
+          "buildVersion": "454",
+          "date": "2026-11-23",
+          "localizedDescription": "Breathing you can follow by ear, a battery page, and fixes for sleep edits and the weather location.",
+          "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.1.1/PHMN-v3.1.1-ios-unsigned.ipa",
+          "size": 86918253,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "3.1.0",
           "buildVersion": "443",
           "date": "2026-11-21",

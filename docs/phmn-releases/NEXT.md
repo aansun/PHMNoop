@@ -9,7 +9,6 @@ Breathing you can follow by ear, a battery page, and fixes for sleep edits and t
 - **Battery page.** A ring with the level, the time left or to full, the average and last charge, and a history chart.
 - **Activity names stay in English.** Sports and gym exercises read the same everywhere and can be searched.
 - **Walks and other activities on foot.** The log shows the heart-rate zones under the chart and the steps at the top.
-- **WHP highlight cards** use the type sizes and greys of the WHOOP card.
 
 ### Bug Fixing
 - **A shortened night now counts.** After the strap was added again, a night you edited (say from 9 hours to 7) kept its old total on Today and in Anya's reading. Both follow your edit.
