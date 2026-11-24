@@ -105,24 +105,35 @@ final class SleepStagerTests: XCTestCase {
 
     // MARK: - Daytime false-sleep guard (#90)
 
-    /// A 70-min still, LOW-HR daytime window is rejected: even though its HR dips, it is
-    /// shorter than the daytime minimum (90 min), so it's the dominant false-positive a
-    /// sedentary daytime stretch produces. The preceding active block lifts the day HR
-    /// baseline so the HR test would otherwise PASS — proving the rejection is the duration
-    /// gate, not the HR gate.
-    func testDaytimeShortLowHRWindowRejected() {
+    /// A 70-min still daytime window used to be rejected for being under the 90-minute daytime minimum, which meant a nap shorter than an hour and a half
+    /// could never be found. Now a window of 20 to 90 minutes is a candidate, held to a stricter bar: with no sleep state from the strap it needs a
+    /// resting HR at or below 0.88 of the day's baseline. Here it is 50 against 72 (0.69), a clear cardiac dip, so it registers as a nap.
+    func testDaytimeShortNapWithADeepDipRegisters() {
         let dayStart = daytimeStart(10)           // 10:00 active context
         let dayDur = 3 * 60 * 60                   // 3 h awake, moving, HR 72
         let dayGrav = activeGravity(start: dayStart, durationS: dayDur)
         let dayHR = hrStream(start: dayStart, durationS: dayDur, bpm: 72)
 
         let napStart = dayStart + dayDur           // 13:00, center 13:35 → daytime band
-        let napDur = 70 * 60                        // 70 min < 90 min daytime minimum
+        let napDur = 70 * 60
         let napGrav = stillGravity(start: napStart, durationS: napDur)
         let napHR = hrStream(start: napStart, durationS: napDur, bpm: 50)
 
         let sessions = SleepStager.detectSleep(hr: dayHR + napHR, gravity: dayGrav + napGrav)
-        XCTAssertTrue(sessions.isEmpty, "a 70-min daytime still window must be rejected by the guard")
+        XCTAssertEqual(sessions.count, 1, "a 70-min still window with a deep heart-rate dip is a nap")
+    }
+
+    /// The same 70-minute still window with only a shallow dip (66 against 72, 0.92) is the sedentary false positive the guard exists for: rejected.
+    func testDaytimeShortStillWindowWithAShallowDipIsRejected() {
+        let dayStart = daytimeStart(10)
+        let dayDur = 3 * 60 * 60
+        let dayGrav = activeGravity(start: dayStart, durationS: dayDur)
+        let dayHR = hrStream(start: dayStart, durationS: dayDur, bpm: 72)
+        let napStart = dayStart + dayDur
+        let napDur = 70 * 60
+        let sessions = SleepStager.detectSleep(hr: dayHR + hrStream(start: napStart, durationS: napDur, bpm: 66),
+                                               gravity: dayGrav + stillGravity(start: napStart, durationS: napDur))
+        XCTAssertTrue(sessions.isEmpty, "sitting still at 0.92 of the day's heart rate is not a nap")
     }
 
     /// A 120-min still, genuine-dip daytime nap STILL registers: ≥ 90 min AND its resting HR
@@ -232,6 +243,46 @@ final class SleepStagerTests: XCTestCase {
         let p = SleepStager.Period(stage: "sleep", start: start, end: start)
         _ = SleepStager.isDaytimeCenter(p, tzOffsetSeconds: 0)
         XCTAssertFalse(SleepStager.passesDaytimeGuard(p, restingHR: nil, baseline: nil))
+    }
+
+    // MARK: - Short daytime naps (20 to 90 minutes)
+
+    private func nap(minutes: Int) -> SleepStager.Period {
+        let start = daytimeStart(12)
+        return SleepStager.Period(stage: "sleep", start: start, end: start + minutes * 60)
+    }
+
+    /// Band sleep-state samples (one a second) over a nap: `asleepShare` of the seconds read "asleep" (2), the rest "still" (1).
+    private func band(_ p: SleepStager.Period, asleepShare: Double) -> [(ts: Int, state: Int)] {
+        let n = p.end - p.start
+        return (0..<n).map { (ts: p.start + $0, state: Double($0) / Double(n) >= 1 - asleepShare ? 2 : 1) }
+    }
+
+    func testShortNapPassesWithAClearDipAndTheStrapsOwnVerdict() {
+        let p = nap(minutes: 40)
+        // 65 against a day median of 72 is 0.90 of baseline, inside the short-nap bar of 0.92; the strap read it half asleep or more.
+        XCTAssertTrue(SleepStager.passesDaytimeGuard(p, restingHR: 65, baseline: 72, bandSleepState: band(p, asleepShare: 0.55)))
+    }
+
+    func testShortNapIsRejectedWhenTheStrapDoesNotCallItSleepOrTheDipIsShallow() {
+        let p = nap(minutes: 40)
+        XCTAssertFalse(SleepStager.passesDaytimeGuard(p, restingHR: 65, baseline: 72, bandSleepState: band(p, asleepShare: 0.2)),
+                       "sitting still with a low heart rate is not sleep the strap agrees with")
+        XCTAssertFalse(SleepStager.passesDaytimeGuard(p, restingHR: 69, baseline: 72, bandSleepState: band(p, asleepShare: 0.9)),
+                       "a dip of 0.96 of baseline is not enough for a short window even when the strap agrees")
+    }
+
+    func testShortNapWithNoStrapSleepStateNeedsADeeperDip() {
+        let p = nap(minutes: 40)
+        XCTAssertFalse(SleepStager.passesDaytimeGuard(p, restingHR: 65, baseline: 72), "0.90 passes only with the strap's verdict")
+        XCTAssertTrue(SleepStager.passesDaytimeGuard(p, restingHR: 62, baseline: 72), "0.86 stands on its own")
+    }
+
+    func testTooShortOrLongNapKeepsItsOwnBar() {
+        XCTAssertFalse(SleepStager.passesDaytimeGuard(nap(minutes: 15), restingHR: 55, baseline: 72), "under 20 minutes is never a nap")
+        let long = nap(minutes: 100)
+        XCTAssertTrue(SleepStager.passesDaytimeGuard(long, restingHR: 68, baseline: 72), "a long nap keeps the ordinary 0.95 bar, no band needed")
+        XCTAssertFalse(SleepStager.passesDaytimeGuard(long, restingHR: 70, baseline: 72))
     }
 
     // MARK: - Off-wrist backstop (#500)

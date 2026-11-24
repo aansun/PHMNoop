@@ -120,13 +120,25 @@ public enum SleepStager {
     /// displayed wake time was truncated to late morning (late sleepers / shift workers).
     // Reimplemented from @vulnix0x4's PR #353.
     public static let nightContinuationGapMin: Int = 90
-    /// A daytime window must run at least this long (minutes) to count — short still
-    /// daytime stretches are the dominant false-positive and are rejected outright.
-    public static let daytimeMinSleepMin: Int = 90
+    /// A daytime window must run at least this long (minutes) to count as a NAP. It was 90, which meant no nap under an hour and a half was ever found
+    /// (and a base floor of 60 minutes sat under that), although a nap of 20 to 60 minutes is the usual one. A window this short is held to a much
+    /// stricter bar than a long one (see `shortNapMaxMin`), because a short still daytime stretch is the dominant false positive.
+    public static let daytimeMinSleepMin: Int = 20
+    /// A daytime window at or above this length (minutes) is a long nap and faces the ordinary daytime bar; a shorter one faces the short-nap bar.
+    public static let shortNapMaxMin: Int = 90
     /// A daytime window's resting HR (lowest 5-min rolling mean) must be at or below
     /// baseline × this to confirm a real cardiac dip. Stricter than the overnight 1.05:
     /// a true nap dips BELOW the waking-day median, sedentary stillness does not.
     public static let daytimeRestingHRMult: Double = 0.95
+    /// The short-nap bar. Both parts must hold: a clear dip (resting HR at or below baseline × this) AND the strap's own banked sleep state reading mostly
+    /// "asleep" over the window (`morningReonsetBandAsleepFrac`). Sitting still with a low heart rate, as in front of a screen, can pass the dip alone; it
+    /// does not pass the strap's own verdict.
+    public static let shortNapRestingHRMult: Double = 0.92
+    /// The share of a short nap's window the strap's own sleep state must read "asleep". Half, not the 0.6 a re-onset needs: a nap begins with minutes of
+    /// lying still before sleep, which the strap scores as "still", so even a real one is not asleep from its first minute.
+    public static let shortNapBandAsleepFrac: Double = 0.5
+    /// A strap that banks no sleep state (a WHOOP 4.0) cannot give the second part, so a short nap there must show a deeper dip on its own.
+    public static let shortNapNoBandRestingHRMult: Double = 0.88
 
     // MARK: - H4 physiological in-bed span cap (#547 / #531 / #509 / tail)
 
@@ -1065,11 +1077,19 @@ public enum SleepStager {
     /// evidence (nil baseline OR nil restingHR) a daytime stretch cannot be confirmed as a
     /// real nap, so it is rejected — sedentary daytime stillness without a measured HR dip
     /// is far more likely than an unmonitored nap, and this path can never touch the night.
-    static func passesDaytimeGuard(_ p: Period, restingHR: Int?, baseline: Double?) -> Bool {
+    static func passesDaytimeGuard(_ p: Period, restingHR: Int?, baseline: Double?,
+                                   bandSleepState: [(ts: Int, state: Int)] = []) -> Bool {
         let daytimeMinSleepS = daytimeMinSleepMin * 60
         if (p.end - p.start) < daytimeMinSleepS { return false }
         guard let baseline = baseline, let resting = restingHR else { return false }
-        return Double(resting) <= baseline * daytimeRestingHRMult
+        // A long nap: the ordinary bar.
+        if (p.end - p.start) >= shortNapMaxMin * 60 { return Double(resting) <= baseline * daytimeRestingHRMult }
+        // A short nap (20 to 90 minutes): the strap's own verdict when it gives one, a deeper dip when it does not.
+        if bandSleepState.contains(where: { $0.ts >= p.start && $0.ts <= p.end }) {
+            return Double(resting) <= baseline * shortNapRestingHRMult
+                && bandStateConfirmsAsleep(p, bandSleepState: bandSleepState, minFraction: shortNapBandAsleepFrac)
+        }
+        return Double(resting) <= baseline * shortNapNoBandRestingHRMult
     }
 
     /// H7 morning-stillness nap suppression (#531). Returns true = KEEP, false = REJECT, for a daytime block
@@ -1086,10 +1106,10 @@ public enum SleepStager {
         // Only a daytime block beginning within the post-wake window of an overnight chain is suspected.
         guard let wakeEnd = morningWakeEnd, p.start >= wakeEnd,
               (p.start - wakeEnd) <= morningStillnessWindowMin * 60 else {
-            return passesDaytimeGuard(p, restingHR: restingHR, baseline: baseline)
+            return passesDaytimeGuard(p, restingHR: restingHR, baseline: baseline, bandSleepState: bandSleepState)
         }
         // Suspected morning stillness needs at least the ordinary daytime guard (long enough + a real dip).
-        if !passesDaytimeGuard(p, restingHR: restingHR, baseline: baseline) { return false }
+        if !passesDaytimeGuard(p, restingHR: restingHR, baseline: baseline, bandSleepState: bandSleepState) { return false }
         // CONSUME the strap's OWN banked band sleep_state (#531 / H8): if the strap itself scored this block
         // predominantly "asleep", that is a strong independent re-onset anchor — KEEP it even on a borderline
         // HR dip. This only ever RESCUES a block the strap says was real sleep; it never fabricates one.
@@ -1104,11 +1124,12 @@ public enum SleepStager {
     /// `morningReonsetBandAsleepFrac` of the in-block samples — an independent confirmation of a real
     /// re-onset. Empty/absent band state → false (no anchor → fall back to the HR bar); we never invent a
     /// "asleep" reading the strap did not bank. Pure + deterministic. (#531 / H8 consume)
-    static func bandStateConfirmsAsleep(_ p: Period, bandSleepState: [(ts: Int, state: Int)]) -> Bool {
+    static func bandStateConfirmsAsleep(_ p: Period, bandSleepState: [(ts: Int, state: Int)],
+                                        minFraction: Double = morningReonsetBandAsleepFrac) -> Bool {
         let inBlock = bandSleepState.filter { $0.ts >= p.start && $0.ts <= p.end }
         guard !inBlock.isEmpty else { return false }
         let asleep = inBlock.reduce(0) { $0 + ($1.state == bandStateAsleep ? 1 : 0) }
-        return Double(asleep) / Double(inBlock.count) >= morningReonsetBandAsleepFrac
+        return Double(asleep) / Double(inBlock.count) >= minFraction
     }
 
     // MARK: - Band sleep_state WAKE-veto (recover strap-disputed false wakes)
@@ -1693,7 +1714,12 @@ public enum SleepStager {
             firstSleepStart = min(firstSleepStart, p.start)
             lastSleepEnd = max(lastSleepEnd, p.end)
             let spanMin = (p.end - p.start) / 60
-            if (p.end - p.start) <= minSleepS {
+            // A daytime run that is not the tail of the night may be a nap, and is judged by the daytime guard below (20 minutes up, strict bar); every other
+            // run keeps the 60-minute floor.
+            let napCandidate = isDaytimeCenter(p, tzOffsetSeconds: tzOffsetSeconds)
+                && !((chainPrevEnd.map { p.start - $0 <= continuationGapS } ?? false) && chainFromOvernight)
+            let floorS = napCandidate ? min(minSleepS, daytimeMinSleepMin * 60) : minSleepS
+            if (p.end - p.start) <= floorS {
                 minSleepDrops += 1
                 traceSink?(GateTrace.runLine(index: runIndex, startTs: p.start, endTs: p.end,
                     verdict: .dropped, gate: "minSleepMin",
