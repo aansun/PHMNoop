@@ -3,6 +3,7 @@ import Foundation
 import HealthKit
 import CoreLocation
 import UIKit
+import WhoopProtocol
 import WhoopStore
 import StrandAnalytics
 import StrandImport
@@ -680,7 +681,7 @@ final class HealthKitBridge: ObservableObject {
         // imports these from a static Health export and Android reads them from Health Connect; iOS now
         // reads them live on-device too, so the platforms reach parity. ON-DEVICE ONLY: this is a plain
         // HealthKit read of workouts NOOP did NOT author, never any cloud/3rd-party API. (#835)
-        let workoutRows = await collectWorkouts(start: start, end: end)
+        let (workoutRows, workoutHr) = await collectWorkouts(start: start, end: end)
 
         // Persist all the apple-health rows AND write back, advancing lastSync only when the WHOLE
         // round-trip succeeds. The three read-side upserts used to be swallowed by `try?`, so a failed
@@ -692,6 +693,10 @@ final class HealthKitBridge: ObservableObject {
             try await store.upsertDailyMetrics(dmRows, deviceId: appleDeviceId)
             try await store.upsertMetricSeries(points, deviceId: appleDeviceId)
             if !workoutRows.isEmpty { try await store.upsertWorkouts(workoutRows, deviceId: appleDeviceId) }
+            // The heart rate Health holds for those workouts (a Garmin, a Fitbit or a Watch wrote it), kept under the Apple source only. The strap
+            // stays the main source: a workout's page reads it first and falls to these readings only when the strap has none for that time, and
+            // nothing that scores the day (stress, resting heart rate, Charge) reads this source.
+            if !workoutHr.isEmpty { _ = try await store.insert(Streams(hr: workoutHr), deviceId: appleDeviceId) }
             // Imported water (#949) goes to the hydration source, not apple-health, because the hydration
             // screen is what reads it. Every day in the window is written — including the ones with no
             // water at all, as 0 — so deleting a drink in the source app takes it away here on the next
@@ -1702,7 +1707,7 @@ final class HealthKitBridge: ObservableObject {
         }
     }
 
-    private func collectWorkouts(start: Date, end: Date) async -> [WorkoutRow] {
+    private func collectWorkouts(start: Date, end: Date) async -> (rows: [WorkoutRow], hr: [HRSample]) {
         let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
             HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate),
             Self.notNoopAuthored,
@@ -1758,7 +1763,45 @@ final class HealthKitBridge: ObservableObject {
             }
         }
         RouteStore.storeAll(importedRoutes)
-        return workoutsAndRows.map { $0.1 }
+        // The heart rate Health holds inside each workout: the average and the highest reading go on the row, and the readings themselves are handed
+        // back to be kept for the chart and the zones. Workouts this app wrote are already left out by the predicate above.
+        var rows: [WorkoutRow] = []
+        var readings: [HRSample] = []
+        for (workout, row) in workoutsAndRows {
+            let hr = await Self.heartRateReadings(from: workout.startDate, to: workout.endDate, store: store)
+            guard !hr.isEmpty else { rows.append(row); continue }
+            readings += hr
+            let bpm = hr.map(\.bpm)
+            rows.append(WorkoutRow(startTs: row.startTs, endTs: row.endTs, sport: row.sport, source: row.source, durationS: row.durationS,
+                                   energyKcal: row.energyKcal, avgHr: Int((Double(bpm.reduce(0, +)) / Double(bpm.count)).rounded()), maxHr: bpm.max(),
+                                   strain: row.strain, distanceM: row.distanceM, zonesJSON: row.zonesJSON, notes: row.notes, steps: row.steps))
+        }
+        return (rows, readings)
+    }
+
+    /// Every heart-rate reading Health holds between two instants, whichever app or device wrote it (not this app), one per second, oldest first.
+    private static func heartRateReadings(from: Date, to: Date, store: HKHealthStore) async -> [HRSample] {
+        guard let type = HKQuantityType.quantityType(forIdentifier: .heartRate), to > from else { return [] }
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            HKQuery.predicateForSamples(withStart: from, end: to, options: []),
+            notNoopAuthored,
+        ])
+        let unit = HKUnit.count().unitDivided(by: .minute())
+        return await withCheckedContinuation { (cont: CheckedContinuation<[HRSample], Never>) in
+            let q = HKSampleQuery(sampleType: type, predicate: predicate, limit: HKObjectQueryNoLimit,
+                                  sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]) { _, samples, _ in
+                var seen = Set<Int>(), out: [HRSample] = []
+                for case let s as HKQuantitySample in samples ?? [] {
+                    let ts = Int(s.startDate.timeIntervalSince1970)
+                    let bpm = Int(s.quantity.doubleValue(for: unit).rounded())
+                    // A reading that is not a heart rate (zero, or beyond what a heart can do) is dropped, as for the strap.
+                    guard bpm >= 25, bpm <= 250, seen.insert(ts).inserted else { continue }
+                    out.append(HRSample(ts: ts, bpm: bpm))
+                }
+                cont.resume(returning: out)
+            }
+            store.execute(q)
+        }
     }
 
     /// #1205: fetch the GPS route (list of `RouteMath.LatLng`) for a single `HKWorkout`.

@@ -3602,9 +3602,22 @@ final class Repository: ObservableObject {
         guard to > from else { return [] }
         let span = to - from
         let bucket = max(15, min(300, span / 120))
-        let ids = Self.workoutHrDeviceIds(source: source, activeStrapId: deviceId,
-                                          importedIds: importedReadIds)
+        let ids = await workoutHrIds(source: source, from: from, to: to)
         return await hrBuckets(deviceIds: ids, from: from, to: to, bucketSeconds: bucket)
+    }
+
+    /// The ids whose heart rate backs a workout's page: the strap's (`workoutHrDeviceIds`), and, for a session the strap did not cover, the heart rate
+    /// Apple Health holds for it (a Garmin, a Fitbit or a Watch wrote it). The strap stays the main source, exactly as for the steps: Apple's readings
+    /// are used only when they are more numerous than the strap's for that time, and the two are never mixed in one curve. A session the strap
+    /// recorded itself (detected) always reads that strap.
+    private func workoutHrIds(source: String, from: Int, to: Int) async -> [String] {
+        let base = Self.workoutHrDeviceIds(source: source, activeStrapId: deviceId, importedIds: importedReadIds)
+        guard WorkoutSource.classify(source) != .detected, to > from else { return base }
+        let strap = await hrSamples(deviceIds: base, from: from, to: to, limit: 2000)
+        // The strap covers the session when it has about a reading for every two minutes of it, and at least five.
+        if strap.count >= max(5, (to - from) / 120) { return base }
+        let apple = await hrSamples(deviceIds: [Self.appleHealthSource], from: from, to: to, limit: 2000)
+        return apple.count > strap.count ? [Self.appleHealthSource] : base
     }
 
     /// Raw HR samples binned into per-zone MINUTES for a workout window, using the age-derived
@@ -3619,8 +3632,7 @@ final class Repository: ObservableObject {
     /// without a row keeps today's behaviour.
     func workoutZoneMinutes(from: Int, to: Int, zoneSet: HRZoneSet, source: String = "") async -> [Double]? {
         guard to > from else { return nil }
-        let ids = Self.workoutHrDeviceIds(source: source, activeStrapId: deviceId,
-                                          importedIds: importedReadIds)
+        let ids = await workoutHrIds(source: source, from: from, to: to)
         let samples = await hrSamples(deviceIds: ids, from: from, to: to)
         guard !samples.isEmpty else { return nil }
         let tiz = HRZones.timeInZone(samples, zoneSet: zoneSet)
