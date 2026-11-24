@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "3.1.2",
+          "buildVersion": "460",
+          "date": "2026-11-24",
+          "localizedDescription": "Heart rate for Fitbit and Garmin workouts, naps that are found, and no more double activities.",
+          "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.1.2/PHMN-v3.1.2-ios-unsigned.ipa",
+          "size": 86988746,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "3.1.1",
           "buildVersion": "454",
           "date": "2026-11-23",

@@ -1,19 +1,18 @@
-## PHMN 3.1.1
+## PHMN 3.1.2
 
-Breathing you can follow by ear, a battery page, and fixes for sleep edits and the weather location.
+Heart rate for Fitbit and Garmin workouts, naps that are found, and no more double activities.
 
 ### New / Enhancement
-- **Breathing by ear.** Tones or Anya's voice mark the start, a pause and the end of a session, in every technique including Resonance and Calm me.
-- **A breath that ends properly.** When the time is up the session carries on to the end of the out-breath, instead of stopping in the middle of a hold.
-- **Anya after breathing.** She reads the session's heart rate, HRV and stress and says what it did for you in a few warm words. When you keep coming back to the same exercise she offers to make it a favourite, one tap in her sheet.
-- **Battery page.** A ring with the level, the time left or to full, the average and last charge, and a history chart.
-- **Activity names stay in English.** Sports and gym exercises read the same everywhere and can be searched.
-- **Walks and other activities on foot.** The log shows the heart-rate zones under the chart and the steps at the top.
+- **Heart rate for workouts from Fitbit and Garmin.** A workout that reaches Apple Health now brings its heart rate: the chart, the average and highest, and the zones. The strap stays first: Apple's heart rate is used only where the strap has none for that time, and it never feeds Strain, Stress or Recovery.
+- **One activity, one row.** When the strap, a session logged here, Strava and Apple Health all hold the same workout, PHMN keeps one: the strap or what you logged first, then Strava, then Apple Health. The row you keep takes the heart rate, calories or distance it lacks from the others.
+- **Where it came from.** An activity imported from Strava or Apple Health says so on its page, under the figures.
+- **Naps found.** Naps of 20 to 90 minutes are now detected, using a clear heart-rate dip and the strap's own sleep reading. Before, only sleeps over an hour and a half were.
+- **Suggestions after the workout.** An "Activity detected" suggestion appears once your heart rate has settled for 30 minutes, so it no longer changes while you are still cooling down.
+- **Detection learns your habits.** The workout and nap detectors now study your own answers on your phone and are checked against the built-in rules. They change nothing until there is enough of your data to prove they do better. The comparison is in Auto-detect settings, under Detection check.
 
 ### Bug Fixing
-- **A shortened night now counts.** After the strap was added again, a night you edited (say from 9 hours to 7) kept its old total on Today and in Anya's reading. Both follow your edit.
-- **Weather location** is more exact, and the place name comes from OpenWeather. An IQAir station far from you is left out.
-- **Anya does not guess while stress is calibrating.** She says it is still calibrating.
+- **Double activities.** A workout logged here and the same one from Apple Health no longer show side by side when the two name it differently, such as Treadmill walk and Running.
+- **Missed naps.** A short daytime nap was never detected, however clear it was on the strap.
 
 ### Install
 `PHMN-ios-unsigned.ipa` is **unsigned** and has no Apple Watch app. Sign it with a sideloader (AltStore or SideStore), or yourself: see [docs/SIGNING.md](https://github.com/aansun/PHMNoop/blob/phm/docs/SIGNING.md).
