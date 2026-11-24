@@ -173,17 +173,29 @@ enum WorkoutSource: Equatable {
         return Double(overlap) > 0.5 * Double(shorter)
     }
 
-    /// Of two same-activity rows, the one to KEEP. Prefer the richer (more captured signals); on a tie
-    /// prefer the strap-native source (live/manual/detected/whoop carry the real trace) over a thin
-    /// import (Apple Health / Health Connect); final tie → the longer session, then `a` (stable).
+    /// Of two same-activity rows, the one to KEEP. A row from Apple Health (or Health Connect) never beats one from any other source: the strap,
+    /// a session logged here or imported from Strava, a WHOOP export or a file all rank above it, however many fields the Apple row carries, so the
+    /// result does not depend on which arrived first. Between two rows of the same rank the richer (more captured signals) wins, then the longer
+    /// session, then `a` (stable). What the Apple row knows and the winner lacks is added by `fillingGaps`.
     static func preferred(_ a: WorkoutRow, _ b: WorkoutRow) -> WorkoutRow {
+        let ia = classify(a.source) == .apple, ib = classify(b.source) == .apple
+        if ia != ib { return ia ? b : a }
         let ra = richness(a), rb = richness(b)
         if ra != rb { return ra > rb ? a : b }
-        let ia = classify(a.source) == .apple, ib = classify(b.source) == .apple
-        if ia != ib { return ia ? b : a }   // keep the non-import on a richness tie
         let da = a.endTs - a.startTs, db = b.endTs - b.startTs
         if da != db { return da > db ? a : b }
         return a
+    }
+
+    /// The winner of a pair with what the Apple Health row adds: the average and highest heart rate, the zones, the energy and the distance, each only
+    /// where the winner has none. The name, the sport, the times, the strain, the notes and the route stay the winner's. Nothing is added when the
+    /// loser is not from Apple Health, or when the winner is.
+    static func fillingGaps(_ winner: WorkoutRow, from loser: WorkoutRow) -> WorkoutRow {
+        guard classify(winner.source) != .apple, classify(loser.source) == .apple else { return winner }
+        return WorkoutRow(startTs: winner.startTs, endTs: winner.endTs, sport: winner.sport, source: winner.source, durationS: winner.durationS,
+                          energyKcal: winner.energyKcal ?? loser.energyKcal, avgHr: winner.avgHr ?? loser.avgHr, maxHr: winner.maxHr ?? loser.maxHr,
+                          strain: winner.strain, distanceM: winner.distanceM ?? loser.distanceM, zonesJSON: winner.zonesJSON ?? loser.zonesJSON,
+                          notes: winner.notes, steps: winner.steps)
     }
 
     // MARK: - Detected-vs-real overlap collapse (#975)
@@ -246,12 +258,11 @@ enum WorkoutSource: Equatable {
             var merged = false
             for idx in bySport[key, default: []] where overlapsInTime(kept[idx], row) {
                 let winner = preferred(kept[idx], row)
-                if let onMerge {
-                    // Identify the loser by the REAL keep decision (== against the winner). When the two rows
-                    // are byte-identical the label is interchangeable, so == is correct in every case.
-                    onMerge(winner, winner == kept[idx] ? row : kept[idx])
-                }
-                kept[idx] = winner
+                // Identify the loser by the REAL keep decision (== against the winner). When the two rows
+                // are byte-identical the label is interchangeable, so == is correct in every case.
+                let loser = winner == kept[idx] ? row : kept[idx]
+                onMerge?(winner, loser)
+                kept[idx] = fillingGaps(winner, from: loser)
                 merged = true
                 break
             }

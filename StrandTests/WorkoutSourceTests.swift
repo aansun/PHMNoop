@@ -124,6 +124,28 @@ final class WorkoutSourceTests: XCTestCase {
         XCTAssertEqual(a.first?.strain, 14.0)   // kept the row with the captured trace
     }
 
+    func testAppleRowNeverBeatsAnotherSourceAndOnlyFillsItsGaps() {
+        // A Strava import (stored as a manual row) with distance but no heart rate, and the same run from Apple Health carrying more fields.
+        let strava = WorkoutRow(startTs: 1000, endTs: 4600, sport: "Running", source: "manual", durationS: 3600, energyKcal: nil, avgHr: nil, maxHr: nil,
+                                strain: nil, distanceM: 9_800, zonesJSON: nil, notes: "Morning run", steps: nil)
+        let apple = WorkoutRow(startTs: 1010, endTs: 4590, sport: "Running", source: "apple-health", durationS: 3580, energyKcal: 610, avgHr: 148, maxHr: 176,
+                               strain: nil, distanceM: 10_020, zonesJSON: nil, notes: nil, steps: nil)
+        for list in [[strava, apple], [apple, strava]] {
+            let kept = WorkoutSource.dedupCrossSource(list)
+            XCTAssertEqual(kept.count, 1)
+            let r = try! XCTUnwrap(kept.first)
+            XCTAssertEqual(r.source, "manual")                 // the Strava row wins although Apple carries more
+            XCTAssertEqual(r.distanceM, 9_800)                 // its own distance and notes stay
+            XCTAssertEqual(r.notes, "Morning run")
+            XCTAssertEqual(r.avgHr, 148)                       // what it lacked comes from Apple
+            XCTAssertEqual(r.maxHr, 176)
+            XCTAssertEqual(r.energyKcal, 610)
+            XCTAssertNil(r.strain)                             // never Strain from Apple
+        }
+        // Apple alone is kept as it is.
+        XCTAssertEqual(WorkoutSource.dedupCrossSource([apple]).first, apple)
+    }
+
     func testDedupTraceKeptIsByteIdenticalAndNamesThePair() {
         // The Workouts test-mode dedup twin must return the SAME kept list dedupCrossSource does, plus a
         // decision line naming the kept vs dropped source. (Trace cannot diverge from the screen's list.)
