@@ -47,7 +47,7 @@ struct NunaWorkoutSummaryView: View {
             if let ls = m.liftSessions.first(where: { $0.startTs == key.startTs }), m.row(key).map(NunaWorkoutKind.isStrength) ?? false {
                 NunaGymSessionView(sessionId: ls.id)
             } else if let r = m.row(key) ?? (m.loaded && !justSaved ? nil : initialRow) {
-                NunaDetailScreen(nunaSportKey(WorkoutSource.displaySport(r.sport)), titleSymbol: ActivitySport.symbol(for: r.sport), subtitle: ([NunaWorkoutFormat.span(r.startTs, r.endTs)] + [WorkoutSource.externalName(r).map { String(localized: "Imported from \($0)") }].compactMap { $0 }).joined(separator: " · "), titleActivity: r.sport, trailing: AnyView(actionsMenu(r))) { content(r) }
+                NunaDetailScreen(nunaSportKey(WorkoutSource.displaySport(r.sport)), titleSymbol: ActivitySport.symbol(for: r.sport), subtitle: NunaWorkoutFormat.span(r.startTs, r.endTs), titleActivity: r.sport, trailing: AnyView(actionsMenu(r))) { content(r) }
             } else {
                 NunaDetailScreen("Workout") {
                     NunaCard { Text(m.loaded ? "This session is no longer saved." : " ").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
@@ -104,6 +104,7 @@ struct NunaWorkoutSummaryView: View {
             lowContent(r, shown: shown.row, mins: mins, averages: averages)
         } else {
             NunaWorkoutLogFigures(row: r, averages: averages, steps: data.steps)
+            sourceLine(r)
             if mapped {
                 // With a map: the heart rate and its zones first, then the route, then the key statistics.
                 heartRateAndZones(r, mins: mins)
@@ -145,6 +146,7 @@ struct NunaWorkoutSummaryView: View {
     /// rate on two tabs, the milestone, the heart-rate figures and the impact on recovery.
     @ViewBuilder private func lowContent(_ r: WorkoutRow, shown: WorkoutRow, mins: [Double]?, averages: NunaWorkoutAverages?) -> some View {
         NunaLowFigures(row: r, averages: averages, stress: stress, steps: data.steps)
+        sourceLine(r)
         anyaCard(shown, mins: mins, averages: averages)
         NunaCapsuleTabs(options: [(value: LowTab.stress, title: "Stress"), (value: LowTab.heartRate, title: "Heart rate")], selection: $lowTab)
         switch lowTab {
@@ -185,6 +187,15 @@ struct NunaWorkoutSummaryView: View {
             items.append(t)
         }
         return items
+    }
+
+    /// Under the figures and above Anya: where an activity came from when it was not recorded here (Apple Health, Strava). Nothing for the strap or
+    /// for what was logged in the app.
+    @ViewBuilder private func sourceLine(_ r: WorkoutRow) -> some View {
+        if let from = WorkoutSource.externalName(r) {
+            Text(verbatim: String(localized: "Imported from \(from)")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 4)
+        }
     }
 
     // MARK: Anya

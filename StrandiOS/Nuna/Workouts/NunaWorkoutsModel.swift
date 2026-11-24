@@ -174,8 +174,7 @@ struct NunaWorkoutRow: View {
     let effortScale: EffortScale
 
     var body: some View {
-        let subtitle = [NunaWorkoutFormat.day(row.startTs), NunaWorkoutFormat.distance(row.distanceM, system), NunaWorkoutFormat.duration(row.durationS),
-                        WorkoutSource.externalName(row)]
+        let subtitle = [NunaWorkoutFormat.day(row.startTs), NunaWorkoutFormat.distance(row.distanceM, system), NunaWorkoutFormat.duration(row.durationS)]
             .compactMap { $0 }.joined(separator: " · ")
         NunaListRow(nunaSportKey(WorkoutSource.displaySport(row.sport)), subtitle: LocalizedStringKey(subtitle),
                     systemImage: NunaWorkoutKind.isStrength(row) ? "dumbbell" : sportSymbol(row.sport)) {
