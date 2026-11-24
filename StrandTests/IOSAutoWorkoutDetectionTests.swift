@@ -39,6 +39,18 @@ final class IOSAutoWorkoutDetectionTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(suggestions.first?.durationMin ?? 0, 14)
     }
 
+    func testASuggestionIsHeldBackUntilTheHeartRateHasSettled() {
+        // The same 15-minute brisk walk, ending at `start + 899`. Ten minutes after it ends it is still held back; thirty-one minutes after, it is offered.
+        func suggestions(at now: Int?) -> [AutoWorkoutSuggestion] {
+            IOSAutoWorkoutDetector.detect(hr: hr(15 * 60, bpm: 130), gravity: gravity(15 * 60, delta: 0.05), steps: steps(15 * 60, activityClass: 1),
+                                          restingBpm: 60, savedSpans: [], now: now)
+        }
+        let end = start + 15 * 60 - 1
+        XCTAssertTrue(suggestions(at: end + 10 * 60).isEmpty, "a window that ended ten minutes ago may only be a pause")
+        XCTAssertEqual(suggestions(at: end + IOSAutoWorkoutDetector.settleAfterEndSeconds + 60).count, 1)
+        XCTAssertEqual(suggestions(at: nil).count, 1, "with no clock nothing is held back (replays and tests)")
+    }
+
     func testRunProducesRunningSuggestion() {
         let suggestions = IOSAutoWorkoutDetector.detect(
             hr: hr(12 * 60, bpm: 150),

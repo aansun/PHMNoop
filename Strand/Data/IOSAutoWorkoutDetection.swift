@@ -85,10 +85,15 @@ enum IOSAutoWorkoutDetector {
     private static let maxClassGapSeconds = 90
     private static let mergeGapSeconds = 5 * 60
 
-    /// Returns newest-first suggestions for walking, running and cycling.
+    /// A workout is offered only once its heart rate has been below the working level for this long (30 minutes, as Fitbit and Google Health do):
+    /// a window that ended a few minutes ago may only be a pause, and offering it early gives a card that then changes under the person's hand.
+    static let settleAfterEndSeconds = 30 * 60
+
+    /// Returns newest-first suggestions for walking, running and cycling. With `now`, a window that ended less than `settleAfterEndSeconds` ago is not
+    /// offered yet; without it (tests, replays) nothing is held back.
     static func detect(hr: [HRSample], gravity: [GravitySample], steps: [StepSample],
                        restingBpm: Int?, maxBpm: Int? = nil, userSports: [String: Int] = [:],
-                       savedSpans: [SavedWorkoutSpan]) -> [AutoWorkoutSuggestion] {
+                       savedSpans: [SavedWorkoutSpan], now: Int? = nil) -> [AutoWorkoutSuggestion] {
         let sortedHR = hr.sorted { $0.ts < $1.ts }
         guard sortedHR.count >= 2 else { return [] }
 
@@ -130,6 +135,7 @@ enum IOSAutoWorkoutDetector {
         let merged = mergeWindows(windows)
         var suggestions: [AutoWorkoutSuggestion] = []
         for window in merged {
+            if let now, window.end > now - settleAfterEndSeconds { continue }
             guard window.end - window.start >= runMinSeconds else { continue }
             guard !savedSpans.contains(where: {
                 overlaps(window.start, window.end, $0.startSec, $0.endSec)

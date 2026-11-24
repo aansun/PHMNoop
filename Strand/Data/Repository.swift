@@ -3337,7 +3337,7 @@ final class Repository: ObservableObject {
         let (gravity, steps) = await (gravityTask, stepsTask)
         let suggestions = IOSAutoWorkoutDetector.detect(
             hr: samples, gravity: gravity, steps: steps,
-            restingBpm: restingBpm, maxBpm: strainProfile.map { Int($0.hrMax.rounded()) }, userSports: userSports, savedSpans: savedSpans)
+            restingBpm: restingBpm, maxBpm: strainProfile.map { Int($0.hrMax.rounded()) }, userSports: userSports, savedSpans: savedSpans, now: now)
         let picked = Self.selectAutoDetectSuggestion(
             suggestions,
             autoDismissedTokens: autoDetectDismissedSpans,
@@ -3422,6 +3422,83 @@ final class Repository: ObservableObject {
             scoresJSON: scores.flatMap { Self.jsonString($0) }, featuresJSON: Self.jsonString(features),
             outcome: WorkoutSuggestionOutcome.pending.rawValue, outcomeAt: nil, savedSport: nil)
         if (try? await store.recordWorkoutSuggestion(row)) != nil { loggedSuggestionKeys.insert(seen) }
+        recordShadowPrediction(startSec: s.startSec, endSec: s.endSec, heuristic: s.predictedClass, features: features)
+        refreshPersonalLearnerIfStale()
+    }
+
+    // MARK: - Personal learner, shadow mode
+    //
+    // A small classifier trained on the person's own labelled workouts (`PersonalWorkoutClassifier`). It is only ever MEASURED: its prediction for each
+    // offered window is written beside the rules' prediction, and the Detection check compares both with what the person finally chose. Nothing reads it
+    // to decide what is offered, shown or scored. Both the model and the log live in UserDefaults (no database change) and stay on this phone.
+
+    private static let learnerModelKey = "workouts.personalLearner.model.v1"
+    private static let learnerShadowLogKey = "workouts.personalLearner.shadowLog.v1"
+    private static let learnerTrainedAtKey = "workouts.personalLearner.checkedAt"
+    private static let learnerRefreshEvery = 20 * 3600
+    private static let shadowLogCap = 300
+
+    struct LearnerShadowEntry: Codable, Equatable {
+        var startSec: Int
+        var endSec: Int
+        var at: Int
+        var rules: String?
+        var learner: String
+        var learnerConfidence: Double
+    }
+
+    nonisolated static func personalLearnerModel() -> PersonalClassifierModel? {
+        UserDefaults.standard.data(forKey: learnerModelKey).flatMap { try? JSONDecoder().decode(PersonalClassifierModel.self, from: $0) }
+    }
+
+    nonisolated static func learnerShadowLog() -> [LearnerShadowEntry] {
+        UserDefaults.standard.data(forKey: learnerShadowLogKey).flatMap { try? JSONDecoder().decode([LearnerShadowEntry].self, from: $0) } ?? []
+    }
+
+    /// Keep the learner's call for a window the card offered, once per window (the latest wins). A no-op while there is no trained model.
+    private func recordShadowPrediction(startSec: Int, endSec: Int, heuristic: CoarseWorkoutClass?, features: WorkoutClassFeatures) {
+        guard let model = Self.personalLearnerModel() else { return }
+        let p = PersonalWorkoutClassifier(model: model).classify(features)
+        var log = Self.learnerShadowLog().filter { $0.startSec != startSec }
+        log.append(LearnerShadowEntry(startSec: startSec, endSec: endSec, at: Int(Date().timeIntervalSince1970), rules: heuristic?.rawValue,
+                                      learner: p.predictedClass.rawValue, learnerConfidence: p.confidence))
+        if log.count > Self.shadowLogCap { log.removeFirst(log.count - Self.shadowLogCap) }
+        if let data = try? JSONEncoder().encode(log) { UserDefaults.standard.set(data, forKey: Self.learnerShadowLogKey) }
+    }
+
+    /// Re-train from the person's labelled workouts at most once a day, in the background. Training reads each labelled workout's strap data, so it is not
+    /// done for every card refresh.
+    private func refreshPersonalLearnerIfStale() {
+        let now = Int(Date().timeIntervalSince1970)
+        guard now - UserDefaults.standard.integer(forKey: Self.learnerTrainedAtKey) >= Self.learnerRefreshEvery else { return }
+        UserDefaults.standard.set(now, forKey: Self.learnerTrainedAtKey)
+        Task { _ = await workoutClassReplay() }
+    }
+
+    /// What the shadow log says once the person has decided: for each window they SAVED under a sport that names a class, whether the rules and the
+    /// learner had that class. A window they dismissed has no label and is not counted.
+    struct ShadowOutcomes: Equatable {
+        var decided = 0
+        var rulesRight = 0
+        var learnerRight = 0
+        var pending = 0
+    }
+
+    func learnerShadowOutcomes() async -> ShadowOutcomes {
+        var out = ShadowOutcomes()
+        guard let store = await ensureStore() else { return out }
+        let rows = (try? await store.workoutSuggestions(deviceId: deviceId)) ?? []
+        let byStart = Dictionary(rows.map { ($0.startSec, $0) }, uniquingKeysWith: { a, _ in a })
+        for e in Self.learnerShadowLog() {
+            guard let row = byStart[e.startSec] else { continue }
+            if row.outcome == WorkoutSuggestionOutcome.pending.rawValue { out.pending += 1; continue }
+            guard row.outcome == WorkoutSuggestionOutcome.saved.rawValue, let sport = row.savedSport,
+                  let truth = WorkoutSportMap.coarseClass(forSport: sport) else { continue }
+            out.decided += 1
+            if e.rules == truth.rawValue { out.rulesRight += 1 }
+            if e.learner == truth.rawValue { out.learnerRight += 1 }
+        }
+        return out
     }
 
     /// Settle a window as saved or dismissed. A window that was never logged (a Strava one, or one offered before the log existed) changes nothing.
@@ -3452,6 +3529,12 @@ final class Repository: ObservableObject {
         var report = WorkoutClassReplay.evaluate([])
         var fullReport = WorkoutClassReplay.evaluate([])
         var heartRateOnlyReport = WorkoutClassReplay.evaluate([])
+        /// The shadow learner trained on the full-evidence windows: how many windows, which classes, and how it did against the rules, leave one out.
+        var learnerTrainedOn = 0
+        var learnerClasses: [CoarseWorkoutClass] = []
+        var learnerComparison: PersonalLearnerComparison?
+        /// Filled by the caller that shows the check: what the shadow log says about offered windows the person has decided on.
+        var shadow = ShadowOutcomes()
     }
 
     /// Run the shape classifier over every saved workout that carries the person's own label and has strap data, and report how often it named them right.
@@ -3504,6 +3587,18 @@ final class Repository: ObservableObject {
         result.report = WorkoutClassReplay.evaluate(windows)
         result.fullReport = WorkoutClassReplay.evaluate(result.fullWindows)
         result.heartRateOnlyReport = WorkoutClassReplay.evaluate(result.heartRateOnlyWindows)
+        // Shadow learner: trained on windows with motion only, kept for the shadow log, and measured here against the rules without ever seeing the window
+        // it predicts. With too little to learn from the saved model is cleared, so a stale one never keeps predicting.
+        let now = Int(Date().timeIntervalSince1970)
+        UserDefaults.standard.set(now, forKey: Self.learnerTrainedAtKey)
+        if let model = PersonalWorkoutClassifier.train(result.fullWindows, now: now), let data = try? JSONEncoder().encode(model) {
+            UserDefaults.standard.set(data, forKey: Self.learnerModelKey)
+            result.learnerTrainedOn = model.total
+        } else {
+            UserDefaults.standard.removeObject(forKey: Self.learnerModelKey)
+        }
+        result.learnerClasses = PersonalLearnerReplay.trainedClasses(result.fullWindows)
+        result.learnerComparison = PersonalLearnerReplay.leaveOneOut(result.fullWindows, now: now)
         return result
     }
 

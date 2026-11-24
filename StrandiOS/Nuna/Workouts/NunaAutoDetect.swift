@@ -74,7 +74,12 @@ struct NunaAutoDetectView: View {
                 Button {
                     guard !checking else { return }
                     checking = true
-                    Task { check = await repo.workoutClassReplay(); checking = false }
+                    Task {
+                        var result = await repo.workoutClassReplay()
+                        result.shadow = await repo.learnerShadowOutcomes()
+                        check = result
+                        checking = false
+                    }
                 } label: {
                     Text(verbatim: checking ? "Checking..." : "Check against my workouts").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(maxWidth: .infinity).frame(height: 46)
@@ -109,6 +114,27 @@ struct NunaAutoDetectView: View {
         if !c.heartRateOnlyWindows.isEmpty {
             lines.append("Heart-rate-only windows are a weaker kind of evidence. Do not learn from them as if they carried gait.")
         }
+        lines.append("")
+        lines.append("Personal learner (shadow: it is measured, never used to decide anything)")
+        if c.learnerTrainedOn == 0 {
+            let need = WorkoutClassReplay.minLabelsPerClass
+            lines.append("Not trained yet: it needs at least \(PersonalWorkoutClassifier.minTrainingPerClass) windows with motion for two sports to start, and about \(need) per sport to be trusted.")
+            lines.append("Windows with motion so far: \(c.fullWindows.count)")
+        } else {
+            lines.append("Trained on \(c.learnerTrainedOn) windows with motion, sports: " + c.learnerClasses.map(\.rawValue).joined(separator: ", "))
+            if let k = c.learnerComparison, k.windows > 0 {
+                func pct(_ a: Int, _ b: Int) -> String { b == 0 ? "n/a" : "\(Int((Double(a) / Double(b) * 100).rounded()))%" }
+                lines.append("Each window predicted by a model that never saw it (\(k.windows) windows):")
+                lines.append("Rules named correctly: \(pct(k.rulesCorrect, k.windows)); learner named correctly: \(pct(k.learnerCorrect, k.windows))")
+                lines.append("Named the wrong sport: rules \(k.rulesConfidentlyWrong), learner \(k.learnerConfidentlyWrong)")
+                if k.learnerCouldName > 0 {
+                    lines.append("On the \(k.learnerCouldName) windows of a sport it had learned: rules \(pct(k.rulesCorrectWhenCouldName, k.learnerCouldName)), learner \(pct(k.learnerCorrectWhenCouldName, k.learnerCouldName))")
+                }
+            }
+        }
+        let shadow = c.shadow
+        lines.append("Offered windows you decided on: \(shadow.decided) (rules right \(shadow.rulesRight), learner right \(shadow.learnerRight)); waiting for you: \(shadow.pending)")
+        lines.append("Case open: judge it with 3 to 4 weeks of data. Do not turn it on before that.")
         return lines
     }
 
