@@ -146,6 +146,27 @@ final class WorkoutSourceTests: XCTestCase {
         XCTAssertEqual(WorkoutSource.dedupCrossSource([apple]).first, apple)
     }
 
+    func testAppleRowOverlappingAnotherSourceIsDroppedWhateverItsSport() {
+        // Garmin/Fitbit label a session differently ("Running" for a treadmill walk), so the same-sport collapse cannot pair them; two activities
+        // cannot run at the same time, so the Apple row is the logged one seen again.
+        let manual = WorkoutRow(startTs: 1000, endTs: 2900, sport: "Treadmill walk", source: "manual", durationS: 1900, energyKcal: nil, avgHr: nil, maxHr: nil,
+                                strain: 6.9, distanceM: nil, zonesJSON: nil, notes: nil, steps: nil)
+        let apple = WorkoutRow(startTs: 1000, endTs: 2860, sport: "Running", source: "apple-health", durationS: 1860, energyKcal: 240, avgHr: 121, maxHr: 150,
+                               strain: nil, distanceM: nil, zonesJSON: nil, notes: nil, steps: nil)
+        let later = WorkoutRow(startTs: 9000, endTs: 10800, sport: "Running", source: "apple-health", durationS: 1800, energyKcal: 200, avgHr: 130, maxHr: 160,
+                               strain: nil, distanceM: nil, zonesJSON: nil, notes: nil, steps: nil)
+        let kept = WorkoutSource.dedupCrossSource([apple, manual, later])
+        XCTAssertEqual(kept.count, 2)                                   // the shadow is gone, the separate Apple session stays
+        let walk = try! XCTUnwrap(kept.first { $0.sport == "Treadmill walk" })
+        XCTAssertEqual(walk.strain, 6.9)
+        XCTAssertEqual(walk.avgHr, 121)                                 // filled from the Apple twin
+        XCTAssertTrue(kept.contains { $0.startTs == 9000 })
+        XCTAssertEqual(WorkoutSource.externalName(apple), "Apple Health")
+        XCTAssertNil(WorkoutSource.externalName(manual))
+        XCTAssertEqual(WorkoutSource.externalName(WorkoutRow(startTs: 1, endTs: 2, sport: "Running", source: "manual", durationS: 1, energyKcal: nil, avgHr: nil,
+                                                             maxHr: nil, strain: nil, distanceM: nil, zonesJSON: nil, notes: "Strava · Run · Morning", steps: nil)), "Strava")
+    }
+
     func testDedupTraceKeptIsByteIdenticalAndNamesThePair() {
         // The Workouts test-mode dedup twin must return the SAME kept list dedupCrossSource does, plus a
         // decision line naming the kept vs dropped source. (Trace cannot diverge from the screen's list.)

@@ -9586,5 +9586,6 @@
  "Let's begin. Get comfortable and breathe with me.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Mari kita mulai. Duduk dengan nyaman dan bernapaslah bersamaku."}}}},
  "Paused.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dijeda."}}}},
  "Continuing.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kita lanjutkan."}}}},
- "The exercise is complete. Well done. Now breathe normally.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Latihan selesai. Bagus sekali. Sekarang bernapaslah seperti biasa."}}}}
+ "The exercise is complete. Well done. Now breathe normally.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Latihan selesai. Bagus sekali. Sekarang bernapaslah seperti biasa."}}}},
+ "Imported from %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Diimpor dari %@"}}}}
 }, "version":"1.0" }

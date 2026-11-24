@@ -235,7 +235,41 @@ enum WorkoutSource: Equatable {
     /// #975: a DETECTED bout that shadows a real logged session is dropped FIRST so the transient
     /// live+detected duplicate never shows and can't pollute the Effort/HR read-out.
     static func dedupCrossSource(_ rows: [WorkoutRow]) -> [WorkoutRow] {
-        collapseCrossSource(dropDetectedShadows(rows))
+        collapseCrossSource(dropDetectedShadows(dropAppleShadows(rows).kept))
+    }
+
+    // MARK: - Apple Health rows that overlap a session from another source
+    //
+    // A Garmin or a Fitbit labels its session differently from the one logged here or sent to Strava ("Running" for a treadmill walk, "Strength
+    // Training" for "Strength"), so the same-sport collapse below cannot pair them and two sessions of the same half hour would stand side by side.
+    // Two activities cannot run in the same time, so an Apple Health row whose window overlaps a row of any other source by more than half of the
+    // shorter session is that session seen again: it is dropped, and the row it shadows takes what it lacks (`fillingGaps`).
+
+    /// The list without the Apple Health rows that shadow a row from another source, each shadowed row filled from its Apple twin, and one
+    /// (winner, dropped) pair for every Apple row dropped, for the test-mode trace.
+    static func dropAppleShadows(_ rows: [WorkoutRow]) -> (kept: [WorkoutRow], pairs: [(winner: WorkoutRow, dropped: WorkoutRow)]) {
+        let others = rows.indices.filter { classify(rows[$0].source) != .apple && classify(rows[$0].source) != .detected }
+        guard !others.isEmpty, rows.contains(where: { classify($0.source) == .apple }) else { return (rows, []) }
+        var out = rows
+        var dropped = Set<Int>()
+        var pairs: [(winner: WorkoutRow, dropped: WorkoutRow)] = []
+        for i in rows.indices where classify(rows[i].source) == .apple {
+            guard let j = others.first(where: { overlapsInTime(rows[$0], rows[i]) }) else { continue }
+            dropped.insert(i)
+            out[j] = fillingGaps(out[j], from: rows[i])
+            pairs.append((out[j], rows[i]))
+        }
+        return (out.indices.filter { !dropped.contains($0) }.map { out[$0] }, pairs)
+    }
+
+    /// Where an activity came from, when that is somewhere other than this app or the strap: "Apple Health", or "Strava" for one imported from there
+    /// (those rows keep Strava's name in their notes). nil for the strap and for what was logged here.
+    static func externalName(_ row: WorkoutRow) -> String? {
+        switch classify(row.source) {
+        case .apple: return "Apple Health"
+        case .manual: return (row.notes ?? "").hasPrefix("Strava") ? "Strava" : nil
+        default: return nil
+        }
     }
 
     /// The shared cross-source collapse walk behind `dedupCrossSource` and `dedupCrossSourceTrace`. Byte-
@@ -297,10 +331,16 @@ enum WorkoutSource: Equatable {
     static func dedupCrossSourceTrace(_ rows: [WorkoutRow]) -> (kept: [WorkoutRow], trace: [String]) {
         var lines: [String] = []
         // Detected-shadow drop first (byte-identical to dedupCrossSource's `dropDetectedShadows`), tracing each.
-        let reals = rows.filter { classify($0.source) != .detected }
+        // An Apple Health row shadowing a row of another source goes first, as in the plain path, with a line of its own.
+        let (afterApple, appleDrops) = dropAppleShadows(rows)
+        for d in appleDrops {
+            lines.append(WorkoutsTrace.dedupLine(sportKey: traceSportKey(d.winner.sport), keptSource: sourceLabel(d.winner), droppedSource: sourceLabel(d.dropped),
+                                                 keptRichness: richness(d.winner), droppedRichness: richness(d.dropped)))
+        }
+        let reals = afterApple.filter { classify($0.source) != .detected }
         var input: [WorkoutRow] = []
-        input.reserveCapacity(rows.count)
-        for row in rows {
+        input.reserveCapacity(afterApple.count)
+        for row in afterApple {
             if classify(row.source) == .detected,
                let hit = reals.first(where: { detectedShadowsReal(row, $0) }) {
                 let durMin = max(0, (row.endTs - row.startTs) / 60)

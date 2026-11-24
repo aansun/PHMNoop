@@ -255,7 +255,7 @@ struct NunaTodayActivities: View {
                         icon: strength ? "dumbbell.fill" : (recovery ? ActivitySport.symbol(for: w.sport) : sportSymbol(w.sport)),
                         drawn: w.sport,
                         figure: recovery ? Self.hoursAndMinutes((w.durationS ?? Double(w.endTs - w.startTs)) / 60) : workoutFigure(w),
-                        name: Text(verbatim: WorkoutSource.displaySport(w.sport)), start: item.start, end: item.end)
+                        name: Text(verbatim: WorkoutSource.displaySport(w.sport)), start: item.start, end: item.end, from: WorkoutSource.externalName(w))
             }.buttonStyle(.plain)
         }
     }
@@ -265,7 +265,7 @@ struct NunaTodayActivities: View {
 
     /// A tile in neutral grey (icon and figure), the name, when it began and ended, and a thin line with a dot at each end whose colour
     /// follows the Effort of the workout (sleep keeps the Rest colour).
-    private func rowBody(tint: Color, tile: Color, icon: String, drawn: String? = nil, figure: String, name: Text, start: Date, end: Date) -> some View {
+    private func rowBody(tint: Color, tile: Color, icon: String, drawn: String? = nil, figure: String, name: Text, start: Date, end: Date, from external: String? = nil) -> some View {
         // Row 56 pt: a 95 x 40 pt tile 8 pt in (icon and figure centred in it), the name 16 pt after it, the two times at the right in grey DIN Bold,
         // and a 28 pt line with a dot at each end, its right edge 12 pt from the row's.
         HStack(spacing: 0) {
@@ -277,8 +277,16 @@ struct NunaTodayActivities: View {
             .foregroundStyle(Color.white)
             .frame(width: 95, height: 40)
             .background(tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            name.font(.nuna(size: 13, weight: .heavy)).tracking(1.3).foregroundStyle(NunaPalette.textPrimary)
-                .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading).padding(.leading, 16)
+            // An activity that came from another app says so under its name: it was not recorded here.
+            VStack(alignment: .leading, spacing: 3) {
+                name.font(.nuna(size: 13, weight: .heavy)).tracking(1.3).foregroundStyle(NunaPalette.textPrimary)
+                    .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading)
+                if let external {
+                    Text(verbatim: String(localized: "Imported from \(external)")).font(.nuna(size: 10.5, weight: .semibold)).tracking(0.4).textCase(nil)
+                        .foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
+                }
+            }
+            .padding(.leading, 16)
             Spacer(minLength: 6)
             VStack(alignment: .trailing, spacing: 6) {
                 Text(verbatim: Self.stamp(start, relativeTo: dayStart))
