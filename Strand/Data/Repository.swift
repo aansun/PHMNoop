@@ -3475,6 +3475,72 @@ final class Repository: ObservableObject {
         Task { _ = await workoutClassReplay() }
     }
 
+    // MARK: - Nap learner, shadow mode
+    //
+    // Is this daytime still stretch a nap? The rules answer it; a small model trained on the person's OWN answers is measured beside them and never used.
+    // The answers are only the explicit ones: a nap they logged or edited by hand (a nap), a nap the detector found and they deleted (not a nap).
+    // A detected nap they left alone is not an answer: it already passed the rules.
+
+    private static let napModelKey = "sleep.napLearner.model.v1"
+
+    struct NapLearnerCheck: Equatable {
+        var naps = 0
+        var notNaps = 0
+        /// Answered windows with too little heart rate or no strap data to build features from.
+        var noStrapData = 0
+        var trained = false
+        var rulesRight = 0
+        var comparison: NapLearnerComparison?
+    }
+
+    nonisolated static func napLearnerModel() -> NapLearnerModel? {
+        UserDefaults.standard.data(forKey: napModelKey).flatMap { try? JSONDecoder().decode(NapLearnerModel.self, from: $0) }
+    }
+
+    /// Build the labelled windows from what the person did, train, keep the model, and measure it against the rules leave one out. Read only apart from the model.
+    func napLearnerCheck(days: Int = 120) async -> NapLearnerCheck {
+        var result = NapLearnerCheck()
+        guard let store = await ensureStore() else { return result }
+        func daytimeNap(_ start: Int, _ end: Int) -> Bool {
+            let mins = (end - start) / 60
+            guard mins >= 15, mins <= 240 else { return false }
+            let hour = Calendar.current.component(.hour, from: Date(timeIntervalSince1970: TimeInterval(start + (end - start) / 2)))
+            return hour >= 9 && hour < 21
+        }
+        var answers: [(id: String, start: Int, end: Int, isNap: Bool)] = []
+        for s in await allSleepSessions(days: days) where s.userEdited && daytimeNap(s.effectiveStartTs, s.endTs) {
+            answers.append(("nap-\(s.startTs)", s.effectiveStartTs, s.endTs, true))
+        }
+        for w in DismissedSleepSpans.windows(from: dismissedSleepSpans) where daytimeNap(w.start, w.end) {
+            answers.append(("not-\(w.start)", w.start, w.end, false))
+        }
+        var windows: [LabelledNapWindow] = []
+        for a in answers {
+            let lo = a.start - 8 * 3600, hi = a.end + 8 * 3600
+            async let hrTask = hrSamples(from: lo, to: hi, limit: 200_000)
+            async let gravityTask = gravitySamplesUnion(from: a.start, to: a.end)
+            let (hr, gravity) = await (hrTask, gravityTask)
+            var band: [(ts: Int, state: Int)] = []
+            for id in importedReadIds {
+                band += ((try? await store.sleepStateSamples(deviceId: id, from: a.start, to: a.end)) ?? []).map { (ts: $0.ts, state: $0.state) }
+            }
+            guard let f = NapFeatureExtractor.extract(start: a.start, end: a.end, hr: hr, gravity: gravity, band: band) else { result.noStrapData += 1; continue }
+            windows.append(LabelledNapWindow(id: a.id, isNap: a.isNap, features: f))
+        }
+        result.naps = windows.filter(\.isNap).count
+        result.notNaps = windows.count - result.naps
+        result.rulesRight = windows.filter { NapLearnerReplay.rulesSayNap($0.features) == $0.isNap }.count
+        let now = Int(Date().timeIntervalSince1970)
+        if let model = NapLearner.train(windows, now: now), let data = try? JSONEncoder().encode(model) {
+            UserDefaults.standard.set(data, forKey: Self.napModelKey)
+            result.trained = true
+            result.comparison = NapLearnerReplay.leaveOneOut(windows, now: now)
+        } else {
+            UserDefaults.standard.removeObject(forKey: Self.napModelKey)
+        }
+        return result
+    }
+
     /// What the shadow log says once the person has decided: for each window they SAVED under a sport that names a class, whether the rules and the
     /// learner had that class. A window they dismissed has no label and is not counted.
     struct ShadowOutcomes: Equatable {

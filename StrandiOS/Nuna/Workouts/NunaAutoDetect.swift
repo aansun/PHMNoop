@@ -60,6 +60,7 @@ struct NunaAutoDetectView: View {
     // MARK: Detection check (diagnostic)
 
     @State private var check: Repository.WorkoutReplayResult?
+    @State private var napCheck: Repository.NapLearnerCheck?
     @State private var checking = false
 
     /// A read-only diagnostic: how often the shape classifier would have named the workouts you saved yourself. It is English only on purpose, like
@@ -77,6 +78,7 @@ struct NunaAutoDetectView: View {
                     Task {
                         var result = await repo.workoutClassReplay()
                         result.shadow = await repo.learnerShadowOutcomes()
+                        napCheck = await repo.napLearnerCheck()
                         check = result
                         checking = false
                     }
@@ -86,7 +88,7 @@ struct NunaAutoDetectView: View {
                         .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(checking)
                 if let c = check {
-                    ForEach(Array(Self.checkLines(c).enumerated()), id: \.offset) { _, line in
+                    ForEach(Array((Self.checkLines(c) + Self.napLines(napCheck)).enumerated()), id: \.offset) { _, line in
                         Text(verbatim: line).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                             .fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
@@ -135,6 +137,23 @@ struct NunaAutoDetectView: View {
         let shadow = c.shadow
         lines.append("Offered windows you decided on: \(shadow.decided) (rules right \(shadow.rulesRight), learner right \(shadow.learnerRight)); waiting for you: \(shadow.pending)")
         lines.append("Case open: judge it with 3 to 4 weeks of data. Do not turn it on before that.")
+        return lines
+    }
+
+    /// The nap learner's side of the check: how many of the person's own answers it has, and, once it has enough of both kinds, how it compares with the rules.
+    static func napLines(_ n: Repository.NapLearnerCheck?) -> [String] {
+        guard let n else { return [] }
+        var lines = ["", "Nap learner (shadow: it is measured, never used to decide anything)",
+                     "Your answers with strap data: \(n.naps) naps you logged or edited, \(n.notNaps) detected naps you deleted" + (n.noStrapData > 0 ? " (\(n.noStrapData) without strap data)" : "")]
+        lines.append("Rules agree with your answer on \(n.rulesRight) of \(n.naps + n.notNaps)")
+        if n.trained, let k = n.comparison {
+            func pct(_ a: Int, _ b: Int) -> String { b == 0 ? "n/a" : "\(Int((Double(a) / Double(b) * 100).rounded()))%" }
+            lines.append("Each answer judged by a model that never saw it: rules \(pct(k.rulesCorrect, k.windows)), learner \(pct(k.learnerCorrect, k.windows))")
+            lines.append("Naps the rules missed: \(k.rulesMissedNaps), the learner would have kept \(k.learnerRescuedNaps). Deleted naps the rules kept: \(k.rulesFalseNaps), the learner would have dropped \(k.learnerDroppedFalseNaps)")
+        } else {
+            lines.append("Not trained yet: it needs at least \(NapLearner.minPerSide) of each kind. Log a nap by hand when the strap misses one, and delete a detected nap that was not one.")
+        }
+        lines.append("Case open: judge it with 3 to 4 weeks of data.")
         return lines
     }
 

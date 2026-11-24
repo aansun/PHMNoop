@@ -1079,17 +1079,11 @@ public enum SleepStager {
     /// is far more likely than an unmonitored nap, and this path can never touch the night.
     static func passesDaytimeGuard(_ p: Period, restingHR: Int?, baseline: Double?,
                                    bandSleepState: [(ts: Int, state: Int)] = []) -> Bool {
-        let daytimeMinSleepS = daytimeMinSleepMin * 60
-        if (p.end - p.start) < daytimeMinSleepS { return false }
-        guard let baseline = baseline, let resting = restingHR else { return false }
-        // A long nap: the ordinary bar.
-        if (p.end - p.start) >= shortNapMaxMin * 60 { return Double(resting) <= baseline * daytimeRestingHRMult }
-        // A short nap (20 to 90 minutes): the strap's own verdict when it gives one, a deeper dip when it does not.
-        if bandSleepState.contains(where: { $0.ts >= p.start && $0.ts <= p.end }) {
-            return Double(resting) <= baseline * shortNapRestingHRMult
-                && bandStateConfirmsAsleep(p, bandSleepState: bandSleepState, minFraction: shortNapBandAsleepFrac)
-        }
-        return Double(resting) <= baseline * shortNapNoBandRestingHRMult
+        guard let baseline = baseline, baseline > 0, let resting = restingHR else { return false }
+        let inBand = bandSleepState.filter { $0.ts >= p.start && $0.ts <= p.end }
+        let bandFraction: Double? = inBand.isEmpty ? nil
+            : Double(inBand.filter { $0.state == bandStateAsleep }.count) / Double(inBand.count)
+        return NapRules.passes(durationS: p.end - p.start, restingRatio: Double(resting) / baseline, bandAsleepFraction: bandFraction)
     }
 
     /// H7 morning-stillness nap suppression (#531). Returns true = KEEP, false = REJECT, for a daytime block
