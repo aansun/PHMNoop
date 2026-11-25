@@ -2917,7 +2917,9 @@ final class Repository: ObservableObject {
             // already present, so a session that ended with an HR but no strain (sparse live HR at save)
             // still gets its Effort backfilled once the strap trace covers the window. Needs the injected
             // profile; without it the strain fill is skipped and eligibility is unchanged from before.
-            let needsStrainFill = strapNative && row.strain == nil && strainProfile != nil
+            // An Apple Health workout gets its Effort from PHMN's own scorer too, over the heart rate the page shows (the strap's, or Apple's where the
+            // strap has none), never from Apple.
+            let needsStrainFill = (strapNative || cls == .apple) && row.strain == nil && strainProfile != nil
             guard row.endTs > row.startTs, budget > 0,
                   strapNative || row.avgHr == nil || needsStrainFill else { continue }
             budget -= 1
@@ -2947,13 +2949,14 @@ final class Repository: ObservableObject {
                     // own. Resolve this on the main actor (WorkoutSource.classify) and capture the plain Bool,
                     // so the child task crosses only Sendable scalars.
                     let cls = WorkoutSource.classify(rows[idx].source)
-                    let wantStrain = (cls == .manual || cls == .detected) && rows[idx].strain == nil
+                    let wantStrain = (cls == .manual || cls == .detected || cls == .apple) && rows[idx].strain == nil
                     // #510: read HR under the workout's OWN recording strap, not a single active id. A detected
                     // row's `source` IS its computed strap id ("<base>-noop"), so a bout auto-detected on a 2nd
                     // WHOOP reads "<base>" instead of the active strap's empty window. Resolved on the main actor;
                     // only the resulting Sendable String crosses into the task.
-                    let hrIds = Self.workoutHrDeviceIds(source: rows[idx].source, activeStrapId: deviceId,
-                                                        importedIds: importedReadIds)
+                    let hrIds = cls == .apple
+                        ? await workoutHrIds(source: rows[idx].source, from: startTs, to: endTs)
+                        : Self.workoutHrDeviceIds(source: rows[idx].source, activeStrapId: deviceId, importedIds: importedReadIds)
                     group.addTask { [hrIds] in
                         // #836: aggregate in SQLite over the WHOLE window instead of reducing up to 8000
                         // materialised rows. The old read capped at 8000, so a workout longer than ~2h13m
