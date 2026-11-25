@@ -194,7 +194,7 @@ struct NunaWorkoutSummaryView: View {
     @ViewBuilder private func sourceLine(_ r: WorkoutRow) -> some View {
         if let from = WorkoutSource.externalName(r) {
             Text(verbatim: String(localized: "Imported from \(from)")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
