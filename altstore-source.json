@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "3.1.3",
+          "buildVersion": "466",
+          "date": "2026-11-25",
+          "localizedDescription": "Effort and climb for the activities that come from Apple Health.",
+          "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.1.3/PHMN-v3.1.3-ios-unsigned.ipa",
+          "size": 86989612,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "3.1.2",
           "buildVersion": "460",
           "date": "2026-11-24",
