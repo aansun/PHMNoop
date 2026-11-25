@@ -1754,11 +1754,16 @@ final class HealthKitBridge: ObservableObject {
         // a gigabyte of JSON through UserDefaults. `storeAll` applies the same eviction, once.
         var importedRoutes: [(route: WorkoutRoute, startTs: Int, sport: String)] = []
         for (workout, row) in workoutsAndRows {
-            if let route = await Self.fetchWorkoutRoute(for: workout, store: store),
-               route.count >= 2 {
+            if let fetched = await Self.fetchWorkoutRoute(for: workout, store: store),
+               fetched.points.count >= 2 {
+                let route = fetched.points
                 let polyline = RouteMath.encode(route)
                 let distanceM = RouteMath.totalMeters(route)
-                importedRoutes.append((WorkoutRoute(polyline: polyline, distanceM: distanceM),
+                // The climb: the figure the recording device itself wrote with the workout when there is one (a watch with a barometer, a Garmin, a Fitbit),
+                // otherwise worked out from the route's altitudes.
+                let reported = (workout.metadata?[HKMetadataKeyElevationAscended] as? HKQuantity)?.doubleValue(for: .meter())
+                let climb = reported.flatMap { $0 > 0 ? $0 : nil } ?? RouteMath.climbMeters(altitudes: fetched.altitudes)
+                importedRoutes.append((WorkoutRoute(polyline: polyline, distanceM: distanceM, elevationGainM: climb),
                                        row.startTs, row.sport))
             }
         }
@@ -1809,7 +1814,7 @@ final class HealthKitBridge: ObservableObject {
     /// `CLLocation` waypoints from each route via `HKWorkoutRouteQuery`. Returns `nil` when there
     /// is no route, the user has not granted route read access, or HealthKit reports an error —
     /// all of which are graceful skips (the workout imports without a map, same as today).
-    nonisolated static func fetchWorkoutRoute(for workout: HKWorkout, store: HKHealthStore) async -> [RouteMath.LatLng]? {
+    nonisolated static func fetchWorkoutRoute(for workout: HKWorkout, store: HKHealthStore) async -> (points: [RouteMath.LatLng], altitudes: [Double])? {
         let routeType = HKSeriesType.workoutRoute()
         let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: .strictStartDate)
         // First: query for HKWorkoutRoute samples associated with this workout.
@@ -1825,18 +1830,21 @@ final class HealthKitBridge: ObservableObject {
         // Second: collect CLLocation waypoints from each route. HKWorkoutRouteQuery calls its
         // handler repeatedly with batches of locations; `done: true` marks the end of one route.
         var points: [RouteMath.LatLng] = []
+        var altitudes: [Double] = []
         for route in routes {
             await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
                 let query = HKWorkoutRouteQuery(route: route) { _, locations, done, _ in
                     for loc in locations ?? [] {
                         points.append(RouteMath.LatLng(loc.coordinate.latitude, loc.coordinate.longitude))
+                        // A fix with no vertical accuracy (negative) has no usable altitude.
+                        if loc.verticalAccuracy >= 0 { altitudes.append(loc.altitude) }
                     }
                     if done { cont.resume(returning: ()) }
                 }
                 store.execute(query)
             }
         }
-        return points.isEmpty ? nil : points
+        return points.isEmpty ? nil : (points, altitudes)
     }
 
     /// Source tag stamped on workouts imported from Apple Health. Matches the macOS importer's

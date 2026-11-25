@@ -58,6 +58,28 @@ enum RouteMath {
         return earthR * 2 * atan2(sqrt(s), sqrt(1 - s))
     }
 
+    /// Total climb in metres from a series of GPS altitudes. Raw GPS altitude jitters by metres from one fix to the next, and adding every small rise would
+    /// make a flat walk climb tens of metres, so the series is smoothed (a moving average of five fixes) and a rise only counts once it has gone `threshold`
+    /// metres above the last low point. nil when there are too few readings to say anything.
+    static func climbMeters(altitudes: [Double], threshold: Double = 2.0) -> Double? {
+        let alts = altitudes.filter { $0.isFinite }
+        guard alts.count >= 5 else { return nil }
+        let half = 2
+        let smooth = alts.indices.map { i -> Double in
+            let lo = max(0, i - half), hi = min(alts.count - 1, i + half)
+            return alts[lo...hi].reduce(0, +) / Double(hi - lo + 1)
+        }
+        var gain = 0.0, low = smooth[0], high = smooth[0]
+        for v in smooth.dropFirst() {
+            if v < low { low = v; high = v }
+            else if v > high {
+                high = v
+                if high - low >= threshold { gain += high - low; low = high }
+            }
+        }
+        return gain
+    }
+
     /// Total route length in metres — the sum of consecutive Haversine legs. 0 for < 2 points.
     static func totalMeters(_ points: [LatLng]) -> Double {
         guard points.count > 1 else { return 0 }
