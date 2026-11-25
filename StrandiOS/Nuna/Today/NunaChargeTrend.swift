@@ -213,6 +213,40 @@ struct NunaLevelRow: View {
     }
 }
 
+/// A row of the same panel for a figure that is not a percentage (a clock time, minutes): icon, UPPERCASE name, the three-bar level when there is one,
+/// and the figure in the same size and weight as the percentages in `NunaLevelRow`.
+struct NunaFigureRow: View {
+    let title: LocalizedStringKey
+    let icon: String
+    let value: String
+    var unit = ""
+    var level: NunaLevel?
+
+    var body: some View {
+        HStack(spacing: 14) {
+            NunaIcon(name: icon, size: 18, weight: .regular).foregroundStyle(NunaPalette.textSecondary).frame(width: 30)
+            Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                .lineLimit(1).minimumScaleFactor(0.65)
+            Spacer(minLength: 6)
+            if let level {
+                HStack(spacing: 3) {
+                    ForEach(0..<3, id: \.self) { i in
+                        Capsule().fill(level.rawValue == i ? level.color : NunaPalette.ink.opacity(0.14)).frame(width: 14, height: 4)
+                    }
+                }
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+            }
+            .frame(minWidth: 56, alignment: .trailing)
+        }
+        .padding(.vertical, 18)
+        .contentShape(Rectangle())
+    }
+}
+
 /// "Poor · Sufficient · Optimal": what the bars under the ring mean.
 struct NunaLevelLegend: View {
     var body: some View {

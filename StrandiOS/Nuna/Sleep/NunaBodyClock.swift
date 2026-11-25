@@ -212,43 +212,26 @@ struct NunaBodyClockView: View {
         .padding(.top, 6)
     }
 
-    /// One panel, one row for each figure: the peak, how the schedule sits and how last night sat against the ideal window (the lowest point is in the dial).
+    /// The panel the Sleep, Recovery and Strain pages put under their ring: a row for each figure in the same type, with the same three bars where there is a
+    /// level to show (how close last night sat to the ideal window), and the same legend under them.
     private func panel(_ est: CircadianEngine.PhaseEstimate, wake: Double?, ideal: (bed: Double, wake: Double)?) -> some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+        NunaSignalPanel {
             VStack(spacing: 0) {
-                figureRow("sun.max", "Peak", NunaClockHour.text(est.acrophaseHours))
+                NunaFigureRow(title: "Peak", icon: "sun.max", value: NunaClockHour.text(est.acrophaseHours))
                 NunaDivider()
-                figureRow("calendar.badge.clock", "Schedule", signed(est.offsetVsScheduleMinutes), unit: "min")
+                NunaFigureRow(title: "Schedule", icon: "met:sleep-consistency", value: signed(est.offsetVsScheduleMinutes), unit: "min")
                 if let wake, let ideal {
-                    NunaDivider()
                     let off = CircadianEngine.sleepWindowOffsetHours(tempMinHour: est.tempMinHour, actualWakeHour: wake)
                     let mins = NunaClockHour.minutes(off)
-                    figureRow("bed.double", "Last night vs ideal", (off <= 0 ? "−" : "+") + "\(mins)", unit: "min",
-                              note: mins <= 30 ? "Aligned" : (off <= 0 ? "Earlier than ideal" : "Later than ideal"),
-                              noteColor: mins <= 30 ? NunaPalette.charge : NunaPalette.warning)
                     NunaDivider()
-                    figureRow("clock", "Ideal window", "\(NunaClockHour.text(ideal.bed)) – \(NunaClockHour.text(ideal.wake))", small: true)
+                    NunaFigureRow(title: "Last night vs ideal", icon: "met:hours-vs-needed", value: (off <= 0 ? "−" : "+") + "\(mins)", unit: "min",
+                                  level: mins <= 30 ? .optimal : (mins <= 60 ? .sufficient : .poor))
+                    NunaDivider()
+                    NunaFigureRow(title: "Ideal window", icon: "met:time-in-bed", value: "\(NunaClockHour.text(ideal.bed)) – \(NunaClockHour.text(ideal.wake))")
                 }
             }
+            if wake != nil, ideal != nil { NunaLevelLegend().padding(.top, 8) }
         }
-    }
-
-    private func figureRow(_ icon: String, _ title: LocalizedStringKey, _ value: String, unit: String = "", note: LocalizedStringKey? = nil,
-                           noteColor: Color = NunaPalette.textSecondary, small: Bool = false) -> some View {
-        HStack(spacing: 14) {
-            NunaGlyph(icon, pointSize: 20, weight: .regular).foregroundStyle(NunaPalette.textSecondary).frame(width: 30)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                if let note { Text(note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(noteColor).textCase(nil) }
-            }
-            Spacer(minLength: 8)
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(verbatim: value).font(.nuna(size: small ? 20 : 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    .minimumScaleFactor(0.7).lineLimit(1)
-                if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-            }
-        }
-        .frame(minHeight: 66)
     }
 
     /// The 24-hour curve, and under it how sure the estimate is.
