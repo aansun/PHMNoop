@@ -124,6 +124,21 @@ struct NunaRhythmCurve: View {
     }
 }
 
+/// The hour labels under the curve, each centred under its own gridline (00 and 24 at the two edges), so a label and the line it names agree.
+struct NunaRhythmAxis: View {
+    var body: some View {
+        GeometryReader { g in
+            ForEach([0, 6, 12, 18, 24], id: \.self) { h in
+                Text(verbatim: String(format: "%02d", h))
+                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    .position(x: min(max(g.size.width * CGFloat(h) / 24, 9), g.size.width - 9), y: g.size.height / 2)
+            }
+        }
+        .frame(height: 16)
+        .accessibilityHidden(true)
+    }
+}
+
 // MARK: - Body clock screen
 
 /// The page is laid out like the Sleep pages: the title in the middle, the picture of the night first (the 24-hour dial, with the lowest point in its
@@ -242,11 +257,21 @@ struct NunaBodyClockView: View {
             }
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
-                    NunaRhythmCurve(acrophase: est.acrophaseHours, tempMin: est.tempMinHour, bed: bed, wake: wake)
-                    HStack {
-                        ForEach(["00", "06", "12", "18", "24"], id: \.self) { t in Text(verbatim: t).frame(maxWidth: .infinity) }
+                    VStack(spacing: 6) {
+                        NunaRhythmCurve(acrophase: est.acrophaseHours, tempMin: est.tempMinHour, bed: bed, wake: wake)
+                        NunaRhythmAxis()
                     }
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    // What the marks on the curve are, with their times.
+                    HStack(spacing: 14) {
+                        if bed != nil {
+                            curveKey(AnyView(RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaPalette.rest.opacity(0.4)).frame(width: 14, height: 10)),
+                                     "Last night", nil)
+                        }
+                        curveKey(AnyView(Circle().strokeBorder(NunaPalette.ink, lineWidth: 2.5).frame(width: 10, height: 10)), "Lowest point",
+                                 NunaClockHour.text(est.tempMinHour))
+                        curveKey(AnyView(Circle().fill(NunaPalette.charge).frame(width: 10, height: 10)), "Peak", NunaClockHour.text(est.acrophaseHours))
+                        Spacer(minLength: 0)
+                    }
                     NunaDivider()
                     HStack {
                         nunaTrendsCap("Confidence")
@@ -259,9 +284,12 @@ struct NunaBodyClockView: View {
                                 .fill(i < (est.confidence == .solid ? 3 : 2) ? NunaPalette.rest : NunaPalette.ink.opacity(0.09)).frame(height: 8)
                         }
                     }
-                    HStack {
-                        Text("Hard to read"); Spacer(); Text("Wide range"); Spacer()
-                        Text("Solid").foregroundStyle(est.confidence == .solid ? NunaPalette.restText : NunaPalette.textSecondary)
+                    // One label under each of the three bars.
+                    HStack(spacing: 6) {
+                        Text("Hard to read").frame(maxWidth: .infinity, alignment: .leading)
+                        Text("Wide range").frame(maxWidth: .infinity, alignment: .center)
+                        Text("Solid").frame(maxWidth: .infinity, alignment: .trailing)
+                            .foregroundStyle(est.confidence == .solid ? NunaPalette.restText : NunaPalette.textSecondary)
                     }
                     .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
@@ -292,6 +320,14 @@ struct NunaBodyClockView: View {
             }
         }
         .buttonStyle(.plain)
+    }
+
+    private func curveKey(_ mark: AnyView, _ text: LocalizedStringKey, _ time: String?) -> some View {
+        HStack(spacing: 6) {
+            mark
+            Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+            if let time { Text(verbatim: time).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
+        }
     }
 
     private func legend(_ mark: AnyView, _ text: LocalizedStringKey) -> some View {
