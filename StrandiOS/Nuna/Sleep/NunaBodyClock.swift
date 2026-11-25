@@ -24,11 +24,13 @@ enum NunaClockHour {
 
 // MARK: - 24 h dial
 
-/// Two arcs on one ring: dotted = where the body clock wanted the night, solid = the night slept.
+/// Two arcs on one ring: dotted = where the body clock wanted the night, solid = the night slept. Without a night to compare, only the ring and the lowest
+/// point are drawn.
 struct NunaBodyClockDial: View {
-    let idealBed: Double, idealWake: Double
-    let bed: Double, wake: Double
+    var idealBed: Double?, idealWake: Double?
+    var bed: Double?, wake: Double?
     let tempMin: Double
+    var size: CGFloat = 248
 
     var body: some View {
         Canvas { ctx, size in
@@ -56,16 +58,20 @@ struct NunaBodyClockDial: View {
                 p.addArc(center: c, radius: r * scale, startAngle: angle(from), endAngle: angle(from + sweep), clockwise: false)
                 return p
             }
-            ctx.stroke(arc(idealBed, idealWake, 88), with: .color(NunaPalette.restText),
-                       style: StrokeStyle(lineWidth: 7 * scale, lineCap: .round, dash: [0.1, 9 * scale]))
-            ctx.stroke(arc(bed, wake, 70), with: .color(NunaPalette.rest),
-                       style: StrokeStyle(lineWidth: 13 * scale, lineCap: .round))
+            if let idealBed, let idealWake {
+                ctx.stroke(arc(idealBed, idealWake, 88), with: .color(NunaPalette.restText),
+                           style: StrokeStyle(lineWidth: 7 * scale, lineCap: .round, dash: [0.1, 9 * scale]))
+            }
+            if let bed, let wake {
+                ctx.stroke(arc(bed, wake, 70), with: .color(NunaPalette.rest),
+                           style: StrokeStyle(lineWidth: 13 * scale, lineCap: .round))
+            }
             let m = point(tempMin, 88)
             let dot = Path(ellipseIn: CGRect(x: m.x - 6 * scale, y: m.y - 6 * scale, width: 12 * scale, height: 12 * scale))
             ctx.fill(dot, with: .color(NunaPalette.canvas))
             ctx.stroke(dot, with: .color(NunaPalette.ink), lineWidth: 2.5)
         }
-        .frame(width: 248, height: 248)
+        .frame(width: size, height: size)
         .accessibilityHidden(true)
     }
 }
@@ -120,15 +126,15 @@ struct NunaRhythmCurve: View {
 
 // MARK: - Body clock screen
 
+/// The page is laid out like the Sleep pages: the title in the middle, the picture of the night first (the 24-hour dial, with the lowest point in its
+/// middle), one panel of figures with a row for each, a titled card for the rhythm, a card that explains, and Anya as the floating pill.
 struct NunaBodyClockView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var appModel: AppModel
-    @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @StateObject private var sleep = NunaSleepModel()
-    @State private var showCoach = false
 
     var body: some View {
-        NunaDetailScreen("Body clock", onAnya: coachEnabled ? { showCoach = true } : nil) {
+        NunaDetailScreen("Body clock", centersTitle: true) {
             if let est = appModel.circadianPhase, est.confidence != .unreadable {
                 content(est)
             } else {
@@ -140,85 +146,144 @@ struct NunaBodyClockView: View {
             // The estimate is computed in the analytics pass; make sure it is fresh when this screen opens.
             if appModel.circadianPhase == nil { await appModel.refreshV5Signals() }
         }
-        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "body clock") }
+        // Her line is worked out from the figures on this page; there is no analysis to fetch for it.
+        .nunaAnyaFloating(context: "body clock", line: anyaLine, analyses: false)
     }
 
     private var night: NunaNight? { sleep.nights.first }
 
+    // MARK: Anya
+
+    /// What she says about the page: how the last night sat against the body clock, in a few warm words.
+    private var anyaLine: String? {
+        guard let est = appModel.circadianPhase, est.confidence != .unreadable else { return nil }
+        guard let night, let ideal = idealWindow(est, night) else {
+            return String(localized: "Your body clock is at its lowest around \(NunaClockHour.text(est.tempMinHour)). You are sleepiest then, and good sleep ends about two and a half hours after it.")
+        }
+        let wake = NunaClockHour.hour(of: night.wake)
+        let off = CircadianEngine.sleepWindowOffsetHours(tempMinHour: est.tempMinHour, actualWakeHour: wake)
+        let mins = NunaClockHour.minutes(off)
+        if mins <= 30 {
+            return String(localized: "Your sleep sits right on your body clock. Keep waking close to \(NunaClockHour.text(wake)) and the rhythm stays steady.")
+        }
+        let when = off <= 0 ? String(localized: "earlier") : String(localized: "later")
+        return String(localized: "Last night ran \(mins) minutes \(when) than your body clock wanted. Tonight, aim to be asleep nearer \(NunaClockHour.text(ideal.bed)), and get daylight soon after you wake.")
+    }
+
+    // MARK: Content
+
     @ViewBuilder private func content(_ est: CircadianEngine.PhaseEstimate) -> some View {
         let chrono = CircadianEngine.chronotype(est)
-        NunaCard(padding: EdgeInsets(top: 22, leading: 22, bottom: 22, trailing: 22)) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Text("Your body clock estimate").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    NunaChip(est.confidence == .solid ? "Solid" : "Wide range", color: NunaPalette.restText)
-                }
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(verbatim: NunaClockHour.text(est.tempMinHour))
-                        .font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.restText)
-                        .minimumScaleFactor(0.6).lineLimit(1)
-                    Text("lowest point").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                Text("You are sleepiest around this time. Good sleep ends about 2.5 hours after it.")
-                    .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    .fixedSize(horizontal: false, vertical: true).textCase(nil)
-                if let chrono {
-                    NunaChip(chronoLabel(chrono), systemImage: "moon", color: NunaPalette.restText).padding(.top, 4)
-                }
-            }
-        }
-        if let night, let ideal = idealWindow(est, night) {
-            dialCard(est, night, ideal)
-        }
-        HStack(spacing: 12) {
-            NunaStatTile(label: "Lowest", value: NunaClockHour.text(est.tempMinHour))
-            NunaStatTile(label: "Peak", value: NunaClockHour.text(est.acrophaseHours))
-            NunaStatTile(label: "Schedule", value: signed(est.offsetVsScheduleMinutes), unit: "min")
-        }
-        NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("24-hour rhythm").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    Text("Estimated shape").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                NunaRhythmCurve(acrophase: est.acrophaseHours, tempMin: est.tempMinHour,
-                                bed: night.map { NunaClockHour.hour(of: $0.onset) }, wake: night.map { NunaClockHour.hour(of: $0.wake) })
-                HStack {
-                    ForEach(["00", "06", "12", "18", "24"], id: \.self) { t in
-                        Text(verbatim: t).frame(maxWidth: .infinity)
-                    }
-                }
-                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-        }
-        NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Confidence").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    Text("From the last 14 days").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                HStack(spacing: 6) {
-                    ForEach(0..<3, id: \.self) { i in
-                        RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(i < (est.confidence == .solid ? 3 : 2) ? NunaPalette.rest : NunaPalette.ink.opacity(0.09)).frame(height: 8)
-                    }
-                }
-                HStack {
-                    Text("Hard to read"); Spacer(); Text("Wide range"); Spacer()
-                    Text("Solid").foregroundStyle(est.confidence == .solid ? NunaPalette.restText : NunaPalette.textSecondary)
-                }
-                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                Text("It needs at least 7 days of data for a first estimate. More days narrow the range.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-        }
+        let ideal = night.flatMap { idealWindow(est, $0) }
+        let bed = night.map { NunaClockHour.hour(of: $0.onset) }
+        let wake = night.map { NunaClockHour.hour(of: $0.wake) }
+        hero(est, chrono: chrono, ideal: ideal, bed: bed, wake: wake)
+        panel(est, wake: wake, ideal: ideal)
+        rhythmCard(est, bed: bed, wake: wake)
         planLink
-        if coachEnabled { NunaAnyaCard(title: "Is my sleep timing right for my body clock?") { showCoach = true } }
-        NunaExpandRow(title: "How it's calculated", subtitle: "From 14 days of heart-rate rhythm, not a temperature reading",
-                      text: "Your heart rate rises and falls over the day. NOOP fits one smooth daily cycle to the last 14 days, finds its lowest and highest points, and places your body-clock low about when your heart-rate rhythm bottoms out. It is an on-device estimate, not a medical measurement or a body temperature reading.")
+        NunaBodyClockInfo()
+    }
+
+    /// The dial at its full size, with the lowest point in the middle, and under it what kind of clock this is and what the marks mean.
+    private func hero(_ est: CircadianEngine.PhaseEstimate, chrono: CircadianEngine.Chronotype?, ideal: (bed: Double, wake: Double)?,
+                      bed: Double?, wake: Double?) -> some View {
+        VStack(spacing: 18) {
+            ZStack {
+                NunaBodyClockDial(idealBed: ideal?.bed, idealWake: ideal?.wake, bed: bed, wake: wake, tempMin: est.tempMinHour, size: 300)
+                VStack(spacing: 4) {
+                    nunaTrendsCap("Lowest point")
+                    Text(verbatim: NunaClockHour.text(est.tempMinHour))
+                        .font(.nuna(size: 52, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(52)).foregroundStyle(NunaPalette.textPrimary)
+                        .minimumScaleFactor(0.6).lineLimit(1)
+                    Text(est.confidence == .solid ? "Solid" : "Wide range")
+                        .font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.restText)
+                }
+            }
+            if let chrono { NunaChip(chronoLabel(chrono), systemImage: "moon", color: NunaPalette.restText) }
+            if ideal != nil {
+                HStack(spacing: 14) {
+                    legend(AnyView(Text(verbatim: "···").font(.nuna(size: 14, weight: .black)).foregroundStyle(NunaPalette.restText)), "Ideal window")
+                    legend(AnyView(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.rest).frame(width: 14, height: 6)), "Last night")
+                    legend(AnyView(Circle().strokeBorder(NunaPalette.ink, lineWidth: 2.5).frame(width: 10, height: 10)), "Lowest point")
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 6)
+    }
+
+    /// One panel, one row for each figure: the peak, how the schedule sits and how last night sat against the ideal window (the lowest point is in the dial).
+    private func panel(_ est: CircadianEngine.PhaseEstimate, wake: Double?, ideal: (bed: Double, wake: Double)?) -> some View {
+        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+            VStack(spacing: 0) {
+                figureRow("sun.max", "Peak", NunaClockHour.text(est.acrophaseHours))
+                NunaDivider()
+                figureRow("calendar.badge.clock", "Schedule", signed(est.offsetVsScheduleMinutes), unit: "min")
+                if let wake, let ideal {
+                    NunaDivider()
+                    let off = CircadianEngine.sleepWindowOffsetHours(tempMinHour: est.tempMinHour, actualWakeHour: wake)
+                    let mins = NunaClockHour.minutes(off)
+                    figureRow("bed.double", "Last night vs ideal", (off <= 0 ? "−" : "+") + "\(mins)", unit: "min",
+                              note: mins <= 30 ? "Aligned" : (off <= 0 ? "Earlier than ideal" : "Later than ideal"),
+                              noteColor: mins <= 30 ? NunaPalette.charge : NunaPalette.warning)
+                    NunaDivider()
+                    figureRow("clock", "Ideal window", "\(NunaClockHour.text(ideal.bed)) – \(NunaClockHour.text(ideal.wake))", small: true)
+                }
+            }
+        }
+    }
+
+    private func figureRow(_ icon: String, _ title: LocalizedStringKey, _ value: String, unit: String = "", note: LocalizedStringKey? = nil,
+                           noteColor: Color = NunaPalette.textSecondary, small: Bool = false) -> some View {
+        HStack(spacing: 14) {
+            NunaGlyph(icon, pointSize: 20, weight: .regular).foregroundStyle(NunaPalette.textSecondary).frame(width: 30)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                if let note { Text(note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(noteColor).textCase(nil) }
+            }
+            Spacer(minLength: 8)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: value).font(.nuna(size: small ? 20 : 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    .minimumScaleFactor(0.7).lineLimit(1)
+                if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+            }
+        }
+        .frame(minHeight: 66)
+    }
+
+    /// The 24-hour curve, and under it how sure the estimate is.
+    private func rhythmCard(_ est: CircadianEngine.PhaseEstimate, bed: Double?, wake: Double?) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            NunaTitleRow(title: "24-hour rhythm") {
+                Text("Estimated shape").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+            NunaCard {
+                VStack(alignment: .leading, spacing: 14) {
+                    NunaRhythmCurve(acrophase: est.acrophaseHours, tempMin: est.tempMinHour, bed: bed, wake: wake)
+                    HStack {
+                        ForEach(["00", "06", "12", "18", "24"], id: \.self) { t in Text(verbatim: t).frame(maxWidth: .infinity) }
+                    }
+                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    NunaDivider()
+                    HStack {
+                        nunaTrendsCap("Confidence")
+                        Spacer()
+                        Text("From the last 14 days").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                    HStack(spacing: 6) {
+                        ForEach(0..<3, id: \.self) { i in
+                            RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)
+                                .fill(i < (est.confidence == .solid ? 3 : 2) ? NunaPalette.rest : NunaPalette.ink.opacity(0.09)).frame(height: 8)
+                        }
+                    }
+                    HStack {
+                        Text("Hard to read"); Spacer(); Text("Wide range"); Spacer()
+                        Text("Solid").foregroundStyle(est.confidence == .solid ? NunaPalette.restText : NunaPalette.textSecondary)
+                    }
+                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+            }
+        }
     }
 
     private var unreadable: some View {
@@ -232,6 +297,7 @@ struct NunaBodyClockView: View {
                 }
             }
             planLink
+            NunaBodyClockInfo()
         }
     }
 
@@ -243,40 +309,6 @@ struct NunaBodyClockView: View {
             }
         }
         .buttonStyle(.plain)
-    }
-
-    private func dialCard(_ est: CircadianEngine.PhaseEstimate, _ night: NunaNight, _ ideal: (bed: Double, wake: Double)) -> some View {
-        let bed = NunaClockHour.hour(of: night.onset), wake = NunaClockHour.hour(of: night.wake)
-        let off = CircadianEngine.sleepWindowOffsetHours(tempMinHour: est.tempMinHour, actualWakeHour: wake)
-        let mins = NunaClockHour.minutes(off)
-        let aligned = mins <= 30
-        return NunaCard {
-            VStack(spacing: 12) {
-                HStack {
-                    Text("Sleep and ideal window").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    NunaChip(aligned ? "Aligned" : "Off", color: aligned ? NunaPalette.charge : NunaPalette.warning)
-                }
-                ZStack {
-                    NunaBodyClockDial(idealBed: ideal.bed, idealWake: ideal.wake, bed: bed, wake: wake, tempMin: est.tempMinHour)
-                    VStack(spacing: 2) {
-                        Text("Difference").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        HStack(alignment: .firstTextBaseline, spacing: 3) {
-                            Text(verbatim: (off <= 0 ? "−" : "+") + "\(mins)").font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("min").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                        Text(off <= 0 ? "earlier" : "later").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                }
-                HStack(spacing: 14) {
-                    legend(AnyView(Text(verbatim: "···").font(.nuna(size: 14, weight: .black)).foregroundStyle(NunaPalette.restText)), "Ideal window")
-                    legend(AnyView(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.rest).frame(width: 14, height: 6)), "Last night")
-                    legend(AnyView(Circle().strokeBorder(NunaPalette.ink, lineWidth: 2.5).frame(width: 10, height: 10)), "Lowest point")
-                }
-                Text(verbatim: String(localized: "Your sleep was \(mins) minutes \(off <= 0 ? String(localized: "earlier") : String(localized: "later")) than the ideal window (\(NunaClockHour.text(ideal.bed)) to \(NunaClockHour.text(ideal.wake))). The night has the same length, so this is about timing, not duration."))
-                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).textCase(nil)
-            }
-        }
     }
 
     private func legend(_ mark: AnyView, _ text: LocalizedStringKey) -> some View {

@@ -85,6 +85,16 @@ struct NunaWeatherAirExplainer: View {
     }
 }
 
+/// Under the Body clock page: where the estimate comes from and what it is not.
+struct NunaBodyClockInfo: View {
+    var body: some View {
+        NunaInfoCard(title: "How it's calculated") {
+            nunaInfoParagraph("Your heart rate rises and falls over the day. PHMN fits one smooth daily cycle to the last 14 days, finds its lowest and highest points, and places your body-clock low about when your heart-rate rhythm bottoms out.")
+            nunaInfoParagraph("It is an on-device estimate from your heart-rate rhythm, not a medical measurement and not a body temperature reading.")
+        }
+    }
+}
+
 /// Under the strap's battery page: how to look after the battery, and what the figures on the page are.
 struct NunaBatteryCareInfo: View {
     var body: some View {

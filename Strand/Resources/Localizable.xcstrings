@@ -9587,5 +9587,13 @@
  "Paused.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dijeda."}}}},
  "Continuing.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kita lanjutkan."}}}},
  "The exercise is complete. Well done. Now breathe normally.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Latihan selesai. Bagus sekali. Sekarang bernapaslah seperti biasa."}}}},
- "Imported from %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Diimpor dari %@"}}}}
+ "Imported from %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Diimpor dari %@"}}}},
+ "Last night vs ideal": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Semalam vs ideal"}}}},
+ "Earlier than ideal": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lebih awal dari ideal"}}}},
+ "Later than ideal": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lebih larut dari ideal"}}}},
+ "Your heart rate rises and falls over the day. PHMN fits one smooth daily cycle to the last 14 days, finds its lowest and highest points, and places your body-clock low about when your heart-rate rhythm bottoms out.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Detak jantungmu naik dan turun sepanjang hari. PHMN mencocokkan satu siklus harian yang halus pada 14 hari terakhir, mencari titik terendah dan tertingginya, lalu menaruh titik terendah jam biologismu kira-kira saat ritme detak jantungmu paling rendah."}}}},
+ "It is an on-device estimate from your heart-rate rhythm, not a medical measurement and not a body temperature reading.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ini perkiraan di perangkat dari ritme detak jantungmu, bukan pengukuran medis dan bukan pembacaan suhu tubuh."}}}},
+ "Your body clock is at its lowest around %@. You are sleepiest then, and good sleep ends about two and a half hours after it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jam biologismu paling rendah sekitar %@. Saat itu kamu paling mengantuk, dan tidur yang baik berakhir sekitar dua setengah jam setelahnya."}}}},
+ "Your sleep sits right on your body clock. Keep waking close to %@ and the rhythm stays steady.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidurmu pas dengan jam biologismu. Bangunlah di sekitar %@ dan ritmenya tetap stabil."}}}},
+ "Last night ran %lld minutes %@ than your body clock wanted. Tonight, aim to be asleep nearer %@, and get daylight soon after you wake.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur semalam %lld menit %@ dari yang diinginkan jam biologismu. Malam ini, usahakan tidur lebih dekat ke %@, dan cari cahaya siang tak lama setelah bangun."}}}}
 }, "version":"1.0" }

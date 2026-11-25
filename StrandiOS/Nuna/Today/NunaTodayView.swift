@@ -463,6 +463,13 @@ struct NunaTodayView: View {
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             pushToday(.sleepNaps(0))
         }
+        // `--open-bodyclock` opens the Body clock page, once.
+        .task {
+            guard CommandLine.arguments.contains("--open-bodyclock"), !NunaTodayDebug.openedPlanner else { return }
+            NunaTodayDebug.openedPlanner = true
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            pushToday(.bodyClock)
+        }
         // `--open-sleep` opens the Sleep detail on last night, once.
         .task {
             guard CommandLine.arguments.contains("--open-sleep"), !NunaTodayDebug.openedPlanner else { return }
