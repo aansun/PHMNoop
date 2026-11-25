@@ -1761,8 +1761,12 @@ final class HealthKitBridge: ObservableObject {
                 let distanceM = RouteMath.totalMeters(route)
                 // The climb: the figure the recording device itself wrote with the workout when there is one (a watch with a barometer, a Garmin, a Fitbit),
                 // otherwise worked out from the route's altitudes.
-                let reported = (workout.metadata?[HKMetadataKeyElevationAscended] as? HKQuantity)?.doubleValue(for: .meter())
+                let reported = Self.reportedAscentMeters(workout.metadata)
                 let climb = reported.flatMap { $0 > 0 ? $0 : nil } ?? RouteMath.climbMeters(altitudes: fetched.altitudes)
+                // Local diagnostic (this phone only): what the newest imported workout carried, so a missing climb can be traced to its cause.
+                UserDefaults.standard.set("keys=\((workout.metadata ?? [:]).keys.sorted().joined(separator: ",")) reported=\(reported.map { String($0) } ?? "nil") "
+                                          + "altitudes=\(fetched.altitudes.count)/\(route.count) climb=\(climb.map { String($0) } ?? "nil") start=\(row.startTs)",
+                                          forKey: "applehealth.lastRouteClimbDebug")
                 importedRoutes.append((WorkoutRoute(polyline: polyline, distanceM: distanceM, elevationGainM: climb),
                                        row.startTs, row.sport))
             }
@@ -1836,8 +1840,8 @@ final class HealthKitBridge: ObservableObject {
                 let query = HKWorkoutRouteQuery(route: route) { _, locations, done, _ in
                     for loc in locations ?? [] {
                         points.append(RouteMath.LatLng(loc.coordinate.latitude, loc.coordinate.longitude))
-                        // A fix with no vertical accuracy (negative) has no usable altitude.
-                        if loc.verticalAccuracy >= 0 { altitudes.append(loc.altitude) }
+                        // A writer that does not set a vertical accuracy still wrote an altitude; `climbMeters` smooths it and a flat series counts as no climb.
+                        altitudes.append(loc.altitude)
                     }
                     if done { cont.resume(returning: ()) }
                 }
@@ -1845,6 +1849,23 @@ final class HealthKitBridge: ObservableObject {
             }
         }
         return points.isEmpty ? nil : (points, altitudes)
+    }
+
+    /// The ascent a device wrote with the workout, in metres: Apple's own key first, then any other metadata entry named for elevation or ascent (a third-party
+    /// writer may use its own key). A bare number is taken as metres.
+    private static func reportedAscentMeters(_ metadata: [String: Any]?) -> Double? {
+        guard let metadata else { return nil }
+        func metres(_ v: Any?) -> Double? {
+            if let q = v as? HKQuantity, q.is(compatibleWith: .meter()) { return q.doubleValue(for: .meter()) }
+            if let n = v as? NSNumber { return n.doubleValue }
+            return nil
+        }
+        if let m = metres(metadata[HKMetadataKeyElevationAscended]) { return m }
+        for (key, value) in metadata {
+            let k = key.lowercased()
+            if (k.contains("elevation") || k.contains("ascen") || k.contains("climb")) && !k.contains("descen"), let m = metres(value) { return m }
+        }
+        return nil
     }
 
     /// Source tag stamped on workouts imported from Apple Health. Matches the macOS importer's
