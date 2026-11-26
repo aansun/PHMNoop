@@ -193,6 +193,16 @@ struct NunaRootView: View {
             paths[Tab.me.rawValue] = NavigationPath([NunaMeRoute.settings, NunaMeRoute.appSettings, NunaMeRoute.recommended])
             router.openRecommendedSettings = false
         }
+        // The blood pressure reminder: its page, which then opens the entry sheet. Also on appearing, for a tap that started the app.
+        .onChange(of: router.openBloodPressureEntry) { _, on in if on { showBloodPressureEntry() } }
+        .task { if router.openBloodPressureEntry { showBloodPressureEntry() } }
+    }
+
+    private func showBloodPressureEntry() {
+        journalOpen = false
+        routed = nil
+        selection = Tab.today.rawValue
+        paths[Tab.today.rawValue] = NavigationPath([NunaTodayRoute.bloodPressure])
     }
 
     /// Light or dark is also set on the windows themselves, because pages pushed inside the tabs are hosted by UIKit and

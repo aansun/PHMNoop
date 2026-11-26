@@ -27,6 +27,7 @@ struct NunaBreathReportView: View {
         NunaDetailScreen(LocalizedStringKey(title), titleSymbol: "lungs.fill", subtitle: NunaWorkoutFormat.span(record.startTs, end), titleActivity: goal.activity,
                          trailing: AnyView(actionsMenu), onBack: onDone) {
             figures(averages)
+            NunaBPBreathCard(startTs: record.startTs, seconds: record.seconds)
             NunaBreathInsightCard(insight: NunaBreathCoach.insight(for: record), offer: readOnly ? nil : NunaBreathCoach.offer(for: record)) { showAnya = true }
             if hasCurves {
                 NunaCapsuleTabs(options: [(value: Tab.stats, title: "Key statistics"), (value: Tab.curves, title: "Heart rate")], selection: $tab)

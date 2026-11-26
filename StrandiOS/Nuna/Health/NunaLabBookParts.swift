@@ -169,6 +169,8 @@ enum NunaLabStore {
         _ = try? await store.upsertLabMarkers(drafts)
         await repo.refresh()
         NunaDataChanges.shared.bump()
+        // A new blood pressure reading can make the next reminder unnecessary.
+        if drafts.contains(where: { $0.markerKey == LabBookProjection.bpSystolicKey }) { await NunaBPReminder.refresh(repo: repo) }
     }
 
     static func delete(ids: [String], repo: Repository) async {
@@ -177,6 +179,7 @@ enum NunaLabStore {
         for id in ids { _ = try? await store.deleteLabMarker(id: id) }
         await repo.refresh()
         NunaDataChanges.shared.bump()
+        await NunaBPReminder.refresh(repo: repo)
     }
 
     /// Stored rows for parsed readings. Noon of each reading's own day, so bringing the same reading in again updates it in place instead of adding a copy.

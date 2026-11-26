@@ -92,6 +92,7 @@ private struct NunaToolSessionBody: View {
                         VStack(spacing: NunaSpacing.section) {
                             if finished || notStarted != nil {
                                 resultCard
+                                if finished, let row = lastRow { NunaBPBreathCard(startTs: row.startTs, seconds: row.endTs - row.startTs) }
                             } else {
                                 // The heart rate sits at the foot of the page, next to the figures under it.
                                 VStack(spacing: 0) {

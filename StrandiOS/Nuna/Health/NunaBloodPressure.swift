@@ -168,6 +168,7 @@ enum NunaBP {
 struct NunaBloodPressureView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var health: HealthKitBridge
+    @EnvironmentObject private var router: NavRouter
     @ObservedObject private var changes = NunaDataChanges.shared
     @State private var readings: [NunaBPReading] = []
     @State private var loaded = false
@@ -190,12 +191,15 @@ struct NunaBloodPressureView: View {
                 if latest.category == .veryHigh { veryHigh }
                 period
                 addButton
+                NunaBPReminderRow()
                 allReadings
             } else {
                 empty
                 addButton
+                NunaBPReminderRow()
             }
             appleHealth
+            if loaded, !readings.isEmpty { NunaBPLinksSection(readings: readings) }
             NunaBPZones()
             NunaBPFindings()
         }
@@ -208,8 +212,17 @@ struct NunaBloodPressureView: View {
         .sheet(isPresented: $adding) {
             NunaBPAddSheet { drafts in await NunaLabStore.save(drafts, repo: repo) }
         }
+        // Opened from the measurement reminder: straight to typing the reading.
+        .onAppear { openEntryIfAsked() }
+        .onChange(of: router.openBloodPressureEntry) { _, _ in openEntryIfAsked() }
         // Her line is worked out from these figures; nothing is sent anywhere unless she is asked.
         .nunaAnyaFloating(context: "blood pressure", line: anyaLine, detail: anyaDetail, analyses: false)
+    }
+
+    private func openEntryIfAsked() {
+        guard router.openBloodPressureEntry else { return }
+        router.openBloodPressureEntry = false
+        adding = true
     }
 
     // MARK: Anya

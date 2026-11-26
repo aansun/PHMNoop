@@ -105,6 +105,7 @@ enum PHMBloodPressureImport {
         for id in gone { _ = try? await store.deleteLabMarker(id: id) }
         await repo.refresh()
         NunaDataChanges.shared.bump()
+        await NunaBPReminder.refresh(repo: repo)
         return true
     }
 }

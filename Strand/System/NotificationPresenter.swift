@@ -23,6 +23,10 @@ final class NotificationPresenter: NSObject, UNUserNotificationCenterDelegate {
     /// root has wired it.
     var onCoachBriefTapped: (() -> Void)?
 
+    /// The category of the iPhone's blood pressure reminder, and where a tap on it goes (wired by the iOS app root).
+    static let bloodPressureCategoryId = "bp.reminder"
+    var onBloodPressureReminderTapped: (() -> Void)?
+
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
@@ -31,9 +35,9 @@ final class NotificationPresenter: NSObject, UNUserNotificationCenterDelegate {
         completionHandler([.banner, .sound, .list])
     }
 
-    /// Handle a tap on a delivered notification. Only the scheduled morning-brief category (K5) routes
-    /// anywhere; every other notification (wind-down, smart-alarm, battery/illness) just opens the app
-    /// to wherever it was, matching the pre-K5 behaviour.
+    /// Handle a tap on a delivered notification. The scheduled morning-brief category (K5) and the blood
+    /// pressure reminder route somewhere; every other notification (wind-down, smart-alarm, battery/illness)
+    /// just opens the app to wherever it was, matching the pre-K5 behaviour.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
@@ -41,6 +45,9 @@ final class NotificationPresenter: NSObject, UNUserNotificationCenterDelegate {
     ) {
         if response.notification.request.content.categoryIdentifier == CoachBriefScheduler.notificationCategoryId {
             onCoachBriefTapped?()
+        }
+        if response.notification.request.content.categoryIdentifier == Self.bloodPressureCategoryId {
+            onBloodPressureReminderTapped?()
         }
         completionHandler()
     }

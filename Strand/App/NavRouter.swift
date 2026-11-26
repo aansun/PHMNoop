@@ -79,6 +79,10 @@ final class NavRouter: ObservableObject {
     /// One-shot: the first-launch Highlight for Recommended settings. The Nuna shell opens Settings > App Settings > Recommended settings; other shells ignore it.
     @Published var openRecommendedSettings = false
 
+    /// One-shot: the blood pressure reminder was tapped. The Nuna shell opens the Blood pressure page, which opens the entry sheet and clears this.
+    @Published var openBloodPressureEntry = false
+    func openBloodPressure() { openBloodPressureEntry = true }
+
     /// Ask the shell to open the quick-action sheet (Live HR · workout · journal · breathe).
     func requestQuickActions() { quickActionsRequested = true }
 
