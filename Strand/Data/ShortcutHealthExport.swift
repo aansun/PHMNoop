@@ -5,7 +5,7 @@ import StrandAnalytics
 
 /// #155 — Apple-Health-free export for sideloaded iOS installs. A free (7-day) signing identity
 /// can't carry the HealthKit entitlement, so HealthKitBridge never runs for sideloaders. Instead,
-/// NOOP drops a plain-text file at Documents/noop_sync.txt (exposed to Files/Shortcuts via
+/// NOOP drops a plain-text file at Documents/phmn_sync.txt (exposed to Files/Shortcuts via
 /// UIFileSharingEnabled) and the reporter's pre-built Siri Shortcut reads it and logs the rows into
 /// Apple Health. One line per 15-minute window — `HR,HRV,Steps,yyyy-MM-dd HH:mm` — en_US_POSIX,
 /// LOCAL time (the Shortcut parses dates in the device zone), empty fields keep their commas so
@@ -25,7 +25,7 @@ enum ShortcutHealthExport {
     /// Exclusive end of the last successfully written coverage, unix seconds. Advances ONLY after
     /// a successful file write, so a failed export retries the same span next time.
     static let watermarkKey = "noop.shortcutSync.lastExportTs"
-    static let fileName = "noop_sync.txt"
+    static let fileName = "phmn_sync.txt"
     /// Aggregation window: 15 minutes, epoch-aligned — the same boundaries hrBuckets(900) groups by.
     static let windowSeconds = 900
     /// Catch-up bound: never reach further back than 7 days, even on a first run or after a long gap.

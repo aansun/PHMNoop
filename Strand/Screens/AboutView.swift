@@ -39,7 +39,7 @@ struct AboutView: View {
                 aboutLink("Diagnostics", "Device and build information for troubleshooting.", "stethoscope") {
                     TestCentreView()
                 }
-                aboutLink("About Apple Watch data", "What Apple Watch can contribute to NOOP.", "applewatch") {
+                aboutLink("About Apple Watch data", "What Apple Watch can contribute to PHMN.", "applewatch") {
                     AppleWatchAboutView(onStartSetup: {})
                 }
 
@@ -60,7 +60,7 @@ struct AboutView: View {
                 NoopCard {
                     VStack(alignment: .leading, spacing: NoopMetrics.space2) {
                         Text("BUILT ON").strandOverline()
-                        Text("Built on the NOOP baseline and community WHOOP protocol work.")
+                        Text("Built on the PHMN baseline and community WHOOP protocol work.")
                     }
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.textSecondary)

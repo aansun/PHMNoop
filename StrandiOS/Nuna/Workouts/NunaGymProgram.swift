@@ -804,7 +804,7 @@ struct NunaProgramItemView: View {
             NunaDialogButton("Forget", role: .destructive) { Task { await forget() } }
             NunaDialogButton("Cancel", role: .cancel) { forgetting = nil }
         } message: { Text("It stops being offered here. Sessions you already logged with it are kept exactly as they are.") }
-        .alert("You've saved the most exercises NOOP remembers", isPresented: $vocabularyFull) {
+        .alert("You've saved the most exercises PHMN remembers", isPresented: $vocabularyFull) {
             Button("OK", role: .cancel) {}
         } message: { Text("Forget one you no longer use and this one will save. Your logged sessions are never affected.") }
     }
@@ -995,7 +995,7 @@ struct NunaProgramImportView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     Text("Fill it in on a computer").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Typing a dozen exercise rows on a phone is tiring. A spreadsheet is much faster.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    step(1, "Download the template from the NOOP repository")
+                    step(1, "Download the template from the PHMN repository")
                     step(2, "Fill in one row per exercise")
                     step(3, "Bring the file here (.xlsx or .csv)")
                 }

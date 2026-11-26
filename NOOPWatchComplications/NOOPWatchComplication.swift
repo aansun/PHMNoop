@@ -277,14 +277,14 @@ struct NOOPChargeView: View {
             }
             return String(localized: "Recovery · cal")
         case .missing:
-            return noSnapshot ? String(localized: "Open NOOP") : String(localized: "Recovery")
+            return noSnapshot ? String(localized: "Open PHMN") : String(localized: "Recovery")
         }
     }
 
     // MARK: accessoryInline — a single line of text along the top of the face
 
     private var inlineText: String {
-        if noSnapshot { return String(localized: "NOOP · open on iPhone") }
+        if noSnapshot { return String(localized: "PHMN · open on iPhone") }
         // When the snapshot has aged out we never print the old number; we say it is stale and how old.
         if isStale {
             let fresh = freshness ?? String(localized: "old")
@@ -320,7 +320,7 @@ struct NOOPChargeView: View {
         VStack(alignment: .leading, spacing: 3) {
             // Header: the wordmark + the snapshot age (or a sync hint when empty).
             HStack(spacing: 4) {
-                Text("NOOP")
+                Text("PHMN")
                     .font(StrandFont.rounded(11, weight: .bold))
                     .tracking(0.5)
                     .foregroundStyle(StrandPalette.textSecondary)
@@ -409,21 +409,21 @@ struct NOOPChargeView: View {
         // is a dash plainly so it is never mistaken for "still calibrating".
         if isStale {
             let fresh = freshness ?? String(localized: "a while ago")
-            return String(localized: "Recovery out of date, last synced \(fresh). Open NOOP on iPhone.")
+            return String(localized: "Recovery out of date, last synced \(fresh). Open PHMN on iPhone.")
         }
         switch charge {
         case .value(let v):    return String(localized: "Recovery \(v) out of 100")
         case .calibrating:     return String(localized: "Recovery calibrating, needs more data")
-        case .missing:         return noSnapshot ? String(localized: "No data, open NOOP on iPhone")
+        case .missing:         return noSnapshot ? String(localized: "No data, open PHMN on iPhone")
                                                  : String(localized: "Recovery unavailable")
         }
     }
 
     private var accessibilityRectangular: String {
-        if noSnapshot { return String(localized: "NOOP. No data yet, open NOOP on your iPhone to sync.") }
+        if noSnapshot { return String(localized: "PHMN. No data yet, open PHMN on your iPhone to sync.") }
         if isStale {
             let fresh = freshness ?? String(localized: "a while ago")
-            return String(localized: "NOOP. Scores out of date, last synced \(fresh). Open NOOP on iPhone to refresh.")
+            return String(localized: "PHMN. Scores out of date, last synced \(fresh). Open PHMN on iPhone to refresh.")
         }
         func phrase(_ label: String, _ r: ScoreReadout) -> String {
             switch r {
@@ -435,7 +435,7 @@ struct NOOPChargeView: View {
         let chargePhrase = phrase(String(localized: "Recovery"), charge)
         let effortPhrase = phrase(String(localized: "Strain"), effort)
         let restPhrase = phrase(String(localized: "Sleep"), rest)
-        return String(localized: "NOOP. \(chargePhrase), \(effortPhrase), \(restPhrase).")
+        return String(localized: "PHMN. \(chargePhrase), \(effortPhrase), \(restPhrase).")
     }
 
     // Snapshot recency now comes straight from the shared contract (`freshnessText` / `isStale` on
@@ -453,7 +453,7 @@ struct NOOPChargeComplication: Widget {
             NOOPChargeView(entry: entry)
                 .containerBackground(StrandPalette.surfaceBase, for: .widget)
         }
-        .configurationDisplayName("NOOP Recovery")
+        .configurationDisplayName("PHMN Recovery")
         .description("Your Recovery on the watch face, with Strain and Sleep in the rectangular card.")
         .supportedFamilies([
             .accessoryCircular,

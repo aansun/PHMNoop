@@ -506,7 +506,7 @@ struct CoupledView: View {
     // (a coupled read of NOOP's OWN scores, same data, different lens) without the branding word. The
     // matching Android caption is byte-identical.
     private var footerCaption: some View {
-        Text("A classic one-glance read of NOOP's own scores. Same data, different lens.")
+        Text("A classic one-glance read of PHMN's own scores. Same data, different lens.")
             .font(StrandFont.footnote)
             .foregroundStyle(StrandPalette.textTertiary)
             .fixedSize(horizontal: false, vertical: true)

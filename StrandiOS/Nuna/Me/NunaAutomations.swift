@@ -216,7 +216,7 @@ struct NunaSedentaryView: View {
 struct NunaShortcutsView: View {
     var body: some View {
         NunaDetailScreen("Siri and Shortcuts") {
-            Text("Run NOOP actions by voice or from the Shortcuts app. Good for Focus, Sleep mode or the Action button.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            Text("Run PHMN actions by voice or from the Shortcuts app. Good for Focus, Sleep mode or the Action button.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaSettingsGroup {
                 NunaListRow("Sync Strap", description: "Pulls the history from the strap", systemImage: "arrow.triangle.2.circlepath")
                 NunaDivider()

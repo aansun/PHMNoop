@@ -503,7 +503,7 @@ struct StrandiOSApp: App {
                 // the user just saw — its battery/HR/score otherwise lag to the last FOREGROUND refreshSeq
                 // bump. One reload per app-exit is low-frequency and well within WidgetKit's daily budget.
                 Task { await WidgetSnapshot.publish(from: model) }
-                // #155: refresh the Documents/noop_sync.txt drop file the user's Siri Shortcut logs
+                // #155: refresh the Documents/phmn_sync.txt drop file the user's Siri Shortcut logs
                 // into Apple Health. Gated inside writeIfEnabled on the opt-in default (OFF) — a
                 // no-op until the user turns on Shortcuts Export.
                 Task { await ShortcutHealthExport.writeIfEnabled(repo: model.repo) }

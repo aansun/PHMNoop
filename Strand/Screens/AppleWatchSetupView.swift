@@ -72,7 +72,7 @@ struct AppleWatchSetupView: View {
                 Text("APPLE WATCH").font(StrandFont.overline)
                     .tracking(StrandFont.overlineTracking)
                     .foregroundStyle(StrandPalette.textTertiary)
-                Text("Use NOOP with your watch").font(StrandFont.rounded(26, weight: .bold))
+                Text("Use PHMN with your watch").font(StrandFont.rounded(26, weight: .bold))
                     .foregroundStyle(StrandPalette.textPrimary)
                 Text(step == .intro ? "What to expect" : "Connect Apple Health")
                     .font(StrandFont.caption)
@@ -153,12 +153,12 @@ struct AppleWatchSetupView: View {
                             .background(StrandPalette.accent.opacity(0.14),
                                         in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                             .accessibilityHidden(true)
-                        Text("Your watch, NOOP's brain")
+                        Text("Your watch, PHMN's brain")
                             .font(StrandFont.headline)
                             .foregroundStyle(StrandPalette.textPrimary)
                         Spacer(minLength: 0)
                     }
-                    Text("No chest strap? No problem. NOOP can run off only your Apple Watch. It reads your watch's data through Apple Health and works out your Recovery, Sleep, Strain and Fitness Age right here on your phone. Everything stays on the device.")
+                    Text("No chest strap? No problem. PHMN can run off only your Apple Watch. It reads your watch's data through Apple Health and works out your Recovery, Sleep, Strain and Fitness Age right here on your phone. Everything stays on the device.")
                         .font(StrandFont.subhead)
                         .foregroundStyle(StrandPalette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -169,7 +169,7 @@ struct AppleWatchSetupView: View {
             goodAtCard
             lighterCard
 
-            Text("Want the full breakdown of every metric and how sure NOOP is about each one? The \u{201C}About Apple Watch data\u{201D} page in Settings has the honest table.")
+            Text("Want the full breakdown of every metric and how sure PHMN is about each one? The \u{201C}About Apple Watch data\u{201D} page in Settings has the honest table.")
                 .font(StrandFont.footnote)
                 .foregroundStyle(StrandPalette.textTertiary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -201,9 +201,9 @@ struct AppleWatchSetupView: View {
                     .tracking(StrandFont.overlineTracking)
                     .foregroundStyle(StrandPalette.statusWarning)
                 bullet("heart.fill", String(localized: "Recovery takes about a week"),
-                       String(localized: "A watch samples your heart-rate variability rather than streaming it all night, so your Recovery score needs roughly seven nights to calibrate. Until then NOOP shows \u{201C}needs more data\u{201D}, never a guessed number."))
+                       String(localized: "A watch samples your heart-rate variability rather than streaming it all night, so your Recovery score needs roughly seven nights to calibrate. Until then PHMN shows \u{201C}needs more data\u{201D}, never a guessed number."))
                 bullet("drop.degreesign", String(localized: "A couple of metrics depend on your model"),
-                       String(localized: "Wrist temperature needs Series 8 or later, and the newest US units dropped the blood-oxygen sensor. Where a sensor isn't there, NOOP reads \u{201C}not available\u{201D} instead of zero."))
+                       String(localized: "Wrist temperature needs Series 8 or later, and the newest US units dropped the blood-oxygen sensor. Where a sensor isn't there, PHMN reads \u{201C}not available\u{201D} instead of zero."))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -277,7 +277,7 @@ struct AppleWatchSetupView: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                 case .unknown, .denied:
-                    Text("NOOP reads your heart rate, HRV, resting heart rate, sleep, steps, energy and VO₂ max from Apple Health to compute your scores. It all stays on this iPhone, and you pick exactly what to share on the next screen.")
+                    Text("PHMN reads your heart rate, HRV, resting heart rate, sleep, steps, energy and VO₂ max from Apple Health to compute your scores. It all stays on this iPhone, and you pick exactly what to share on the next screen.")
                         .font(StrandFont.subhead)
                         .foregroundStyle(StrandPalette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -291,14 +291,14 @@ struct AppleWatchSetupView: View {
                     .buttonStyle(NoopButtonStyle(.primary, fullWidth: true))
                     .accessibilityHint("Shows the Apple Health permission sheet")
                     if health.auth == .denied {
-                        Text("If you don't see the prompt, turn NOOP on under Settings › Health › Data Access & Devices.")
+                        Text("If you don't see the prompt, turn PHMN on under Settings › Health › Data Access & Devices.")
                             .font(StrandFont.footnote)
                             .foregroundStyle(StrandPalette.textTertiary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
                 case .authorized:
-                    Text("You're connected. NOOP is reading your Apple Watch data now. Your Recovery score will spend its first week or so calibrating, then settle in.")
+                    Text("You're connected. PHMN is reading your Apple Watch data now. Your Recovery score will spend its first week or so calibrating, then settle in.")
                         .font(StrandFont.subhead)
                         .foregroundStyle(StrandPalette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -330,7 +330,7 @@ struct AppleWatchSetupView: View {
                         .font(StrandFont.headline)
                         .foregroundStyle(StrandPalette.textPrimary)
                 }
-                Text("Apple Health lives on the iPhone, not the Mac, so connecting your Apple Watch happens there. Open NOOP on your iPhone, head to Settings, and run this same Apple Watch setup. Your scores then show up across your devices.")
+                Text("Apple Health lives on the iPhone, not the Mac, so connecting your Apple Watch happens there. Open PHMN on your iPhone, head to Settings, and run this same Apple Watch setup. Your scores then show up across your devices.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)

@@ -158,11 +158,11 @@ final class SyncLiveActivityController {
         // Each refusal names its gate. These are rare-event lines (one per attempted start), so they stay
         // always-on rather than behind a Test Centre domain.
         guard activitiesEnabled else {
-            live?.append(log: "Sync activity: not started — Live Activities are off for NOOP in iOS Settings")
+            live?.append(log: "Sync activity: not started — Live Activities are off for PHMN in iOS Settings")
             return
         }
         guard UnitPrefs.syncLiveActivityEnabled() else {
-            live?.append(log: "Sync activity: not started — \"Strap sync in Dynamic Island\" is off in NOOP Settings")
+            live?.append(log: "Sync activity: not started — \"Strap sync in Dynamic Island\" is off in PHMN Settings")
             return
         }
         if let activity { push(activity, state); return }

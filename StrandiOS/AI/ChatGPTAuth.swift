@@ -449,7 +449,7 @@ struct ChatGPTAuthCard: View {
                         .buttonStyle(NoopButtonStyle(.primary))
                     if auth.isBusy { ProgressView().controlSize(.small) }
                 }
-                Text("Masukkan kode di auth.openai.com/codex/device. NOOP akan menunggu persetujuan secara otomatis.")
+                Text("Masukkan kode di auth.openai.com/codex/device. PHMN akan menunggu persetujuan secara otomatis.")
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)

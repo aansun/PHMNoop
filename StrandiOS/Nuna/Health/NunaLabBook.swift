@@ -59,7 +59,7 @@ struct NunaMarkerDetailView: View {
                     .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
                 NunaExpandRow(title: "About these numbers", subtitle: "", systemImage: "info.circle",
-                              text: "These are your own numbers shown back to you. NOOP doesn't decide whether any value is normal, high or low: a reading is only placed against the range you copied from your own report.")
+                              text: "These are your own numbers shown back to you. PHMN doesn't decide whether any value is normal, high or low: a reading is only placed against the range you copied from your own report.")
             } else if loaded {
                 NunaCard { Text("No readings for this marker.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
             }
@@ -262,7 +262,7 @@ struct NunaMarkerDetailView: View {
                 }
                 NunaSegmented(LabWindow.allCases.map { (value: $0, title: LocalizedStringKey($0.label)) }, selection: $window)
                 if signal == nil {
-                    Text("Pick a wearable signal (resting HR, HRV, sleep, Recovery, weight…) to line it up against this marker. NOOP averages the signal over the \(window.phrase) before each reading.")
+                    Text("Pick a wearable signal (resting HR, HRV, sleep, Recovery, weight…) to line it up against this marker. PHMN averages the signal over the \(window.phrase) before each reading.")
                         .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 } else {
                     resultBlock(m)
@@ -281,8 +281,8 @@ struct NunaMarkerDetailView: View {
             Text(n == 0
                  ? "No overlap yet between this marker and \(signal?.title.lowercased() ?? String(localized: "that signal")). Log a few more readings (and keep wearing your strap)."
                  : (n == 1
-                    ? "1 reading lines up so far, not enough to read a trend yet (NOOP waits for \(LabBookSignals.floor))."
-                    : "\(n) readings line up so far, not enough to read a trend yet (NOOP waits for \(LabBookSignals.floor))."))
+                    ? "1 reading lines up so far, not enough to read a trend yet (PHMN waits for \(LabBookSignals.floor))."
+                    : "\(n) readings line up so far, not enough to read a trend yet (PHMN waits for \(LabBookSignals.floor))."))
                 .font(muted).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
         } else if let c = correlation {
             let tint = NunaPalette.effortText

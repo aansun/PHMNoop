@@ -575,7 +575,7 @@ final class DeviceConfigReadProbeTests: XCTestCase {
            1. enable_r22_packets              = '2' (0x32)
            2. whoop_live_hr_in_adv_ind_pkt    — no value (result=UNSUPPORTED(3))
 
-        Known feature-flag values (names NOOP already writes; values never read before) (1):
+        Known feature-flag values (names PHMN already writes; values never read before) (1):
            1. hr_ch_switching                 = '2' (0x32)
 
         Candidate oxygen keys — GUESSES, never observed on a wire or in any table (1):

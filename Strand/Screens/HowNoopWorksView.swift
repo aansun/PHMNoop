@@ -44,13 +44,13 @@ struct HowNoopWorksView: View {
         var body: String {
             switch self {
             case .sleepSorting:
-                return String(localized: "NOOP picks your main sleep as your longest real block, and (once it has learned your usual hours) the one nearest your normal sleep time. Everything else that day is a nap. You can always edit bed and wake times.")
+                return String(localized: "PHMN picks your main sleep as your longest real block, and (once it has learned your usual hours) the one nearest your normal sleep time. Everything else that day is a nap. You can always edit bed and wake times.")
             case .scores:
-                return String(localized: "Recovery, Strain and Sleep are scored on your own device from your strap data. Recovery needs about four nights of sleep to learn your baseline (that's \"Calibrating\", counted as nights of 4 on the ring), and keeps sharpening over your first couple of weeks. On a WHOOP 5 or MG the strap banks little history, so that count can sit at 0 of 4 until you have worn it across a few nights. That's the strap's sync limit, not a fault. Before there's a number, NOOP shows what it can without faking one.")
+                return String(localized: "Recovery, Strain and Sleep are scored on your own device from your strap data. Recovery needs about four nights of sleep to learn your baseline (that's \"Calibrating\", counted as nights of 4 on the ring), and keeps sharpening over your first couple of weeks. On a WHOOP 5 or MG the strap banks little history, so that count can sit at 0 of 4 until you have worn it across a few nights. That's the strap's sync limit, not a fault. Before there's a number, PHMN shows what it can without faking one.")
             case .recording:
-                return String(localized: "When your strap is connected NOOP is saving data live. \"Last synced\" tells you how fresh it is. If it says \"Not recording\", reconnect.")
+                return String(localized: "When your strap is connected PHMN is saving data live. \"Last synced\" tells you how fresh it is. If it says \"Not recording\", reconnect.")
             case .provenance:
-                return String(localized: "A badge shows whether a number was scored on-device by NOOP, or imported from Whoop or Apple Health.")
+                return String(localized: "A badge shows whether a number was scored on-device by PHMN, or imported from Whoop or Apple Health.")
             }
         }
 
@@ -130,7 +130,7 @@ struct HowNoopWorksView: View {
                 Text("THE BASICS").font(StrandFont.overline)
                     .tracking(StrandFont.overlineTracking)
                     .foregroundStyle(StrandPalette.textTertiary)
-                Text("How NOOP works").font(StrandFont.rounded(26, weight: .bold))
+                Text("How PHMN works").font(StrandFont.rounded(26, weight: .bold))
                     .foregroundStyle(StrandPalette.textPrimary)
                 Text("Sleep · scores · recording · where your numbers come from")
                     .font(StrandFont.caption)
@@ -169,7 +169,7 @@ struct HowNoopWorksView: View {
                 Text("THE ONE RULE").font(StrandFont.overline)
                     .tracking(StrandFont.overlineTracking)
                     .foregroundStyle(StrandPalette.textSecondary)
-                Text("NOOP never shows you a number it had to make up. If a score isn't ready, it tells you why and what to do next. Everything here runs on your device, from your strap.")
+                Text("PHMN never shows you a number it had to make up. If a score isn't ready, it tells you why and what to do next. Everything here runs on your device, from your strap.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -326,7 +326,7 @@ struct HowNoopWorksView: View {
     }
 
     private var footerNote: some View {
-        Text("NOOP never makes up a number. When it can't compute one honestly it tells you what's missing and what to do, rather than showing a fake value.")
+        Text("PHMN never makes up a number. When it can't compute one honestly it tells you what's missing and what to do, rather than showing a fake value.")
             .font(StrandFont.footnote)
             .foregroundStyle(StrandPalette.textTertiary)
             .fixedSize(horizontal: false, vertical: true)
@@ -336,7 +336,7 @@ struct HowNoopWorksView: View {
 }
 
 #if DEBUG
-#Preview("How NOOP works") {
+#Preview("How PHMN works") {
     HowNoopWorksView(onClose: {})
         .preferredColorScheme(.dark)
 }

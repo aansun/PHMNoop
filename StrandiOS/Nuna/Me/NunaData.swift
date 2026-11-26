@@ -168,12 +168,12 @@ struct NunaBackupView: View {
                 }
                 if !FolderBackup.useInternalFolder {
                     NunaSettingsCard {
-                        Button { _ = FolderBackup.useNoopFolder(); folder = FolderBackup.folderLabel() } label: { NunaListRow("Use NOOP's own folder", description: "Inside Files > On My iPhone > NOOP", systemImage: "iphone", showsChevron: true) }.buttonStyle(.plain)
+                        Button { _ = FolderBackup.useNoopFolder(); folder = FolderBackup.folderLabel() } label: { NunaListRow("Use PHMN's own folder", description: "Inside Files > On My iPhone > PHMN", systemImage: "iphone", showsChevron: true) }.buttonStyle(.plain)
                     }
                 }
             }
             NunaSettingsSection("Schedule") {
-                NunaSettingsSwitch("Daily backup", subtitle: "Once a day when NOOP is opened", systemImage: "calendar.badge.clock", isOn: Binding(get: { auto }, set: { auto = $0; FolderBackup.autoEnabled = $0 }))
+                NunaSettingsSwitch("Daily backup", subtitle: "Once a day when PHMN is opened", systemImage: "calendar.badge.clock", isOn: Binding(get: { auto }, set: { auto = $0; FolderBackup.autoEnabled = $0 }))
                 NunaSettingsCard {
                     NunaStepRow(label: "Keep the last", value: "\(keep)", note: "Older ones are deleted, oldest first", canDecrement: keep > (FolderBackup.keepOptions.first ?? 1),
                                 onMinus: { step(-1) }, onPlus: { step(1) })
@@ -239,7 +239,7 @@ struct NunaBackupView: View {
         Task {
             defer { busy = false }
             if await FolderBackup.pickFolder() != nil { folder = FolderBackup.folderLabel() }
-            else if !FolderBackup.useInternalFolder { alert = (String(localized: "No folder selected"), String(localized: "NOOP didn't get a folder back from the picker. Use NOOP's own folder to back up inside NOOP instead.")) }
+            else if !FolderBackup.useInternalFolder { alert = (String(localized: "No folder selected"), String(localized: "PHMN didn't get a folder back from the picker. Use PHMN's own folder to back up inside PHMN instead.")) }
         }
     }
 
@@ -259,7 +259,7 @@ struct NunaBackupView: View {
             defer { busy = false }
             let r = await Task.detached(priority: .userInitiated) { FolderBackup.restore(snapshotNamed: s.name) }.value
             switch r {
-            case .imported: alert = (String(localized: "Restored"), String(localized: "Fully quit and reopen NOOP to load it."))
+            case .imported: alert = (String(localized: "Restored"), String(localized: "Fully quit and reopen PHMN to load it."))
             case .failure(let m): alert = (String(localized: "Restore problem"), m)
             default: alert = (String(localized: "Restore problem"), String(localized: "Couldn't restore that backup."))
             }

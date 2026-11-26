@@ -382,7 +382,7 @@ struct TrendsView: View {
                             .padding(24)
                             .background(StrandPalette.surfaceBase)
                             .environment(\.colorScheme, colorScheme)
-                        TrendsReportRenderer.exportPNG(page: page, suggestedName: "noop-recap-\(weekAnchorDay).png")
+                        TrendsReportRenderer.exportPNG(page: page, suggestedName: "phmn-recap-\(weekAnchorDay).png")
                     }
                 }
             }

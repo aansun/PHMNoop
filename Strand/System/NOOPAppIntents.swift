@@ -16,8 +16,8 @@ enum NOOPIntentError: Error, CustomLocalizedStringResourceConvertible {
     case notConnected
     var localizedStringResource: LocalizedStringResource {
         switch self {
-        case .notRunning:   return "Open NOOP first so it can reach your strap."
-        case .notConnected: return "Connect your WHOOP strap in NOOP, then try again."
+        case .notRunning:   return "Open PHMN first so it can reach your strap."
+        case .notConnected: return "Connect your WHOOP strap in PHMN, then try again."
         }
     }
 }

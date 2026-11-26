@@ -59,7 +59,7 @@ struct WhatsNewView: View {
                 Text("WHAT'S NEW").font(StrandFont.overline)
                     .tracking(StrandFont.overlineTracking)
                     .foregroundStyle(StrandPalette.textTertiary)
-                Text("NOOP \(AppChangelog.currentVersion)")
+                Text("PHMN \(AppChangelog.currentVersion)")
                     .font(StrandFont.rounded(26, weight: .bold))
                     .foregroundStyle(StrandPalette.textPrimary)
                 Text("Release notes").font(StrandFont.caption)

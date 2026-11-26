@@ -55,10 +55,10 @@ device for educational and security-research purposes.
 
 ## 4. Licensing, non-commercial use, and no warranty
 
-NOOP's own source code and documentation are made available under the **PolyForm Noncommercial
+PHMN's own source code and documentation are made available under the **PolyForm Noncommercial
 License 1.0.0** (see [`LICENSE`](LICENSE)): free for personal and other **non-commercial** use —
 you may read, run, fork, and contribute, but commercial use is not granted. The license covers
-NOOP's original work only; protocol facts are uncopyrightable, and bundled dependencies keep their
+PHMN's original work only; protocol facts are uncopyrightable, and bundled dependencies keep their
 own licenses (see [`NOTICE`](NOTICE)).
 
 The software is provided **as-is**, with **no warranty of any kind**, express or implied. You use it
@@ -69,7 +69,7 @@ own agreements and local laws before use; you are responsible for your own compl
 ## 5. Not a medical device
 
 Outputs such as heart rate, HRV, Charge, Effort, Rest, sleep stages, SpO₂, respiratory rate, and skin
-temperature (Charge/Effort/Rest are NOOP's own recovery/strain/sleep scores, not WHOOP's) are
+temperature (Charge/Effort/Rest are PHMN's own recovery/strain/sleep scores, not WHOOP's) are
 **approximations** computed from published methods. They are **not** clinically
 validated, are **not** a medical device, and are **not** medical advice. Do not use them to
 diagnose, treat, or make health decisions. Consult a qualified professional.
@@ -85,23 +85,23 @@ qualified professional. Any pattern or correlation it surfaces is **informationa
 reflection of numbers you entered, not a clinical finding.
 
 **If you are struggling, in distress, or in crisis, contact a qualified professional or your local
-emergency service straight away — do not rely on NOOP.**
+emergency service straight away — do not rely on PHMN.**
 
 ### 5.2 Nutrition import — informational, not dietary advice
 
 Importing nutrition data (e.g. a Cronometer or MacroFactor CSV) simply displays figures **you**
-recorded elsewhere alongside your other metrics. NOOP does **not** verify, correct, or endorse those
+recorded elsewhere alongside your other metrics. PHMN does **not** verify, correct, or endorse those
 figures, and nothing it shows is **dietary, nutritional, or medical advice**. For guidance on diet,
 supplements, or any condition affected by nutrition, consult a qualified professional.
 
 ### 5.3 Apple Health & "Export for Shortcuts" — your data, your choice
 
-On iOS, NOOP can prepare metrics for Apple Health (including the HealthKit-free **"Export for
-Shortcuts"** path). NOOP writes **only** the data you explicitly choose to export, **on your own
+On iOS, PHMN can prepare metrics for Apple Health (including the HealthKit-free **"Export for
+Shortcuts"** path). PHMN writes **only** the data you explicitly choose to export, **on your own
 device**, and only when you trigger it. **You are responsible for the data you push into Apple
-Health** and for anything you, or Shortcuts you run, then do with it. NOOP cannot see, retrieve, or
+Health** and for anything you, or Shortcuts you run, then do with it. PHMN cannot see, retrieve, or
 manage data once it is in Apple Health — that store and its sharing settings are governed by Apple
-and by you. NOOP-prepared values are the same uncertified approximations described above; do not
+and by you. PHMN-prepared values are the same uncertified approximations described above; do not
 treat them as clinical records.
 
 ## 6. Good-faith takedown contact

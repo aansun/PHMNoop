@@ -5,8 +5,6 @@ import StrandDesign
 // MARK: - What's new (About.dc › What's new)
 
 struct NunaWhatsNewView: View {
-    @State private var showNoop = false
-    @State private var shown = 6
     @ObservedObject private var feed = PHMNChangelogFeed.shared
 
     var body: some View {
@@ -27,26 +25,6 @@ struct NunaWhatsNewView: View {
             }
             ForEach(Array(PHMNChangelog.merged(with: feed.releases).enumerated()), id: \.element.id) { i, r in
                 releaseCard(version: r.version, title: r.title, date: r.date, items: r.items, fixes: r.fixes, highlight: i == 0)
-            }
-            Button { withAnimation(.easeInOut(duration: 0.2)) { showNoop.toggle() } } label: {
-                HStack {
-                    Text("NOOP history").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Spacer()
-                    Image(systemName: "chevron.down").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted).rotationEffect(.degrees(showNoop ? 180 : 0))
-                }
-                .padding(.horizontal, 18).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-            }.buttonStyle(.plain)
-            if showNoop {
-                nunaFootnote("The releases of NOOP that PHMN is built on.")
-                ForEach(Array(AppChangelog.releases.prefix(shown))) { r in
-                    releaseCard(version: r.version, title: r.title, date: r.date, items: r.items, highlight: false, prefix: "NOOP ")
-                }
-                if shown < AppChangelog.releases.count {
-                    Button { shown = min(shown + 8, AppChangelog.releases.count) } label: {
-                        Text("Show older releases").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    }.buttonStyle(.plain)
-                }
             }
         }
         .task { await feed.refresh() }
@@ -99,7 +77,7 @@ struct NunaHowItWorksView: View {
             NunaCard(highlight: true) {
                 VStack(alignment: .leading, spacing: 8) {
                     nunaTrendsCap("The one rule")
-                    Text("NOOP never shows you a number it had to make up. If a score isn't ready, it tells you why and what to do next. Everything here runs on your device, from your strap.")
+                    Text("PHMN never shows you a number it had to make up. If a score isn't ready, it tells you why and what to do next. Everything here runs on your device, from your strap.")
                         .font(.nuna(size: 15, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -143,7 +121,7 @@ struct NunaScoringGuideView: View {
                 NunaCard(highlight: true) {
                     VStack(alignment: .leading, spacing: 10) {
                         nunaRuledHeader("The three scores")
-                        Text("NOOP gives you three daily scores (Recovery, Strain and Sleep), each on a 0-100 scale. They're built from your strap's raw signals using published, peer-reviewed sport science, and computed entirely on your device. They are NOT WHOOP's scores: we don't have WHOOP's private algorithms and don't pretend to. They aim at the same three questions using open science, so they'll usually track WHOOP's in direction, but won't match number-for-number. And that's the point.")
+                        Text("PHMN gives you three daily scores (Recovery, Strain and Sleep), each on a 0-100 scale. They're built from your strap's raw signals using published, peer-reviewed sport science, and computed entirely on your device. They are NOT WHOOP's scores: we don't have WHOOP's private algorithms and don't pretend to. They aim at the same three questions using open science, so they'll usually track WHOOP's in direction, but won't match number-for-number. And that's the point.")
                             .font(.nuna(size: 14.5, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         HStack(spacing: 16) {
                             ForEach(ScoreSection.allCases) { s in
@@ -175,13 +153,13 @@ struct NunaScoringGuideView: View {
                 }
                 NunaCard(small: true) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("How sure is NOOP?  ·  Solid · Building · Calibrating").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                        Text("How sure is PHMN?  ·  Solid · Building · Calibrating").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         HStack(spacing: 8) {
                             NunaChip("Solid", color: NunaPalette.charge)
                             NunaChip("Building", color: NunaPalette.warning)
                             NunaChip("Calibrating")
                         }
-                        Text("Every score carries a small honesty label. Calibrating means NOOP is still learning your baseline, or doesn't have enough data yet. Building means there's enough to show, but it's thin. Solid means full inputs are present. When NOOP can't compute a score honestly, it shows nothing rather than a fake number.")
+                        Text("Every score carries a small honesty label. Calibrating means PHMN is still learning your baseline, or doesn't have enough data yet. Building means there's enough to show, but it's thin. Solid means full inputs are present. When PHMN can't compute a score honestly, it shows nothing rather than a fake number.")
                             .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }

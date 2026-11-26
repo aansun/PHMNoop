@@ -221,7 +221,7 @@ struct AddDeviceWizard: View {
             Button("Cancel", role: .cancel) { }
             Button("Take over", role: .destructive) { commitOuraAdopt() }
         } message: {
-            Text("NOOP will install its own key on the ring and become its owner. The Oura app will no longer control this ring. This is intended and it cannot be undone from NOOP.")
+            Text("PHMN will install its own key on the ring and become its owner. The Oura app will no longer control this ring. This is intended and it cannot be undone from PHMN.")
         }
         // Drive the Adopting step to success (the live source reached streaming -> close the wizard) or to a
         // REACHABLE honest Failed step (the live source announced needs-pairing). Only acts while Adopting,
@@ -330,7 +330,7 @@ struct AddDeviceWizard: View {
                     subtitle: String(localized: "Newer WHOOP band with live data and history sync"))
             typeRow(.whoop4, icon: "applewatch.side.right",
                     title: "WHOOP 4.0",
-                    subtitle: String(localized: "NOOP's primary, fully-supported band"))
+                    subtitle: String(localized: "PHMN's primary, fully-supported band"))
             typeRow(.hrStrap, icon: "heart.circle",
                     title: String(localized: "Heart-rate strap"),
                     subtitle: String(localized: "Polar, Wahoo, Coospo, Garmin HRM, Amazfit Helio broadcast"))
@@ -473,36 +473,36 @@ struct AddDeviceWizard: View {
             return [
                 String(localized: "Put your WHOOP 4.0 on your wrist and make sure it's awake."),
                 String(localized: "Make sure it's NOT connected to the official WHOOP app right now."),
-                String(localized: "NOOP will look for it nearby."),
+                String(localized: "PHMN will look for it nearby."),
             ]
         case .whoop5mg:
             return [
                 String(localized: "WHOOP 5.0 / MG bonds to one device at a time. Unpair it from the official WHOOP app first."),
                 String(localized: "Put the band into pairing mode, on your wrist and awake."),
-                String(localized: "NOOP will look for it nearby."),
+                String(localized: "PHMN will look for it nearby."),
             ]
         case .hrStrap:
             return [
                 String(localized: "Wake your strap. Put it on, or dampen the contacts."),
                 String(localized: "Make sure it isn't connected to another app (a bike computer, the brand's own app…)."),
-                String(localized: "NOOP will look for it nearby."),
+                String(localized: "PHMN will look for it nearby."),
             ]
         case .gymEquipment:
             return [
                 String(localized: "Wake the machine. Start pedalling, walking or rowing so it powers on its Bluetooth."),
                 String(localized: "Make sure it isn't already connected to another app (Zwift, the gym's app, a bike computer…)."),
-                String(localized: "NOOP looks for machines that broadcast the standard Bluetooth Fitness Machine service."),
+                String(localized: "PHMN looks for machines that broadcast the standard Bluetooth Fitness Machine service."),
             ]
         case .amazfit:
             return [
                 String(localized: "Wake your Amazfit / Zepp band and make sure it isn't connected to the Zepp app right now."),
-                String(localized: "NOOP reads live heart rate when the band exposes it. Some bands need a pairing we can't do yet. If so, we'll say so honestly."),
+                String(localized: "PHMN reads live heart rate when the band exposes it. Some bands need a pairing we can't do yet. If so, we'll say so honestly."),
                 String(localized: "Experimental: this is best-effort. If live doesn't work, you can export from Zepp and import the file."),
             ]
         case .miBand:
             return [
                 String(localized: "Wake your Mi Band and make sure it isn't connected to the Mi Fitness / Zepp Life app right now."),
-                String(localized: "NOOP reads live heart rate on bands that don't require pairing. Newer bands need an auth handshake we can't do yet."),
+                String(localized: "PHMN reads live heart rate on bands that don't require pairing. Newer bands need an auth handshake we can't do yet."),
                 String(localized: "Experimental: if your band needs pairing, we'll tell you honestly rather than show a fake reading."),
             ]
         case .garmin:
@@ -512,7 +512,7 @@ struct AddDeviceWizard: View {
             // installs its own key on a reset ring and becomes its sole owner (clean-room facts, see
             // docs/OURA_PROTOCOL.md s3 on the install-key + reset-clears-owner model).
             return [
-                String(localized: "Open the official Oura app and remove this ring (Oura calls it \"factory reset\" or \"unpair and reset\"). This wipes the ring's owner so NOOP can take it over."),
+                String(localized: "Open the official Oura app and remove this ring (Oura calls it \"factory reset\" or \"unpair and reset\"). This wipes the ring's owner so PHMN can take it over."),
                 String(localized: "Keep the ring on the charger or on your finger so it stays awake."),
                 String(localized: "Make sure the Oura app is fully closed. A ring answers one owner at a time."),
                 String(localized: "When the ring is reset and waking, tap Scan below."),
@@ -568,16 +568,16 @@ struct AddDeviceWizard: View {
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("What you get").strandOverline()
-                    ouraBullet(String(localized: "Your ring talks to NOOP only, fully offline, no Oura account."))
+                    ouraBullet(String(localized: "Your ring talks to PHMN only, fully offline, no Oura account."))
                     ouraBullet(String(localized: "Live heart rate, and HRV when the ring can measure it."))
                     ouraBullet(String(localized: "Overnight sleep staging, resting heart rate, skin-temperature trend, motion and battery, read straight off the ring."))
-                    ouraBullet(String(localized: "NOOP's own Recovery, Strain and Sleep, computed on your device from published methods."))
+                    ouraBullet(String(localized: "PHMN's own Recovery, Strain and Sleep, computed on your device from published methods."))
                 }
                 Divider().overlay(StrandPalette.hairline)
                 VStack(alignment: .leading, spacing: 6) {
                     Text("What you lose").strandOverline()
                     ouraBullet(String(localized: "The Oura app and your Oura account stop working with this ring. This is the point. You are replacing Oura."))
-                    ouraBullet(String(localized: "Oura's own Readiness and Sleep scores. NOOP does not copy them. It computes its own."))
+                    ouraBullet(String(localized: "Oura's own Readiness and Sleep scores. PHMN does not copy them. It computes its own."))
                     ouraBullet(String(localized: "Anything that needs Oura's cloud (web dashboard, Oura's coaching, shared circles)."))
                     ouraBullet(String(localized: "Likely your Oura warranty and support, because the ring is no longer paired to Oura. Treat this as permanent."))
                 }
@@ -593,7 +593,7 @@ struct AddDeviceWizard: View {
                     .font(StrandFont.headline)
                     .foregroundStyle(StrandPalette.statusCritical)
                     .accessibilityHidden(true)
-                Text("I understand this disconnects the ring from Oura and that NOOP cannot undo it for me. To go back to Oura I would factory-reset the ring again and set it up in the Oura app.")
+                Text("I understand this disconnects the ring from Oura and that PHMN cannot undo it for me. To go back to Oura I would factory-reset the ring again and set it up in the Oura app.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textPrimary)
                     .multilineTextAlignment(.leading)
@@ -605,7 +605,7 @@ struct AddDeviceWizard: View {
                         in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("I understand this disconnects the ring from Oura and that NOOP cannot undo it for me.")
+        .accessibilityLabel("I understand this disconnects the ring from Oura and that PHMN cannot undo it for me.")
         .accessibilityAddTraits(ouraConsented ? [.isSelected] : [])
 
         // Primary: continue to the reset checklist. Disabled until the box is ticked.
@@ -714,7 +714,7 @@ struct AddDeviceWizard: View {
             Image(systemName: "key.horizontal")
                 .foregroundStyle(StrandPalette.statusWarning)
                 .accessibilityHidden(true)
-            Text("If you extracted your ring's 16-byte key from a previous Oura setup, NOOP can talk to the ring with that key without resetting it, so the Oura app keeps working too. NOOP does not extract keys for you and cannot help you find one. If you do not know what this means, go back and use the standard setup or file import.")
+            Text("If you extracted your ring's 16-byte key from a previous Oura setup, PHMN can talk to the ring with that key without resetting it, so the Oura app keeps working too. PHMN does not extract keys for you and cannot help you find one. If you do not know what this means, go back and use the standard setup or file import.")
                 .font(StrandFont.footnote)
                 .foregroundStyle(StrandPalette.statusWarning)
                 .fixedSize(horizontal: false, vertical: true)
@@ -742,7 +742,7 @@ struct AddDeviceWizard: View {
                 .font(StrandFont.footnote)
                 .foregroundStyle(StrandPalette.statusCritical)
         }
-        Text("NOOP stores this key only on this device, in the same place it stores your paired bands.")
+        Text("PHMN stores this key only on this device, in the same place it stores your paired bands.")
             .font(StrandFont.footnote)
             .foregroundStyle(StrandPalette.textTertiary)
             .fixedSize(horizontal: false, vertical: true)
@@ -858,7 +858,7 @@ struct AddDeviceWizard: View {
                 .buttonStyle(.borderedProminent)
                 .tint(StrandPalette.accent)
                 .accessibilityLabel("Connect to this ring")
-                Text("Both NOOP and the Oura app can use a ring you own by key, but only one can hold the Bluetooth link at a time.")
+                Text("Both PHMN and the Oura app can use a ring you own by key, but only one can hold the Bluetooth link at a time.")
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -894,7 +894,7 @@ struct AddDeviceWizard: View {
                     .font(StrandFont.headline)
                     .foregroundStyle(StrandPalette.textPrimary)
             }
-            Text("Installing NOOP's key and confirming the ring answers only to NOOP. Keep the ring close and do not open the Oura app.")
+            Text("Installing PHMN's key and confirming the ring answers only to PHMN. Keep the ring close and do not open the Oura app.")
                 .font(StrandFont.subhead)
                 .foregroundStyle(StrandPalette.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -914,7 +914,7 @@ struct AddDeviceWizard: View {
             Text("We could not take over this ring.")
                 .font(StrandFont.headline)
                 .foregroundStyle(StrandPalette.textPrimary)
-            Text(model.ouraNeedsPairing ?? "The most common cause is the ring was not fully reset in the Oura app, or the Oura app is still running. Reset the ring again, force-quit Oura, then try once more. If it keeps failing, your ring may be a generation NOOP cannot adopt yet. The ring is not bricked: re-pair it in the Oura app to recover it. You can still use file import.")
+            Text(model.ouraNeedsPairing ?? "The most common cause is the ring was not fully reset in the Oura app, or the Oura app is still running. Reset the ring again, force-quit Oura, then try once more. If it keeps failing, your ring may be a generation PHMN cannot adopt yet. The ring is not bricked: re-pair it in the Oura app to recover it. You can still use file import.")
                 .font(StrandFont.subhead)
                 .foregroundStyle(StrandPalette.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -985,7 +985,7 @@ struct AddDeviceWizard: View {
                 Text("Beta. Read this first.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.statusWarning)
-                Text("Local Oura support is new and we cannot test every ring here. It may not connect on your ring, and it can change between updates. NOOP never makes up a number. If something does not work, it will tell you plainly.")
+                Text("Local Oura support is new and we cannot test every ring here. It may not connect on your ring, and it can change between updates. PHMN never makes up a number. If something does not work, it will tell you plainly.")
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.statusWarning)
                     .fixedSize(horizontal: false, vertical: true)
@@ -1475,7 +1475,7 @@ struct AddDeviceWizard: View {
             Image(systemName: "info.circle")
                 .foregroundStyle(StrandPalette.textTertiary)
                 .accessibilityHidden(true)
-            Text("WHOOP is NOOP's primary, fully-supported band. Other heart-rate straps stream live heart rate and HRV, but not WHOOP's deeper sleep and recovery data.")
+            Text("WHOOP is PHMN's primary, fully-supported band. Other heart-rate straps stream live heart rate and HRV, but not WHOOP's deeper sleep and recovery data.")
                 .font(StrandFont.footnote)
                 .foregroundStyle(StrandPalette.textTertiary)
                 .fixedSize(horizontal: false, vertical: true)

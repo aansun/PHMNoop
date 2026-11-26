@@ -307,7 +307,7 @@ enum PHMNChangelog {
         ),
         Release(
             version: "0.1.0",
-            title: "The first PHMN: NOOP's engine, rebuilt around reading your day",
+            title: "The first PHMN, rebuilt around reading your day",
             date: "October 2026",
             items: [
                 "**Nuna design.** Today, Health, Trends, Anya and Me are redrawn, in two styles (Default and WHP). Charge, Effort and Rest stay pinned as rings at the top of Today, and every metric opens one card with a W / M / 6M switch.",
@@ -330,8 +330,8 @@ enum PHMNChangelog {
             body: "PHMN is built around how I read my own day. It may not fit yours, and nothing here is a promise."),
         Expectation(
             icon: "checkmark.seal",
-            title: "On NOOP's engine",
-            body: "Strap protocol, storage and sleep staging are NOOP's. Strain, Stress and the Body age are PHMN's own readings, written up in the calculation notes. WHOOP 4.0 is the tested path; 5.0 and MG are newer."),
+            title: "Built on a proven engine",
+            body: "Strap protocol, storage and sleep staging come from the open-source engine PHMN is built on (see Open source licenses). Strain, Stress and the Body age are PHMN's own readings, written up in the calculation notes. WHOOP 4.0 is the tested path; 5.0 and MG are newer."),
         Expectation(
             icon: "hourglass",
             title: "Scores build over a few nights",

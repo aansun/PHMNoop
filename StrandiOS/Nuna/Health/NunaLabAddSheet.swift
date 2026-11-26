@@ -63,6 +63,11 @@ struct NunaLabAddSheet: View {
     // MARK: Body
 
     var body: some View {
+        // Blood pressure has a sheet of its own, whether it was asked for or picked here.
+        if selection?.key == LabBookProjection.bpSystolicKey { NunaBPAddSheet(onSave: onSave) } else { form }
+    }
+
+    private var form: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 header
@@ -113,7 +118,7 @@ struct NunaLabAddSheet: View {
                     NunaFormField("Reference range from my report (optional)") {
                         TextField("", text: $referenceText, prompt: Text("e.g. 2.0-5.0").foregroundStyle(NunaPalette.textMuted)).focused($focused, equals: .reference)
                     }
-                    Text("NOOP never fills this in. It only shows back exactly what you type from your own report, and a reading is placed against it.")
+                    Text("PHMN never fills this in. It only shows back exactly what you type from your own report, and a reading is placed against it.")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     NunaFormField("Note (optional)") {
                         TextField("", text: $note, prompt: Text("e.g. fasting, morning draw").foregroundStyle(NunaPalette.textMuted)).focused($focused, equals: .note)

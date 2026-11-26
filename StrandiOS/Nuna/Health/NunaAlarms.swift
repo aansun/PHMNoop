@@ -78,7 +78,7 @@ private extension View {
             Button(String(localized: "Open Settings")) { NunaAlarmFormat.openNotificationSettings() }
             Button(String(localized: "Not now"), role: .cancel) {}
         } message: {
-            Text("Turn on notifications for NOOP in Settings to get your wind-down reminder.")
+            Text("Turn on notifications for PHMN in Settings to get your wind-down reminder.")
         }
     }
 }

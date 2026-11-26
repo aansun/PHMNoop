@@ -27,7 +27,7 @@ struct PowerSavingView: View {
                 NoopCard {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Power saving").strandOverline()
-                        Text("The strap keeps banking data on its own, so nothing is lost — NOOP just talks to it less often to help it last until you can charge it.")
+                        Text("The strap keeps banking data on its own, so nothing is lost — PHMN just talks to it less often to help it last until you can charge it.")
                             .font(StrandFont.caption)
                             .foregroundStyle(StrandPalette.textTertiary)
                             .fixedSize(horizontal: false, vertical: true)

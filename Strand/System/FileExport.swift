@@ -18,7 +18,7 @@ enum FileExport {
 
     /// A short `yyMMdd-HHmm` wall-clock stamp for export filenames (#510 — maddognik's protocol RE),
     /// so a reporter who saves several strap logs / raw captures in a row gets sortable, non-colliding
-    /// files (e.g. `noop-strap-log-260617-1042.txt`) instead of repeatedly overwriting one name.
+    /// files (e.g. `phmn-strap-log-260617-1042.txt`) instead of repeatedly overwriting one name.
     /// Locale-independent (POSIX) so the stamp is stable on every machine.
     static func timestamp(_ date: Date = Date()) -> String {
         let f = DateFormatter()
@@ -28,7 +28,7 @@ enum FileExport {
     }
 
     /// Compose a timestamped suggested filename — `<prefix>-<yyMMdd-HHmm>.<ext>`
-    /// (e.g. `timestampedName("noop-strap-log", ext: "txt")` → `noop-strap-log-260617-1042.txt`).
+    /// (e.g. `timestampedName("phmn-strap-log", ext: "txt")` → `phmn-strap-log-260617-1042.txt`).
     static func timestampedName(_ prefix: String, ext: String) -> String {
         "\(prefix)-\(timestamp()).\(ext)"
     }
@@ -38,7 +38,7 @@ enum FileExport {
     /// version before opening the zip. `timestampedName` keeps its old 2-arg form for the existing
     /// strap-log / raw-capture callers; this is the new bundle-name builder.
     static func bundleName(profile: String, platform: String, version: String, date: Date = Date()) -> String {
-        "noop-\(profile)-\(platform)-v\(version)-\(timestamp(date)).zip"
+        "phmn-\(profile)-\(platform)-v\(version)-\(timestamp(date)).zip"
     }
 
     /// Write `text` to a file and let the user choose where it goes.
@@ -99,7 +99,7 @@ enum FileExport {
     @MainActor
     static func exportPair(file src: URL, fileSuggestedName: String,
                            text: String, textSuggestedName: String) async {
-        let zipName = timestampedName("noop-export", ext: "zip")
+        let zipName = timestampedName("phmn-export", ext: "zip")
         let entries = await Task.detached(priority: .userInitiated) { () -> [BundleEntry] in
             var entries: [BundleEntry] = [BundleEntry(name: textSuggestedName, data: Data(text.utf8))]
             if FileManager.default.fileExists(atPath: src.path), let fileData = try? Data(contentsOf: src) {

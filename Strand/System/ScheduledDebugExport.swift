@@ -67,8 +67,8 @@ enum ScheduledDebugExport {
     /// Filename prefixes for the two scheduled-export file kinds this type writes into Documents (the
     /// log `.txt` and the raw-capture `.json`). Nothing else in Documents matches either prefix, so
     /// retention and the manual clear action only ever touch scheduled drops.
-    private static let logPrefix = "noop-strap-log-"
-    private static let rawPrefix = "noop-raw-capture-"
+    private static let logPrefix = "phmn-strap-log-"
+    private static let rawPrefix = "phmn-raw-capture-"
 
     /// The `yyMMdd-HHmm` stamp embedded in one scheduled-export filename (log `.txt` or raw `.json`),
     /// or nil if `name` isn't one of ours. Mirrors Android `LogExport.scheduledExportStamp`. Pure — no
@@ -254,7 +254,7 @@ enum ScheduledDebugExport {
 
     // MARK: - The export itself
 
-    /// Write the durable strap-log tail to `Documents/noop-strap-log-<yyMMdd-HHmm>.txt`, and (when the
+    /// Write the durable strap-log tail to `Documents/phmn-strap-log-<yyMMdd-HHmm>.txt`, and (when the
     /// caller supplies one) copy the raw 5/MG capture beside it. Reuses the already-shipped writers (the
     /// durable tail from `LiveState`, the timestamped naming from `FileExport`) so a scheduled drop reads
     /// the same as a manual share. `markDay` records today so the daily dedup/catch-up doesn't
@@ -265,7 +265,7 @@ enum ScheduledDebugExport {
             return nil
         }
         let stamp = FileExport.timestamp()
-        let logURL = docs.appendingPathComponent("noop-strap-log-\(stamp).txt")
+        let logURL = docs.appendingPathComponent("phmn-strap-log-\(stamp).txt")
         do {
             try LiveState.scheduledExportText(extraHeaderLines: DebugDataDiagnostics.strapStateLines())
                 .write(to: logURL, atomically: true, encoding: .utf8)
@@ -276,7 +276,7 @@ enum ScheduledDebugExport {
         // matched pair the one-tap "Export raw + log" does. The background timer path passes nil (no live
         // session), so it writes just the log — honest about what's available with no session open.
         if let capture = captureURL, FileManager.default.fileExists(atPath: capture.path) {
-            let dest = docs.appendingPathComponent("noop-raw-capture-\(stamp).json")
+            let dest = docs.appendingPathComponent("phmn-raw-capture-\(stamp).json")
             try? FileManager.default.copyItem(at: capture, to: dest)
         }
         if markDay {

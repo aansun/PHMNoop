@@ -440,7 +440,7 @@ final class SourceCoordinator: ObservableObject {
             onSerial: { [weak self] serial in self?.adoptOuraSerial(currentId: id, serial: serial) },  // #771
             onsetKeying: { UserDefaults.standard.bool(forKey: AppModel.ouraOnsetKeyingKey) },  // #1284 residual 3
             adoptIntent: adoptIntent)
-        if adoptIntent { straplog("Oura: adopt consent granted - this session may install NOOP's key") }
+        if adoptIntent { straplog("Oura: adopt consent granted - this session may install PHMN's key") }
         ouraSource = source   // the published typed handle for the adopt mirror (same object as activeSource)
         return source
     }

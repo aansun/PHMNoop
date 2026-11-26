@@ -12,7 +12,7 @@ import StrandDesign
 struct SiriShortcutsSettingsView: View {
     var body: some View {
         ScreenScaffold(title: "Siri & Shortcuts",
-                       subtitle: "Run NOOP actions hands-free.") {
+                       subtitle: "Run PHMN actions hands-free.") {
             tips
             shortcutsCard
         }
@@ -54,7 +54,7 @@ struct SiriShortcutsSettingsView: View {
                         .font(StrandFont.headline)
                         .foregroundStyle(StrandPalette.textPrimary)
                 }
-                Text("Wire NOOP's actions into a Back-Tap, a focus automation, or a longer Shortcut. For example, double-tap the back of your iPhone to buzz the strap.")
+                Text("Wire PHMN's actions into a Back-Tap, a focus automation, or a longer Shortcut. For example, double-tap the back of your iPhone to buzz the strap.")
                     .font(StrandFont.caption)
                     .foregroundStyle(StrandPalette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)

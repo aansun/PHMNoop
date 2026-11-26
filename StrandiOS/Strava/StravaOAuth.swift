@@ -62,7 +62,7 @@ enum StravaError: LocalizedError {
         case .invalidUpload:
             return String(localized: "Strava did not return a valid upload identifier.")
         case .readAccessRequired:
-            return String(localized: "Reconnect Strava and allow activity read access so NOOP can verify recent uploads.")
+            return String(localized: "Reconnect Strava and allow activity read access so PHMN can verify recent uploads.")
         }
     }
 }

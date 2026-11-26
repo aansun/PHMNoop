@@ -173,7 +173,7 @@ enum CsvExport {
                     ("workouts.csv",
                      Data(WhoopCsvExporter.workoutsCSV(workouts, sourceLabel: { workoutSource($0, computedIds: computedIds) }).utf8)),
                     ("journal_entries.csv", Data(WhoopCsvExporter.journalCSV(journal).utf8)),
-                    ("noop_metric_series.json", WhoopCsvExporter.metricSeriesJSON(sidecar)),
+                    ("phmn_metric_series.json", WhoopCsvExporter.metricSeriesJSON(sidecar)),
                 ]
                 // Deflate to a temp path off main; the cheap atomic swap into the user's chosen destination
                 // stays on main (it needs the panel/picker result).
@@ -186,7 +186,7 @@ enum CsvExport {
             #if os(macOS)
             // Save panel — DataBackup.runExport precedent (NSSavePanel + .zip content type).
             let panel = NSSavePanel()
-            panel.title = String(localized: "Export NOOP data as CSV")
+            panel.title = String(localized: "Export PHMN data as CSV")
             panel.nameFieldStringValue = name
             panel.allowedContentTypes = [.zip]
             panel.canCreateDirectories = true
@@ -236,6 +236,6 @@ enum CsvExport {
     // called from `run`, which already is.
     @MainActor
     private static func defaultName() -> String {
-        "noop-export-\(Repository.localDayKey(Date())).zip"
+        "phmn-export-\(Repository.localDayKey(Date())).zip"
     }
 }

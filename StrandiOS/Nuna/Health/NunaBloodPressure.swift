@@ -18,6 +18,8 @@ struct NunaBPReading: Identifiable, Equatable {
     let systolic: Double
     let diastolic: Double
     let source: String
+    /// Position and cuff place, for a typed reading that has them.
+    var note: String? = nil
 
     var date: Date { Date(timeIntervalSince1970: TimeInterval(takenAt)) }
     var text: String { NunaBP.text(systolic, diastolic) }
@@ -79,7 +81,7 @@ enum NunaBP {
         let diastolic = Dictionary(rows.filter { $0.markerKey == LabBookProjection.bpDiastolicKey }.map { ($0.takenAt, $0) }, uniquingKeysWith: { _, l in l })
         return rows.filter { $0.markerKey == LabBookProjection.bpSystolicKey }.compactMap { s in
             guard let sv = s.value, let d = diastolic[s.takenAt], let dv = d.value else { return nil }
-            return NunaBPReading(id: s.id, diastolicId: d.id, takenAt: s.takenAt, systolic: sv, diastolic: dv, source: s.source)
+            return NunaBPReading(id: s.id, diastolicId: d.id, takenAt: s.takenAt, systolic: sv, diastolic: dv, source: s.source, note: s.note)
         }
         .sorted { $0.takenAt < $1.takenAt }
     }
@@ -206,12 +208,7 @@ struct NunaBloodPressureView: View {
             await PHMBloodPressureImport.sync(repo: repo)
         }
         .sheet(isPresented: $adding) {
-            // In a navigation stack so the number pad gets its Done button: it has no return key of its own.
-            NavigationStack {
-                NunaLabAddSheet(preselect: LabBookProjection.bpSystolicKey) { drafts in await NunaLabStore.save(drafts, repo: repo) }
-                    .toolbar(.hidden, for: .navigationBar)
-            }
-            .preferredColorScheme(NunaTheme.colorScheme)
+            NunaBPAddSheet { drafts in await NunaLabStore.save(drafts, repo: repo) }
         }
         .sheet(isPresented: $showInfo) {
             ScrollView { NunaBPMeasureInfo().padding(NunaSpacing.screenH) }
@@ -281,6 +278,9 @@ struct NunaBloodPressureView: View {
             Text(verbatim: r.category.wordText).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(r.category.color)
             Text(verbatim: NunaBP.when(r.date) + " · " + NunaBP.sourceName(r.source))
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            if let how = NunaBPContext.display(r.note) {
+                Text(verbatim: how).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)

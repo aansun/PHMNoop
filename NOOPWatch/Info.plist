@@ -23,9 +23,9 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>NOOP reads your heart rate from the Watch sensor to show a live readout on your wrist. It stays on your device.</string>
+	<string>PHMN reads your heart rate from the Watch sensor to show a live readout on your wrist. It stays on your device.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>NOOP records a basic workout session on your Watch for a higher-fidelity heart rate. The session stays on your device.</string>
+	<string>PHMN records a basic workout session on your Watch for a higher-fidelity heart rate. The session stays on your device.</string>
 	<key>WKApplication</key>
 	<true/>
 	<key>WKCompanionAppBundleIdentifier</key>

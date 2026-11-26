@@ -207,7 +207,7 @@ struct NunaWeightView: View {
             NunaBodyHealthCard(weightKg: latest, bmi: bmi, waistCm: profile.waistCm, heightCm: profile.heightCm, showsChevron: false)
             NunaBodyCompositionCard(weightKg: latest, fatPct: fatS.latest?.value, leanKg: leanS.latest?.value, bmi: bmi)
             NunaExpandRow(title: "About body composition", subtitle: "From a smart scale via Apple Health", systemImage: "sparkles",
-                          text: "Body fat and lean mass appear only when Apple Health has them, for example from a smart scale. NOOP never estimates them.")
+                          text: "Body fat and lean mass appear only when Apple Health has them, for example from a smart scale. PHMN never estimates them.")
         }
         .sheet(isPresented: $showAdd) {
             NunaNumberSheet(title: "Add a measurement", unit: "kg", initial: latest ?? 70, range: 25...250, step: 0.1, decimals: 1) { v in

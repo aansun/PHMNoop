@@ -4,7 +4,7 @@ import StrandDesign
 
 /// #155 — the opt-in surface for the Apple-Health-free export. Sideloaded installs (free 7-day
 /// signing) can't carry the HealthKit entitlement, so HealthKitBridge never runs for them; this
-/// toggle instead has NOOP rewrite Documents/noop_sync.txt on every background transition, and the
+/// toggle instead has NOOP rewrite Documents/phmn_sync.txt on every background transition, and the
 /// user's Siri Shortcut reads the file and logs the rows into Apple Health. Default OFF.
 struct ShortcutExportSettingsView: View {
     @AppStorage(ShortcutHealthExport.enabledKey) private var enabled = false
@@ -34,7 +34,7 @@ struct ShortcutExportSettingsView: View {
                 }
                 .toggleStyle(.switch)
                 .tint(StrandPalette.accent)
-                Text("When this is on, NOOP rewrites a plain-text file (On My iPhone › NOOP › noop_sync.txt) each time you leave the app: one line per 15 minutes of heart rate, HRV and steps, read straight from your strap. Pair it with the Siri Shortcut that reads the file and logs everything into Apple Health (no HealthKit entitlement needed), so it works on sideloaded installs. The setup guide and the pre-built Shortcut live in the project wiki on GitHub.")
+                Text("When this is on, PHMN rewrites a plain-text file (On My iPhone › PHMN › phmn_sync.txt) each time you leave the app: one line per 15 minutes of heart rate, HRV and steps, read straight from your strap. Pair it with the Siri Shortcut that reads the file and logs everything into Apple Health (no HealthKit entitlement needed), so it works on sideloaded installs. The setup guide and the pre-built Shortcut live in the project wiki on GitHub.")
                     .font(StrandFont.caption)
                     .foregroundStyle(StrandPalette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)

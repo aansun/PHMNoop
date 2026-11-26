@@ -21,7 +21,9 @@ enum BackupSync {
     /// in behind the same UI/logic without changing the snapshot scheme.
     enum Destination { case folder /* , googleDrive */ }
 
-    static let prefix = "noop-backup-"
+    static let prefix = "phmn-backup-"
+    /// The prefix of backups written before the rename: still listed and still rotated.
+    static let earlierPrefix = "noop-backup-"
     static let suffix = ".noopbak"
 
     // MARK: - Pure helpers (unit-tested; mirror Android BackupSync)
@@ -58,8 +60,8 @@ enum BackupSync {
 
     /// The UTC instant (ms) encoded in a snapshot filename, or nil if `name` is not one of ours.
     static func snapshotTimeMs(_ name: String) -> Int? {
-        guard name.hasPrefix(prefix), name.hasSuffix(suffix) else { return nil }
-        let stamp = String(name.dropFirst(prefix.count).dropLast(suffix.count))
+        guard let used = [prefix, earlierPrefix].first(where: name.hasPrefix), name.hasSuffix(suffix) else { return nil }
+        let stamp = String(name.dropFirst(used.count).dropLast(suffix.count))
         guard let d = stampFormatter().date(from: stamp) else { return nil }
         return Int((d.timeIntervalSince1970 * 1000.0).rounded())
     }
@@ -239,7 +241,7 @@ enum FolderBackup {
     /// the gap was never the choosing — it was that the result was unidentifiable afterwards. A user on
     /// the internal fallback saw a bare "Backups" and could not tell their backups were on-device only.
     static func folderLabel() -> String? {
-        if useInternalFolder { return String(localized: "NOOP (in Files)") }
+        if useInternalFolder { return String(localized: "PHMN (in Files)") }
         guard let path = resolveFolder()?.path else { return nil }
         let trail = folderTrail(path: path)
         if isICloudPath(path) {
@@ -451,7 +453,7 @@ enum FolderBackup {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         panel.prompt = String(localized: "Choose")
-        panel.message = String(localized: "Choose a folder for NOOP backups (for example a Google Drive or iCloud folder).")
+        panel.message = String(localized: "Choose a folder for PHMN backups (for example a Google Drive or iCloud folder).")
         guard panel.runModal() == .OK, let url = panel.url else { return nil }
         saveFolder(url)
         return url

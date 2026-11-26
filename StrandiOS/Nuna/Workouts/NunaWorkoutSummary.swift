@@ -272,7 +272,7 @@ struct NunaWorkoutSummaryView: View {
         let steps = data.steps
         let r = NunaTreadmillEstimate.filled(r, steps: steps).row
         let format: RouteExporter.Format = gpx ? .gpx : .fit
-        let name = "noop-workout-\(r.startTs).\(format.ext)"
+        let name = "phmn-workout-\(r.startTs).\(format.ext)"
         let file = await Task.detached(priority: .userInitiated) {
             RouteExporter.render(format, route: points, startTs: r.startTs, endTs: r.endTs, sport: r.sport, distanceM: r.distanceM,
                                  energyKcal: r.energyKcal, avgHr: r.avgHr, maxHr: r.maxHr, movingTimeS: r.durationS, steps: steps)

@@ -1277,7 +1277,7 @@ final class HealthKitBridge: ObservableObject {
     /// metadata; delete-then-write scoped to our own source, like sleep and the vitals. The key
     /// carries NO device-id segment (#1503): the active strap id is not durable, and embedding it
     /// stranded every prior workout as unreachable duplicates after a re-pair. Matches the Android
-    /// twin's `noop-workout-<startTs>` `clientRecordId`.
+    /// twin's `phmn-workout-<startTs>` `clientRecordId`.
     /// How many workout rows each write-back read asks the store for, per source.
     ///
     /// Named rather than inline because [deleteOrphanedWorkouts] has to compare against it: a read that

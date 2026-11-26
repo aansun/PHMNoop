@@ -60,7 +60,7 @@ struct NunaAppearanceView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         nunaRuledHeader("Experience")
                         Text(verbatim: experience.displayName).font(.nuna(size: 16, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Switch to Default to return to the original NOOP look").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        Text("Switch to Default to return to the classic look").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer(minLength: 8)
                     Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)

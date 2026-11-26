@@ -322,7 +322,7 @@ struct RawDataCollectorView: View {
         }
         for segment in segments { entries.append(.init(name: "imu/\(segment.name)", data: segment.data)) }
         let result = await FileExport.exportBundle(entries: entries,
-                                                    suggestedName: "noop-5mg-raw-\(session.id).zip")
+                                                    suggestedName: "phmn-5mg-raw-\(session.id).zip")
         if result == nil { exportError = "The export file could not be created or shared." }
         else {
             store.markExported(session.id)

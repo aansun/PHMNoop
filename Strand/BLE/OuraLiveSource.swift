@@ -1720,7 +1720,7 @@ public final class OuraLiveSource: NSObject, ObservableObject {
         let cmd = OuraCommands.setFeatureMode(feature, mode: mode)
         let frameHex = cmd.bytes.map { String(format: "%02x", $0) }.joined()
         log("Oura: feature-mode WRITE feature=0x\(String(feature, radix: 16)) mode=\(mode) frame=\(frameHex)"
-            + " - EXPERIMENT, unvalidated on NOOP hardware (OURA_PROTOCOL.md s7.5)")
+            + " - EXPERIMENT, unvalidated on PHMN hardware (OURA_PROTOCOL.md s7.5)")
         loggedFeatureStatuses.remove(Int(feature))
         if mode == 0x00 {
             manuallyDisabledFeatures.insert(Int(feature))
@@ -1824,7 +1824,7 @@ public final class OuraLiveSource: NSObject, ObservableObject {
         }
         pendingInstallKey = key
         adoptPhase = .installingKey
-        log("Oura: installing NOOP's key on the reset ring")
+        log("Oura: installing PHMN's key on the reset ring")
         write([cmd])
     }
 
@@ -2635,11 +2635,11 @@ public final class OuraLiveSource: NSObject, ObservableObject {
         let detail: String
         switch reason {
         case .factoryResetOrNoKey:
-            detail = "NOOP needs the ring's install key to read it live, and that pairing handshake isn't set up yet."
+            detail = "PHMN needs the ring's install key to read it live, and that pairing handshake isn't set up yet."
         case .authFailed(let status):
             detail = "The ring rejected the pairing handshake (status \(status.rawValue))."
         case .installFailed(let why):
-            detail = "NOOP couldn't take over this ring (\(why))."
+            detail = "PHMN couldn't take over this ring (\(why))."
         }
         let recovery = " The ring isn't bricked: re-pair it in the Oura app to recover it."
         let msg = detail + " Live data isn't available - export from the Oura app and import the file instead." + recovery

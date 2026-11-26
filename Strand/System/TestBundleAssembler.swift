@@ -519,6 +519,6 @@ enum TestBundleAssembler {
     /// automatically. Lives in the app's caches dir so it is never iCloud-synced.
     static func crashLogURL() -> URL? {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("noop-last-crash.txt")
+            .appendingPathComponent("phmn-last-crash.txt")
     }
 }

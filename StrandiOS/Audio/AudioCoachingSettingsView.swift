@@ -33,7 +33,7 @@ struct AudioCoachingSettingsView: View {
                             .font(StrandFont.subhead)
                             .foregroundStyle(StrandPalette.textPrimary)
                         Text(enabled
-                             ? "On: NOOP uses native on-device speech and ducks music briefly."
+                             ? "On: PHMN uses native on-device speech and ducks music briefly."
                              : "Off by default. Enable when you want spoken workout cues.")
                             .font(StrandFont.footnote)
                             .foregroundStyle(StrandPalette.textTertiary)
@@ -64,7 +64,7 @@ struct AudioCoachingSettingsView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Smart coaching")
                                 .strandOverline()
-                            Text("NOOP watches the recent HR, pace and cadence trend on-device and speaks one short cue when a pattern is reliable.")
+                            Text("PHMN watches the recent HR, pace and cadence trend on-device and speaks one short cue when a pattern is reliable.")
                                 .font(StrandFont.footnote)
                                 .foregroundStyle(StrandPalette.textTertiary)
                                 .fixedSize(horizontal: false, vertical: true)

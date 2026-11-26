@@ -49,7 +49,7 @@ struct NunaStravaView: View {
                 NunaDivider()
                 NunaListRow("A GPS, treadmill or gym workout", subtitle: "Gym counts only when logged in PHMN, not from Hevy or Apple Health", systemImage: "figure.run")
             }
-            nunaFootnote("NOOP uses your own Strava API app. The Client ID and Secret are kept in this iPhone's Keychain and used only when you connect or upload. The activity goes to Strava as a FIT file.")
+            nunaFootnote("PHMN uses your own Strava API app. The Client ID and Secret are kept in this iPhone's Keychain and used only when you connect or upload. The activity goes to Strava as a FIT file.")
         }
     }
 

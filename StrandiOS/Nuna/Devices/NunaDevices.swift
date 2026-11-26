@@ -123,7 +123,7 @@ private struct NunaDevicesContent: View {
         .nunaDialog("Remove this device?", isPresented: $confirmRemove) {
             NunaDialogButton("Remove", role: .destructive) { if let d = active { registry.archive(d.id) } }
             NunaDialogButton("Cancel", role: .cancel) {}
-        } message: { Text("NOOP stops connecting to it. Its recorded data is kept and you can add it back.") }
+        } message: { Text("PHMN stops connecting to it. Its recorded data is kept and you can add it back.") }
         .nunaDialog("Delete all of this device's data?", isPresented: $confirmDeleteData) {
             NunaDialogButton("Delete data", role: .destructive) {
                 guard let d = active else { return }
@@ -375,7 +375,7 @@ private struct NunaDevicesContent: View {
             VStack(alignment: .leading, spacing: 12) {
                 NunaIconTile("applewatch")
                 Text("No strap yet").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Add your WHOOP to record heart rate, sleep and workouts. NOOP connects directly over Bluetooth, without the WHOOP app or any cloud.")
+                Text("Add your WHOOP to record heart rate, sleep and workouts. PHMN connects directly over Bluetooth, without the WHOOP app or any cloud.")
                     .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -479,7 +479,7 @@ struct NunaDeviceDetailView: View {
         .nunaDialog("Remove this device?", isPresented: $confirmRemove) {
             NunaDialogButton("Remove", role: .destructive) { registry?.archive(deviceId); dismiss() }
             NunaDialogButton("Cancel", role: .cancel) {}
-        } message: { Text("NOOP stops connecting to it. Its recorded data is kept and you can add it back.") }
+        } message: { Text("PHMN stops connecting to it. Its recorded data is kept and you can add it back.") }
         .nunaDialog("Delete all of this device's data?", isPresented: $confirmDeleteData) {
             NunaDialogButton("Delete data", role: .destructive) {
                 Task { guard let store = await model.repo.storeHandle() else { return }; await registry?.deleteDeviceData(deviceId, store: store) }

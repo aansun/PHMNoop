@@ -147,7 +147,7 @@ struct NunaDeviceRepairView: View {
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             step(1, "Forget the strap in iOS", "Settings, Bluetooth, tap the i next to WHOOP, then Forget This Device.", "Open Settings", openSettings)
-            step(2, "Remove it from NOOP's list", "Data already recorded stays.", "Remove from the list") { confirmRemove = true }
+            step(2, "Remove it from PHMN's list", "Data already recorded stays.", "Remove from the list") { confirmRemove = true }
             step(3, "Add it again", "Turn the strap on and follow the pairing steps.", "Add WHOOP") { showAdd = true }
             Text("The last 14 days are pulled from the strap again if they are still on it.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
@@ -155,7 +155,7 @@ struct NunaDeviceRepairView: View {
         .nunaDialog("Remove this device?", isPresented: $confirmRemove) {
             NunaDialogButton("Remove", role: .destructive) { if let id = model.deviceRegistry?.activeDeviceId { model.deviceRegistry?.archive(id) } }
             NunaDialogButton("Cancel", role: .cancel) {}
-        } message: { Text("NOOP stops connecting to it. Its recorded data is kept and you can add it back.") }
+        } message: { Text("PHMN stops connecting to it. Its recorded data is kept and you can add it back.") }
     }
 
     private func step(_ n: Int, _ title: LocalizedStringKey, _ detail: LocalizedStringKey, _ button: LocalizedStringKey, _ run: @escaping () -> Void) -> some View {

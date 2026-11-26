@@ -30,7 +30,7 @@ struct NunaAboutView: View {
             }
             .padding(.top, 10)
             VStack(spacing: 12) {
-                Text("PHMN is an internal fork of NOOP by ryanbr, with an iOS layer, Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for fitness age.")
+                Text("PHMN reads your strap on this iPhone, with Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for fitness age.")
                 Text("Not a medical device. It does not diagnose or detect disease and does not replace a professional. Not affiliated with WHOOP, Inc.")
             }
             .font(.nuna(size: 12.5, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textMuted).multilineTextAlignment(.center).textCase(nil)
@@ -112,7 +112,7 @@ struct NunaOpenSource: Identifiable, Decodable {
             NunaOpenSource(id: "opengym", name: "openGym", author: "Duarte Santos", license: "GNU AGPL-3.0", version: nil,
                            url: "https://github.com/DuarteSantos8/openGym",
                            used: "The idea of a body map showing which muscles are trained and which are still tired. No openGym code, data, photos or animations are in PHMN: the muscle readings and the library here are written from scratch or come from the projects above.",
-                           text: "openGym is licensed under the GNU Affero General Public License v3.0. Its text is at https://www.gnu.org/licenses/agpl-3.0.html. Because none of its code is included, PHMN is not a derivative work of openGym and keeps NOOP's PolyForm Noncommercial licence."),
+                           text: "openGym is licensed under the GNU Affero General Public License v3.0. Its text is at https://www.gnu.org/licenses/agpl-3.0.html. Because none of its code is included, PHMN is not a derivative work of openGym and keeps its PolyForm Noncommercial licence."),
             NunaOpenSource(id: "fonts", name: "D-DIN-PRO, Montserrat, Fraunces and Plus Jakarta Sans",
                            author: "Datto; The Montserrat Project Authors; The Fraunces Project Authors; The Plus Jakarta Sans Project Authors",
                            license: "SIL Open Font License 1.1", version: nil, url: "https://openfontlicense.org",

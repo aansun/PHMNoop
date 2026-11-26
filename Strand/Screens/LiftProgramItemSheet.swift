@@ -71,7 +71,7 @@ struct LiftProgramItemSheet: View {
     var body: some View {
         ScreenScaffold(
             title: item == nil ? "Add exercise" : "Edit exercise",
-            subtitle: "Type any name you like. NOOP remembers it, with the muscles you give it."
+            subtitle: "Type any name you like. PHMN remembers it, with the muscles you give it."
         ) {
             VStack(alignment: .leading, spacing: NoopMetrics.sectionGap) {
                 exerciseSection
@@ -101,7 +101,7 @@ struct LiftProgramItemSheet: View {
         } message: {
             Text("It stops being offered here. Sessions you already logged with it are kept exactly as they are.")
         }
-        .alert("You've saved the most exercises NOOP remembers",
+        .alert("You've saved the most exercises PHMN remembers",
                isPresented: Binding(get: { vocabularyFullLimit != nil },
                                     set: { if !$0 { vocabularyFullLimit = nil } })) {
             Button("OK", role: .cancel) { vocabularyFullLimit = nil }

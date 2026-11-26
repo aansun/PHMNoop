@@ -89,18 +89,18 @@ struct AppleWatchAboutView: View {
                     detail: String(localized: "Heart rate plus active energy give a solid daily cardiovascular load. An on-watch workout sharpens it further.")),
         WatchMetric(icon: "heart.fill", metric: String(localized: "Recovery"),
                     confidence: .calibrating,
-                    detail: String(localized: "Led by your heart-rate variability versus your own baseline. The watch samples HRV rather than streaming it, so this needs about a week of nights to calibrate. Until then NOOP shows \u{201C}needs more data\u{201D}, never a guessed number.")),
+                    detail: String(localized: "Led by your heart-rate variability versus your own baseline. The watch samples HRV rather than streaming it, so this needs about a week of nights to calibrate. Until then PHMN shows \u{201C}needs more data\u{201D}, never a guessed number.")),
         WatchMetric(icon: "thermometer.medium", metric: String(localized: "Skin temperature"),
                     confidence: .good,
                     detail: String(localized: "From the watch's wrist-temperature sensor during sleep, on Series 8 and later. Older models don't have the sensor, so it reads \u{201C}not available\u{201D} rather than zero.")),
         WatchMetric(icon: "drop.degreesign", metric: String(localized: "Blood oxygen (SpO₂)"),
                     confidence: .unavailable,
-                    detail: String(localized: "Trend only where supported, and Apple removed the SpO₂ sensor from the newest US units, so on those it simply isn't there. NOOP shows nothing rather than a fake reading.")),
+                    detail: String(localized: "Trend only where supported, and Apple removed the SpO₂ sensor from the newest US units, so on those it simply isn't there. PHMN shows nothing rather than a fake reading.")),
     ]
 
     var body: some View {
         ScreenScaffold(title: "About Apple Watch data",
-                       subtitle: "What your watch is great at, where it's lighter than a chest strap, and how sure NOOP is.",
+                       subtitle: "What your watch is great at, where it's lighter than a chest strap, and how sure PHMN is.",
                        lazy: true) {
             VStack(alignment: .leading, spacing: NoopMetrics.sectionGap) {
                 introCard
@@ -133,11 +133,11 @@ struct AppleWatchAboutView: View {
                         .foregroundStyle(StrandPalette.textPrimary)
                     Spacer(minLength: 0)
                 }
-                Text("NOOP can run off only an Apple Watch, no chest strap needed. The watch is the sensor; NOOP does the thinking on your phone, computing Recovery, Sleep, Strain and your Fitness Age from your Health data, all on-device.")
+                Text("PHMN can run off only an Apple Watch, no chest strap needed. The watch is the sensor; PHMN does the thinking on your phone, computing Recovery, Sleep, Strain and your Fitness Age from your Health data, all on-device.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("The honest catch: a watch isn't a chest strap. It's brilliant at sleep, steps, workouts and fitness, and lighter on the dense heart-rate-variability a strap measures all night. So recovery takes about a week to calibrate, and a couple of metrics depend on your watch model. NOOP is upfront about all of it. Every watch-derived number carries a confidence, and where the watch can't be honest, NOOP shows nothing instead of a made-up figure.")
+                Text("The honest catch: a watch isn't a chest strap. It's brilliant at sleep, steps, workouts and fitness, and lighter on the dense heart-rate-variability a strap measures all night. So recovery takes about a week to calibrate, and a couple of metrics depend on your watch model. PHMN is upfront about all of it. Every watch-derived number carries a confidence, and where the watch can't be honest, PHMN shows nothing instead of a made-up figure.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -214,11 +214,11 @@ struct AppleWatchAboutView: View {
                         .foregroundStyle(StrandPalette.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Text("Recovery, NOOP's own score, is led by your heart-rate variability measured against your own personal baseline. A chest strap streams beat-to-beat data densely all night, so it can learn that baseline fast. An Apple Watch instead samples HRV, a handful of readings through the day plus overnight, so the signal is real but sparser.")
+                Text("Recovery, PHMN's own score, is led by your heart-rate variability measured against your own personal baseline. A chest strap streams beat-to-beat data densely all night, so it can learn that baseline fast. An Apple Watch instead samples HRV, a handful of readings through the day plus overnight, so the signal is real but sparser.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("That's why a watch-only Recovery starts out \u{201C}Calibrating\u{201D}. NOOP needs about seven nights of your HRV to learn what normal looks like for you. Until it has them it withholds the score rather than guess. Once the baseline is set, your Recovery appears with its confidence, on the same 0-100 scale as a strap's.")
+                Text("That's why a watch-only Recovery starts out \u{201C}Calibrating\u{201D}. PHMN needs about seven nights of your HRV to learn what normal looks like for you. Until it has them it withholds the score rather than guess. Once the baseline is set, your Recovery appears with its confidence, on the same 0-100 scale as a strap's.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -246,7 +246,7 @@ struct AppleWatchAboutView: View {
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Where a sensor isn't on your watch, NOOP reads \u{201C}not available\u{201D} for that metric, never a zero, never an invented number. Everything else keeps working.")
+                Text("Where a sensor isn't on your watch, PHMN reads \u{201C}not available\u{201D} for that metric, never a zero, never an invented number. Everything else keeps working.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -263,7 +263,7 @@ struct AppleWatchAboutView: View {
                 Text("Ready to connect your watch?")
                     .font(StrandFont.headline)
                     .foregroundStyle(StrandPalette.textPrimary)
-                Text("NOOP reads your Apple Watch data through Apple Health, on your phone, nothing leaves the device. You choose exactly what to share.")
+                Text("PHMN reads your Apple Watch data through Apple Health, on your phone, nothing leaves the device. You choose exactly what to share.")
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -278,7 +278,7 @@ struct AppleWatchAboutView: View {
     }
 
     private var footerNote: some View {
-        Text("These are independent estimates computed on your device from your Apple Health data, not medical advice. Confidence labels are honest about how much NOOP knows so far.")
+        Text("These are independent estimates computed on your device from your Apple Health data, not medical advice. Confidence labels are honest about how much PHMN knows so far.")
             .font(StrandFont.footnote)
             .foregroundStyle(StrandPalette.textTertiary)
             .fixedSize(horizontal: false, vertical: true)

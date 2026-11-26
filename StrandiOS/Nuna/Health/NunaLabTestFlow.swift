@@ -318,7 +318,7 @@ struct NunaLabTestFlow: View {
             }
             ForEach(selectedDefinitions, id: \.key) { d in entryCard(key: d.key, title: Self.title(d), base: d.canonicalUnit, pressure: d.key == LabBookProjection.bpSystolicKey, custom: false) }
             ForEach(customs) { c in entryCard(key: c.id, title: c.name, base: c.unit, pressure: false, custom: true) }
-            Text("NOOP never fills the range in. It only shows back what you type from your own report.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            Text("PHMN never fills the range in. It only shows back what you type from your own report.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
     }
 

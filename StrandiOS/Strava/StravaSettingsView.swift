@@ -54,7 +54,7 @@ struct StravaSettingsView: View {
                     Toggle("Enable Strava integration", isOn: $experimentEnabled)
                         .tint(StrandPalette.accent)
                     Text(experimentEnabled
-                         ? "When enabled, NOOP can connect to Strava and upload workouts manually or automatically."
+                         ? "When enabled, PHMN can connect to Strava and upload workouts manually or automatically."
                          : "Off by default. No Strava request is made while this experiment is disabled.")
                         .font(StrandFont.footnote)
                         .foregroundStyle(StrandPalette.textSecondary)
@@ -123,7 +123,7 @@ struct StravaSettingsView: View {
             NoopCard(tint: StrandPalette.accent) {
                 DisclosureGroup(isExpanded: $credentialsExpanded) {
                     VStack(alignment: .leading, spacing: 14) {
-                        Text("Create your own Strava API app, then enter its Client ID and Client Secret here. NOOP keeps both values in Apple Keychain and uses them only for the explicit Strava connection.")
+                        Text("Create your own Strava API app, then enter its Client ID and Client Secret here. PHMN keeps both values in Apple Keychain and uses them only for the explicit Strava connection.")
                             .font(StrandFont.footnote)
                             .foregroundStyle(StrandPalette.textSecondary)
                             .fixedSize(horizontal: false, vertical: true).textCase(nil)

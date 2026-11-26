@@ -363,7 +363,7 @@ struct LiveView: View {
                 .font(StrandFont.headline)
                 .foregroundStyle(StrandPalette.textPrimary)
             Text(activeConnection
-                 ? "Start a workout when the stream matters. NOOP records the interval, HR, peak, average and strain from the same live feed."
+                 ? "Start a workout when the stream matters. PHMN records the interval, HR, peak, average and strain from the same live feed."
                  : "Connect the strap first, then mark a workout from the live stream.")
                 .font(StrandFont.subhead)
                 .foregroundStyle(StrandPalette.textSecondary)
@@ -1322,7 +1322,7 @@ private struct LiveLogCard: View {
 
     private func saveStrapLog() {
         FileExport.exportText(live.exportableLogText(),
-                              suggestedName: FileExport.timestampedName("noop-strap-log", ext: "txt"))
+                              suggestedName: FileExport.timestampedName("phmn-strap-log", ext: "txt"))
     }
 }
 

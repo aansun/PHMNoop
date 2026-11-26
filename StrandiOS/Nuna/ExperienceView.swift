@@ -19,9 +19,9 @@ struct ExperienceView: View {
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
 
                 option(.standard,
-                       tag: "Original NOOP look",
-                       blurb: "Back to the original NOOP look.",
-                       bullets: ["Today with sky and liquid", "Today, Insights, Health and More tabs", "Every NOOP feature as before"])
+                       tag: "Classic look",
+                       blurb: "Back to the classic look.",
+                       bullets: ["Today with sky and liquid", "Today, Insights, Health and More tabs", "Every feature as before"])
                 option(.nuna,
                        tag: "New design",
                        blurb: "The new PHMN design: simple, clear and customisable.",
@@ -155,7 +155,7 @@ private struct ExperienceConfirmSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(target == .standard ? "Switch to the Default look?" : "Switch to Nuna?")
                         .font(.nuna(size: 20, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(target == .standard ? "The original NOOP look" : "The new PHMN design")
+                    Text(target == .standard ? "The classic look" : "The new PHMN design")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }

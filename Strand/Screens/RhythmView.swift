@@ -320,7 +320,7 @@ struct RhythmView: View {
     private func buildRhythmExportURL() -> URL? {
         guard let night, !windows.isEmpty else { return nil }
         let csv = RhythmExport.csv(summary: night, windows: windows)
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("noop-rhythm.csv")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("phmn-rhythm.csv")
         return (try? csv.write(to: url, atomically: true, encoding: .utf8)) != nil ? url : nil
     }
 
@@ -556,7 +556,7 @@ struct RhythmView: View {
         StrandCard {
             VStack(alignment: .leading, spacing: 8) {
                 Text("How this is measured").strandOverline()
-                Text("During quiet, still, resting windows, NOOP looks at the timing between your heartbeats (R-R intervals) and draws their Poincaré scatter. From the cloud it computes its short and long axes (SD1, SD2) and a few plain regularity numbers. Movement and noisy windows are skipped, not shown. These are transparent, published descriptive statistics: a picture of your timing, never a clinical measurement.")
+                Text("During quiet, still, resting windows, PHMN looks at the timing between your heartbeats (R-R intervals) and draws their Poincaré scatter. From the cloud it computes its short and long axes (SD1, SD2) and a few plain regularity numbers. Movement and noisy windows are skipped, not shown. These are transparent, published descriptive statistics: a picture of your timing, never a clinical measurement.")
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
