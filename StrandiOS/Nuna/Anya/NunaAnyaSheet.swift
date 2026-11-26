@@ -357,6 +357,7 @@ struct NunaAnyaSheet: View {
         var page = context
         if let r = read { page += "\n\n" + NunaMark.plain(NunaMark.compose(headline: r.headline, detail: r.detail)) }
         if let v = read?.verdict { page += "\n\n" + v.providerLine }
+        if context == "rhythm" { page += "\n\n" + NunaAnyaReader.rhythmGuardrail }
         if let pack = await NunaAnyaPack.text(for: module, repo: repo, profile: profile, live: live) { page += "\n\n" + pack }
         let reply = await coach.answerContextualMessage(pageContext: page, notice: notice, history: Array(turns.dropLast()), question: prompt, imageBase64: image)
         turns.append(ChatMessage(id: UUID(), role: .assistant, text: reply ?? String(localized: "I couldn't answer right now. Check the provider in Anya settings.")))
@@ -453,7 +454,7 @@ extension NunaAnyaSheet {
                     Spacer(minLength: 0)
                 }
             }
-            if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
+            if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining, context != "rhythm" {
                 Button { Task { await explain() } } label: {
                     HStack(spacing: 8) {
                         Text("Explain").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)

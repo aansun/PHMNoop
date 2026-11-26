@@ -2,6 +2,7 @@
 import SwiftUI
 import Charts
 import StrandDesign
+import StrandAnalytics
 
 /// One explanation card: a title and paragraphs, in the type the other explanation cards use.
 struct NunaInfoCard<Content: View>: View {
@@ -91,6 +92,46 @@ struct NunaBodyClockInfo: View {
         NunaInfoCard(title: "How it's calculated") {
             nunaInfoParagraph("Your heart rate rises and falls over the day. PHMN fits one smooth daily cycle to the last 14 days, finds its lowest and highest points, and places your body-clock low about when your heart-rate rhythm bottoms out.")
             nunaInfoParagraph("It is an on-device estimate from your heart-rate rhythm, not a medical measurement and not a body temperature reading.")
+        }
+    }
+}
+
+/// Under the Rhythm page: how to read the scatter, with the three figures that describe its shape for anyone who wants them.
+struct NunaRhythmReadingInfo: View {
+    var window: RhythmScreener.WindowResult?
+
+    var body: some View {
+        NunaInfoCard(title: "How to read it") {
+            nunaInfoParagraph("Each dot sets one gap between heartbeats against the next. A long, narrow cloud along the line means the timing changed smoothly. A rounder, wider cloud means it jumped more from one beat to the next.")
+            if let w = window, let sd1 = w.sd1, let sd2 = w.sd2, let ratio = w.sd1sd2 {
+                VStack(spacing: 0) {
+                    figure("Width (SD1)", String(format: "%.0f ms", locale: AppLanguage.activeLocale, sd1))
+                    NunaDivider()
+                    figure("Length (SD2)", String(format: "%.0f ms", locale: AppLanguage.activeLocale, sd2))
+                    NunaDivider()
+                    figure("Width to length", String(format: "%.2f", locale: AppLanguage.activeLocale, ratio))
+                }
+                nunaInfoParagraph("These three describe the ellipse drawn over the bright dots. They have no good or bad value on their own.")
+            }
+        }
+    }
+
+    private func figure(_ title: LocalizedStringKey, _ value: String) -> some View {
+        HStack {
+            Text(title).font(.nunaWords(size: 15)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            Spacer(minLength: 8)
+            Text(verbatim: value).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+        }
+        .padding(.vertical, 10)
+    }
+}
+
+/// Under the Rhythm page: where the reading comes from and what it is not. The last paragraph is the standing disclaimer.
+struct NunaRhythmMeasureInfo: View {
+    var body: some View {
+        NunaInfoCard(title: "How it's measured") {
+            nunaInfoParagraph("While you sleep and lie still, PHMN reads the time between your heartbeats in five-minute windows. Windows with movement or a noisy signal are left out.")
+            nunaInfoParagraph("It is an experimental picture, not a diagnosis, not an ECG and not a medical device, and it cannot detect any heart condition. If you feel unwell or are worried, contact a qualified professional; in an emergency, your local emergency service.")
         }
     }
 }

@@ -42,7 +42,7 @@ enum NunaAnyaModule: String, Equatable {
         else if c.contains("sleep") || c.contains("nap") || c.contains("body clock") || c.contains("rest") { self = .sleep }
         else if c.contains("trend") { self = .trends }
         else if c.contains("workout") || c.contains("effort") || c.contains("strain") || c.contains("training") { self = .workouts }
-        else if c.contains("health") || c.contains("stress") || c.contains("warning") || c.contains("hrv") || c.contains("heart") || c.contains("oxygen") || c.contains("respir") || c.contains("weight") || c.contains("body") { self = .health }
+        else if c.contains("health") || c.contains("rhythm") || c.contains("stress") || c.contains("warning") || c.contains("hrv") || c.contains("heart") || c.contains("oxygen") || c.contains("respir") || c.contains("weight") || c.contains("body") { self = .health }
         else if c.contains("nutrition") || c.contains("water") || c.contains("calor") { self = .nutrition }
         else if c.contains("device") || c.contains("battery") || c.contains("strap") { self = .device }
         else { self = .today }
@@ -72,6 +72,7 @@ enum NunaAnyaReader {
         if let metric { return await metricRead(metric, repo: repo, profile: profile) }
         if context.lowercased() == "body" { return await body(repo: repo, profile: profile, scale: scale) }
         if context.lowercased() == "strain" { return await strain(repo: repo, profile: profile, scale: scale) }
+        if context.lowercased() == "rhythm" { return rhythm() }
         let module = NunaAnyaModule(context: context)
         switch module {
         case .nutrition: return await nutrition(repo: repo, profile: profile)
@@ -83,6 +84,19 @@ enum NunaAnyaReader {
         case .breathing: return await breathing(repo: repo, profile: profile)
         }
     }
+
+    // MARK: Rhythm
+
+    /// The Rhythm page hands her its own reading (the line and the figures), so this only sets who is speaking and what can be asked. Nothing here judges the
+    /// reading: the page is an experimental picture of beat timing, and her questions stay on what it shows.
+    private static func rhythm() -> NunaAnyaRead {
+        let asks = [String(localized: "What does this picture show?"), String(localized: "What can make beats vary?"), String(localized: "How do I get a clearer reading?")]
+        return NunaAnyaRead(headline: String(localized: "Your beat-to-beat timing"), detail: nil, read: [], module: .health,
+                            questions: asks.map { NunaAnyaQuestion(title: $0, prompt: $0) })
+    }
+
+    /// What a provider is told on top of the Rhythm page, so her words stay a description and never become a medical verdict.
+    static let rhythmGuardrail = "RULES FOR THIS PAGE: it is an experimental, non-diagnostic picture of heartbeat timing from a wrist or arm strap, not an ECG. Do not name any heart condition, do not say whether the reading is normal or abnormal, do not estimate risk and do not suggest treatment. Explain only what the figures show, in plain words, with ordinary causes such as breathing, movement, an imperfect optical reading or a single extra beat. If the person says they feel unwell or are worried, tell them to contact a qualified professional, or emergency services if it is urgent."
 
     /// Writes this module's note for the day and adds what moved since the last day it noted to the read's detail.
     private static func remembering(_ read: NunaAnyaRead, values: [String: Double]) -> NunaAnyaRead {

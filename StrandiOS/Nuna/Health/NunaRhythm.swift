@@ -72,9 +72,11 @@ struct NunaRhythmConsentView: View {
 
 // MARK: - Poincaré plot
 
-/// Successive-beat scatter: a tight line along the diagonal is a steady beat, a rounder cloud is more variable.
+/// Successive-beat scatter: a tight line along the diagonal is a steady beat, a rounder cloud is more variable. The window the figures are about is drawn
+/// bright, with its ellipse; the rest of the night sits behind it, dim, so the shape and the numbers are visibly about the same beats.
 struct NunaPoincarePlot: View {
     let points: [RhythmScreener.PoincarePoint]
+    var others: [RhythmScreener.PoincarePoint] = []
     let sd1: Double?
     let sd2: Double?
     private let lo = 300.0, hi = 1500.0
@@ -94,29 +96,35 @@ struct NunaPoincarePlot: View {
             var diag = Path()
             diag.move(to: CGPoint(x: inset, y: s - inset)); diag.addLine(to: CGPoint(x: s - inset, y: inset))
             ctx.stroke(diag, with: .color(NunaPalette.ink.opacity(0.28)), style: StrokeStyle(lineWidth: 1, dash: [4, 6]))
+            // A whole night holds thousands of pairs; an evenly spaced sample keeps the cloud readable.
+            func dots(_ list: [RhythmScreener.PoincarePoint], limit: Int, color: Color) {
+                let step = max(1, list.count / limit)
+                for (i, p) in list.enumerated() where i % step == 0 {
+                    let x = map(p.x), y = s - map(p.y)
+                    ctx.fill(Path(ellipseIn: CGRect(x: x - 1.6, y: y - 1.6, width: 3.2, height: 3.2)), with: .color(color))
+                }
+            }
+            dots(others, limit: 260, color: NunaPalette.ink.opacity(0.22))
             guard !points.isEmpty else { return }
-            let mx = points.map(\.x).reduce(0, +) / Double(points.count), my = points.map(\.y).reduce(0, +) / Double(points.count)
             if let sd1, let sd2 {
+                let mx = points.map(\.x).reduce(0, +) / Double(points.count), my = points.map(\.y).reduce(0, +) / Double(points.count)
                 let k = plot / CGFloat(hi - lo) * 2.5
                 let c = CGPoint(x: map(mx), y: s - map(my))
                 var e = Path(ellipseIn: CGRect(x: -CGFloat(sd2) * k, y: -CGFloat(sd1) * k, width: CGFloat(sd2) * k * 2, height: CGFloat(sd1) * k * 2))
                 e = e.applying(CGAffineTransform(rotationAngle: -.pi / 4)).applying(CGAffineTransform(translationX: c.x, y: c.y))
-                ctx.fill(e, with: .color(NunaPalette.rest.opacity(0.14)))
-                ctx.stroke(e, with: .color(NunaPalette.restText), lineWidth: 1.5)
+                var inside = ctx
+                inside.clip(to: Path(roundedRect: CGRect(x: 0, y: 0, width: s, height: s), cornerRadius: 10))
+                inside.fill(e, with: .color(NunaPalette.rest.opacity(0.12)))
+                inside.stroke(e, with: .color(NunaPalette.restText), lineWidth: 1.5)
             }
-            // A whole night holds thousands of pairs; an evenly spaced sample keeps the cloud readable.
-            let step = max(1, points.count / 320)
-            for p in points.enumerated().filter({ $0.offset % step == 0 }).map(\.element) {
-                let x = map(p.x), y = s - map(p.y)
-                ctx.fill(Path(ellipseIn: CGRect(x: x - 1.6, y: y - 1.6, width: 3.2, height: 3.2)), with: .color(NunaPalette.restLight.opacity(0.7)))
-            }
+            dots(points, limit: 320, color: NunaPalette.restLight.opacity(0.85))
         }
         .aspectRatio(1, contentMode: .fit)
-        .overlay(alignment: .bottomLeading) {
-            Text("RR now (ms) →").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(12)
+        .overlay(alignment: .bottomTrailing) {
+            Text("This beat (ms) →").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(12)
         }
         .overlay(alignment: .topLeading) {
-            Text("↑ next RR").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(12)
+            Text("↑ Next beat").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(12)
         }
         .accessibilityHidden(true)
     }
@@ -124,6 +132,8 @@ struct NunaPoincarePlot: View {
 
 // MARK: - The screen
 
+/// Laid out like the Body clock page: the title in the middle, the night's picture first, one panel of figures about the window drawn bright, the reading
+/// windows, cards that explain, the settings, and Anya as the floating pill with a line worked out from these figures.
 struct NunaRhythmView: View {
     @EnvironmentObject private var repo: Repository
     @Environment(\.dismiss) private var dismiss
@@ -136,6 +146,8 @@ struct NunaRhythmView: View {
 
     @State private var night: RhythmScreener.NightRhythmSummary?
     @State private var windows: [RhythmScreener.WindowResult] = []
+    /// When each of `windows` ran, in the same order.
+    @State private var times: [(start: Int, end: Int)] = []
     @State private var spans: [Span] = []
     @State private var emptyReason: RhythmEmptyState = .gatheringData
     @State private var loaded = false
@@ -144,17 +156,22 @@ struct NunaRhythmView: View {
 
     private var consentGiven: Bool { enabled && RhythmConsent.isAccepted(acceptedVersion) }
     private var readable: [RhythmScreener.WindowResult] { windows.filter { $0.label != .unreadable } }
-    private var allPoints: [RhythmScreener.PoincarePoint] { windows.flatMap { $0.poincare } }
-    private var headline: RhythmScreener.WindowResult? {
-        readable.first(where: { $0.label == .varied }) ?? readable.first(where: { $0.label == .occasionalEctopy }) ?? readable.first
+    /// The one window the figures and the bright dots are about: the first that varied most, else the first with extra beats, else the first read.
+    private var featuredIndex: Int? {
+        windows.firstIndex(where: { $0.label == .varied }) ?? windows.firstIndex(where: { $0.label == .occasionalEctopy })
+            ?? windows.firstIndex(where: { $0.label != .unreadable })
     }
+    private var featured: RhythmScreener.WindowResult? { featuredIndex.map { windows[$0] } }
+    private var overall: RhythmRegularity { night?.overall ?? featured?.label ?? .unreadable }
 
     var body: some View {
         Group {
             if !consentGiven {
                 NunaRhythmConsentView(onAccept: { acceptedVersion = RhythmConsent.currentVersion; enabled = true }, onCancel: { dismiss() })
             } else {
-                NunaDetailScreen("Rhythm") { content }
+                NunaDetailScreen("Rhythm", centersTitle: true) { content }
+                    // Her line comes from the figures on this page; nothing is sent anywhere unless she is asked.
+                    .nunaAnyaFloating(context: "rhythm", line: anyaLine, detail: anyaDetail, analyses: false)
             }
         }
         .toolbar(.hidden, for: .navigationBar)
@@ -169,37 +186,143 @@ struct NunaRhythmView: View {
     }
 
     @ViewBuilder private var content: some View {
-        HStack {
-            Text("A picture of your beat-to-beat timing, not a verdict.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            Spacer(minLength: 8)
-            NunaChip("Experimental")
-        }
         if !loaded {
             ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
-        } else if allPoints.isEmpty {
-            emptyCard
-        } else {
-            summaryCard
-            plotCard
+        } else if let featured, let index = featuredIndex {
+            hero(featured, index: index)
+            panel(featured, index: index)
             spansList
-            numbers
             if let exportURL {
                 ShareLink(item: exportURL) {
                     NunaCard(small: true) { NunaListRow("Share", description: "A neutral CSV of the numbers, never a verdict", systemImage: "square.and.arrow.up", showsChevron: true) }
                 }.buttonStyle(.plain)
             }
+        } else {
+            emptyCard
         }
-        NunaCard {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("How this is measured").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                Text("During quiet, still, resting windows, NOOP looks at the timing between your heartbeats (R-R intervals) and draws their Poincaré scatter. From the cloud it computes its short and long axes (SD1, SD2) and a few plain regularity numbers. Movement and noisy windows are skipped, not shown. These are transparent, published descriptive statistics: a picture of your timing, never a clinical measurement.")
-                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+        NunaRhythmReadingInfo(window: featured)
+        NunaRhythmMeasureInfo()
+        settings
+    }
+
+    // MARK: Anya
+
+    private var anyaLine: String? {
+        guard loaded else { return nil }
+        guard !readable.isEmpty else {
+            if emptyReason == .deviceBanksBeats || emptyReason == .deviceNoMotion { return nil }
+            return String(localized: "No quiet window was clear enough to read last night.")
+        }
+        switch overall {
+        case .steady: return String(localized: "Your beat timing looked even through last night's quiet windows.")
+        case .occasionalEctopy: return String(localized: "Mostly even last night, with some variation here and there.")
+        case .varied: return String(localized: "Your beat timing was more spread out in several windows last night.")
+        case .unreadable: return String(localized: "No quiet window was clear enough to read last night.")
+        }
+    }
+
+    private var anyaDetail: String? {
+        guard let night, let f = featured, let i = featuredIndex else {
+            return loaded ? String(localized: "Rhythm only reads while you are still and resting. A snug strap and a calm night give it more to work with.") : nil
+        }
+        let counts = String(localized: "Quiet windows read: \(night.readableWindows). Steady: \(night.steadyWindows). Some variation: \(night.occasionalWindows). More varied: \(night.variedWindows).")
+        let window = String(localized: "In the window \(range(i)), beat-to-beat variation was \(pct(f.normRmssd)) and extra or skipped beats \(pct(f.ectopicFraction)).")
+        let causes = String(localized: "Breathing, movement, an imperfect optical reading or an early beat can all change the timing. This is a picture, not a diagnosis.")
+        return [counts, window, causes].joined(separator: " ")
+    }
+
+    // MARK: Hero
+
+    private func hero(_ f: RhythmScreener.WindowResult, index: Int) -> some View {
+        let others = windows.indices.filter { $0 != index && windows[$0].label != .unreadable }.flatMap { windows[$0].poincare }
+        return NunaCard {
+            VStack(spacing: 14) {
+                HStack {
+                    nunaTrendsCap("Last night")
+                    Spacer()
+                    NunaChip("Experimental")
+                }
+                Text(label(overall)).font(.nuna(size: 28, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    .multilineTextAlignment(.center).frame(maxWidth: .infinity)
+                NunaPoincarePlot(points: f.poincare, others: others, sd1: f.sd1, sd2: f.sd2)
+                    .frame(maxWidth: 300)
+                HStack(spacing: 14) {
+                    key(NunaPalette.restLight, windowName(f.label))
+                    if !others.isEmpty { key(NunaPalette.ink.opacity(0.3), "Rest of the night") }
+                }
             }
         }
-        disclaimer
+    }
+
+    private func key(_ color: Color, _ text: LocalizedStringKey) -> some View {
+        HStack(spacing: 6) {
+            Circle().fill(color).frame(width: 8, height: 8)
+            Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+        }
+    }
+
+    // MARK: Panel
+
+    /// Plain figures, no good / poor bars: the page describes the timing and does not grade it.
+    private func panel(_ f: RhythmScreener.WindowResult, index: Int) -> some View {
+        NunaSignalPanel {
+            VStack(spacing: 0) {
+                HStack {
+                    nunaTrendsCap(windowName(f.label))
+                    Spacer(minLength: 8)
+                    Text(verbatim: range(index)).font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.restText)
+                }
+                .padding(.top, 14)
+                NunaFigureRow(title: "Variation", icon: "waveform.path.ecg", value: pct(f.normRmssd))
+                NunaDivider()
+                NunaFigureRow(title: "Extra or skipped", icon: "heart", value: pct(f.ectopicFraction))
+                NunaDivider()
+                NunaFigureRow(title: "Shape", icon: "oval", value: shape(f.sd1sd2))
+                NunaDivider()
+                NunaFigureRow(title: "Beats read", icon: "number", value: "\(f.nBeats)")
+                NunaDivider()
+                NunaFigureRow(title: "Read quality", icon: "checkmark.seal", value: quality(f.confidence))
+            }
+        }
+    }
+
+    // MARK: Reading windows
+
+    @ViewBuilder private var spansList: some View {
+        if !spans.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                NunaTitleRow(title: "Reading windows") { EmptyView() }
+                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+                    VStack(spacing: 0) {
+                        ForEach(Array(spans.enumerated()), id: \.element.id) { i, s in
+                            if i > 0 { NunaDivider() }
+                            HStack(spacing: 14) {
+                                NunaIcon(name: "moon", size: 18, weight: .regular).foregroundStyle(NunaPalette.textSecondary).frame(width: 30)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(verbatim: clock(s.start) + " – " + clock(s.end)).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(verbatim: String(localized: "\((s.end - s.start) / 60) min · \(s.beats) beats read"))
+                                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                                }
+                                Spacer(minLength: 6)
+                                Text(label(s.label)).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                    .foregroundStyle(s.label == .steady ? NunaPalette.textSecondary : NunaPalette.restText)
+                                    .multilineTextAlignment(.trailing)
+                            }
+                            .padding(.vertical, 14)
+                            .accessibilityElement(children: .combine)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: Settings
+
+    private var settings: some View {
         NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
             VStack(spacing: 0) {
-                NunaListRow("Rhythm on", subtitle: "Computed on this phone, never leaves your iPhone") {
+                NunaListRow("Rhythm on", subtitle: "Computed on this phone") {
                     Toggle("", isOn: Binding(get: { enabled }, set: { on in enabled = on; if !on { dismiss() } })).labelsHidden().tint(NunaPalette.charge)
                 }
                 NunaDivider()
@@ -210,31 +333,22 @@ struct NunaRhythmView: View {
         }
     }
 
-    private var disclaimer: some View {
-        NunaCard(small: true) {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "info.circle").foregroundStyle(NunaPalette.textMuted)
-                Text("Experimental wellness visualization: not a diagnosis, not an ECG, and not a medical device. It cannot detect any heart condition. Beat-to-beat variation has many ordinary, benign causes. If you feel unwell or are worried, contact a qualified professional; in an emergency, your local emergency service. Everything is computed on your device.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-            }
-        }
-    }
-
     // MARK: Empty and unsupported
 
     private var emptyCard: some View {
         let unsupported = emptyReason == .deviceBanksBeats || emptyReason == .deviceNoMotion
-        return VStack(spacing: 16) {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    Image(systemName: unsupported ? "applewatch" : "waveform.path.ecg").font(.nuna(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 56, height: 56).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
-                    Text(unsupported ? "This device can't support a rhythm reading" : "No clear reading yet")
-                        .font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(emptyMessage).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    NunaIconTile(unsupported ? "applewatch" : "waveform.path.ecg", tint: NunaPalette.restText)
+                    Spacer()
+                    NunaChip("Experimental")
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text(unsupported ? "This device can't support a rhythm reading" : "No clear reading yet")
+                    .font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text(emptyMessage).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -246,7 +360,7 @@ struct NunaRhythmView: View {
         }
     }
 
-    // MARK: Result cards
+    // MARK: Words
 
     private func label(_ l: RhythmRegularity) -> LocalizedStringKey {
         switch l {
@@ -257,100 +371,31 @@ struct NunaRhythmView: View {
         }
     }
 
-    private var summaryCard: some View {
-        let overall = night?.overall ?? headline?.label ?? .unreadable
-        let confidence: LocalizedStringKey = {
-            switch headline?.confidence ?? .calibrating {
-            case .solid: return "Solid"
-            case .building: return readable.count <= 1 ? "Building (1 window)" : "Building"
-            case .calibrating: return "Calibrating"
-            }
-        }()
-        let detail: LocalizedStringKey = {
-            switch overall {
-            case .steady: return "Across the quiet windows we could read, your beat-to-beat timing held a tight, even shape."
-            case .occasionalEctopy: return "Mostly steady, with a few isolated extra or skipped beats. Very common and usually nothing."
-            case .varied: return "The scatter looked rounder and more spread out than a tight, steady beat. This has many ordinary causes and is not a diagnosis."
-            case .unreadable: return "There wasn't a calm, still window clean enough to describe. Try again after a settled night."
-            }
-        }()
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Last night").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    NunaChip(confidence, systemImage: "checkmark", color: NunaPalette.restText)
-                }
-                NunaChip(label(overall), systemImage: overall == .steady ? "checkmark" : "waveform.path.ecg", color: NunaPalette.restText)
-                Text(detail).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                if let h = headline {
-                    VStack(spacing: 12) {
-                        bar("Beat-to-beat variation", h.normRmssd, NunaPalette.restLight)
-                        bar("Extra or skipped beats", h.ectopicFraction, NunaPalette.rest)
-                    }
-                    .padding(.top, 4)
-                }
-            }
+    private func windowName(_ l: RhythmRegularity) -> LocalizedStringKey {
+        switch l {
+        case .varied: return "Most varied window"
+        case .occasionalEctopy: return "Window with extra beats"
+        default: return "One quiet window"
         }
     }
 
-    private func bar(_ title: LocalizedStringKey, _ v: Double?, _ color: Color) -> some View {
-        VStack(spacing: 6) {
-            HStack {
-                Text(title).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                Spacer()
-                Text(verbatim: pct(v)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-            NunaProgressBar(fraction: min(max(v ?? 0, 0), 1), color: color)
+    /// The cloud's shape in a word, cut where the engine itself calls it rounding out.
+    private func shape(_ ratio: Double?) -> String {
+        guard let ratio else { return "–" }
+        return ratio >= RhythmScreener.tauRatio ? String(localized: "Rounder") : String(localized: "Elongated")
+    }
+
+    private func quality(_ c: RhythmConfidence) -> String {
+        switch c {
+        case .solid: return String(localized: "Solid")
+        case .building: return String(localized: "Building")
+        case .calibrating: return String(localized: "Calibrating")
         }
     }
 
-    private var plotCard: some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Beat-to-beat scatter").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                NunaPoincarePlot(points: allPoints, sd1: headline?.sd1, sd2: headline?.sd2)
-                Text("Each dot pairs one heartbeat interval with the next. A tight line along the diagonal means a steady beat; a rounder, more spread-out cloud means the timing varied more.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-            }
-        }
-    }
+    private func pct(_ v: Double?) -> String { v.map { String(format: "%.0f%%", locale: AppLanguage.activeLocale, $0 * 100) } ?? "–" }
 
-    @ViewBuilder private var spansList: some View {
-        if !spans.isEmpty {
-            NunaTitleRow(title: "Reading windows") { EmptyView() }
-            ForEach(spans) { s in
-                NunaCard(small: true) {
-                    NunaListRow(LocalizedStringKey(clock(s.start) + " – " + clock(s.end)),
-                                subtitle: LocalizedStringKey(String(localized: "\((s.end - s.start) / 60) min · \(s.beats) beats read")), systemImage: "moon") {
-                        NunaChip(label(s.label), systemImage: s.label == .steady ? "checkmark" : nil, color: NunaPalette.restText)
-                    }
-                }
-            }
-        }
-    }
-
-    private var numbers: some View {
-        let h = headline
-        let total = readable.reduce(0) { $0 + $1.nBeats }
-        return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "The numbers") { EmptyView() }
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                tile("Short axis", h?.sd1.map { String(format: "%.0f", $0) } ?? "–", "SD1 · ms")
-                tile("Long axis", h?.sd2.map { String(format: "%.0f", $0) } ?? "–", "SD2 · ms")
-                tile("Cloud shape", h?.sd1sd2.map { String(format: "%.2f", locale: AppLanguage.activeLocale, $0) } ?? "–", "SD1:SD2 ratio")
-                tile("Beat-to-beat variation", pct(h?.normRmssd), "variation index")
-                tile("Extra / skipped", pct(h?.ectopicFraction), "of beats")
-                tile("Beats read", "\(total)", "clean intervals")
-            }
-        }
-    }
-
-    private func tile(_ label: LocalizedStringKey, _ value: String, _ caption: LocalizedStringKey) -> some View {
-        NunaStatTile(label: label, value: value, caption: caption)
-    }
-
-    private func pct(_ v: Double?) -> String { v.map { String(format: "%.0f%%", $0 * 100) } ?? "–" }
+    private func range(_ i: Int) -> String { times.indices.contains(i) ? clock(times[i].start) + " – " + clock(times[i].end) : "–" }
 
     private func clock(_ ts: Int) -> String {
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("jj:mm")
@@ -359,8 +404,60 @@ struct NunaRhythmView: View {
 
     // MARK: Load (same windowing and gates as the Default Rhythm host)
 
+#if DEBUG
+    /// `--demo-rhythm`: a night of made-up beat timing, so the page can be looked at without a strap. Six resting windows: mostly steady, one with a few extra
+    /// beats and one that varies more. Nothing is read from or written to the store.
+    private func loadDemo() {
+        var rng = SystemRandomNumberGenerator()
+        func window(beats: Int, baseMs: Double, rsa: Double, noise: Double, ectopicEvery: Int = 0, scatter: Double = 0) -> [Double] {
+            var out: [Double] = []
+            for i in 0..<beats {
+                var v = baseMs + rsa * sin(Double(i) / 4.2) + Double.random(in: -noise...noise, using: &rng) + Double.random(in: -scatter...scatter, using: &rng)
+                if ectopicEvery > 0, i > 0, i % ectopicEvery == 0 { v *= 0.62 }       // an early beat, then the pause that follows it
+                if ectopicEvery > 0, i > 1, (i - 1) % ectopicEvery == 0 { v *= 1.38 }
+                out.append(v)
+            }
+            return out
+        }
+        let shapes: [[Double]] = [
+            window(beats: 300, baseMs: 1040, rsa: 38, noise: 9),
+            window(beats: 296, baseMs: 1010, rsa: 42, noise: 10),
+            window(beats: 310, baseMs: 1060, rsa: 35, noise: 8, ectopicEvery: 17),
+            window(beats: 305, baseMs: 1030, rsa: 40, noise: 9),
+            window(beats: 288, baseMs: 990, rsa: 30, noise: 40, scatter: 190),
+            window(beats: 300, baseMs: 1050, rsa: 44, noise: 9),
+        ]
+        let lo = Int(Date().timeIntervalSince1970) - 8 * 3600
+        var results: [RhythmScreener.WindowResult] = []
+        var starts: [(Int, Int)] = []
+        for (i, rr) in shapes.enumerated() {
+            let mean = rr.reduce(0, +) / Double(rr.count)
+            results.append(RhythmScreener.screenWindow(RhythmScreener.WindowInput(rrMs: rr, ts: [], motionStill: true, meanHR: 60_000 / mean)))
+            let start = lo + i * 5 * 60 + (i >= 3 ? 40 * 60 : 0)
+            starts.append((start, start + 300))
+        }
+        windows = results
+        times = starts.map { (start: $0.0, end: $0.1) }
+        night = RhythmScreener.summarizeNight(results)
+        func rank(_ l: RhythmRegularity) -> Int { l == .varied ? 3 : (l == .occasionalEctopy ? 2 : 1) }
+        var out: [Span] = []
+        for (i, r) in results.enumerated() where r.label != .unreadable {
+            let (s, e) = starts[i]
+            if let last = out.last, last.end == s {
+                out[out.count - 1] = Span(start: last.start, end: e, beats: last.beats + r.nBeats, label: rank(r.label) > rank(last.label) ? r.label : last.label)
+            } else {
+                out.append(Span(start: s, end: e, beats: r.nBeats, label: r.label))
+            }
+        }
+        spans = out
+    }
+#endif
+
     private func load() async {
         defer { loaded = true }
+#if DEBUG
+        if CommandLine.arguments.contains("--demo-rhythm") { loadDemo(); return }
+#endif
         guard let lastSleep = (await repo.allSleepSessions(days: 14)).last else { return }
         let lo = lastSleep.effectiveStartTs, hi = lastSleep.endTs
         guard hi > lo else { return }
@@ -381,6 +478,7 @@ struct NunaRhythmView: View {
             t = end
         }
         windows = results
+        times = starts.map { (start: $0.0, end: $0.1) }
         night = RhythmScreener.summarizeNight(results)
         emptyReason = RhythmScreener.classifyEmptyState(
             windows: results, hadMotionSignal: !grav.isEmpty,
@@ -399,7 +497,7 @@ struct NunaRhythmView: View {
         spans = out
         if let night, !results.isEmpty {
             let csv = RhythmExport.csv(summary: night, windows: results)
-            let url = FileManager.default.temporaryDirectory.appendingPathComponent("noop-rhythm.csv")
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("phmn-rhythm.csv")
             exportURL = (try? csv.write(to: url, atomically: true, encoding: .utf8)) != nil ? url : nil
         }
     }

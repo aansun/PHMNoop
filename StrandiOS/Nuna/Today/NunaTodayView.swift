@@ -463,6 +463,15 @@ struct NunaTodayView: View {
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             pushToday(.sleepNaps(0))
         }
+        // `--open-rhythm` opens the Rhythm page, once (with the consent already given, so the page itself shows).
+        .task {
+            guard CommandLine.arguments.contains("--open-rhythm"), !NunaTodayDebug.openedPlanner else { return }
+            NunaTodayDebug.openedPlanner = true
+            UserDefaults.standard.set(true, forKey: RhythmConsent.enabledKey)
+            UserDefaults.standard.set(RhythmConsent.currentVersion, forKey: RhythmConsent.acceptedVersionKey)
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            pushToday(.rhythm)
+        }
         // `--open-bodyclock` opens the Body clock page, once.
         .task {
             guard CommandLine.arguments.contains("--open-bodyclock"), !NunaTodayDebug.openedPlanner else { return }

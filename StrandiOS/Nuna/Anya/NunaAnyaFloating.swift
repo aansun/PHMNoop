@@ -125,6 +125,8 @@ struct NunaAnyaFloating: ViewModifier {
     let context: String
     let givenLine: String?
     var metric: NunaAnyaMetric?
+    /// The figures behind a line the page worked out: what the sheet says under the line, and what she reads when asked about it.
+    var givenDetail: String? = nil
     /// Whether she analyses the page as it opens (today only); otherwise she is just the button.
     var analyses = true
     @EnvironmentObject private var repo: Repository
@@ -168,7 +170,7 @@ struct NunaAnyaFloating: ViewModifier {
             }
             .task { if analyses { await model.analyse(context: context, metric: metric, pageLine: givenLine, repo: repo, profile: profile, coach: coach, scale: UnitPrefs.resolveEffortScale(effortScaleRaw)) } }
             .sheet(isPresented: $open) {
-                NunaAnyaSheet(context: context, cardLine: (givenLine ?? model.local).map { NunaAnyaCardLine(headline: $0, detail: nil, read: []) },
+                NunaAnyaSheet(context: context, cardLine: (givenLine ?? model.local).map { NunaAnyaCardLine(headline: $0, detail: givenDetail, read: []) },
                               metric: metric, floating: true, seed: model.explanation)
             }
     }
@@ -226,8 +228,8 @@ struct NunaAnyaFloating: ViewModifier {
 
 extension View {
     /// Anya floating over this page, with `line` as what she has to say about it (nil: only the button).
-    func nunaAnyaFloating(context: String, line: String?, metric: NunaAnyaMetric? = nil, analyses: Bool = true) -> some View {
-        modifier(NunaAnyaFloating(context: context, givenLine: line, metric: metric, analyses: analyses))
+    func nunaAnyaFloating(context: String, line: String?, detail: String? = nil, metric: NunaAnyaMetric? = nil, analyses: Bool = true) -> some View {
+        modifier(NunaAnyaFloating(context: context, givenLine: line, metric: metric, givenDetail: detail, analyses: analyses))
     }
 }
 #endif

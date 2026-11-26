@@ -32,7 +32,7 @@ import StrandAnalytics
 /// until `accepted` is true. Default OFF.
 public enum RhythmConsent {
     /// Bump on a material change to the experimental/non-diagnostic wording to re-prompt.
-    public static let currentVersion = "1.0"
+    public static let currentVersion = "1.1"
     /// `@AppStorage` key holding the accepted consent version ("" = never accepted).
     public static let acceptedVersionKey = "noopRhythmConsentVersion"
     /// `@AppStorage` key for the feature on/off flag (the `noopRhythmScreening` flag, default OFF).
@@ -54,9 +54,9 @@ public enum RhythmConsent {
         (String(localized: "Variation is normal and often benign"),
          String(localized: "Beat-to-beat timing varies for many ordinary reasons: breathing, movement, an imperfect optical reading, or the occasional extra or skipped beat that most healthy people have.")),
         (String(localized: "It is not a substitute for a professional"),
-         String(localized: "If you feel unwell or are worried about your heart, contact a qualified professional; in an emergency, your local emergency service. Do not rely on NOOP.")),
-        (String(localized: "Everything stays on your device"),
-         String(localized: "All of this is computed on your own device from data you already have. No heartbeat data leaves it.")),
+         String(localized: "If you feel unwell or are worried about your heart, contact a qualified professional; in an emergency, your local emergency service. Do not rely on this app.")),
+        (String(localized: "Computed on your device"),
+         String(localized: "The reading is computed on your own device from data you already have. Your heartbeats never leave it. If you ask Anya about this page while she uses an online provider, a short summary (labels and percentages) goes to that provider with your question.")),
     ]
 }
 
