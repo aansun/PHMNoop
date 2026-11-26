@@ -11,24 +11,59 @@ extension NunaBPReading {
     var linked: PressureLinks.Reading { .init(takenAt: takenAt, systolic: systolic, diastolic: diastolic) }
 }
 
-/// "+6 / +4 mmHg".
-private func gapText(_ p: PressureLinks.Pressure) -> String {
+/// The five things the readings are compared with, one row each on the Blood pressure page.
+enum NunaBPTopic: String, CaseIterable, Identifiable, Hashable {
+    case sleep, activity, weight, journal, breathing
+    var id: String { rawValue }
+    var icon: String {
+        switch self {
+        case .sleep: return NunaIcons.sleep
+        case .activity: return "figure.run"
+        case .weight: return NunaIcons.weight
+        case .journal: return NunaIcons.journal
+        case .breathing: return NunaIcons.breathing
+        }
+    }
+    var title: String {
+        switch self {
+        case .sleep: return String(localized: "Sleep")
+        case .activity: return String(localized: "Activity")
+        case .weight: return String(localized: "Body weight")
+        case .journal: return String(localized: "Journal")
+        case .breathing: return String(localized: "Breathing sessions")
+        }
+    }
+}
+
+/// "+6 / +4"; the unit is written beside it where there is room.
+private func changeText(_ p: PressureLinks.Pressure) -> String {
     func signed(_ v: Double) -> String { let r = Int(v.rounded()); return r > 0 ? "+\(r)" : (r < 0 ? "−\(-r)" : "0") }
-    return signed(p.systolic) + " / " + signed(p.diastolic) + " mmHg"
+    // Held together, so a sentence never breaks inside the pair.
+    return signed(p.systolic) + "\u{00A0}/\u{00A0}" + signed(p.diastolic)
+}
+
+/// How much higher the higher side reads, "6 / 4"; a figure that leans the other way keeps its minus.
+private func gapSize(_ c: PressureLinks.Comparison) -> String? {
+    guard let d = c.difference, c.verdict == .firstHigher || c.verdict == .firstLower else { return nil }
+    let way = c.verdict == .firstHigher ? 1.0 : -1.0
+    func shown(_ v: Double) -> String { let r = Int((v * way).rounded()); return r < 0 ? "−\(-r)" : "\(r)" }
+    return shown(d.systolic) + " / " + shown(d.diastolic)
 }
 
 @MainActor
 final class NunaBPLinksModel: ObservableObject {
     /// One measured level split in two: hours slept, effort or weight.
     struct Level: Identifiable {
-        let id: String
-        let icon: String
+        let topic: NunaBPTopic
+        var id: NunaBPTopic { topic }
         let title: String
         let first: String
         let second: String
         /// Nil with too little variation or no shared days; `note` then says why.
         let comparison: PressureLinks.Comparison?
         let note: String?
+        /// Days with both a reading and this figure.
+        let shared: Int
     }
 
     struct Behaviour: Identifiable {
@@ -52,7 +87,7 @@ final class NunaBPLinksModel: ObservableObject {
 
         // Sleep: the night that ended on the morning of the reading's day.
         let sleep = metrics.compactMapValues(\.totalSleepMin)
-        var out = [level("sleep", icon: NunaIcons.sleep, title: String(localized: "Sleep the night before"), daily: daily, values: sleep, minimumSpread: 30,
+        var out = [level(.sleep, title: String(localized: "Sleep the night before"), daily: daily, values: sleep, minimumSpread: 30,
                          words: { m in (String(localized: "Under \(NunaHighlightEngine.hm(m))"), String(localized: "\(NunaHighlightEngine.hm(m)) or more")) },
                          still: String(localized: "Your sleep is much the same on the days you measured, so there is nothing to compare yet."))]
 
@@ -63,7 +98,7 @@ final class NunaBPLinksModel: ObservableObject {
                   let strain = metrics[Repository.localDayKey(prior)]?.strain else { continue }
             before[day] = strain
         }
-        out.append(level("activity", icon: "figure.run", title: String(localized: "Activity the day before"), daily: daily, values: before, minimumSpread: 10,
+        out.append(level(.activity, title: String(localized: "Activity the day before"), daily: daily, values: before, minimumSpread: 10,
                          words: { m in
                              let shown = UnitFormatter.effortDisplay(m, scale: effortScale)
                              return (String(localized: "Strain under \(shown)"), String(localized: "Strain \(shown) or more"))
@@ -82,7 +117,7 @@ final class NunaBPLinksModel: ObservableObject {
                 if let d = Calendar.current.date(byAdding: .day, value: -back, to: date), let w = weighed[Repository.localDayKey(d)] { weight[day] = w; break }
             }
         }
-        out.append(level("weight", icon: NunaIcons.weight, title: String(localized: "Body weight"), daily: daily, values: weight, minimumSpread: 1,
+        out.append(level(.weight, title: String(localized: "Body weight"), daily: daily, values: weight, minimumSpread: 1,
                          words: { m in
                              let shown = String(format: "%.1f kg", locale: AppLanguage.activeLocale, m)
                              return (String(localized: "Under \(shown)"), String(localized: "\(shown) or more"))
@@ -117,21 +152,23 @@ final class NunaBPLinksModel: ObservableObject {
     /// Noon of a day key, so stepping a day back or forth never lands on the wrong date.
     private static func date(_ day: String) -> Date? { dayFormat.date(from: day).map { $0.addingTimeInterval(12 * 3600) } }
 
-    private func level(_ id: String, icon: String, title: String, daily: [String: PressureLinks.Pressure], values: [String: Double], minimumSpread: Double,
+    private func level(_ topic: NunaBPTopic, title: String, daily: [String: PressureLinks.Pressure], values: [String: Double], minimumSpread: Double,
                        words: (Double) -> (String, String), still: String) -> Level {
+        let shared = daily.keys.filter { values[$0] != nil }.count
         if let r = PressureLinks.compareByLevel(daily, level: values, minimumSpread: minimumSpread) {
             let (first, second) = words(r.middle)
-            return Level(id: id, icon: icon, title: title, first: first, second: second, comparison: r.comparison, note: nil)
+            return Level(topic: topic, title: title, first: first, second: second, comparison: r.comparison, note: nil, shared: shared)
         }
-        let shared = daily.keys.filter { values[$0] != nil }.count
         let note = shared < PressureLinks.daysNeeded * 2
             ? String(localized: "Needs \(PressureLinks.daysNeeded * 2) days with both a reading and this figure: \(shared) so far.")
             : still
-        return Level(id: id, icon: icon, title: title, first: "", second: "", comparison: nil, note: note)
+        return Level(topic: topic, title: title, first: "", second: "", comparison: nil, note: note, shared: shared)
     }
 }
 
-/// The section on the Blood pressure page.
+// MARK: - On the Blood pressure page
+
+/// One row a topic: what it shows so far, and the way to the figures behind it.
 struct NunaBPLinksSection: View {
     let readings: [NunaBPReading]
     @EnvironmentObject private var repo: Repository
@@ -139,17 +176,18 @@ struct NunaBPLinksSection: View {
     @StateObject private var model = NunaBPLinksModel()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Your readings and your data").font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-            if model.loaded {
-                ForEach(model.levels) { levelCard($0) }
-                journalCard
-                breathCard
-                Text("These are patterns in your own readings, not proof of cause: other things change on the same days, and a cuff reading varies by itself. Not a diagnosis.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).fixedSize(horizontal: false, vertical: true)
-            } else {
-                ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 80)
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Your readings and your data").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            NunaCard(small: true) {
+                VStack(spacing: 0) {
+                    ForEach(NunaBPTopic.allCases) { topic in
+                        if topic != .sleep { NunaDivider() }
+                        NavigationLink(value: NunaTodayRoute.bloodPressureLinks(topic)) { row(topic) }.buttonStyle(.plain)
+                    }
+                }
             }
+            Text("Patterns in your own readings, not proof of cause.")
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .task(id: "\(readings.count)-\(readings.last?.takenAt ?? 0)-\(repo.refreshSeq)-\(effortScaleRaw)") {
@@ -157,142 +195,247 @@ struct NunaBPLinksSection: View {
         }
     }
 
-    private func title(_ icon: String, _ text: String, early: Bool) -> some View {
-        HStack(spacing: 10) {
-            NunaIcon(name: icon, size: 17, weight: .medium).foregroundStyle(NunaPalette.textSecondary).frame(width: 22)
-            Text(verbatim: text).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                .foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 6)
-            if early { NunaChip("Early") }
-        }
-    }
-
-    private func line(_ text: String, color: Color = NunaPalette.textSecondary) -> some View {
-        Text(verbatim: text).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(color).textCase(nil)
-            .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func column(_ label: String, _ side: PressureLinks.Side) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(verbatim: label).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                .lineLimit(2).fixedSize(horizontal: false, vertical: true)
-            if let m = side.mean {
-                Text(verbatim: NunaBP.text(m.systolic, m.diastolic)).font(.nuna(size: 24, weight: .bold, design: NunaType.design))
-                    .foregroundStyle(NunaBPCategory.of(m.systolic, m.diastolic).color).monospacedDigit()
-            } else {
-                Text(verbatim: "–").font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted)
-            }
-            Text(verbatim: side.days == 1 ? String(localized: "1 day") : String(localized: "\(side.days) days"))
-                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func verdict(_ c: PressureLinks.Comparison, first: String, second: String) -> String {
-        switch c.verdict {
-        case .needMore:
-            return String(localized: "Needs \(PressureLinks.daysNeeded) days on each side: \(c.first.days) and \(c.second.days) so far.")
-        case .same:
-            return String(localized: "No clear difference (\(c.difference.map(gapText) ?? "–")).")
-        case .firstHigher:
-            return String(localized: "\(first): reads higher (\(c.difference.map(gapText) ?? "–")).")
-        case .firstLower:
-            return String(localized: "\(first): reads lower (\(c.difference.map(gapText) ?? "–")).")
-        }
-    }
-
-    private func levelCard(_ level: NunaBPLinksModel.Level) -> some View {
-        NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 12) {
-                title(level.icon, level.title, early: level.comparison.map { $0.verdict != .needMore && $0.early } ?? false)
-                if let c = level.comparison {
-                    HStack(alignment: .top, spacing: 14) { column(level.first, c.first); column(level.second, c.second) }
-                    line(verdict(c, first: level.first, second: level.second), color: c.verdict == .needMore ? NunaPalette.textSecondary : NunaPalette.textPrimary)
-                } else if let note = level.note {
-                    line(note)
-                }
+    private func row(_ topic: NunaBPTopic) -> some View {
+        let (state, figure) = model.loaded ? summary(topic) : ("…", nil)
+        return NunaListRow(LocalizedStringKey(topic.title), subtitle: LocalizedStringKey(state), systemImage: topic.icon, showsChevron: true) {
+            if let figure {
+                Text(verbatim: figure).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    .monospacedDigit().textCase(nil).lineLimit(1).fixedSize()
             }
         }
-    }
-
-    // MARK: Journal
-
-    private var journalCard: some View {
-        NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 12) {
-                title(NunaIcons.journal, String(localized: "Journal: the day after"), early: model.behaviours.contains { $0.comparison.early })
-                ForEach(model.behaviours.prefix(6)) { b in
-                    NunaDivider()
-                    behaviourRow(b)
-                }
-                if !model.journalAnswered {
-                    line(String(localized: "Answer your journal on the days around your readings, and each behaviour is compared here."))
-                } else if model.behaviours.isEmpty {
-                    line(String(localized: "No behaviour has \(PressureLinks.daysNeeded) measured days after both a Yes and a No yet."))
-                } else if model.waiting > 0 {
-                    line(String(localized: "Behaviours still short of days: \(model.waiting)."), color: NunaPalette.textMuted)
-                }
-            }
-        }
-    }
-
-    /// One behaviour in two lines: its name with the gap (or that there is none), then the two means and their days.
-    private func behaviourRow(_ b: NunaBPLinksModel.Behaviour) -> some View {
-        let c = b.comparison
-        let gap = c.verdict == .same ? String(localized: "No clear difference") : (c.difference.map(gapText) ?? "–")
-        func side(_ label: String, _ s: PressureLinks.Side) -> some View {
-            VStack(alignment: .leading, spacing: 1) {
-                HStack(spacing: 5) {
-                    Text(verbatim: label).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    if let m = s.mean {
-                        Text(verbatim: NunaBP.text(m.systolic, m.diastolic)).font(.nuna(size: 15, weight: .bold, design: NunaType.design))
-                            .foregroundStyle(NunaBPCategory.of(m.systolic, m.diastolic).color).monospacedDigit()
-                    }
-                }
-                Text(verbatim: s.days == 1 ? String(localized: "1 day") : String(localized: "\(s.days) days"))
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(verbatim: NunaBehaviorModel.title(b.question)).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 8)
-                Text(verbatim: gap).font(.nuna(size: 13, weight: .bold)).foregroundStyle(c.verdict == .same ? NunaPalette.textMuted : NunaPalette.textPrimary)
-                    .textCase(nil).multilineTextAlignment(.trailing)
-            }
-            HStack(alignment: .top, spacing: 14) { side(String(localized: "After Yes"), c.first); side(String(localized: "After No"), c.second) }
-        }
+        .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
     }
 
-    // MARK: Breathing
+    /// The row's second line and, where there is one, the size of the gap or change.
+    private func summary(_ topic: NunaBPTopic) -> (String, String?) {
+        let needed = PressureLinks.daysNeeded
+        func collected(_ n: Int) -> String { String(localized: "\(n) of \(needed * 2) days collected") }
+        switch topic {
+        case .sleep, .activity, .weight:
+            guard let level = model.levels.first(where: { $0.topic == topic }) else { return ("–", nil) }
+            guard let c = level.comparison else {
+                return (level.shared < needed * 2 ? collected(level.shared) : String(localized: "Too little variation to compare"), nil)
+            }
+            switch c.verdict {
+            case .needMore: return (collected(min(c.first.days, needed) + min(c.second.days, needed)), nil)
+            case .same: return (String(localized: "No clear difference"), nil)
+            case .firstHigher, .firstLower:
+                let higher = c.verdict == .firstHigher
+                let words: String
+                switch topic {
+                case .sleep: words = higher ? String(localized: "Higher after shorter sleep") : String(localized: "Lower after shorter sleep")
+                case .activity: words = higher ? String(localized: "Higher after lighter days") : String(localized: "Lower after lighter days")
+                default: words = higher ? String(localized: "Higher at lower weight") : String(localized: "Higher at higher weight")
+                }
+                return (words, gapSize(c))
+            }
+        case .journal:
+            if !model.journalAnswered { return (String(localized: "Answer your journal to compare"), nil) }
+            guard let top = model.behaviours.first else { return (String(localized: "No behaviour has enough days yet"), nil) }
+            guard let size = gapSize(top.comparison) else { return (String(localized: "No clear difference"), nil) }
+            let name = NunaBehaviorModel.title(top.question)
+            return (top.comparison.verdict == .firstHigher ? String(localized: "Higher the day after: \(name)") : String(localized: "Lower the day after: \(name)"), size)
+        case .breathing:
+            guard let change = PressureLinks.meanChange(model.pairs) else { return (String(localized: "No session measured before and after yet"), nil) }
+            return (model.pairs.count == 1 ? String(localized: "Change in 1 session") : String(localized: "Average change, \(model.pairs.count) sessions"), changeText(change))
+        }
+    }
+}
 
-    private var breathCard: some View {
-        NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 12) {
-                title(NunaIcons.breathing, String(localized: "Breathing sessions"), early: !model.pairs.isEmpty && model.pairs.count < PressureLinks.daysNeeded)
-                if let change = PressureLinks.meanChange(model.pairs) {
-                    Text(verbatim: gapText(change)).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        .monospacedDigit().textCase(nil)
-                    line(model.pairs.count == 1 ? String(localized: "From before to after, in 1 session measured both sides.")
-                                                : String(localized: "Average from before to after, over \(model.pairs.count) sessions measured both sides."))
-                    ForEach(model.pairs.prefix(3), id: \.session.start) { pair in
-                        NunaDivider()
-                        HStack {
-                            Text(verbatim: NunaBP.when(Date(timeIntervalSince1970: TimeInterval(pair.session.start))))
-                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            Spacer(minLength: 8)
-                            Text(verbatim: NunaBP.text(pair.before.systolic, pair.before.diastolic) + " → " + NunaBP.text(pair.after.systolic, pair.after.diastolic))
-                                .font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
-                        }
+// MARK: - The detail page
+
+/// One topic at a time: the two sides and their days, what that says, and how it is worked out.
+struct NunaBPLinksView: View {
+    @State var topic: NunaBPTopic
+    @EnvironmentObject private var repo: Repository
+    @ObservedObject private var changes = NunaDataChanges.shared
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
+    @StateObject private var model = NunaBPLinksModel()
+
+    var body: some View {
+        NunaDetailScreen("Your readings and your data", centersTitle: true) {
+            chips
+            if !model.loaded {
+                ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
+            } else {
+                switch topic {
+                case .sleep, .activity, .weight:
+                    if let level = model.levels.first(where: { $0.topic == topic }) { levelCard(level) }
+                case .journal: journal
+                case .breathing: breathing
+                }
+                VStack(alignment: .leading, spacing: 12) {
+                    nunaTrendsCap("How it is compared")
+                    Text(verbatim: method).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3)
+                        .textCase(nil).fixedSize(horizontal: false, vertical: true)
+                    Text("These are patterns in your own readings, not proof of cause: other things change on the same days, and a cuff reading varies by itself. Not a diagnosis.")
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .task(id: "\(repo.refreshSeq)-\(changes.seq)-\(effortScaleRaw)") {
+            await model.load(repo: repo, readings: await NunaBP.load(repo), effortScale: UnitPrefs.resolveEffortScale(effortScaleRaw))
+        }
+    }
+
+    private var chips: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal) {
+                HStack(spacing: 10) {
+                    ForEach(NunaBPTopic.allCases) { t in
+                        NunaBPTopicChip(title: t.title, selected: t == topic) { topic = t }.id(t)
                     }
-                    line(String(localized: "Sitting still lowers a reading too, so part of a drop may be the rest itself."), color: NunaPalette.textMuted)
-                } else {
-                    line(String(localized: "Measure within half an hour before a breathing session and again within half an hour after, and the change shows here."))
+                }
+                .padding(.horizontal, NunaSpacing.screenH)
+            }
+            .scrollIndicators(.hidden)
+            // Out to the screen's edges, so a chip cut off there reads as more to come.
+            .padding(.horizontal, -NunaSpacing.screenH)
+            .onAppear { proxy.scrollTo(topic, anchor: .center) }
+        }
+    }
+
+    private var method: String {
+        let needed = PressureLinks.daysNeeded
+        switch topic {
+        case .sleep: return String(localized: "Your measured days are split at the middle of your own sleep, taken from the night before each one. Each day counts once, as the average of its readings. A side needs \(needed) days.")
+        case .activity: return String(localized: "Your measured days are split at the middle of your own strain on the day before each one. Each day counts once, as the average of its readings. A side needs \(needed) days.")
+        case .weight: return String(localized: "Your measured days are split at the middle of your own weight, using the latest weighing in the two weeks up to each one. A side needs \(needed) days.")
+        case .journal: return String(localized: "A day's journal answer is compared with the readings of the day after. Each side needs \(needed) measured days.")
+        case .breathing: return String(localized: "Measure within half an hour before a breathing session and again within half an hour after. Sitting still lowers a reading too, so part of a drop may be the rest itself.")
+        }
+    }
+
+    private func words(_ text: String, color: Color = NunaPalette.textPrimary) -> some View {
+        Text(verbatim: text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(color).textCase(nil)
+            .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// A side of a comparison. While it is short of days, five marks show how far it has come.
+    private func side(_ label: String, _ s: PressureLinks.Side, size: CGFloat, progress: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(verbatim: label).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+            Text(verbatim: s.mean.map { NunaBP.text($0.systolic, $0.diastolic) } ?? "–")
+                .font(.nuna(size: size, weight: .bold, design: NunaType.design))
+                .foregroundStyle(s.mean.map { NunaBPCategory.of($0.systolic, $0.diastolic).color } ?? NunaPalette.textMuted)
+                .monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+            Text(verbatim: s.days == 1 ? String(localized: "1 day") : String(localized: "\(s.days) days"))
+                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+            if progress { marks(min(s.days, PressureLinks.daysNeeded), of: PressureLinks.daysNeeded) }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func marks(_ done: Int, of total: Int) -> some View {
+        HStack(spacing: 4) {
+            ForEach(0..<total, id: \.self) { i in
+                Capsule().fill(i < done ? NunaPalette.textPrimary : NunaPalette.ink.opacity(0.14)).frame(height: 4)
+            }
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func levelCard(_ level: NunaBPLinksModel.Level) -> some View {
+        NunaCard {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    nunaTrendsCap(LocalizedStringKey(level.title))
+                    Spacer(minLength: 8)
+                    if let c = level.comparison, c.verdict != .needMore, c.early { NunaChip("Early") }
+                }
+                if let c = level.comparison {
+                    HStack(alignment: .top, spacing: 18) {
+                        side(level.first, c.first, size: 34, progress: c.verdict == .needMore)
+                        side(level.second, c.second, size: 34, progress: c.verdict == .needMore)
+                    }
+                    NunaDivider()
+                    words(verdict(c, first: level.first))
+                } else if let note = level.note {
+                    if level.shared < PressureLinks.daysNeeded * 2 { marks(level.shared, of: PressureLinks.daysNeeded * 2) }
+                    words(note)
                 }
             }
+        }
+    }
+
+    private func verdict(_ c: PressureLinks.Comparison, first: String) -> String {
+        let gap = c.difference.map { changeText($0) + "\u{00A0}mmHg" } ?? "–"
+        switch c.verdict {
+        case .needMore: return String(localized: "Needs \(PressureLinks.daysNeeded) days on each side: \(c.first.days) and \(c.second.days) so far.")
+        case .same: return String(localized: "No clear difference (\(gap)).")
+        case .firstHigher: return String(localized: "\(first): reads higher (\(gap)).")
+        case .firstLower: return String(localized: "\(first): reads lower (\(gap)).")
+        }
+    }
+
+    @ViewBuilder private var journal: some View {
+        if model.behaviours.isEmpty {
+            NunaCard {
+                words(model.journalAnswered ? String(localized: "No behaviour has \(PressureLinks.daysNeeded) measured days after both a Yes and a No yet.")
+                                            : String(localized: "Answer your journal on the days around your readings, and each behaviour is compared here."))
+            }
+        } else {
+            ForEach(model.behaviours) { b in
+                let c = b.comparison
+                NunaCard(small: true) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(alignment: .center, spacing: 8) {
+                            Text(verbatim: NunaBehaviorModel.title(b.question)).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                .textCase(nil).fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 8)
+                            if c.verdict == .same { NunaChip("No clear difference") }
+                            else if let d = c.difference { NunaChip(verbatim: changeText(d) + " mmHg", color: NunaPalette.textPrimary).textCase(nil) }
+                        }
+                        HStack(alignment: .top, spacing: 18) {
+                            side(String(localized: "After Yes"), c.first, size: 24, progress: false)
+                            side(String(localized: "After No"), c.second, size: 24, progress: false)
+                        }
+                    }
+                }
+            }
+            if model.waiting > 0 { words(String(localized: "Behaviours still short of days: \(model.waiting)."), color: NunaPalette.textMuted) }
+        }
+    }
+
+    @ViewBuilder private var breathing: some View {
+        if let change = PressureLinks.meanChange(model.pairs) {
+            NunaCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        nunaTrendsCap("Average change")
+                        Spacer(minLength: 8)
+                        if model.pairs.count < PressureLinks.daysNeeded { NunaChip("Early") }
+                    }
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(verbatim: changeText(change)).font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
+                        Text(verbatim: "mmHg").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                    words(model.pairs.count == 1 ? String(localized: "From before to after, in 1 session measured both sides.")
+                                                 : String(localized: "Average from before to after, over \(model.pairs.count) sessions measured both sides."),
+                          color: NunaPalette.textSecondary)
+                }
+            }
+            NunaCard(small: true) {
+                VStack(spacing: 0) {
+                    ForEach(model.pairs.prefix(10), id: \.session.start) { pair in
+                        if pair.session.start != model.pairs.first?.session.start { NunaDivider() }
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(verbatim: NunaBP.when(Date(timeIntervalSince1970: TimeInterval(pair.session.start))))
+                                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            Text(verbatim: NunaBP.text(pair.before.systolic, pair.before.diastolic) + "  →  " + NunaBP.text(pair.after.systolic, pair.after.diastolic))
+                                .font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+                        .accessibilityElement(children: .combine)
+                    }
+                }
+            }
+        } else {
+            NunaCard { words(String(localized: "No session measured before and after yet")) }
         }
     }
 }

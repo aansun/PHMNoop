@@ -147,10 +147,6 @@ struct NunaWorkoutSummaryView: View {
     @ViewBuilder private func lowContent(_ r: WorkoutRow, shown: WorkoutRow, mins: [Double]?, averages: NunaWorkoutAverages?) -> some View {
         NunaLowFigures(row: r, averages: averages, stress: stress, steps: data.steps)
         sourceLine(r)
-        // For someone who records blood pressure: this session's reading before and after.
-        if r.sport == NunaBreathRecovery.sport {
-            NunaBPBreathCard(startTs: r.startTs, seconds: Int((r.durationS ?? Double(r.endTs - r.startTs)).rounded()))
-        }
         anyaCard(shown, mins: mins, averages: averages)
         NunaCapsuleTabs(options: [(value: LowTab.stress, title: "Stress"), (value: LowTab.heartRate, title: "Heart rate")], selection: $lowTab)
         switch lowTab {

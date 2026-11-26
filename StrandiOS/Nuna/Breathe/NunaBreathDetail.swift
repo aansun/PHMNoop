@@ -132,7 +132,6 @@ private struct NunaBreathDetailShell<Content: View>: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 6) {
                 if let startNote { Text(verbatim: startNote).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                NunaBPBeforeRow()
                 Button(action: onStart) {
                     Text("Start").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.charge).frame(maxWidth: .infinity).frame(height: 56)

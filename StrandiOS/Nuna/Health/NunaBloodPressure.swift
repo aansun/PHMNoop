@@ -167,7 +167,6 @@ enum NunaBP {
 /// ranges mean with what research links to blood pressure. Only readings that were taken are drawn: nothing is estimated.
 struct NunaBloodPressureView: View {
     @EnvironmentObject private var repo: Repository
-    @EnvironmentObject private var health: HealthKitBridge
     @EnvironmentObject private var router: NavRouter
     @ObservedObject private var changes = NunaDataChanges.shared
     @State private var readings: [NunaBPReading] = []
@@ -178,12 +177,11 @@ struct NunaBloodPressureView: View {
     /// The day tapped on the chart; nil shows the latest of the period.
     @State private var picked: Date?
     @State private var adding = false
-    @State private var reading = false
 
     private var latest: NunaBPReading? { readings.last }
 
     var body: some View {
-        NunaDetailScreen("Blood pressure", centersTitle: true) {
+        NunaDetailScreen("Blood pressure", trailing: AnyView(settingsButton), centersTitle: true) {
             if !loaded {
                 ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
             } else if let latest {
@@ -191,14 +189,11 @@ struct NunaBloodPressureView: View {
                 if latest.category == .veryHigh { veryHigh }
                 period
                 addButton
-                NunaBPReminderRow()
-                allReadings
             } else {
                 empty
                 addButton
-                NunaBPReminderRow()
             }
-            appleHealth
+            if loaded, !readings.isEmpty { allReadings }
             if loaded, !readings.isEmpty { NunaBPLinksSection(readings: readings) }
             NunaBPZones()
             NunaBPFindings()
@@ -358,12 +353,28 @@ struct NunaBloodPressureView: View {
         return f.string(from: a) + " - " + f.string(from: b)
     }
 
-    // MARK: Readings
+    // MARK: Readings and settings
+
+    private var settingsButton: some View {
+        NavigationLink(value: NunaTodayRoute.bloodPressureSettings) {
+            Image(systemName: "gearshape").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                .frame(width: 44, height: 44).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain).accessibilityLabel(Text("Blood pressure settings"))
+    }
+
+    private var readingCount: String {
+        readings.count == 1 ? String(localized: "bp.readings.one", defaultValue: "1 reading")
+                            : String(localized: "bp.readings.many", defaultValue: "\(readings.count) readings")
+    }
 
     /// The full list, which is also where a reading is removed.
     private var allReadings: some View {
         NavigationLink(value: NunaTodayRoute.bloodPressureHistory) {
-            NunaCard(small: true) { NunaListRow("All readings", description: "The full history; press and hold a reading to remove it", systemImage: "list.bullet", showsChevron: true) }
+            NunaCard(small: true) {
+                NunaListRow("All readings", subtitle: LocalizedStringKey(readingCount),
+                            systemImage: "list.bullet", showsChevron: true)
+            }
         }
         .buttonStyle(.plain)
     }
@@ -375,7 +386,7 @@ struct NunaBloodPressureView: View {
             VStack(alignment: .leading, spacing: 10) {
                 NunaIconTile(NunaIcons.bloodPressure, tint: NunaPalette.restText)
                 Text("No blood pressure yet").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Measure with a cuff, then type the two figures here, or let PHMN read them from Apple Health if your cuff's app saves them there. The strap does not measure blood pressure.")
+                Text("Measure with a cuff, then type the two figures here. If your cuff's app saves them in Apple Health, connect it with the gear at the top right. The strap does not measure blood pressure.")
                     .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -394,37 +405,6 @@ struct NunaBloodPressureView: View {
             }
         }
         .buttonStyle(.plain)
-    }
-
-    @ViewBuilder private var appleHealth: some View {
-        switch health.auth {
-        case .authorized:
-            Button { readHealth() } label: {
-                NunaCard(small: true) {
-                    NunaListRow("Apple Health", description: reading ? "Reading…" : "Read automatically. Tap to read now", systemImage: "heart.text.square", showsChevron: true)
-                }
-            }
-            .buttonStyle(.plain).disabled(reading)
-        case .entitlementMissing, .unavailable:
-            NunaCard(small: true) { NunaListRow("Apple Health", description: "Not available in this build. Typed readings work as usual", systemImage: "heart.slash") }
-        default:
-            Button { readHealth(connect: true) } label: {
-                NunaCard(small: true) { NunaListRow("Connect Apple Health", description: "Read blood pressure saved by your cuff's app", systemImage: "heart.text.square", showsChevron: true) }
-            }
-            .buttonStyle(.plain).disabled(reading)
-        }
-    }
-
-    /// A full Health pass also asks for any reading permission this version added, blood pressure among them.
-    private func readHealth(connect: Bool = false) {
-        reading = true
-        Task {
-            if connect { await health.requestAuthorization() }
-            _ = await health.sync(days: 30)
-            await PHMBloodPressureImport.sync(repo: repo)
-            readings = await NunaBP.load(repo)
-            reading = false
-        }
     }
 }
 
@@ -585,6 +565,21 @@ private struct NunaBPZones: View {
     }
 }
 
+/// A topic to choose, filled while it is the one shown.
+struct NunaBPTopicChip: View {
+    let title: String
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(verbatim: title).font(.nuna(size: 14, weight: .bold)).foregroundStyle(selected ? NunaPalette.onAccent : NunaPalette.textPrimary)
+                .padding(.horizontal, 18).frame(height: 38).background(selected ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
+        }
+        .buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
 /// General findings about sleep, activity and stress, a topic at a time, each point opening on a tap.
 private struct NunaBPFindings: View {
     private struct Finding: Identifiable {
@@ -616,13 +611,8 @@ private struct NunaBPFindings: View {
         }
     }
 
-    private func chip(_ value: Int, _ title: LocalizedStringKey) -> some View {
-        let on = topic == value
-        return Button { topic = value; open = nil } label: {
-            Text(title).font(.nuna(size: 14, weight: .bold)).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                .padding(.horizontal, 18).frame(height: 38).background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
-        }
-        .buttonStyle(.plain).accessibilityAddTraits(on ? .isSelected : [])
+    private func chip(_ value: Int, _ title: String.LocalizationValue) -> some View {
+        NunaBPTopicChip(title: String(localized: title), selected: topic == value) { topic = value; open = nil }
     }
 
     private func row(_ f: Finding) -> some View {
