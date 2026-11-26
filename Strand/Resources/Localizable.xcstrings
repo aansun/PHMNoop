@@ -9837,5 +9837,6 @@
  "Y or N is your answer from the day before for %@.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Y atau N adalah jawabanmu sehari sebelumnya untuk %@."}}}},
  "The change around that day's breathing sessions: upper figure above, lower figure below.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Perubahan sekitar sesi napas hari itu: angka sistolik di atas, diastolik di bawah."}}}},
  "Hides the explanation": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menutup penjelasan"}}}},
- "Shows the explanation": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membuka penjelasan"}}}}
+ "Shows the explanation": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membuka penjelasan"}}}},
+ "Sleep, activity, weight, journal and breathing": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur, aktivitas, berat, jurnal, napas"}}}}
 }, "version":"1.0" }

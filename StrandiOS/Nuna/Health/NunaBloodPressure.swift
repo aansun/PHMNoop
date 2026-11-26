@@ -188,13 +188,15 @@ struct NunaBloodPressureView: View {
                 hero(latest)
                 if latest.category == .veryHigh { veryHigh }
                 period
-                NunaBPLinksSection(readings: readings, days: linkDays, picked: selectedDay)
                 addButton
             } else {
                 empty
                 addButton
             }
-            if loaded, !readings.isEmpty { allReadings }
+            if loaded, !readings.isEmpty {
+                allReadings
+                dataLinks
+            }
             NunaBPZones()
             NunaBPFindings()
         }
@@ -296,20 +298,6 @@ struct NunaBloodPressureView: View {
         return (0..<span).reversed().compactMap { cal.date(byAdding: .day, value: -$0, to: end) }
     }
 
-    /// The day the chart has lit: the one tapped, else the newest of the period that has a reading.
-    private var selectedDay: Date? {
-        let days = window
-        let shown = NunaBP.daily(readings).filter { days.contains($0.date) }
-        return (shown.first { $0.date == picked } ?? shown.last)?.date
-    }
-
-    /// The week of the rows under the chart: the chart's own week, or, over a month, the seven days up to the lit one.
-    private var linkDays: [Date] {
-        let cal = Calendar.current
-        guard let end = span == 7 ? window.last : (selectedDay ?? window.last) else { return [] }
-        return (0..<7).reversed().compactMap { cal.date(byAdding: .day, value: -$0, to: end) }
-    }
-
     private var hasEarlier: Bool { guard let first = readings.first, let start = window.first else { return false }; return first.date < start }
 
     private var period: some View {
@@ -388,6 +376,16 @@ struct NunaBloodPressureView: View {
             NunaCard(small: true) {
                 NunaListRow("All readings", subtitle: LocalizedStringKey(readingCount),
                             systemImage: "list.bullet", showsChevron: true)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// The readings beside sleep, activity, weight, the journal and breathing, on a page of their own.
+    private var dataLinks: some View {
+        NavigationLink(value: NunaTodayRoute.bloodPressureLinks) {
+            NunaCard(small: true) {
+                NunaListRow("Your readings and your data", subtitle: "Sleep, activity, weight, journal and breathing", systemImage: "link", showsChevron: true)
             }
         }
         .buttonStyle(.plain)

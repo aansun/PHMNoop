@@ -237,7 +237,39 @@ final class NunaBPLinksModel: ObservableObject {
     }
 }
 
-// MARK: - On the Blood pressure page
+// MARK: - The page
+
+/// "Your readings and your data": a week at a time, with its own way back and forth.
+struct NunaBPLinksView: View {
+    @EnvironmentObject private var repo: Repository
+    @ObservedObject private var changes = NunaDataChanges.shared
+    @State private var readings: [NunaBPReading] = []
+    @State private var loaded = false
+    /// How many weeks back from the one ending today.
+    @State private var back = 0
+
+    private var window: NunaTrendWindow { NunaTrendWindow(range: 7, page: back, endingDaysAgo: 0) }
+
+    var body: some View {
+        let w = window
+        NunaDetailScreen("Your readings and your data", centersTitle: true) {
+            if !loaded {
+                ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
+            } else {
+                NunaDateStepper(label: w.label, canGoBack: readings.first.map { $0.date < w.start } ?? false, canGoForward: back > 0,
+                                back: { back += 1 }, forward: { back = max(0, back - 1) })
+                    .frame(maxWidth: .infinity)
+                NunaBPLinksSection(readings: readings, days: w.noons)
+            }
+        }
+        .task(id: "\(repo.refreshSeq)-\(changes.seq)") {
+            readings = await NunaBP.load(repo)
+            loaded = true
+        }
+    }
+}
+
+// MARK: - The week
 
 /// A side of a comparison: its name, the mean and its days. While it is short of days, five marks show how far it has come.
 struct NunaBPSideView: View {
@@ -270,14 +302,12 @@ struct NunaBPSideView: View {
     }
 }
 
-/// The week the chart above stands on, a row a thing: the sleep of the night before, the strain of the day before, the weight, the journal's yes
+/// A week, a row a thing: the sleep of the night before, the strain of the day before, the weight, the journal's yes
 /// or no and the change around breathing sessions. A row opens downward to say what its figures are and what they show beside the pressure.
 struct NunaBPLinksSection: View {
     let readings: [NunaBPReading]
     /// The seven days of the rows, oldest first.
     let days: [Date]
-    /// The day picked on the chart, named brighter here.
-    var picked: Date?
     @EnvironmentObject private var repo: Repository
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @StateObject private var model = NunaBPLinksModel()
@@ -289,8 +319,6 @@ struct NunaBPLinksSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Your readings and your data").font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                .accessibilityAddTraits(.isHeader).padding(.top, 8).padding(.bottom, 2).padding(.horizontal, 4)
             if model.loaded {
                 card
             } else {
@@ -313,7 +341,7 @@ struct NunaBPLinksSection: View {
                 HStack(spacing: 0) {
                     Color.clear.frame(width: gutter, height: 1)
                     ForEach(Array(days.enumerated()), id: \.offset) { i, date in
-                        dayLabel(date, lit: picked.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? (i == days.count - 1))
+                        dayLabel(date, lit: i == days.count - 1)
                     }
                     Color.clear.frame(width: arrow, height: 1)
                 }

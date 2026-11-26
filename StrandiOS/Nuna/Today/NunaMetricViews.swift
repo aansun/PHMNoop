@@ -37,6 +37,8 @@ enum NunaTodayRoute: Hashable {
     /// Blood pressure from a cuff, and the full list of its readings.
     case bloodPressure
     case bloodPressureHistory
+    /// The readings beside sleep, activity, weight, the journal and breathing sessions.
+    case bloodPressureLinks
     /// Behind the gear on the Blood pressure page: its reminder and Apple Health.
     case bloodPressureSettings
     case smartAlarm
@@ -89,6 +91,7 @@ extension View {
             case .rhythm: NunaRhythmView()
             case .bloodPressure: NunaBloodPressureView()
             case .bloodPressureHistory: NunaLabMarkerHost(markerKey: LabBookProjection.bpSystolicKey, isBody: false)
+            case .bloodPressureLinks: NunaBPLinksView()
             case .bloodPressureSettings: NunaBPSettingsView()
             case .smartAlarm: NunaSmartAlarmView()
             case .windDown: NunaWindDownView()
