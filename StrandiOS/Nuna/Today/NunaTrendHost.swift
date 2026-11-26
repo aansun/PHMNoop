@@ -198,6 +198,26 @@ struct NunaTrendHost: View {
     }
 }
 
+/// The face of that box: the picture, the name and, where it opens a list, a chevron.
+struct NunaTrendBox: View {
+    let icon: String
+    let title: LocalizedStringKey
+    var open = false
+    var chevron = true
+
+    var body: some View {
+        HStack(spacing: 16) {
+            NunaIcon(name: icon, size: 21).foregroundStyle(NunaPalette.textSecondary).frame(width: 32)
+            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            Spacer(minLength: 0)
+            if chevron { Image(systemName: open ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary) }
+        }
+        .padding(.horizontal, 18).frame(height: 60)
+        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+        .contentShape(Rectangle())
+    }
+}
+
 /// The box that names the reading at the top of a trend page. Inside a `NunaTrendHost` it is a button with a chevron that opens the list of every
 /// trend page, grouped as Effort, Charge, Rest, Health and Other, the page on show lit; on its own it is only the name.
 struct NunaTrendNameBox: View {
@@ -220,15 +240,7 @@ struct NunaTrendNameBox: View {
     }
 
     private func box(open: Bool, chevron: Bool) -> some View {
-        HStack(spacing: 16) {
-            NunaIcon(name: shownIcon, size: 21).foregroundStyle(NunaPalette.textSecondary).frame(width: 32)
-            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-            Spacer(minLength: 0)
-            if chevron { Image(systemName: open ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary) }
-        }
-        .padding(.horizontal, 18).frame(height: 60)
-        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-        .contentShape(Rectangle())
+        NunaTrendBox(icon: shownIcon, title: title, open: open, chevron: chevron)
     }
 
     private func list(_ menu: NunaTrendMenu) -> some View {

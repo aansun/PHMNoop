@@ -32,6 +32,11 @@ struct NunaWeeklyTrendCard: View {
     var autoScale = false
     /// 0 for the week that ends today; the day picked on Today moves it.
     var endingDaysAgo = 0
+    /// A second figure for each day, written under its date (the blood pressure beside the sleep or the weight above), with what that row is.
+    var under: ((Date) -> (upper: String, lower: String, color: Color)?)?
+    var underCaption: LocalizedStringKey?
+    /// A line of words under the chart.
+    var note: String?
 
     @EnvironmentObject private var repo: Repository
     @StateObject private var model = NunaSeriesModel()
@@ -44,6 +49,10 @@ struct NunaWeeklyTrendCard: View {
             VStack(alignment: .leading, spacing: 14) {
                 NunaWeeklyTitle(title: title)
                 chart
+                if let note {
+                    Text(verbatim: note).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                        .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
         }
         Group {
@@ -68,7 +77,7 @@ struct NunaWeeklyTrendCard: View {
 
     @ViewBuilder private var chart: some View {
         let s = slots
-        if model.loaded && s.allSatisfy({ $0.value == nil }) {
+        if model.loaded && s.allSatisfy({ $0.value == nil && under?($0.date) == nil }) {
             Text("No readings in this week yet").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 .frame(maxWidth: .infinity, minHeight: plotHeight + labelHeight, alignment: .center)
         } else {
@@ -78,8 +87,28 @@ struct NunaWeeklyTrendCard: View {
                     ForEach(Array(s.enumerated()), id: \.offset) { i, slot in dayLabel(slot.date, last: i == s.count - 1) }
                 }
                 .frame(height: labelHeight)
+                if let under { underRow(s.map(\.date), under) }
             }
             .background(highlight)
+        }
+    }
+
+    private func underRow(_ dates: [Date], _ under: @escaping (Date) -> (upper: String, lower: String, color: Color)?) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            NunaDivider()
+            if let underCaption { nunaTrendsCap(underCaption) }
+            HStack(spacing: 0) {
+                ForEach(Array(dates.enumerated()), id: \.offset) { _, date in
+                    let v = under(date)
+                    VStack(spacing: 1) {
+                        Text(verbatim: v?.upper ?? "–").foregroundStyle(v?.color ?? NunaPalette.textMuted)
+                        Text(verbatim: v?.lower ?? " ").foregroundStyle(v?.color ?? NunaPalette.textMuted)
+                    }
+                    .font(.nuna(size: 13, weight: .bold, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.bottom, 6)
         }
     }
 
