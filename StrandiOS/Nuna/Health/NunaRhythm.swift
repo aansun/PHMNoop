@@ -89,8 +89,8 @@ struct NunaPoincarePlot: View {
             var grid = Path()
             for i in 1...3 {
                 let p = inset + plot * CGFloat(i) / 4
-                grid.move(to: CGPoint(x: inset, y: p)); grid.addLine(to: CGPoint(x: s - inset, y: p))
-                grid.move(to: CGPoint(x: p, y: inset)); grid.addLine(to: CGPoint(x: p, y: s - inset))
+                grid.move(to: CGPoint(x: 0, y: p)); grid.addLine(to: CGPoint(x: s, y: p))
+                grid.move(to: CGPoint(x: p, y: 0)); grid.addLine(to: CGPoint(x: p, y: s))
             }
             ctx.stroke(grid, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
             var diag = Path()
@@ -244,8 +244,9 @@ struct NunaRhythmView: View {
             }
             Text(label(overall)).font(.nuna(size: 28, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 .multilineTextAlignment(.center).frame(maxWidth: .infinity)
+            // As wide as the screen allows, a little past the page margin, so the grid has room.
             NunaPoincarePlot(points: f.poincare, others: others, sd1: f.sd1, sd2: f.sd2)
-                .frame(maxWidth: 300)
+                .padding(.horizontal, -(NunaSpacing.screenH - 6))
             HStack(spacing: 14) {
                 key(NunaPalette.restLight, windowName(f.label))
                 if !others.isEmpty { key(NunaPalette.ink.opacity(0.3), "Rest of the night") }
