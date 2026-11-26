@@ -686,8 +686,99 @@ private struct NunaBPFindings: View {
 
 // MARK: - The card on Health
 
-/// On the Health tab: the latest reading and the way into the page.
+/// The Health tab's blood pressure card, after the reference: the latest reading on the left and, on the right, the last seven days as one short mark a
+/// day at the height of its upper figure, in the colour of its range. Every mark is a reading taken with a cuff; nothing is estimated.
 struct NunaBloodPressureCard: View {
+    @EnvironmentObject private var repo: Repository
+    @ObservedObject private var changes = NunaDataChanges.shared
+    @State private var readings: [NunaBPReading] = []
+    @State private var loaded = false
+
+    private var latest: NunaBPReading? { readings.last }
+
+    var body: some View {
+        NavigationLink(value: NunaTodayRoute.bloodPressure) {
+            NunaCard(small: true) {
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack {
+                        Text("Blood pressure insights").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                        Spacer(minLength: 8)
+                        Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    }
+                    HStack(alignment: .center, spacing: 12) {
+                        figures.frame(maxWidth: .infinity, alignment: .leading)
+                        NunaBPWeekMarks(readings: readings).frame(maxWidth: .infinity).frame(height: 76)
+                    }
+                    .padding(.bottom, 6)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .task(id: "\(repo.refreshSeq)-\(changes.seq)") {
+            readings = await NunaBP.load(repo)
+            loaded = true
+        }
+    }
+
+    private var figures: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let latest {
+                nunaTrendsCap(Calendar.current.isDateInToday(latest.date) ? "Today's reading" : "Latest reading")
+                Text(verbatim: latest.text).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(28))
+                    .foregroundStyle(NunaPalette.textPrimary).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+                // An older reading says when it was taken, so it is not read as today's.
+                if !Calendar.current.isDateInToday(latest.date) {
+                    Text(verbatim: NunaBP.when(latest.date)).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+                }
+            } else {
+                Text(loaded ? "No reading yet" : "Reading…").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Type it in or read it from Apple Health").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .textCase(nil).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// Seven days ending today over four hairlines: a day with readings carries one short mark at its mean upper figure, in the colour of its range.
+private struct NunaBPWeekMarks: View {
+    let readings: [NunaBPReading]
+
+    private var marks: [(slot: Int, systolic: Double, color: Color)] {
+        let cal = Calendar.current, today = cal.startOfDay(for: Date())
+        return NunaBP.daily(readings).compactMap { day in
+            guard let back = cal.dateComponents([.day], from: day.date, to: today).day, (0..<7).contains(back) else { return nil }
+            return (6 - back, day.systolic, NunaBPCategory.of(day.systolic, day.diastolic).color)
+        }
+    }
+
+    var body: some View {
+        let marks = marks
+        Canvas { ctx, size in
+            for i in 0..<4 {
+                let y = 1 + (size.height - 2) * CGFloat(i) / 3
+                var line = Path(); line.move(to: CGPoint(x: 0, y: y)); line.addLine(to: CGPoint(x: size.width, y: y))
+                ctx.stroke(line, with: .color(NunaPalette.textMuted.opacity(0.28)), lineWidth: 1)
+            }
+            // A span wide enough that an ordinary week sits in the middle of the lines, widened for figures beyond it.
+            let low = min(90, (marks.map(\.systolic).min() ?? 90) - 5)
+            let high = max(160, (marks.map(\.systolic).max() ?? 160) + 5)
+            let slot = size.width / 7
+            for m in marks {
+                let x = slot * (CGFloat(m.slot) + 0.5)
+                let y = 1 + (size.height - 2) * CGFloat((high - m.systolic) / (high - low))
+                var dash = Path(); dash.move(to: CGPoint(x: x - 6, y: y)); dash.addLine(to: CGPoint(x: x + 6, y: y))
+                ctx.stroke(dash, with: .color(m.color), style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
+            }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// The latest reading as a tile among the vital signs on the Health monitor page. It is not one of the five signs the page judges against the
+/// person's own usual: its words are the general reference range, and an older reading carries its date.
+struct NunaBPVitalTile: View {
     @EnvironmentObject private var repo: Repository
     @ObservedObject private var changes = NunaDataChanges.shared
     @State private var latest: NunaBPReading?
@@ -695,30 +786,23 @@ struct NunaBloodPressureCard: View {
 
     var body: some View {
         NavigationLink(value: NunaTodayRoute.bloodPressure) {
-            NunaCard(small: true) {
-                HStack(spacing: 12) {
-                    NunaIconTile(NunaIcons.bloodPressure, tint: NunaPalette.restText)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Blood pressure").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        if let latest {
-                            Text(verbatim: latest.text + " mmHg").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                            Text(verbatim: latest.category.wordText + " · " + NunaBP.when(latest.date))
-                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        } else {
-                            Text(loaded ? "No reading yet" : "Reading…").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("Type it in or read it from Apple Health").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        }
-                    }
-                    Spacer(minLength: 8)
-                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                }
-            }
+            NunaVitalTile(icon: NunaIcons.bloodPressure, label: "Blood pressure monitor", value: latest?.text ?? "–", unit: "mmHg",
+                          chip: chip, chipColor: latest?.category.color ?? NunaPalette.textSecondary,
+                          symbol: latest.map { $0.category == .normal ? "checkmark" : "exclamationmark" })
         }
         .buttonStyle(.plain)
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") {
             latest = await NunaBP.load(repo).last
             loaded = true
         }
+    }
+
+    private var chip: String? {
+        guard let latest else { return loaded ? String(localized: "No reading yet") : nil }
+        let word = latest.category.wordText
+        guard !Calendar.current.isDateInToday(latest.date) else { return word }
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("dMMM")
+        return word + " · " + f.string(from: latest.date)
     }
 }
 #endif

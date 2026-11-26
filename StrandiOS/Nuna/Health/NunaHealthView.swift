@@ -206,6 +206,7 @@ struct NunaHealthView: View {
             tile("rhr", icon: "met:resting-heart-rate", label: "RHR", value: fmt(day.restingHr), unit: "bpm", rhrChip)
             tile("hrv", icon: "met:heart-rate-variability", label: "HRV", value: fmt(day.hrv), unit: "ms", hrvChip)
             tile("skin_temp", icon: "vital:temp", label: "Skin temp (from baseline)", value: skinText, unit: "°C", skinChip)
+            NunaBPVitalTile()
         }
     }
 

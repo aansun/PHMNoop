@@ -9781,5 +9781,8 @@
  "Early wake alarm": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Alarm bangun lebih awal"}}}},
  "Sleep goal and In the green may buzz up to an hour before your wake time. Not yet proven on a strap, so keep a backup alarm": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Target tidur dan Di zona hijau bisa bergetar sampai satu jam sebelum jam bangun. Belum terbukti di strap, jadi siapkan alarm cadangan"}}}},
  "Wake times per day": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jam bangun per hari"}}}},
- "Set by My Schedule in the sleep planner. Change them there.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Diatur oleh Jadwal Saya di perencana tidur. Ubah di sana."}}}}
+ "Set by My Schedule in the sleep planner. Change them there.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Diatur oleh Jadwal Saya di perencana tidur. Ubah di sana."}}}},
+ "Blood pressure insights": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Wawasan tekanan darah"}}}},
+ "Today's reading": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Bacaan hari ini"}}}},
+ "Blood pressure monitor": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Monitor tekanan darah"}}}}
 }, "version":"1.0" }
