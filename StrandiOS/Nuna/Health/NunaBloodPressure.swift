@@ -347,10 +347,10 @@ struct NunaBloodPressureView: View {
 
     // MARK: Readings
 
-    /// The full list, which is also where a reading is edited or deleted.
+    /// The full list, which is also where a reading is removed.
     private var allReadings: some View {
         NavigationLink(value: NunaTodayRoute.bloodPressureHistory) {
-            NunaCard(small: true) { NunaListRow("All readings", description: "The full history, where a reading can be edited or deleted", systemImage: "list.bullet", showsChevron: true) }
+            NunaCard(small: true) { NunaListRow("All readings", description: "The full history; press and hold a reading to remove it", systemImage: "list.bullet", showsChevron: true) }
         }
         .buttonStyle(.plain)
     }

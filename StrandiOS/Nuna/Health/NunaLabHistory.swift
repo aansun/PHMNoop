@@ -185,14 +185,21 @@ struct NunaLabRecordingsView: View {
         if let d = diastolic { text += "/" + LabBookFormat.value(d, key: LabBookProjection.bpDiastolicKey) }
         return HStack(spacing: 14) {
             Image(systemName: r.source == "manual" ? "square.and.pencil" : "doc.text").font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30)
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: text).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: r.unit).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(verbatim: text).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: r.unit).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                // How a typed blood-pressure reading was taken, when that was filled in.
+                if let how = NunaBPContext.display(r.note) {
+                    Text(verbatim: how).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                }
             }
             Spacer(minLength: 8)
             Text(verbatim: Self.momentFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(r.takenAt)))).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
-        .padding(.horizontal, 16).frame(height: 62)
+        .padding(.horizontal, 16).padding(.vertical, 10).frame(minHeight: 62)
         .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
         .nunaLongPressMenu { NunaMenuItem("Remove", icon: "trash", role: .destructive) { removing = r } }
     }

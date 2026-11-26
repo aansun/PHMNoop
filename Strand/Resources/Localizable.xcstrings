@@ -9653,7 +9653,7 @@
  "Dashed lines mark 120 and 80.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Garis putus-putus menandai 120 dan 80."}}}},
  "Latest readings": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Bacaan terakhir"}}}},
  "All readings": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Semua bacaan"}}}},
- "The full history, where a reading can be edited or deleted": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Riwayat lengkap, tempat bacaan bisa diubah atau dihapus"}}}},
+ "The full history; press and hold a reading to remove it": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Riwayat lengkap; tekan lama sebuah bacaan untuk menghapusnya"}}}},
  "Typed in": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Diketik"}}}},
  "Read automatically. Tap to read now": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dibaca otomatis. Ketuk untuk membaca sekarang"}}}},
  "Not available in this build. Typed readings work as usual": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak tersedia di build ini. Input manual tetap bisa dipakai"}}}},
