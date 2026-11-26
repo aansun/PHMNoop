@@ -281,7 +281,7 @@ struct NunaBPTrendView: View {
             }
         }
         .chartYScale(domain: low...high)
-        .chartXScale(domain: w.domain)
+        .chartXScale(domain: w.domain, range: .plotDimension(startPadding: 4, endPadding: 12))
         .chartYAxis { axis(Array(stride(from: low, through: high, by: max(10, ((high - low) / 40).rounded(.up) * 10)))) { "\(Int($0))" } }
         .chartXAxis(.hidden)
         .chartPlotStyle { $0.padding(.bottom, breathing ? 46 : 0) }
@@ -332,7 +332,7 @@ struct NunaBPTrendView: View {
             }
         }
         .chartYScale(domain: low...high)
-        .chartXScale(domain: w.domain)
+        .chartXScale(domain: w.domain, range: .plotDimension(startPadding: 4, endPadding: 12))
         .chartYAxis { axis(ticks) { model.figureText(topic, $0) } }
         .chartXAxis(.hidden)
         .chartPlotStyle { $0.padding(.bottom, 46) }

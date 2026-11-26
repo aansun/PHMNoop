@@ -9836,11 +9836,14 @@
  "After": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sesudah"}}}},
  "Before": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sebelum"}}}},
  "Line": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Garis"}}}},
- "After Yes: %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Setelah Ya: %@"}}}},
  "All your readings": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Semua bacaanmu"}}}},
  "Answered: %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jawaban: %@"}}}},
  "Body weight (kg)": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Berat badan (kg)"}}}},
- "Breathing sessions: change": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sesi napas: perubahan"}}}},
  "Journal: %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jurnal: %@"}}}},
- "Yes on %lld of %lld days": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ya pada %lld dari %lld hari"}}}}
+ "Yes on %lld of %lld days": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ya pada %lld dari %lld hari"}}}},
+ "After a Yes to %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Setelah menjawab Ya pada %@"}}}},
+ "no answer yet": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "belum ada jawaban"}}}},
+ "Sleep: hours the night before. Strain: the day before. Weight in kg. Journal: %@, the day before. Breathing: change in pressure around a session. Tap a row for its trend.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur: lama tidur malam sebelumnya. Strain: sehari sebelumnya. Berat dalam kg. Jurnal: %@, sehari sebelumnya. Napas: perubahan tekanan sekitar sesi. Ketuk satu baris untuk melihat trennya."}}}},
+ "bp.week.yes": {"extractionState": "extracted_with_value", "localizations": {"en": {"stringUnit": {"state": "new", "value": "Y"}}, "id": {"stringUnit": {"state": "translated", "value": "Y"}}}},
+ "bp.week.no": {"extractionState": "extracted_with_value", "localizations": {"en": {"stringUnit": {"state": "new", "value": "N"}}, "id": {"stringUnit": {"state": "translated", "value": "N"}}}}
 }, "version":"1.0" }
