@@ -150,23 +150,6 @@ struct NunaBPMeasureInfo: View {
     }
 }
 
-/// Under the Blood pressure page: what the words mean, what the page is not, and where the figures go.
-struct NunaBPRangeInfo: View {
-    var body: some View {
-        NunaInfoCard(title: "What the words mean") {
-            VStack(alignment: .leading, spacing: 10) {
-                nunaInfoBullet("Normal: under 120 and under 80")
-                nunaInfoBullet("Above ideal: 120 to 139, or 80 to 89")
-                nunaInfoBullet("High: 140 or more, or 90 or more")
-                nunaInfoBullet("Very high: 180 or more, or 120 or more")
-                nunaInfoBullet("Low: under 90, or under 60")
-            }
-            nunaInfoParagraph("These are general reference ranges for adults. High blood pressure is diagnosed by a health professional from readings on different days, and your own target may differ. This page is not a diagnosis and gives no advice on medicines.")
-            nunaInfoParagraph("Readings stay on this iPhone. If you ask Anya about them, they go to an online provider only while Share patterns and Lab Book is on in Anya settings.")
-        }
-    }
-}
-
 /// Under the strap's battery page: how to look after the battery, and what the figures on the page are.
 struct NunaBatteryCareInfo: View {
     var body: some View {

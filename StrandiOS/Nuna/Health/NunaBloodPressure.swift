@@ -52,19 +52,21 @@ enum NunaBPCategory: Equatable {
         switch self {
         case .low: return NunaPalette.restText
         case .normal: return NunaPalette.charge
-        case .aboveIdeal: return NunaPalette.caution
-        case .high: return NunaPalette.warning
+        case .aboveIdeal: return NunaPalette.warning
+        case .high: return NunaPalette.caution
         case .veryHigh: return NunaPalette.alertText
         }
     }
 
-    /// The three bars of the panel rows: lit at the right for normal, in the middle for a little off, at the left for high.
-    var level: NunaLevel {
-        switch self {
-        case .normal: return .optimal
-        case .low, .aboveIdeal: return .sufficient
-        case .high, .veryHigh: return .poor
+    /// Where a pair sits along the three zones of the gauge, 0 to 1: each zone is a third, and the figure further along decides, as the words do.
+    static func gaugePosition(_ systolic: Double, _ diastolic: Double) -> Double {
+        func along(_ v: Double, _ edges: [Double]) -> Double {
+            for i in 0..<3 where v < edges[i + 1] || i == 2 {
+                return (Double(i) + min(max((v - edges[i]) / (edges[i + 1] - edges[i]), 0), 0.98)) / 3
+            }
+            return 0
         }
+        return min(max(max(along(systolic, [90, 120, 140, 180]), along(diastolic, [60, 80, 90, 120])), 0.02), 0.98)
     }
 }
 
@@ -99,12 +101,23 @@ enum NunaBP {
         return list.filter { $0.takenAt >= from }
     }
 
-    struct Day: Equatable { let date: Date; let systolic: Double; let diastolic: Double }
+    /// A day's readings: the means the marks are drawn at, and the span from the lowest lower figure to the highest upper one.
+    struct Day: Equatable {
+        let date: Date
+        let systolic: Double
+        let diastolic: Double
+        let top: Double
+        let bottom: Double
+        let count: Int
+    }
 
-    /// One point a day, the mean of that day's readings, oldest first.
+    /// One entry a day with a reading, oldest first.
     static func daily(_ list: [NunaBPReading], calendar: Calendar = .current) -> [Day] {
         Dictionary(grouping: list) { calendar.startOfDay(for: $0.date) }
-            .compactMap { day, rs in average(rs).map { Day(date: day, systolic: $0.systolic, diastolic: $0.diastolic) } }
+            .compactMap { day, rs in
+                average(rs).map { Day(date: day, systolic: $0.systolic, diastolic: $0.diastolic,
+                                      top: rs.map(\.systolic).max() ?? $0.systolic, bottom: rs.map(\.diastolic).min() ?? $0.diastolic, count: rs.count) }
+            }
             .sorted { $0.date < $1.date }
     }
 
@@ -148,36 +161,44 @@ enum NunaBP {
 
 // MARK: - The page
 
-/// Laid out like the Sleep pages: the latest reading in a ring, one panel of averages, the trend, the readings, how to add more, and what the ranges mean.
+/// The latest reading on an arc of three zones, the week or the month as one mark a day, adding a reading, the averages and the readings, and what the
+/// ranges mean with what research links to blood pressure. Only readings that were taken are drawn: nothing is estimated.
 struct NunaBloodPressureView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var health: HealthKitBridge
     @ObservedObject private var changes = NunaDataChanges.shared
     @State private var readings: [NunaBPReading] = []
     @State private var loaded = false
-    @State private var days = 30
+    /// 7 or 30 days on the chart, and how many such periods back from today it stands.
+    @State private var span = 7
+    @State private var back = 0
+    /// The day tapped on the chart; nil shows the latest of the period.
+    @State private var picked: Date?
     @State private var adding = false
+    @State private var showInfo = false
     @State private var reading = false
 
     private var latest: NunaBPReading? { readings.last }
 
     var body: some View {
         NunaDetailScreen("Blood pressure", centersTitle: true) {
+            infoChip
             if !loaded {
                 ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
             } else if let latest {
                 hero(latest)
                 if latest.category == .veryHigh { veryHigh }
-                panel
-                trend
+                period
+                addButton
+                averages
                 recent
             } else {
                 empty
+                addButton
             }
-            addButton
             appleHealth
-            NunaBPMeasureInfo()
-            NunaBPRangeInfo()
+            NunaBPZones()
+            NunaBPFindings()
         }
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") {
             readings = await NunaBP.load(repo)
@@ -193,8 +214,25 @@ struct NunaBloodPressureView: View {
             }
             .preferredColorScheme(NunaTheme.colorScheme)
         }
+        .sheet(isPresented: $showInfo) {
+            ScrollView { NunaBPMeasureInfo().padding(NunaSpacing.screenH) }
+                .background(NunaBackdrop()).presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
+                .preferredColorScheme(NunaTheme.colorScheme)
+        }
         // Her line is worked out from these figures; nothing is sent anywhere unless she is asked.
         .nunaAnyaFloating(context: "blood pressure", line: anyaLine, detail: anyaDetail, analyses: false)
+    }
+
+    private var infoChip: some View {
+        Button { showInfo = true } label: {
+            HStack(spacing: 8) {
+                Text("How to measure").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                Image(systemName: "info.circle").font(.nuna(size: 15, weight: .regular))
+            }
+            .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34)
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain).frame(maxWidth: .infinity)
     }
 
     // MARK: Anya
@@ -224,24 +262,37 @@ struct NunaBloodPressureView: View {
     // MARK: Hero
 
     private func hero(_ r: NunaBPReading) -> some View {
-        VStack(spacing: 14) {
-            // The ring runs with the upper figure, from 80 to 180.
-            NunaRingGauge(fraction: (r.systolic - 80) / 100, color: r.category.color, size: 300, lineWidth: 16) {
-                VStack(spacing: 6) {
-                    nunaTrendsCap("Latest")
-                    Text(verbatim: r.text).font(.nuna(size: 62, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(62))
-                        .foregroundStyle(NunaPalette.textPrimary).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
-                    Text(verbatim: "mmHg").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    Text(verbatim: r.category.wordText).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(r.category.color)
+        VStack(spacing: 6) {
+            ZStack(alignment: .top) {
+                NunaBPGauge(position: NunaBPCategory.gaugePosition(r.systolic, r.diastolic))
+                VStack(spacing: 14) {
+                    VStack(spacing: 4) {
+                        nunaTrendsCap("Latest reading")
+                        Text(verbatim: r.text).font(.nuna(size: 50, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(50))
+                            .foregroundStyle(NunaPalette.textPrimary).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+                    }
+                    HStack(spacing: 40) {
+                        figure("Systolic", r.systolic)
+                        figure("Diastolic", r.diastolic)
+                    }
                 }
-                .padding(.horizontal, 24)
+                .padding(.top, 78)
             }
+            .frame(height: 262)
+            Text(verbatim: r.category.wordText).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(r.category.color)
             Text(verbatim: NunaBP.when(r.date) + " · " + NunaBP.sourceName(r.source))
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 6)
         .accessibilityElement(children: .combine)
+    }
+
+    private func figure(_ title: LocalizedStringKey, _ value: Double) -> some View {
+        VStack(spacing: 2) {
+            nunaTrendsCap(title)
+            Text(verbatim: "\(Int(value.rounded()))").font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
+            Text(verbatim: "mmHg").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+        }
     }
 
     private var veryHigh: some View {
@@ -254,64 +305,103 @@ struct NunaBloodPressureView: View {
         }
     }
 
-    // MARK: Panel
+    // MARK: The period
 
-    private var panel: some View {
-        let month = NunaBP.within(readings, days: 30)
-        return NunaSignalPanel {
-            VStack(spacing: 0) {
-                row("7-day average", "calendar", NunaBP.average(NunaBP.within(readings, days: 7)))
-                NunaDivider()
-                row("30-day average", "chart.line.uptrend.xyaxis", NunaBP.average(month))
-                NunaDivider()
-                row("Mornings", "sun.max", NunaBP.average(month.filter(NunaBP.isMorning)))
-                NunaDivider()
-                row("Evenings", "moon", NunaBP.average(month.filter(NunaBP.isEvening)))
-                NunaDivider()
-                NunaFigureRow(title: "Readings (30 days)", icon: "number", value: "\(month.count)")
+    /// The days on the chart: `span` of them, ending today or `back` periods before.
+    private var window: [Date] {
+        let cal = Calendar.current
+        let end = cal.date(byAdding: .day, value: -back * span, to: cal.startOfDay(for: Date())) ?? Date()
+        return (0..<span).reversed().compactMap { cal.date(byAdding: .day, value: -$0, to: end) }
+    }
+
+    private var hasEarlier: Bool { guard let first = readings.first, let start = window.first else { return false }; return first.date < start }
+
+    private var period: some View {
+        let days = window
+        let shown = NunaBP.daily(readings).filter { days.contains($0.date) }
+        let selected = shown.first { $0.date == picked } ?? shown.last
+        return VStack(spacing: 14) {
+            HStack(spacing: 10) {
+                HStack(spacing: 2) {
+                    spanButton(7, String(localized: "bp.span.week", defaultValue: "W")); spanButton(30, String(localized: "bp.span.month", defaultValue: "M"))
+                }
+                .padding(3).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                Spacer(minLength: 4)
+                arrow("chevron.left", "Earlier", enabled: hasEarlier) { back += 1; picked = nil }
+                Text(verbatim: rangeText(days)).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.7).frame(minWidth: 96)
+                arrow("chevron.right", "Later", enabled: back > 0) { back -= 1; picked = nil }
             }
-            NunaBPLegend().padding(.top, 8)
+            HStack(spacing: 18) {
+                HStack(spacing: 6) {
+                    Capsule().fill(NunaPalette.textSecondary).frame(width: 14, height: 3)
+                    nunaTrendsCap("Reading")
+                }
+                HStack(spacing: 6) {
+                    Capsule().fill(NunaPalette.ink.opacity(0.18)).frame(width: 8, height: 14)
+                    nunaTrendsCap("Upper to lower")
+                }
+                Spacer(minLength: 0)
+            }
+            NunaBPDayChart(days: days, entries: shown, picked: selected?.date) { picked = $0 }
+                .frame(height: 280)
+            if let d = selected {
+                Text(verbatim: dayLine(d)).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            }
         }
     }
 
-    private func row(_ title: LocalizedStringKey, _ icon: String, _ value: (systolic: Double, diastolic: Double)?) -> some View {
-        NunaFigureRow(title: title, icon: icon, value: value.map { NunaBP.text($0.systolic, $0.diastolic) } ?? "–",
-                      level: value.map { NunaBPCategory.of($0.systolic, $0.diastolic).level })
+    private func spanButton(_ value: Int, _ title: String) -> some View {
+        let on = span == value
+        return Button { span = value; back = 0; picked = nil } label: {
+            Text(verbatim: title).font(.nuna(size: 13, weight: .bold)).foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                .frame(width: 56, height: 36).background(on ? NunaPalette.glassStrong : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+        .buttonStyle(.plain).accessibilityLabel(Text(value == 7 ? "7 days" : "30 days")).accessibilityAddTraits(on ? .isSelected : [])
     }
 
-    // MARK: Trend
+    private func arrow(_ symbol: String, _ label: LocalizedStringKey, enabled: Bool, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.nuna(size: 17, weight: .heavy)).foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
+                .frame(width: 36, height: 44).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain).disabled(!enabled).accessibilityLabel(Text(label))
+    }
 
-    private var trend: some View {
-        let shown = NunaBP.within(readings, days: days)
-        let points = NunaBP.daily(shown)
+    private func rangeText(_ days: [Date]) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("dMMM")
+        guard let a = days.first, let b = days.last else { return "" }
+        return f.string(from: a) + " - " + f.string(from: b)
+    }
+
+    private func dayLine(_ d: NunaBP.Day) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEEdMMM")
+        let pair = NunaBP.text(d.systolic, d.diastolic)
+        return d.count > 1 ? String(localized: "\(f.string(from: d.date)): average \(pair) from \(d.count) readings") : "\(f.string(from: d.date)): \(pair) mmHg"
+    }
+
+    // MARK: Averages
+
+    private var averages: some View {
+        let month = NunaBP.within(readings, days: 30)
         return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Trend") {
-                Text("Daily average · mmHg").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-            NunaSegmented([(value: 7, title: "7 days"), (value: 30, title: "30 days"), (value: 90, title: "90 days")], selection: $days)
-            NunaCard {
-                if points.isEmpty {
-                    Text("No reading in this period.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .frame(maxWidth: .infinity, minHeight: 120)
-                } else {
-                    VStack(alignment: .leading, spacing: 10) {
-                        NunaBPChart(points: points, days: days).frame(height: 220)
-                        HStack(spacing: 14) {
-                            key(NunaPalette.textPrimary, "Upper (systolic)")
-                            key(NunaPalette.restText, "Lower (diastolic)")
-                        }
-                        Text("Dashed lines mark 120 and 80.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
+            NunaTitleRow(title: "Averages") { Text(verbatim: "mmHg").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+            NunaCard(small: true, padding: EdgeInsets(top: 0, leading: 14, bottom: 0, trailing: 18)) {
+                VStack(spacing: 0) {
+                    row("7-day average", "calendar", NunaBP.average(NunaBP.within(readings, days: 7)))
+                    NunaDivider()
+                    row("30-day average", "chart.line.uptrend.xyaxis", NunaBP.average(month))
+                    NunaDivider()
+                    row("Mornings", "sun.max", NunaBP.average(month.filter(NunaBP.isMorning)))
+                    NunaDivider()
+                    row("Evenings", "moon", NunaBP.average(month.filter(NunaBP.isEvening)))
                 }
             }
         }
     }
 
-    private func key(_ color: Color, _ text: LocalizedStringKey) -> some View {
-        HStack(spacing: 6) {
-            Circle().fill(color).frame(width: 8, height: 8)
-            Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
-        }
+    private func row(_ title: LocalizedStringKey, _ icon: String, _ value: (systolic: Double, diastolic: Double)?) -> some View {
+        NunaFigureRow(title: title, icon: icon, value: value.map { NunaBP.text($0.systolic, $0.diastolic) } ?? "–")
     }
 
     // MARK: Readings
@@ -363,8 +453,17 @@ struct NunaBloodPressureView: View {
     }
 
     private var addButton: some View {
-        Button { adding = true } label: { Text("Add a reading") }
-            .buttonStyle(.nuna(.primary, fullWidth: true))
+        Button { adding = true } label: {
+            NunaCard(small: true) {
+                HStack(spacing: 16) {
+                    Image(systemName: "plus").font(.nuna(size: 20, weight: .regular))
+                    Text("Add manual reading").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    Spacer(minLength: 0)
+                }
+                .foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 28)
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder private var appleHealth: some View {
@@ -399,79 +498,271 @@ struct NunaBloodPressureView: View {
     }
 }
 
-/// The two figures over the period as two lines, a point for each day with a reading, against dashed lines at 120 and 80. The latest pair is written
-/// beside its points; the scale is at the left.
-private struct NunaBPChart: View {
-    let points: [NunaBP.Day]
-    let days: Int
+/// The arc of three zones, normal, above ideal and high, with a mark across it where the latest reading sits.
+private struct NunaBPGauge: View {
+    /// 0 at the start of the normal zone, 1 at the end of the high one.
+    let position: Double
 
     var body: some View {
         Canvas { ctx, size in
-            let left: CGFloat = 34, right: CGFloat = 34, top: CGFloat = 8, bottom: CGFloat = 24
-            let w = size.width - left - right, h = size.height - top - bottom
-            let all = points.flatMap { [$0.systolic, $0.diastolic] }
-            let lo = (min(all.min() ?? 70, 70) / 20).rounded(.down) * 20
-            let hi = (max(all.max() ?? 140, 140) / 20).rounded(.up) * 20
-            let cal = Calendar.current
-            let end = cal.startOfDay(for: Date())
-            let start = cal.date(byAdding: .day, value: -(days - 1), to: end) ?? end
-            let span = max(end.timeIntervalSince(start), 1)
-            func x(_ d: Date) -> CGFloat { left + CGFloat(min(max(d.timeIntervalSince(start) / span, 0), 1)) * w }
-            func y(_ v: Double) -> CGFloat { top + h - CGFloat((v - lo) / max(hi - lo, 1)) * h }
-            func label(_ s: String, _ color: Color, _ at: CGPoint, _ anchor: UnitPoint) {
-                ctx.draw(Text(verbatim: s).font(.nuna(size: 11, weight: .bold, design: NunaType.design)).foregroundColor(color), at: at, anchor: anchor)
-            }
-            for v in stride(from: lo, through: hi, by: 20) {
-                var line = Path(); line.move(to: CGPoint(x: left, y: y(v))); line.addLine(to: CGPoint(x: left + w, y: y(v)))
-                ctx.stroke(line, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
-                label(String(format: "%.0f", v), NunaPalette.textMuted, CGPoint(x: left - 8, y: y(v)), .trailing)
-            }
-            for v in [120.0, 80.0] {
-                var line = Path(); line.move(to: CGPoint(x: left, y: y(v))); line.addLine(to: CGPoint(x: left + w, y: y(v)))
-                ctx.stroke(line, with: .color(NunaPalette.charge.opacity(0.6)), style: StrokeStyle(lineWidth: 1, dash: [4, 5]))
-            }
-            let r: CGFloat = days > 30 ? 2 : 3.5
-            for (value, color) in [(\NunaBP.Day.systolic, NunaPalette.textPrimary), (\NunaBP.Day.diastolic, NunaPalette.restText)] {
-                var line = Path()
-                for (i, p) in points.enumerated() {
-                    let pt = CGPoint(x: x(p.date), y: y(p[keyPath: value]))
-                    if i == 0 { line.move(to: pt) } else { line.addLine(to: pt) }
+            let radius = min(size.width / 2 - 20, size.height * 0.62)
+            let centre = CGPoint(x: size.width / 2, y: radius + 18)
+            // From the lower left, over the top, to the lower right.
+            let start = 160.0, sweep = 220.0, gap = 2.6
+            let zones = [NunaPalette.charge, NunaPalette.warning, NunaPalette.caution]
+            for (i, color) in zones.enumerated() {
+                let a = start + sweep * Double(i) / 3 + (i == 0 ? 0 : gap / 2)
+                let b = start + sweep * Double(i + 1) / 3 - (i == 2 ? 0 : gap / 2)
+                func arc(_ r: CGFloat) -> Path {
+                    var p = Path(); p.addArc(center: centre, radius: r, startAngle: .degrees(a), endAngle: .degrees(b), clockwise: false); return p
                 }
-                ctx.stroke(line, with: .color(color), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-                for p in points {
-                    ctx.fill(Path(ellipseIn: CGRect(x: x(p.date) - r, y: y(p[keyPath: value]) - r, width: r * 2, height: r * 2)), with: .color(color))
+                ctx.stroke(arc(radius - 8), with: .color(color.opacity(0.22)), style: StrokeStyle(lineWidth: 14, lineCap: .butt))
+                ctx.stroke(arc(radius), with: .color(color), style: StrokeStyle(lineWidth: 5, lineCap: .round))
+            }
+            let angle = (start + sweep * position) * .pi / 180
+            func point(_ r: CGFloat) -> CGPoint { CGPoint(x: centre.x + r * CGFloat(cos(angle)), y: centre.y + r * CGFloat(sin(angle))) }
+            var tail = Path(); tail.move(to: point(radius - 52)); tail.addLine(to: point(radius - 16))
+            ctx.stroke(tail, with: .linearGradient(Gradient(colors: [NunaPalette.ink.opacity(0), NunaPalette.ink.opacity(0.7)]),
+                                                   startPoint: point(radius - 52), endPoint: point(radius - 16)), style: StrokeStyle(lineWidth: 9))
+            var head = Path(); head.move(to: point(radius - 17)); head.addLine(to: point(radius + 5))
+            ctx.stroke(head, with: .color(NunaPalette.ink), style: StrokeStyle(lineWidth: 8, lineCap: .round))
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// One column a day: a bar from the lower figure to the upper one, and a mark at each in the colour of that day's zone. The highest and the lowest
+/// figures of the period are lined and named at the left. A day without a reading stays empty; a tap picks a day.
+private struct NunaBPDayChart: View {
+    let days: [Date]
+    let entries: [NunaBP.Day]
+    let picked: Date?
+    let onPick: (Date) -> Void
+    private let left: CGFloat = 4
+
+    var body: some View {
+        GeometryReader { geo in
+            Canvas { ctx, size in
+                let week = days.count <= 7
+                let top: CGFloat = 26, bottom: CGFloat = 46
+                let h = size.height - top - bottom
+                let column = (size.width - left * 2) / CGFloat(max(days.count, 1))
+                let high = entries.map(\.top).max(), low = entries.map(\.bottom).min()
+                let hi = max((high ?? 140) + 20, 150), lo = min((low ?? 60) - 20, 50)
+                func y(_ v: Double) -> CGFloat { top + h - CGFloat((v - lo) / (hi - lo)) * h }
+                func x(_ i: Int) -> CGFloat { left + column * (CGFloat(i) + 0.5) }
+                func words(_ s: String, _ size: CGFloat, _ weight: Font.Weight, _ color: Color, _ at: CGPoint, _ anchor: UnitPoint) {
+                    ctx.draw(Text(verbatim: s).font(.nuna(size: size, weight: weight)).foregroundColor(color), at: at, anchor: anchor)
                 }
-                if let last = points.last {
-                    label(String(format: "%.0f", last[keyPath: value]), color, CGPoint(x: x(last.date) + 8, y: y(last[keyPath: value])), .leading)
+                func rule(_ yy: CGFloat) {
+                    var p = Path(); p.move(to: CGPoint(x: 0, y: yy)); p.addLine(to: CGPoint(x: size.width, y: yy))
+                    ctx.stroke(p, with: .color(NunaPalette.ink.opacity(0.1)), lineWidth: 1)
+                }
+                rule(top + h / 2)
+                if let high, let low {
+                    rule(y(high) - 28); rule(y(low) + 28)
+                    words(String(localized: "Highest \(Int(high.rounded()))"), 12, .bold, NunaPalette.caution, CGPoint(x: 0, y: y(high) - 31), .bottomLeading)
+                    words(String(localized: "Lowest \(Int(low.rounded()))"), 12, .bold, NunaPalette.charge, CGPoint(x: 0, y: y(low) + 31), .topLeading)
+                } else {
+                    rule(top); rule(top + h)
+                    words(String(localized: "No reading in this period."), 13, .semibold, NunaPalette.textSecondary, CGPoint(x: size.width / 2, y: top + h / 2 - 14), .center)
+                }
+                let width = min(column * 0.56, 20)
+                let f = DateFormatter(); f.locale = AppLanguage.activeLocale
+                for (i, day) in days.enumerated() {
+                    let isPicked = day == picked
+                    if isPicked {
+                        ctx.fill(Path(roundedRect: CGRect(x: x(i) - max(column, 14) / 2, y: 0, width: max(column, 14), height: size.height), cornerRadius: 6),
+                                 with: .color(NunaPalette.ink.opacity(0.07)))
+                    }
+                    if let e = entries.first(where: { $0.date == day }) {
+                        let bar = CGRect(x: x(i) - width / 2, y: y(e.top) - 8, width: width, height: max(y(e.bottom) - y(e.top) + 16, 16))
+                        ctx.fill(Path(roundedRect: bar, cornerRadius: min(width / 3, 5)), with: .color(NunaPalette.ink.opacity(0.14)))
+                        let tone = NunaBPCategory.of(e.systolic, e.diastolic).color
+                        for v in [e.systolic, e.diastolic] {
+                            ctx.fill(Path(roundedRect: CGRect(x: x(i) - width / 2, y: y(v) - 2.5, width: width, height: 5), cornerRadius: 2.5), with: .color(tone))
+                        }
+                        if week {
+                            words("\(Int(e.systolic.rounded()))", 12, .bold, NunaPalette.textPrimary, CGPoint(x: x(i), y: bar.minY - 3), .bottom)
+                            words("\(Int(e.diastolic.rounded()))", 12, .bold, NunaPalette.textSecondary, CGPoint(x: x(i), y: bar.maxY + 3), .top)
+                        }
+                    }
+                    // Every day of a week is named; a month names a day in seven, counted back from its last.
+                    if week || (days.count - 1 - i) % 7 == 0 {
+                        f.setLocalizedDateFormatFromTemplate(week ? "EEE" : "MMM"); let first = f.string(from: day)
+                        f.setLocalizedDateFormatFromTemplate("d"); let second = f.string(from: day)
+                        let at = min(max(x(i), 16), size.width - 16)
+                        let color = isPicked ? NunaPalette.textPrimary : NunaPalette.textSecondary
+                        words(first, 12, .semibold, color, CGPoint(x: at, y: size.height - 24), .center)
+                        words(second, 12, .semibold, color, CGPoint(x: at, y: size.height - 9), .center)
+                    }
                 }
             }
-            let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("dMMM")
-            label(f.string(from: start), NunaPalette.textSecondary, CGPoint(x: left, y: size.height - 6), .bottomLeading)
-            let mid = start.addingTimeInterval(span / 2)
-            label(f.string(from: mid), NunaPalette.textSecondary, CGPoint(x: left + w / 2, y: size.height - 6), .bottom)
-            label(f.string(from: end), NunaPalette.textSecondary, CGPoint(x: left + w, y: size.height - 6), .bottomTrailing)
+            .contentShape(Rectangle())
+            .onTapGesture { point in
+                let column = (geo.size.width - left * 2) / CGFloat(max(days.count, 1))
+                let i = Int((point.x - left) / max(column, 1))
+                // A month's columns are narrow, so the nearest day with a reading answers the tap.
+                let withData = days.indices.filter { j in entries.contains { $0.date == days[j] } }
+                if let j = withData.min(by: { abs($0 - i) < abs($1 - i) }) { onPick(days[j]) }
+            }
         }
         .textCase(nil)
         .accessibilityHidden(true)
     }
 }
 
-/// What the three bars under the ring mean on this page.
-private struct NunaBPLegend: View {
+// MARK: - What the ranges mean
+
+/// The three zones side by side with their figures, as under the gauge's colours.
+private struct NunaBPZones: View {
     var body: some View {
-        HStack(spacing: 14) {
-            item(.poor, String(localized: "bp.word.high", defaultValue: "High")); item(.sufficient, String(localized: "bp.legend.off", defaultValue: "A little off"))
-            item(.optimal, String(localized: "bp.word.normal", defaultValue: "Normal"))
-            Spacer(minLength: 0)
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Blood pressure and wellbeing").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            HStack(spacing: 2) {
+                zone(.normal, "< 120", "< 80")
+                zone(.aboveIdeal, "120 - 139", "80 - 89")
+                zone(.high, "≥ 140", "≥ 90")
+            }
+            .clipShape(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+            words("Very high is 180 or more, or 120 or more. Low is under 90, or under 60.")
+            words("Over the years, higher blood pressure puts more strain on the heart, the brain and the kidneys, often without any symptom. That is why it is worth measuring.")
         }
-        .padding(.horizontal, 14).frame(height: 44)
-        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+        .padding(.top, 6)
     }
 
-    private func item(_ level: NunaLevel, _ name: String) -> some View {
-        HStack(spacing: 6) {
-            Capsule().fill(level.color).frame(width: 16, height: 4)
-            Text(verbatim: name).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+    private func zone(_ c: NunaBPCategory, _ systolic: String, _ diastolic: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(c.color.opacity(0.35)).frame(height: 16)
+                .overlay(alignment: .top) { Rectangle().fill(c.color).frame(height: 4) }
+            Text(verbatim: c.wordText).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                .lineLimit(2).minimumScaleFactor(0.7).frame(height: 30, alignment: .topLeading)
+            figure("Systolic (mmHg)", systolic)
+            figure("Diastolic (mmHg)", diastolic)
+        }
+        .padding(12).frame(maxWidth: .infinity, alignment: .leading).background(NunaPalette.glassStrong)
+    }
+
+    private func figure(_ title: LocalizedStringKey, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.7)
+            Text(verbatim: value).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+        }
+    }
+
+    private func words(_ key: LocalizedStringKey) -> some View {
+        Text(key).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil).fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// General findings about sleep, activity and stress, a topic at a time, each point opening on a tap.
+private struct NunaBPFindings: View {
+    private struct Finding: Identifiable {
+        let id: String
+        let title: String
+        let tag: String
+        /// True where the point goes with higher pressure, false where it goes with lower.
+        let raises: Bool
+        let text: String
+    }
+
+    @State private var topic = 0
+    @State private var open: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            nunaTrendsCap("From research")
+            HStack(spacing: 10) {
+                chip(0, "Sleep"); chip(1, "Activity"); chip(2, "Stress")
+                Spacer(minLength: 0)
+            }
+            NunaCard(small: true) {
+                Text(verbatim: intro).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+            }
+            ForEach(findings) { f in row(f) }
+            Text("General information, not advice about you. Talk with a health professional before changing any treatment. Readings stay on this iPhone; if you ask Anya about them, they go to an online provider only while Share patterns and Lab Book is on.")
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func chip(_ value: Int, _ title: LocalizedStringKey) -> some View {
+        let on = topic == value
+        return Button { topic = value; open = nil } label: {
+            Text(title).font(.nuna(size: 14, weight: .bold)).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
+                .padding(.horizontal, 18).frame(height: 38).background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
+        }
+        .buttonStyle(.plain).accessibilityAddTraits(on ? .isSelected : [])
+    }
+
+    private func row(_ f: Finding) -> some View {
+        let shown = open == f.id
+        return Button { withAnimation(.easeInOut(duration: 0.2)) { open = shown ? nil : f.id } } label: {
+            NunaCard(small: true) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 8) {
+                        Text(verbatim: f.title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                            .multilineTextAlignment(.leading)
+                        Spacer(minLength: 4)
+                        HStack(spacing: 4) {
+                            Image(systemName: f.raises ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.system(size: 8))
+                            Text(verbatim: f.tag).font(.nuna(size: 11.5, weight: .bold)).textCase(nil)
+                        }
+                        .foregroundStyle(f.raises ? NunaPalette.caution : NunaPalette.charge)
+                        .padding(.horizontal, 8).frame(height: 24)
+                        .background((f.raises ? NunaPalette.caution : NunaPalette.charge).opacity(0.14), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        Image(systemName: shown ? "chevron.up" : "chevron.down").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    if shown {
+                        Text(verbatim: f.text).font(.nunaWords(size: 14)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var intro: String {
+        switch topic {
+        case 0: return String(localized: "Sleep and blood pressure affect each other: poor sleep can push it up, and high pressure often goes with poorer sleep.")
+        case 1: return String(localized: "Moving regularly is one of the most dependable ways to help blood pressure.")
+        default: return String(localized: "Stress raises blood pressure for a while, and the habits that come with long stress matter too.")
+        }
+    }
+
+    private var findings: [Finding] {
+        let higher = String(localized: "bp.tag.higher", defaultValue: "higher"), lower = String(localized: "bp.tag.lower", defaultValue: "lower")
+        switch topic {
+        case 0: return [
+            Finding(id: "short", title: String(localized: "Short sleep"), tag: higher, raises: true,
+                    text: String(localized: "Regularly sleeping less than about six hours is linked with higher blood pressure.")),
+            Finding(id: "apnoea", title: String(localized: "Sleep apnoea"), tag: higher, raises: true,
+                    text: String(localized: "Loud snoring with pauses in breathing and sleepiness by day can raise blood pressure. A doctor can test for it.")),
+            Finding(id: "dip", title: String(localized: "Fall during sleep"), tag: lower, raises: false,
+                    text: String(localized: "Blood pressure normally falls while you sleep. A smaller fall is linked with more heart risk; measuring it takes a 24-hour monitor.")),
+        ]
+        case 1: return [
+            Finding(id: "aerobic", title: String(localized: "Aerobic exercise"), tag: lower, raises: false,
+                    text: String(localized: "Walking, cycling or swimming on most days tends to lower resting blood pressure by a few mmHg.")),
+            Finding(id: "strength", title: String(localized: "Strength training"), tag: lower, raises: false,
+                    text: String(localized: "Moderate strength work can lower it a little. Keep breathing through each lift.")),
+            Finding(id: "weight", title: String(localized: "Healthy weight"), tag: lower, raises: false,
+                    text: String(localized: "Where weight is above the healthy range, losing some usually lowers blood pressure.")),
+            Finding(id: "effort", title: String(localized: "During effort"), tag: higher, raises: true,
+                    text: String(localized: "It rises while you exercise and settles afterwards, so measure when you are rested.")),
+        ]
+        default: return [
+            Finding(id: "acute", title: String(localized: "Tension and hurry"), tag: higher, raises: true,
+                    text: String(localized: "Tension, pain or rushing can raise a reading, which is why you sit quietly first.")),
+            Finding(id: "salt", title: String(localized: "Salt and alcohol"), tag: higher, raises: true,
+                    text: String(localized: "Eating a lot of salt and drinking a lot of alcohol raise blood pressure.")),
+            Finding(id: "caffeine", title: String(localized: "Caffeine"), tag: higher, raises: true,
+                    text: String(localized: "It can raise a reading for a short while, so measure before your coffee.")),
+            Finding(id: "breath", title: String(localized: "Slow breathing"), tag: lower, raises: false,
+                    text: String(localized: "A few minutes of slow breathing may lower it for a while. The lasting effect is less certain.")),
+        ]
         }
     }
 }
