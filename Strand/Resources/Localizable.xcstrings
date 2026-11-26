@@ -9697,7 +9697,6 @@
  "Upper to lower": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Atas ke bawah"}}}},
  "Add manual reading": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tambah bacaan manual"}}}},
  "Averages": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rata-rata"}}}},
- "Lowest %lld": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Terendah %lld"}}}},
  "Blood pressure and wellbeing": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tekanan darah dan kesehatan"}}}},
  "Very high is 180 or more, or 120 or more. Low is under 90, or under 60.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sangat tinggi: 180 atau lebih, atau 120 atau lebih. Rendah: di bawah 90, atau di bawah 60."}}}},
  "Over the years, higher blood pressure puts more strain on the heart, the brain and the kidneys, often without any symptom. That is why it is worth measuring.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dalam jangka panjang, tekanan darah yang tinggi menambah beban jantung, otak, dan ginjal, sering tanpa gejala. Karena itu layak diukur rutin."}}}},

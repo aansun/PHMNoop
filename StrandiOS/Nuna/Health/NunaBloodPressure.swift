@@ -485,8 +485,8 @@ private struct NunaBPDayChart: View {
                 rule(top + h / 2)
                 if let high, let low {
                     rule(y(high) - 28); rule(y(low) + 28)
-                    words(String(localized: "Highest \(Int(high.rounded()))"), 12, .bold, NunaPalette.caution, CGPoint(x: 0, y: y(high) - 31), .bottomLeading)
-                    words(String(localized: "Lowest \(Int(low.rounded()))"), 12, .bold, NunaPalette.charge, CGPoint(x: 0, y: y(low) + 31), .topLeading)
+                    words(String(localized: "Highest"), 12, .bold, NunaPalette.caution, CGPoint(x: 0, y: y(high) - 31), .bottomLeading)
+                    words(String(localized: "Lowest"), 12, .bold, NunaPalette.charge, CGPoint(x: 0, y: y(low) + 31), .topLeading)
                 } else {
                     rule(top); rule(top + h)
                     words(String(localized: "No reading in this period."), 13, .semibold, NunaPalette.textSecondary, CGPoint(x: size.width / 2, y: top + h / 2 - 14), .center)
