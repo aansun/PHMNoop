@@ -97,6 +97,7 @@ struct NunaFitnessAgeTrendView: View {
             NavigationLink(value: NunaTodayRoute.fitnessAge) { fitnessAgeCard }.buttonStyle(.plain)
             NunaTrendInfo(kind: isPace ? .paceOfAging : .fitnessAge)
         }
+        .appears(when: loaded)
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) {
             readings = await repo.exploreSeries(key: "body_age", source: "my-whoop", days: 400)

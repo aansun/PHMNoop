@@ -64,6 +64,7 @@ struct NunaMarkerDetailView: View {
                 NunaCard { Text("No readings for this marker.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
             }
         }
+        .appears(when: loaded)
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") { rows = await NunaLabStore.load(repo); loaded = true }
         .sheet(isPresented: $adding) {
             NunaLabAddSheet(preselect: markerKey, preselectName: title, preselectUnit: marker?.unit) { drafts in

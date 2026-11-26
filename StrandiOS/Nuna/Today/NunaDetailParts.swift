@@ -108,6 +108,8 @@ struct NunaDetailScreen<Content: View>: View {
     private var pinnedBand: AnyView?
     /// False for a page that fills the screen and keeps its parts in place, one of which (a log) scrolls inside itself.
     private var scrollsPage = true
+    /// False while the page is still reading what it shows: the header is up at once and the content comes in whole (see `appears(when:)`).
+    private var ready = true
     let content: Content
     init(_ title: LocalizedStringKey, titleSymbol: String? = nil, subtitle: String? = nil, titleActivity: String? = nil, onAnya: (() -> Void)? = nil, trailing: AnyView? = nil, centersTitle: Bool = false, showsBack: Bool = true, onBack: (() -> Void)? = nil, @ViewBuilder content: () -> Content) {
         self.title = title; self.titleSymbol = titleSymbol; self.subtitle = subtitle; self.titleActivity = titleActivity; self.onAnya = onAnya; self.trailing = trailing; self.centersTitle = centersTitle; self.showsBack = showsBack; self.onBack = onBack; self.content = content()
@@ -129,6 +131,7 @@ struct NunaDetailScreen<Content: View>: View {
                     VStack(spacing: NunaSpacing.section) {
                         content
                     }
+                    .modifier(NunaPageArrival(ready: ready))
                     .padding(.horizontal, NunaSpacing.screenH)
                     .padding(.top, 8)
                     .padding(.bottom, 120)
@@ -138,6 +141,7 @@ struct NunaDetailScreen<Content: View>: View {
                 VStack(spacing: NunaSpacing.section) {
                     content
                 }
+                .modifier(NunaPageArrival(ready: ready))
                 .padding(.horizontal, NunaSpacing.screenH)
                 .padding(.top, 8)
                 .padding(.bottom, 20)
@@ -157,11 +161,35 @@ extension NunaDetailScreen {
         return copy
     }
 
+    /// Holds the content back until `ready`, then fades it in, so the page is not seen filling itself with stand-ins and then jumping.
+    func appears(when ready: Bool) -> NunaDetailScreen {
+        var copy = self
+        copy.ready = ready
+        return copy
+    }
+
     /// Keeps `band` under the header while the page scrolls under it.
     func pinned<Band: View>(@ViewBuilder _ band: () -> Band) -> NunaDetailScreen {
         var copy = self
         copy.pinnedBand = AnyView(band())
         return copy
+    }
+}
+
+/// The content of a page that reads its data after it opens: out of sight until it is ready, then faded in. The content is laid out all along, so a part
+/// that loads for itself still loads. A read that takes longer than a second does not leave the page blank.
+private struct NunaPageArrival: ViewModifier {
+    let ready: Bool
+    @State private var overdue = false
+
+    func body(content: Content) -> some View {
+        content
+            // Only the fade is animated: the layout settling at the same moment is not.
+            .animation(.easeOut(duration: 0.22)) { $0.opacity(ready || overdue ? 1 : 0) }
+            .task {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                overdue = true
+            }
     }
 }
 

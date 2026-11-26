@@ -83,6 +83,7 @@ struct NunaWorkoutHistoryView: View {
             sessions(shown)
             NunaAnyaCard(verbatim: anyaLine(NunaWorkoutStats(model: m, days: rangeDays, filter: matchesFilter).streak)) { showCoach = true }
         }
+        .appears(when: m.loaded)
         .task(id: repo.refreshSeq) { await m.load(repo: repo) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
         .environment(\.nunaAnyaCardContext, "workouts")

@@ -325,13 +325,15 @@ final class NunaSleepModel: ObservableObject {
                                  daily: row, proportional: proportional, motion: motion,
                                  editTarget: SleepView.mainNightSession(group, habitualMidsleepSec: hab)))
         }
-        nights = out
 
         var all: [String: [String: Double]] = [:]
         for k in Self.keys {
             let s = await repo.exploreSeries(key: k, source: "my-whoop", days: 60)
             all[k] = Dictionary(s.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         }
+        // The nights are handed over together with the figures that go with them: published first, they were drawn with stand-in figures that
+        // changed a moment later.
+        nights = out
         series = all
         importedNeed = repo.importedSleep.compactMapValues { $0.needMin }
         fallbackNeed = SleepModel.sleepNeedMin(days: repo.days)

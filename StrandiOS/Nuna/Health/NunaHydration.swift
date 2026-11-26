@@ -31,6 +31,7 @@ struct NunaHydrationView: View {
             NunaExpandRow(title: "How the goal is set", subtitle: "Your sex and today's Strain", systemImage: "drop",
                           text: "A simple goal that starts from your sex and rises with the Strain you add during the day. It is a guide, not a prescription.")
         }
+        .appears(when: series.loaded)
         .task(id: reloadTick) { await reload() }
         .sheet(isPresented: $settingCustom) {
             NunaHydrationAmountSheet(title: "Custom size", initialML: customSizeML) { ml in

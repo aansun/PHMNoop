@@ -200,6 +200,7 @@ struct NunaBloodPressureView: View {
             NunaBPZones()
             NunaBPFindings()
         }
+        .appears(when: loaded)
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") {
             readings = await NunaBP.load(repo)
             loaded = true
@@ -722,10 +723,7 @@ private struct NunaBPFindings: View {
 /// The Health tab's blood pressure card, after the reference: the latest reading on the left and, on the right, the last seven days as one short mark a
 /// day at the height of its upper figure, in the colour of its range. Every mark is a reading taken with a cuff; nothing is estimated.
 struct NunaBloodPressureCard: View {
-    @EnvironmentObject private var repo: Repository
-    @ObservedObject private var changes = NunaDataChanges.shared
-    @State private var readings: [NunaBPReading] = []
-    @State private var loaded = false
+    let readings: [NunaBPReading]
 
     private var latest: NunaBPReading? { readings.last }
 
@@ -748,10 +746,6 @@ struct NunaBloodPressureCard: View {
             }
         }
         .buttonStyle(.plain)
-        .task(id: "\(repo.refreshSeq)-\(changes.seq)") {
-            readings = await NunaBP.load(repo)
-            loaded = true
-        }
     }
 
     private var figures: some View {
@@ -768,7 +762,7 @@ struct NunaBloodPressureCard: View {
                         .textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
                 }
             } else {
-                Text(loaded ? "No reading yet" : "Reading…").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text("No reading yet").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Text("Type it in or read it from Apple Health").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     .textCase(nil).fixedSize(horizontal: false, vertical: true)
             }

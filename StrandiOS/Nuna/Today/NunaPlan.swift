@@ -553,6 +553,7 @@ struct NunaPlanOverviewView: View {
                 }
             }
         }
+        .appears(when: model.loaded)
         .environment(\.nunaDetailSwitch, nil)
         .task(id: "\(week)-\(steps)-\(easy)-\(hard)-\(strength)-\(planRaw)-\(repo.refreshSeq)") { await model.load(repo: repo, age: profile.age, weekOffset: week) }
         .alert(Text("About this behavior"), isPresented: Binding(get: { infoText != nil }, set: { if !$0 { infoText = nil } })) {

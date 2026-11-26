@@ -53,6 +53,7 @@ struct NunaLeanMassTrendView: View {
             NunaBodyRows()
             NunaTrendInfo(kind: .leanBodyMass)
         }
+        .appears(when: fatS.loaded)
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await load() }
         .onReceive(NotificationCenter.default.publisher(for: .nunaBodyMeasurementChanged)) { _ in Task { await load() } }

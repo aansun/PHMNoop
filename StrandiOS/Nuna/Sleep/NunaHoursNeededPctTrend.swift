@@ -96,6 +96,7 @@ struct NunaPctTrendView: View {
             if showsBreakdown { NunaDaysBreakdown(title: breakdownTitle, bands: bands, values: values) }
             if let footer { footer }
         }
+        .appears(when: history.loaded)
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await history.load(repo: repo) }
         .onChange(of: range) { _, _ in picked = nil }

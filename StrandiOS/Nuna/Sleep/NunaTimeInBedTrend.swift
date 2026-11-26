@@ -65,6 +65,7 @@ struct NunaTimeInBedTrendView: View {
             chart(all, averageBed: averageBed, averageWake: averageWake)
             NunaTrendInfo(kind: .timeInBed)
         }
+        .appears(when: history.loaded)
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await history.load(repo: repo) }
         .onChange(of: range) { _, _ in picked = nil }

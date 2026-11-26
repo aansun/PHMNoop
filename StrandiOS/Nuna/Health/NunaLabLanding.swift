@@ -46,6 +46,7 @@ struct NunaLabLandingPage: View {
                 disclaimer
             }
         }
+        .appears(when: loaded)
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") { rows = await NunaLabStore.load(repo); loaded = true; selected = nil }
         .sheet(isPresented: $adding) {
             NunaLabTestFlow { rows = await NunaLabStore.load(repo) }.nunaSheetChrome(detents: [.large])

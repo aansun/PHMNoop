@@ -209,6 +209,7 @@ struct NunaWeightView: View {
             NunaExpandRow(title: "About body composition", subtitle: "From a smart scale via Apple Health", systemImage: "sparkles",
                           text: "Body fat and lean mass appear only when Apple Health has them, for example from a smart scale. PHMN never estimates them.")
         }
+        .appears(when: weightS.loaded && fatS.loaded && leanS.loaded)
         .sheet(isPresented: $showAdd) {
             NunaNumberSheet(title: "Add a measurement", unit: "kg", initial: latest ?? 70, range: 25...250, step: 0.1, decimals: 1) { v in
                 Task { await saveWeight(v) }

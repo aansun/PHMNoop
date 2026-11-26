@@ -19,6 +19,8 @@ struct NunaRootView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var sessionPresenter = NunaLiftSessionPresenter()
+    /// The Health tab's figures, read ahead of the first visit.
+    @StateObject private var healthStore = NunaHealthStore()
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     /// The theme choices. The palette reads them from UserDefaults, so a change rebuilds the tabs (the navigation paths are kept).
     @AppStorage(NunaTheme.storageKey) private var themeRaw = NunaTheme.Mode.dark.rawValue
@@ -76,7 +78,7 @@ struct NunaRootView: View {
     var body: some View {
         TabView(selection: $selection) {
             stack(.today) { NunaTodayView() }
-            stack(.health) { NunaHealthTabView() }
+            stack(.health) { NunaHealthTabView().environmentObject(healthStore) }
             stack(.breath) { NunaBreathView(asTabRoot: true) }
             stack(.me) { NunaMeView() }
         }
@@ -142,6 +144,8 @@ struct NunaRootView: View {
         .onChange(of: liftSession.isPresented) { _, on in
             if on { sessionPresenter.present(repo: model.repo, model: model, session: liftSession, router: router) } else { sessionPresenter.dismiss() }
         }
+        // Read the Health tab ahead, so it opens complete.
+        .task { healthStore.follow(repo: model.repo, profile: model.profile) }
         // Anya reads the clock, the Plan card's session, banked Effort and tonight's sleep need with every request.
         .task {
             NunaAnyaDayContext.install(on: model.coach, repo: model.repo, profile: model.profile)

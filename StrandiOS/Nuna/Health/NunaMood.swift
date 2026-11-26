@@ -40,6 +40,7 @@ struct NunaMoodView: View {
     @State private var stress: Double?
     @State private var lines: [(text: String, caption: String)] = []
     @State private var savedFlash = false
+    @State private var loaded = false
 
     private let factorKeys: [(id: String, title: LocalizedStringKey)] = [
         ("work", "Work"), ("family", "Family"), ("exercise", "Exercise"), ("sleep", "Enough sleep"),
@@ -75,6 +76,7 @@ struct NunaMoodView: View {
             Text("Self-tracking, not a clinical assessment. If low mood persists, talk to a professional. You deserve support.")
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity, alignment: .leading).textCase(nil)
         }
+        .appears(when: loaded)
         .task(id: repo.refreshSeq) { await load() }
     }
 
@@ -232,6 +234,7 @@ struct NunaMoodView: View {
             }
         }
         lines = built.sorted { $0.r > $1.r }.prefix(3).map { ($0.text, $0.caption) }
+        loaded = true
     }
 }
 

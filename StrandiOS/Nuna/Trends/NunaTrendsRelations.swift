@@ -45,6 +45,7 @@ struct NunaChargeEffortView: View {
             NunaExpandRow(title: "How to read this", subtitle: "A link, not proof of cause", systemImage: "sparkles",
                           text: "Each point pairs one day's Strain with the Recovery you woke up with the next morning. The strength shows how closely they move together in your own data. It does not prove that one causes the other.")
         }
+        .appears(when: m.loaded)
         .task(id: repo.refreshSeq) { await m.load(repo: repo) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "trends") }
         .environment(\.nunaAnyaCardContext, "trends")
@@ -231,6 +232,7 @@ struct NunaChargeRestView: View {
             NunaExpandRow(title: "How to read this", subtitle: "Sleep affects Recovery, but is not the only thing", systemImage: "sparkles",
                           text: "Each point pairs a night's Sleep with the Recovery you woke up with. The line shows the general direction in your own data. Recovery also depends on HRV, resting heart rate and how hard the day before was.")
         }
+        .appears(when: m.loaded && sleep.loaded)
         .task(id: repo.refreshSeq) { await m.load(repo: repo); await sleep.load(repo: repo) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "trends") }
         .environment(\.nunaAnyaCardContext, "trends")
@@ -311,6 +313,7 @@ struct NunaHeatmapView: View {
                 }
             }
         }
+        .appears(when: m.loaded)
         .task(id: repo.refreshSeq) { await m.load(repo: repo) }
     }
 

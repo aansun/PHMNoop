@@ -37,6 +37,7 @@ struct NunaTrainingLoadView: View {
                 }.buttonStyle(.plain)
             }
         }
+        .appears(when: m.loaded)
         .nunaWorkoutDestinations()
         .task(id: repo.refreshSeq) {
             await m.load(repo: repo)

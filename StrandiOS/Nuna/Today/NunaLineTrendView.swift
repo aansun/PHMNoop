@@ -149,6 +149,7 @@ struct NunaLineTrendView: View {
             if excludesToday { Text("Average does not include today").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(.horizontal, 2) }
             if let footer { footer }
         }
+        .appears(when: series.loaded)
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await series.load(repo: repo, key: key, source: source, days: 400, also: also); await loadManual() }
         .onAppear { if !ranges.contains(range) { range = ranges.first(where: { $0 >= 30 }) ?? ranges[0] } }

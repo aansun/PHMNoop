@@ -36,6 +36,8 @@ struct NunaHealthView: View {
     @State private var showCoach = false
     @State private var showSleepCoach = false
     @State private var showReport = false
+    /// Every vital has been read once, so the Health monitor page can come in whole.
+    @State private var vitalsRead = false
 
     private enum Legacy: String, Identifiable { case appleHealth, live, mood, cycle, breathing; var id: String { rawValue } }
 
@@ -51,6 +53,7 @@ struct NunaHealthView: View {
                 await spo2S.load(repo: repo, key: "spo2", source: "my-whoop")
                 await respS.load(repo: repo, key: "resp_rate", source: "my-whoop")
                 await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop")
+                vitalsRead = true
             } else {
                 await sleep.load(repo: repo)
             }
@@ -81,10 +84,12 @@ struct NunaHealthView: View {
     @ViewBuilder private var container: some View {
         if vitalsOnly {
             NunaDetailScreen("Health monitor", centersTitle: true) { vitalTab }
+                .appears(when: vitalsRead)
         } else {
             // The sleep overview: the last seven nights, need against actual, bedtime and stages. A page of its own now that Health
             // is no longer a tab.
             NunaDetailScreen("Sleep") { sleepTab }
+                .appears(when: sleep.loaded)
         }
     }
 

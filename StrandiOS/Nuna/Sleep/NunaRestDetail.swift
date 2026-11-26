@@ -36,18 +36,22 @@ struct NunaRestDetailView: View {
     var body: some View {
         // The night sits in the header, as the day does on the Charge page, with the info and settings buttons at the right.
         NunaDetailScreen(restCaption, trailing: AnyView(headerButtons), centersTitle: true) {
-            hero
-            if let night = model.night { components(night) }
-            if let night = model.night {
-                NunaSleepNightSections(model: model, night: night, showsNeed: false, showsBodyClock: false)
-                insights(night)
-                weeklyTrends
-                NunaBodyClockLink()
-                NunaRhythmLink()
+            // The page appears whole, once its nights and the score are read, so nothing on it is swapped or moved after it is seen.
+            if model.loaded && series.loaded {
+                hero
+                if let night = model.night { components(night) }
+                if let night = model.night {
+                    NunaSleepNightSections(model: model, night: night, showsNeed: false, showsBodyClock: false)
+                    insights(night)
+                    weeklyTrends
+                    NunaBodyClockLink()
+                    NunaRhythmLink()
+                }
+                NunaExpandRow(title: "How it's calculated", subtitle: "Four parts of the night",
+                              text: "Sleep adds up how long you slept against what you need (half of the score), how much of your time in bed you were asleep, the share of deep and REM sleep, and how regular your bedtime is. It is an estimate computed on this phone from your strap's data.\n\nEach part has a range for Poor, Sufficient and Optimal.\n\nHours vs. needed: Optimal 85%+, Sufficient 70–85%, Poor under 70%.\nSleep consistency: Optimal 80%+, Sufficient 70–80%, Poor under 70%.\nSleep efficiency: Optimal 85%+, Sufficient 70–85%, Poor under 70%.")
             }
-            NunaExpandRow(title: "How it's calculated", subtitle: "Four parts of the night",
-                          text: "Sleep adds up how long you slept against what you need (half of the score), how much of your time in bed you were asleep, the share of deep and REM sleep, and how regular your bedtime is. It is an estimate computed on this phone from your strap's data.\n\nEach part has a range for Poor, Sufficient and Optimal.\n\nHours vs. needed: Optimal 85%+, Sufficient 70–85%, Poor under 70%.\nSleep consistency: Optimal 80%+, Sufficient 70–80%, Poor under 70%.\nSleep efficiency: Optimal 85%+, Sufficient 70–85%, Poor under 70%.")
         }
+        .animation(.easeOut(duration: 0.22), value: model.loaded && series.loaded)
         .task(id: "\(repo.refreshSeq)-\(autoNaps)") {
             await series.load(repo: repo, key: "sleep_performance", source: "my-whoop")
             await model.load(repo: repo)

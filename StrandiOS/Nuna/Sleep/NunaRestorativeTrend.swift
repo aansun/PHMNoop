@@ -71,6 +71,7 @@ struct NunaRestorativeTrendView: View {
             chart(all, average)
             NunaTrendInfo(kind: .restorative)
         }
+        .appears(when: history.loaded)
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await history.load(repo: repo) }
         .onChange(of: range) { _, _ in picked = nil }

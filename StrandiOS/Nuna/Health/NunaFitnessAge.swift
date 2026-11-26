@@ -81,15 +81,19 @@ struct NunaFitnessAgeView: View {
                     // Zero height, at the very top of the content: its place on the screen is how far the page has gone up (iOS 17).
                     GeometryReader { g in Color.clear.preference(key: NunaFitnessScrollKey.self, value: g.frame(in: .global).minY) }.frame(height: 0)
                     VStack(spacing: 30) {
-                        if bodyAge != nil {
-                            hero
-                            paceSection
-                        } else {
-                            notReady
+                        // Nothing until the week is read: a "not ready" card here would be replaced by the page a moment later.
+                        if loaded {
+                            if bodyAge != nil {
+                                hero
+                                paceSection
+                            } else {
+                                notReady
+                            }
+                            if let healthspan { factors(healthspan) }
+                            if bodyAge != nil { trends }
                         }
-                        if let healthspan { factors(healthspan) }
-                        if bodyAge != nil { trends }
                     }
+                    .frame(maxWidth: .infinity)
                     .padding(.horizontal, NunaSpacing.screenH).padding(.top, 60).padding(.bottom, 120)
                 }
             }
@@ -102,11 +106,16 @@ struct NunaFitnessAgeView: View {
             if bodyAge != nil { compactHeader.opacity(collapse).allowsHitTesting(false) }
             topBar
         }
+        .animation(.easeOut(duration: 0.22), value: loaded)
         .toolbar(.hidden, for: .navigationBar)
-        .task(id: repo.refreshSeq) { bodyAges = await repo.exploreSeries(key: "body_age", source: "my-whoop", days: 400) }
-        // The age of the latest 7 days: read again when the days or the profile change.
+        // The age of the latest 7 days and the stored weekly ages: read again when the days or the profile change, and shown together.
         .task(id: "\(days.last?.day ?? "")-\(days.count)-\(repo.refreshSeq)-\(profile.age)-\(profile.sex)-\(profile.waistCm)") {
-            healthspan = await NunaHealthspan.latest(repo: repo, profile: profile)
+            async let stored = repo.exploreSeries(key: "body_age", source: "my-whoop", days: 400)
+            async let latest = NunaHealthspan.latest(repo: repo, profile: profile)
+            let (ages, result) = await (stored, latest)
+            guard !Task.isCancelled else { return }
+            bodyAges = ages
+            healthspan = result
             loaded = true
         }
         .sheet(isPresented: $showWaist) { NunaWaistSheet() }
@@ -493,7 +502,7 @@ struct NunaFitnessAgeView: View {
     private var notReady: some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 8) {
-                Text(loaded ? "Not ready yet" : " ").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Not ready yet").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Text(profile.age > 0 ? "Fitness age needs at least 3 of its 9 inputs from the last 7 days. Wear your strap for a few more days."
                                      : "Fitness age needs your age in your profile and at least 3 of its 9 inputs from the last 7 days.")
                     .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)

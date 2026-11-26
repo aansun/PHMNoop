@@ -87,6 +87,7 @@ struct NunaTrendsMetricView: View {
             if kind == .charge { drivers }
             links
         }
+        .appears(when: m.loaded)
         .environment(\.nunaDetailSwitch, NunaDetailSwitch(current: kindKey, items: [
             .init(key: "charge", title: String(localized: "Recovery"), icon: "heart.circle"),
             .init(key: "effort", title: String(localized: "Strain"), icon: "flame"),

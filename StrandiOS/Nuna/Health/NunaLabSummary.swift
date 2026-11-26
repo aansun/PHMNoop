@@ -321,11 +321,9 @@ struct NunaLabRangeStrip: View {
 /// The Lab Book on the Health tab: how many markers sit inside their range, outside it, or have none to judge by, with the date of the last result and
 /// the total as a ring. It opens the Lab Book.
 struct NunaLabBookCard: View {
-    @EnvironmentObject private var repo: Repository
+    let rows: [LabMarkerRow]
+
     @EnvironmentObject private var profile: ProfileStore
-    @ObservedObject private var changes = NunaDataChanges.shared
-    @State private var rows: [LabMarkerRow] = []
-    @State private var loaded = false
 
     private var markers: [NunaLabMarker] { NunaLabGrouping.markers(rows, reference: .init(heightCm: profile.heightCm, sex: profile.sex)) }
 
@@ -365,7 +363,7 @@ struct NunaLabBookCard: View {
                                 Group {
                                     if let last {
                                         Text(verbatim: String(localized: "Last updated: \(LabBookFormat.day(last))"))
-                                    } else if loaded {
+                                    } else {
                                         Text("No results yet")
                                     }
                                 }
@@ -384,7 +382,6 @@ struct NunaLabBookCard: View {
             }
         }
         .buttonStyle(.plain)
-        .task(id: "\(repo.refreshSeq)-\(changes.seq)") { rows = await NunaLabStore.load(repo); loaded = true }
     }
 }
 
@@ -497,6 +494,7 @@ struct NunaLabSummaryPage: View {
                 list(ms)
             }
         }
+        .appears(when: loaded)
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") { rows = await NunaLabStore.load(repo); loaded = true }
         .sheet(item: $addingMarker) { def in
             NunaLabAddSheet(preselect: def.key, preselectName: def.displayName, preselectUnit: def.canonicalUnit) { drafts in

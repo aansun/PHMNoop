@@ -99,6 +99,7 @@ struct NunaLabHistoryView: View {
                 otherLabs
             }
         }
+        .appears(when: loaded)
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") { rows = await NunaLabStore.load(repo); loaded = true }
         .sheet(isPresented: $adding) {
             NunaLabTestFlow { rows = await NunaLabStore.load(repo) }.nunaSheetChrome(detents: [.large])
@@ -166,6 +167,7 @@ struct NunaLabRecordingsView: View {
                 Text("No readings for this marker.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity).padding(.vertical, 24)
             }
         }
+        .appears(when: loaded)
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") { rows = await NunaLabStore.load(repo); loaded = true }
         .nunaDialog("Remove this reading?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {
             NunaDialogButton("Remove", role: .destructive) {

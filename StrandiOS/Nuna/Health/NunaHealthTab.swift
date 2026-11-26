@@ -7,33 +7,40 @@ import StrandAnalytics
 struct NunaHealthTabView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
-    @StateObject private var day = NunaTodayModel()
+    @EnvironmentObject private var store: NunaHealthStore
+    @ObservedObject private var changes = NunaDataChanges.shared
 
     var body: some View {
         ScrollView {
-            VStack(spacing: NunaSpacing.section) {
-                NunaFitnessAgeSummary()
-                NunaLabBookCard()
-                NunaHealthMonitorCard(hrv: day.hrv, restingHr: day.restingHr, spo2: day.spo2, respiratory: day.respiratory, skinTemp: day.extras["skin_temp"])
-                NunaBloodPressureCard()
-                if !day.stressStatus.isReady {
-                    // Still learning the person: no stress figure, only how far along it is.
-                    if day.loaded { NunaStressCalibrationCard(nights: day.stressStatus.nights) }
-                } else if day.loaded {
-                    // Shown even before the day has a reading, so the card does not come and go: it then reads "–" over an empty chart.
-                    NunaStressSummaryCard(curve: day.stressCurve, typicalMin: day.stressTypicalMin, isToday: day.isToday)
+            // Nothing is drawn until all of it is there: then it fades in once, at its final size.
+            if let s = store.snapshot {
+                VStack(spacing: NunaSpacing.section) {
+                    NunaFitnessAgeSummary(series: s.bodyAges, live: s.fitness)
+                    NunaLabBookCard(rows: s.labRows)
+                    NunaHealthMonitorCard(hrv: s.hrv, restingHr: s.restingHr, spo2: s.spo2, respiratory: s.respiratory, skinTemp: s.skinTemp,
+                                          hrvS: store.hrvS, rhrS: store.rhrS, respS: store.respS, skinS: store.skinS)
+                    NunaBloodPressureCard(readings: s.pressure)
+                    if !s.stressReady {
+                        // Still learning the person: no stress figure, only how far along it is.
+                        NunaStressCalibrationCard(nights: s.stressNights)
+                    } else {
+                        // Shown even before the day has a reading, so the card does not come and go: it then reads "–" over an empty chart.
+                        NunaStressSummaryCard(curve: s.stressCurve, typicalMin: s.stressTypicalMin, isToday: s.isToday)
+                    }
+                    Text("Fitness age, the health monitor and the stress monitor are not medical devices and cannot diagnose or manage medical conditions. They do not give medical advice. Always consult your doctor about health concerns, and never delay or change medical care because of what they show.")
+                        .font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 12).frame(maxWidth: .infinity, alignment: .leading)
+                        .overlay(alignment: .top) { Rectangle().fill(NunaPalette.hairline).frame(height: 1) }
                 }
-                Text("Fitness age, the health monitor and the stress monitor are not medical devices and cannot diagnose or manage medical conditions. They do not give medical advice. Always consult your doctor about health concerns, and never delay or change medical care because of what they show.")
-                    .font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 12).frame(maxWidth: .infinity, alignment: .leading)
-                    .overlay(alignment: .top) { Rectangle().fill(NunaPalette.hairline).frame(height: 1) }
+                .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 120)
+                .transition(.opacity)
             }
-            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 120)
         }
         .scrollIndicators(.hidden)
+        .animation(.easeOut(duration: 0.22), value: store.snapshot == nil)
         .background(NunaBackdrop())
         .nunaTodayDestinations()
-        .task(id: repo.refreshSeq) { await day.load(repo: repo, profile: profile) }
+        .task(id: "\(repo.refreshSeq)-\(changes.seq)") { await store.load(repo: repo, profile: profile) }
     }
 }
 
@@ -50,14 +57,13 @@ func nunaYearsGap(_ diff: Int) -> LocalizedStringKey {
 /// Fitness age as the orb, with the pace of aging under it and the way into the full page. The card has no edge at the top: its tint fades into the
 /// page, and it is darkest at the bottom.
 struct NunaFitnessAgeSummary: View {
-    @EnvironmentObject private var repo: Repository
+    /// The Body Age stored each week, which the pace is read from.
+    let series: [(day: String, value: Double)]
+    /// The age of the latest 7 days, the figure on the orb: the one the fitness age page shows.
+    let live: NunaHealthspanResult?
+
     @EnvironmentObject private var profile: ProfileStore
     @AppStorage("nuna.fitnessAgeCalibratingHidden") private var calibratingHidden = false
-    /// The Body Age stored each week, which the pace is read from.
-    @State private var series: [(day: String, value: Double)] = []
-    /// The age of the latest 7 days, the figure on the orb: the one the fitness age page shows.
-    @State private var live: NunaHealthspanResult?
-    @State private var loaded = false
 
     private static let dayParser: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.locale = Locale(identifier: "en_US_POSIX"); return f
@@ -109,11 +115,6 @@ struct NunaFitnessAgeSummary: View {
             // A soft glow above the card, so there is no line where the card starts.
             RadialGradient(colors: [tint.opacity(0.22), .clear], center: .center, startRadius: 0, endRadius: 260)
                 .frame(width: 520, height: 420).offset(y: -140).allowsHitTesting(false)
-        }
-        .task(id: repo.refreshSeq) {
-            series = await repo.exploreSeries(key: "body_age", source: "my-whoop", days: 200)
-            live = await NunaHealthspan.latest(repo: repo, profile: profile)
-            loaded = true
         }
     }
 
@@ -176,7 +177,7 @@ struct NunaFitnessAgeSummary: View {
     private var empty: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Fitness age").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-            Text(loaded ? "Not ready yet" : " ").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            Text("Not ready yet").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             Text("Fitness age needs your age in your profile and at least 3 of its 9 inputs from the last 7 days.")
                 .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
@@ -252,12 +253,12 @@ struct NunaHealthMonitorCard: View {
     let respiratory: Double?
     let skinTemp: Double?
 
-    @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var appModel: AppModel
-    @StateObject private var hrvS = NunaSeriesModel()
-    @StateObject private var rhrS = NunaSeriesModel()
-    @StateObject private var respS = NunaSeriesModel()
-    @StateObject private var skinS = NunaSeriesModel()
+    /// Already loaded by the page.
+    let hrvS: NunaSeriesModel
+    let rhrS: NunaSeriesModel
+    let respS: NunaSeriesModel
+    let skinS: NunaSeriesModel
 
     private struct Vital: Identifiable {
         let id: String
@@ -314,12 +315,6 @@ struct NunaHealthMonitorCard: View {
             }
         }
         .buttonStyle(.plain)
-        .task(id: repo.refreshSeq) {
-            await hrvS.load(repo: repo, key: "hrv", source: "my-whoop", days: 400)
-            await rhrS.load(repo: repo, key: "rhr", source: "my-whoop", days: 400)
-            await respS.load(repo: repo, key: "resp_rate", source: "my-whoop")
-            await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop")
-        }
     }
 
     private func column(_ v: Vital) -> some View {

@@ -245,6 +245,8 @@ struct NunaBPLinksView: View {
     @ObservedObject private var changes = NunaDataChanges.shared
     @State private var readings: [NunaBPReading] = []
     @State private var loaded = false
+    /// The rows have been worked out once, so the page can come in whole.
+    @State private var rowsRead = false
     /// How many weeks back from the one ending today.
     @State private var back = 0
 
@@ -259,9 +261,10 @@ struct NunaBPLinksView: View {
                 NunaDateStepper(label: w.label, canGoBack: readings.first.map { $0.date < w.start } ?? false, canGoForward: back > 0,
                                 back: { back += 1 }, forward: { back = max(0, back - 1) })
                     .frame(maxWidth: .infinity)
-                NunaBPLinksSection(readings: readings, days: w.noons)
+                NunaBPLinksSection(readings: readings, days: w.noons) { rowsRead = true }
             }
         }
+        .appears(when: rowsRead)
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") {
             readings = await NunaBP.load(repo)
             loaded = true
@@ -308,6 +311,8 @@ struct NunaBPLinksSection: View {
     let readings: [NunaBPReading]
     /// The seven days of the rows, oldest first.
     let days: [Date]
+    /// Called when the figures behind the rows have been read.
+    var onRead: () -> Void = {}
     @EnvironmentObject private var repo: Repository
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @StateObject private var model = NunaBPLinksModel()
@@ -330,6 +335,7 @@ struct NunaBPLinksSection: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .task(id: "\(readings.count)-\(readings.last?.takenAt ?? 0)-\(repo.refreshSeq)-\(effortScaleRaw)") {
             await model.load(repo: repo, readings: readings, effortScale: UnitPrefs.resolveEffortScale(effortScaleRaw))
+            onRead()
         }
     }
 

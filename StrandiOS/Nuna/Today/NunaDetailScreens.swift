@@ -1187,6 +1187,7 @@ struct NunaMetricDetailView: View {
                           text: LocalizedStringKey("Source: \(metric.sourceLabel). Values are read from the data stored on this phone."))
             }
         }
+        .appears(when: series.loaded)
         .task(id: "\(metric.id)-\(repo.refreshSeq)") { await series.load(repo: repo, key: metric.key, source: metric.source, days: usesTrendCard ? 400 : 190) }
         .nunaAnyaFloating(context: metric.title, line: anyaLine,
                           metric: NunaAnyaMetric(key: metric.key, source: metric.source, title: metric.title, unit: metric.unit,
@@ -1277,6 +1278,8 @@ struct NunaStressDetailView: View {
     @State private var showCoach = false
     @State private var showInfo = false
     @State private var showSettings = false
+    /// The day and its chart have both been read once, so the page can come in whole.
+    @State private var chartRead = false
 
     private func color(_ v: Double) -> Color { NunaStressBand.color(for: v) }
 
@@ -1354,9 +1357,11 @@ struct NunaStressDetailView: View {
             }
         }
         }
+        .appears(when: chartRead)
         .task(id: "\(repo.refreshSeq)-\(day.dayOffset)") {
             await day.load(repo: repo, profile: profile)
             await loadChart()
+            chartRead = true
             await history.ensure(days: [selectedDate] + previousDays, repo: repo)
             await loadAnnotations()
         }

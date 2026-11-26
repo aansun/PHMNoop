@@ -28,6 +28,7 @@ struct NunaNutritionView: View {
     @State private var checkIn: NutritionMath.CheckIn?
     @State private var weightKg: Double?
     @State private var addInAnya = false
+    @State private var loaded = false
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @AppStorage(NunaNutritionPrefs.nudges) private var nudgesOn = true
 
@@ -66,6 +67,7 @@ struct NunaNutritionView: View {
             addButton
             caffeineCard
         }
+        .appears(when: loaded)
         .sheet(item: $addMeal) { m in NunaFoodAddSheet(day: dayKey, meal: m).nunaSheetChrome(detents: [.large]) }
         .nunaDialog("Delete this entry?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
             NunaDialogButton("Delete", role: .destructive) { if let e = deleting { Task { await NunaFoodStore.delete(id: e.id, repo: repo) } }; deleting = nil }
@@ -88,6 +90,7 @@ struct NunaNutritionView: View {
             checkIn = NutritionMath.checkIn(trend: NutritionMath.trend(weights), intake: await NunaFoodStore.intakeByDay(days: 30, repo: repo), endDay: Repository.localDayKey(Date()),
                                             plannedKgPerWeek: pace, currentTarget: targetKcal)
         } else { checkIn = nil }
+        loaded = true
     }
 
     // MARK: Day
