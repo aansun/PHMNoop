@@ -71,7 +71,7 @@ struct NunaSleepNightSections: View {
             if !night.naps.isEmpty { napCard(night) }
             if showsTiles { tiles(model, night) }
             if showsNeed { needCard(model, night) }
-            if showsBodyClock { NunaBodyClockLink() }
+            if showsBodyClock { NunaBodyClockLink(); NunaRhythmLink() }
         }
         .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { snap in await repo.refresh(); if let snap { undo = snap } } }
         .nunaSleepUndo($undo) { await repo.refresh() }

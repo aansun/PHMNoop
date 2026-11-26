@@ -51,6 +51,8 @@ enum NunaMeRoute: Hashable {
     case automations, doubleTap, presence, sessionCues, sedentary, shortcuts, alarm
     case data, backup, imports, appleHealth, strava, hevy, environment
     case advanced, experiments, testCentre, about
+    /// Beat rhythm, opened from Experiments.
+    case rhythm
     /// Under About: the licences of what PHMN is built on, one licence, and the project documents (`NunaLegalDoc` raw values).
     case licenses, license(String), legal(String)
     /// The settings closest to the WHOOP app, with what differs from them and one button to use them.
@@ -98,6 +100,7 @@ extension View {
             case .advanced: NunaAdvancedView()
             case .recommended: NunaRecommendedView()
             case .experiments: NunaExperimentsView()
+            case .rhythm: NunaRhythmView()
             case .testCentre: NunaTestCentreView()
             case .about: NunaAboutView()
             case .licenses: NunaLicensesView()

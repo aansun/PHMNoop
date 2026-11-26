@@ -64,7 +64,6 @@ struct NunaAdvancedView: View {
 
 struct NunaExperimentsView: View {
     @EnvironmentObject private var model: AppModel
-    @EnvironmentObject private var router: NavRouter
     @AppStorage(RhythmConsent.enabledKey) private var rhythm = false
     @AppStorage(LiveSessionPrefs.betaKey) private var liveSessions = true
     @AppStorage(PuffinExperiment.experimentalSleepV2Key) private var sleepV2 = true
@@ -86,7 +85,7 @@ struct NunaExperimentsView: View {
             }
             NunaSettingsSection("Daily features") {
                 NunaSettingsCard {
-                    Button { router.requestedDestination = .rhythm } label: { NunaListRow("Rhythm", description: "A look at the timing between beats. Off until you agree", systemImage: "waveform.path", showsChevron: true) { NunaChip(rhythm ? "On" : "Off") } }.buttonStyle(.plain)
+                    NavigationLink(value: NunaMeRoute.rhythm) { NunaListRow("Beat rhythm", description: "A look at the timing between beats. Off until you agree", systemImage: NunaIcons.beatRhythm, showsChevron: true) { NunaChip(rhythm ? "On" : "Off") } }.buttonStyle(.plain)
                 }
                 NunaSettingsSwitch("Live Sessions", subtitle: "A quiet coach during a workout. The strap only vibrates to correct you · beta", systemImage: "figure.run", isOn: $liveSessions)
                 NunaSettingsSwitch("Sleep staging V2", subtitle: "Cardiorespiratory recipe, better at separating deep and REM", systemImage: NunaIcons.sleep, isOn: $sleepV2)

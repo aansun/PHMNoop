@@ -49,6 +49,7 @@ enum NunaQuickActions {
         .init(id: "nap", title: "Nap", icon: NunaIcons.nap, group: "Sleep", kind: .today(.sleepNaps(0))),
         .init(id: "sleep", title: "Sleep", icon: NunaIcons.sleep, group: "Sleep", kind: .today(.sleep(0))),
         .init(id: "bodyClock", title: "Body clock", icon: "clock", group: "Sleep", kind: .today(.bodyClock)),
+        .init(id: "rhythm", title: "Beat rhythm", icon: NunaIcons.beatRhythm, group: "Sleep", kind: .today(.rhythm)),
         .init(id: "smartAlarm", title: "Smart alarm", icon: "alarm", group: "Sleep", kind: .today(.smartAlarm)),
         .init(id: "windDown", title: "Wind down", icon: NunaIcons.windDown, group: "Sleep", kind: .today(.windDown)),
         // Read

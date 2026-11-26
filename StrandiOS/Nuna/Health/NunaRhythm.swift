@@ -26,9 +26,9 @@ struct NunaRhythmConsentView: View {
                     NunaChip("Experimental")
                 }
                 VStack(alignment: .leading, spacing: 10) {
-                    Image(systemName: "waveform.path.ecg").font(.nuna(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                    Image(systemName: NunaIcons.beatRhythm).font(.nuna(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(width: 56, height: 56).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
-                    Text("Before you turn on Rhythm").font(.nuna(size: NunaTypeSize.h1 - 4, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Before you turn on Beat rhythm").font(.nuna(size: NunaTypeSize.h1 - 4, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("An experimental picture of your beat-to-beat timing. Please read these first.")
                         .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
@@ -54,7 +54,7 @@ struct NunaRhythmConsentView: View {
                     }
                 }
                 Button(action: onAccept) {
-                    Text("Turn on Rhythm").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
+                    Text("Turn on Beat rhythm").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                         .frame(maxWidth: .infinity).frame(height: 56)
                         .background(NunaPalette.accent.opacity(understood ? 1 : 0.35), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(!understood)
@@ -129,6 +129,164 @@ struct NunaPoincarePlot: View {
     }
 }
 
+// MARK: - The night's reading
+
+/// Last night read for Beat rhythm: the windows and their times, the night's summary and, when nothing could be read, why. The page and the card on Sleep
+/// both take it from here. Same windowing and gates as the Default Rhythm host.
+struct NunaRhythmReading {
+    var windows: [RhythmScreener.WindowResult] = []
+    var times: [(start: Int, end: Int)] = []
+    var spans: [NunaRhythmView.Span] = []
+    var night: RhythmScreener.NightRhythmSummary?
+    var emptyReason: RhythmEmptyState = .gatheringData
+
+    /// The night's one word; `.unreadable` when no window could be read.
+    var overall: RhythmRegularity { night?.overall ?? .unreadable }
+
+    static func word(_ l: RhythmRegularity) -> LocalizedStringKey {
+        switch l {
+        case .steady: return "Steady"
+        case .occasionalEctopy: return "Some variation"
+        case .varied: return "More varied"
+        case .unreadable: return "No clear reading"
+        }
+    }
+
+    /// The last reading and what it was made from, so opening the page from the card does not read the night again.
+    @MainActor private static var cache: (key: String, reading: NunaRhythmReading)?
+
+    @MainActor static func lastNight(repo: Repository) async -> NunaRhythmReading {
+#if DEBUG
+        if CommandLine.arguments.contains("--demo-rhythm") {
+            if let hit = cache, hit.key == "demo" { return hit.reading }
+            let demo = demo()
+            cache = ("demo", demo)
+            return demo
+        }
+#endif
+        guard let sleep = (await repo.allSleepSessions(days: 14)).last else { return NunaRhythmReading() }
+        let lo = sleep.effectiveStartTs, hi = sleep.endTs
+        guard hi > lo else { return NunaRhythmReading() }
+        let key = "\(lo)|\(hi)|\(repo.refreshSeq)"
+        if let hit = cache, hit.key == key { return hit.reading }
+        let rr = await repo.rrIntervals(from: lo, to: hi, limit: 200_000)
+        guard !rr.isEmpty else { return NunaRhythmReading() }
+        let grav = await repo.gravitySamplesUnion(from: lo, to: hi, limit: 200_000)
+        var results: [RhythmScreener.WindowResult] = []
+        var times: [(start: Int, end: Int)] = []
+        var t = lo
+        while t < hi {
+            let end = min(t + 300, hi)
+            let wRR = rr.filter { $0.ts >= t && $0.ts < end }
+            if wRR.count >= RhythmScreener.windowMinBeats {
+                let g = grav.filter { $0.ts >= t && $0.ts < end }
+                results.append(RhythmScreener.screenWindow(RhythmScreener.WindowInput(rr: wRR, motionStill: isStill(g))))
+                times.append((start: t, end: end))
+            }
+            t = end
+        }
+        var reading = assemble(results, times)
+        reading.emptyReason = RhythmScreener.classifyEmptyState(
+            windows: results, hadMotionSignal: !grav.isEmpty,
+            beatsAreBanked: RhythmScreener.nightBeatsAreBanked(rrMs: rr.map { Double($0.rrMs) }, tsSec: rr.map { $0.ts }))
+        cache = (key, reading)
+        return reading
+    }
+
+    /// Joins neighbouring readable windows into spans (a span takes its least steady label) and sums the night.
+    private static func assemble(_ results: [RhythmScreener.WindowResult], _ times: [(start: Int, end: Int)]) -> NunaRhythmReading {
+        func rank(_ l: RhythmRegularity) -> Int { l == .varied ? 3 : (l == .occasionalEctopy ? 2 : 1) }
+        var spans: [NunaRhythmView.Span] = []
+        for (i, r) in results.enumerated() where r.label != .unreadable {
+            let (s, e) = times[i]
+            if let last = spans.last, last.end == s {
+                spans[spans.count - 1] = .init(start: last.start, end: e, beats: last.beats + r.nBeats, label: rank(r.label) > rank(last.label) ? r.label : last.label)
+            } else {
+                spans.append(.init(start: s, end: e, beats: r.nBeats, label: r.label))
+            }
+        }
+        return NunaRhythmReading(windows: results, times: times, spans: spans, night: RhythmScreener.summarizeNight(results))
+    }
+
+    private static func isStill(_ grav: [GravitySample]) -> Bool {
+        guard grav.count >= 4 else { return false }
+        let mags = grav.map { ($0.x * $0.x + $0.y * $0.y + $0.z * $0.z).squareRoot() }
+        let mean = mags.reduce(0, +) / Double(mags.count)
+        guard mean > 0 else { return false }
+        let variance = mags.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(mags.count)
+        return (variance.squareRoot() / mean) < 0.03
+    }
+
+#if DEBUG
+    /// `--demo-rhythm`: a night of made-up beat timing, so the page can be looked at without a strap. Six resting windows: mostly steady, one with a few extra
+    /// beats and one that varies more. Nothing is read from or written to the store.
+    private static func demo() -> NunaRhythmReading {
+        var rng = SystemRandomNumberGenerator()
+        func window(beats: Int, baseMs: Double, rsa: Double, noise: Double, ectopicEvery: Int = 0, scatter: Double = 0) -> [Double] {
+            var out: [Double] = []
+            for i in 0..<beats {
+                var v = baseMs + rsa * sin(Double(i) / 4.2) + Double.random(in: -noise...noise, using: &rng) + Double.random(in: -scatter...scatter, using: &rng)
+                if ectopicEvery > 0, i > 0, i % ectopicEvery == 0 { v *= 0.62 }       // an early beat, then the pause that follows it
+                if ectopicEvery > 0, i > 1, (i - 1) % ectopicEvery == 0 { v *= 1.38 }
+                out.append(v)
+            }
+            return out
+        }
+        let shapes: [[Double]] = [
+            window(beats: 300, baseMs: 1040, rsa: 38, noise: 9),
+            window(beats: 296, baseMs: 1010, rsa: 42, noise: 10),
+            window(beats: 310, baseMs: 1060, rsa: 35, noise: 8, ectopicEvery: 17),
+            window(beats: 305, baseMs: 1030, rsa: 40, noise: 9),
+            window(beats: 288, baseMs: 990, rsa: 30, noise: 40, scatter: 190),
+            window(beats: 300, baseMs: 1050, rsa: 44, noise: 9),
+        ]
+        let lo = Int(Date().timeIntervalSince1970) - 8 * 3600
+        var results: [RhythmScreener.WindowResult] = []
+        var times: [(start: Int, end: Int)] = []
+        for (i, rr) in shapes.enumerated() {
+            let mean = rr.reduce(0, +) / Double(rr.count)
+            results.append(RhythmScreener.screenWindow(RhythmScreener.WindowInput(rrMs: rr, ts: [], motionStill: true, meanHR: 60_000 / mean)))
+            let start = lo + i * 5 * 60 + (i >= 3 ? 40 * 60 : 0)
+            times.append((start: start, end: start + 300))
+        }
+        return assemble(results, times)
+    }
+#endif
+}
+
+// MARK: - The card on Sleep
+
+/// Beat rhythm on the Sleep pages, under Body clock: last night's word and the way into the page. Only there while the person has it on and has agreed to
+/// the current wording; it is turned on from More, Experiments.
+struct NunaRhythmLink: View {
+    @EnvironmentObject private var repo: Repository
+    @AppStorage(RhythmConsent.acceptedVersionKey) private var acceptedVersion = ""
+    @AppStorage(RhythmConsent.enabledKey) private var enabled = false
+    @State private var reading: NunaRhythmReading?
+
+    var body: some View {
+        if enabled && RhythmConsent.isAccepted(acceptedVersion) {
+            NavigationLink(value: NunaTodayRoute.rhythm) {
+                NunaCard(small: true) {
+                    HStack(spacing: 12) {
+                        NunaIconTile(NunaIcons.beatRhythm, tint: NunaPalette.restText)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Beat rhythm").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                            Text(reading.map { NunaRhythmReading.word($0.overall) } ?? "Reading…")
+                                .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("Last night · experimental").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        }
+                        Spacer(minLength: 8)
+                        Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .task(id: repo.refreshSeq) { reading = await NunaRhythmReading.lastNight(repo: repo) }
+        }
+    }
+}
+
 // MARK: - The screen
 
 /// Laid out like the Body clock page: the title in the middle, the night's picture first, one panel of figures about the window drawn bright, the reading
@@ -168,7 +326,7 @@ struct NunaRhythmView: View {
             if !consentGiven {
                 NunaRhythmConsentView(onAccept: { acceptedVersion = RhythmConsent.currentVersion; enabled = true }, onCancel: { dismiss() })
             } else {
-                NunaDetailScreen("Rhythm", centersTitle: true) { content }
+                NunaDetailScreen("Beat rhythm", centersTitle: true) { content }
                     // Her line comes from the figures on this page; nothing is sent anywhere unless she is asked.
                     .nunaAnyaFloating(context: "rhythm", line: anyaLine, detail: anyaDetail, analyses: false)
             }
@@ -222,7 +380,7 @@ struct NunaRhythmView: View {
 
     private var anyaDetail: String? {
         guard let night, let f = featured, let i = featuredIndex else {
-            return loaded ? String(localized: "Rhythm only reads while you are still and resting. A snug strap and a calm night give it more to work with.") : nil
+            return loaded ? String(localized: "Beat rhythm only reads while you are still and resting. A snug strap and a calm night give it more to work with.") : nil
         }
         let counts = String(localized: "Quiet windows read: \(night.readableWindows). Steady: \(night.steadyWindows). Some variation: \(night.occasionalWindows). More varied: \(night.variedWindows).")
         let window = String(localized: "In the window \(range(i)), beat-to-beat variation was \(pct(f.normRmssd)) and extra or skipped beats \(pct(f.ectopicFraction)).")
@@ -323,7 +481,7 @@ struct NunaRhythmView: View {
     private var settings: some View {
         NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
             VStack(spacing: 0) {
-                NunaListRow("Rhythm on", subtitle: "Computed on this phone") {
+                NunaListRow("Beat rhythm on", subtitle: "Computed on this phone") {
                     Toggle("", isOn: Binding(get: { enabled }, set: { on in enabled = on; if !on { dismiss() } })).labelsHidden().tint(NunaPalette.charge)
                 }
                 NunaDivider()
@@ -341,7 +499,7 @@ struct NunaRhythmView: View {
         return NunaCard {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    NunaIconTile(unsupported ? "applewatch" : "waveform.path.ecg", tint: NunaPalette.restText)
+                    NunaIconTile(unsupported ? "applewatch" : NunaIcons.beatRhythm, tint: NunaPalette.restText)
                     Spacer()
                     NunaChip("Experimental")
                 }
@@ -355,22 +513,15 @@ struct NunaRhythmView: View {
 
     private var emptyMessage: LocalizedStringKey {
         switch emptyReason {
-        case .deviceBanksBeats: return "Rhythm needs beat-to-beat timing measured one beat at a time. Your device stores its heartbeats in batches, so the exact spacing between them isn't recoverable. Nothing is wrong with your night."
-        case .deviceNoMotion: return "Rhythm reads only during still, resting windows, and this device doesn't record the stillness signal it needs to find them. Nothing is wrong with your night."
-        default: return "Rhythm only looks during quiet, still, resting windows, so it needs a calm night's worth of steady beats. Once there's a clean window, the scatter and its description show here."
+        case .deviceBanksBeats: return "Beat rhythm needs beat-to-beat timing measured one beat at a time. Your device stores its heartbeats in batches, so the exact spacing between them isn't recoverable. Nothing is wrong with your night."
+        case .deviceNoMotion: return "Beat rhythm reads only during still, resting windows, and this device doesn't record the stillness signal it needs to find them. Nothing is wrong with your night."
+        default: return "Beat rhythm only looks during quiet, still, resting windows, so it needs a calm night's worth of steady beats. Once there's a clean window, the scatter and its description show here."
         }
     }
 
     // MARK: Words
 
-    private func label(_ l: RhythmRegularity) -> LocalizedStringKey {
-        switch l {
-        case .steady: return "Steady"
-        case .occasionalEctopy: return "Some variation"
-        case .varied: return "More varied"
-        case .unreadable: return "No clear reading"
-        }
-    }
+    private func label(_ l: RhythmRegularity) -> LocalizedStringKey { NunaRhythmReading.word(l) }
 
     private func windowName(_ l: RhythmRegularity) -> LocalizedStringKey {
         switch l {
@@ -403,113 +554,21 @@ struct NunaRhythmView: View {
         return f.string(from: Date(timeIntervalSince1970: TimeInterval(ts)))
     }
 
-    // MARK: Load (same windowing and gates as the Default Rhythm host)
-
-#if DEBUG
-    /// `--demo-rhythm`: a night of made-up beat timing, so the page can be looked at without a strap. Six resting windows: mostly steady, one with a few extra
-    /// beats and one that varies more. Nothing is read from or written to the store.
-    private func loadDemo() {
-        var rng = SystemRandomNumberGenerator()
-        func window(beats: Int, baseMs: Double, rsa: Double, noise: Double, ectopicEvery: Int = 0, scatter: Double = 0) -> [Double] {
-            var out: [Double] = []
-            for i in 0..<beats {
-                var v = baseMs + rsa * sin(Double(i) / 4.2) + Double.random(in: -noise...noise, using: &rng) + Double.random(in: -scatter...scatter, using: &rng)
-                if ectopicEvery > 0, i > 0, i % ectopicEvery == 0 { v *= 0.62 }       // an early beat, then the pause that follows it
-                if ectopicEvery > 0, i > 1, (i - 1) % ectopicEvery == 0 { v *= 1.38 }
-                out.append(v)
-            }
-            return out
-        }
-        let shapes: [[Double]] = [
-            window(beats: 300, baseMs: 1040, rsa: 38, noise: 9),
-            window(beats: 296, baseMs: 1010, rsa: 42, noise: 10),
-            window(beats: 310, baseMs: 1060, rsa: 35, noise: 8, ectopicEvery: 17),
-            window(beats: 305, baseMs: 1030, rsa: 40, noise: 9),
-            window(beats: 288, baseMs: 990, rsa: 30, noise: 40, scatter: 190),
-            window(beats: 300, baseMs: 1050, rsa: 44, noise: 9),
-        ]
-        let lo = Int(Date().timeIntervalSince1970) - 8 * 3600
-        var results: [RhythmScreener.WindowResult] = []
-        var starts: [(Int, Int)] = []
-        for (i, rr) in shapes.enumerated() {
-            let mean = rr.reduce(0, +) / Double(rr.count)
-            results.append(RhythmScreener.screenWindow(RhythmScreener.WindowInput(rrMs: rr, ts: [], motionStill: true, meanHR: 60_000 / mean)))
-            let start = lo + i * 5 * 60 + (i >= 3 ? 40 * 60 : 0)
-            starts.append((start, start + 300))
-        }
-        windows = results
-        times = starts.map { (start: $0.0, end: $0.1) }
-        night = RhythmScreener.summarizeNight(results)
-        func rank(_ l: RhythmRegularity) -> Int { l == .varied ? 3 : (l == .occasionalEctopy ? 2 : 1) }
-        var out: [Span] = []
-        for (i, r) in results.enumerated() where r.label != .unreadable {
-            let (s, e) = starts[i]
-            if let last = out.last, last.end == s {
-                out[out.count - 1] = Span(start: last.start, end: e, beats: last.beats + r.nBeats, label: rank(r.label) > rank(last.label) ? r.label : last.label)
-            } else {
-                out.append(Span(start: s, end: e, beats: r.nBeats, label: r.label))
-            }
-        }
-        spans = out
-    }
-#endif
+    // MARK: Load
 
     private func load() async {
         defer { loaded = true }
-#if DEBUG
-        if CommandLine.arguments.contains("--demo-rhythm") { loadDemo(); return }
-#endif
-        guard let lastSleep = (await repo.allSleepSessions(days: 14)).last else { return }
-        let lo = lastSleep.effectiveStartTs, hi = lastSleep.endTs
-        guard hi > lo else { return }
-        let rr = await repo.rrIntervals(from: lo, to: hi, limit: 200_000)
-        guard !rr.isEmpty else { return }
-        let grav = await repo.gravitySamplesUnion(from: lo, to: hi, limit: 200_000)
-        var results: [RhythmScreener.WindowResult] = []
-        var starts: [(Int, Int)] = []
-        var t = lo
-        while t < hi {
-            let end = min(t + 300, hi)
-            let wRR = rr.filter { $0.ts >= t && $0.ts < end }
-            if wRR.count >= RhythmScreener.windowMinBeats {
-                let g = grav.filter { $0.ts >= t && $0.ts < end }
-                results.append(RhythmScreener.screenWindow(RhythmScreener.WindowInput(rr: wRR, motionStill: Self.isStill(g))))
-                starts.append((t, end))
-            }
-            t = end
-        }
-        windows = results
-        times = starts.map { (start: $0.0, end: $0.1) }
-        night = RhythmScreener.summarizeNight(results)
-        emptyReason = RhythmScreener.classifyEmptyState(
-            windows: results, hadMotionSignal: !grav.isEmpty,
-            beatsAreBanked: RhythmScreener.nightBeatsAreBanked(rrMs: rr.map { Double($0.rrMs) }, tsSec: rr.map { $0.ts }))
-        // Join neighbouring readable windows into spans; a span takes its least steady label.
-        func rank(_ l: RhythmRegularity) -> Int { l == .varied ? 3 : (l == .occasionalEctopy ? 2 : 1) }
-        var out: [Span] = []
-        for (i, r) in results.enumerated() where r.label != .unreadable {
-            let (s, e) = starts[i]
-            if let last = out.last, last.end == s {
-                out[out.count - 1] = Span(start: last.start, end: e, beats: last.beats + r.nBeats, label: rank(r.label) > rank(last.label) ? r.label : last.label)
-            } else {
-                out.append(Span(start: s, end: e, beats: r.nBeats, label: r.label))
-            }
-        }
-        spans = out
-        if let night, !results.isEmpty {
-            let csv = RhythmExport.csv(summary: night, windows: results)
+        let reading = await NunaRhythmReading.lastNight(repo: repo)
+        windows = reading.windows
+        times = reading.times
+        spans = reading.spans
+        night = reading.night
+        emptyReason = reading.emptyReason
+        if let night, !reading.windows.isEmpty {
+            let csv = RhythmExport.csv(summary: night, windows: reading.windows)
             let url = FileManager.default.temporaryDirectory.appendingPathComponent("phmn-rhythm.csv")
             exportURL = (try? csv.write(to: url, atomically: true, encoding: .utf8)) != nil ? url : nil
         }
-    }
-
-    private static func isStill(_ grav: [GravitySample]) -> Bool {
-        guard grav.count >= 4 else { return false }
-        let mags = grav.map { ($0.x * $0.x + $0.y * $0.y + $0.z * $0.z).squareRoot() }
-        let mean = mags.reduce(0, +) / Double(mags.count)
-        guard mean > 0 else { return false }
-        let variance = mags.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(mags.count)
-        return (variance.squareRoot() / mean) < 0.03
     }
 }
 #endif

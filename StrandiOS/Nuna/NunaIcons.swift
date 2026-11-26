@@ -28,6 +28,7 @@ enum NunaIcons {
     static let nap = "moon.zzz.fill"
     static let windDown = "moon.stars"
     static let breathing = "act:breathwork"
+    static let beatRhythm = "waveform.path.ecg"
 
     // Body and log
     static let cycle = "drop.fill"

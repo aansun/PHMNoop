@@ -159,7 +159,7 @@ enum NunaMeSettingsIndex {
         .init(route: .experiments, title: "Personal stress baseline", note: "Scores the day's stress against your own baseline"),
         .init(route: .experiments, title: "Daily features", note: ""),
         .init(route: .experiments, title: "Device research", note: ""),
-        .init(route: .experiments, title: "Rhythm", note: "A look at the timing between beats. Off until you agree"),
+        .init(route: .experiments, title: "Beat rhythm", note: "A look at the timing between beats. Off until you agree"),
         .init(route: .experiments, title: "Test Centre", note: "WHOOP 5/MG probes, ECG and diagnostics"),
         .init(route: .experiments, title: "Strava", note: "Upload GPS, treadmill and gym workouts. Off by default"),
         .init(route: .testCentre, title: "Scheduled export", note: "Off until you turn it on"),

@@ -253,7 +253,7 @@ struct NunaRootView: View {
         case .insightsHub: InsightsHubView()
         case .labBook: NunaLabBookView()
         case .fusedRecord: FusedRecordHost()
-        case .rhythm: RhythmHost(onClose: { routed = nil })
+        case .rhythm: NunaRhythmView()
         case .devices: NunaDevicesView()
         case .trends: NunaTrendsView()
         case .workouts: NunaWorkoutsView()
