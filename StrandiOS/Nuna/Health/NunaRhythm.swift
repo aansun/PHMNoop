@@ -85,26 +85,25 @@ struct NunaPoincarePlot: View {
         Canvas { ctx, size in
             let s = min(size.width, size.height), inset: CGFloat = 12, plot = s - inset * 2
             func map(_ v: Double) -> CGFloat { inset + CGFloat((min(max(v, lo), hi) - lo) / (hi - lo)) * plot }
-            ctx.fill(Path(roundedRect: CGRect(x: 0, y: 0, width: s, height: s), cornerRadius: 10), with: .color(NunaPalette.field))
             var grid = Path()
             for i in 1...3 {
                 let p = inset + plot * CGFloat(i) / 4
                 grid.move(to: CGPoint(x: 0, y: p)); grid.addLine(to: CGPoint(x: s, y: p))
                 grid.move(to: CGPoint(x: p, y: 0)); grid.addLine(to: CGPoint(x: p, y: s))
             }
-            ctx.stroke(grid, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
+            ctx.stroke(grid, with: .color(NunaPalette.ink.opacity(0.11)), lineWidth: 1)
             var diag = Path()
             diag.move(to: CGPoint(x: inset, y: s - inset)); diag.addLine(to: CGPoint(x: s - inset, y: inset))
-            ctx.stroke(diag, with: .color(NunaPalette.ink.opacity(0.28)), style: StrokeStyle(lineWidth: 1, dash: [4, 6]))
+            ctx.stroke(diag, with: .color(NunaPalette.ink.opacity(0.42)), style: StrokeStyle(lineWidth: 1, dash: [4, 6]))
             // A whole night holds thousands of pairs; an evenly spaced sample keeps the cloud readable.
             func dots(_ list: [RhythmScreener.PoincarePoint], limit: Int, color: Color) {
                 let step = max(1, list.count / limit)
                 for (i, p) in list.enumerated() where i % step == 0 {
                     let x = map(p.x), y = s - map(p.y)
-                    ctx.fill(Path(ellipseIn: CGRect(x: x - 1.6, y: y - 1.6, width: 3.2, height: 3.2)), with: .color(color))
+                    ctx.fill(Path(ellipseIn: CGRect(x: x - 1.8, y: y - 1.8, width: 3.6, height: 3.6)), with: .color(color))
                 }
             }
-            dots(others, limit: 260, color: NunaPalette.ink.opacity(0.22))
+            dots(others, limit: 260, color: NunaPalette.ink.opacity(0.28))
             guard !points.isEmpty else { return }
             if let sd1, let sd2 {
                 let mx = points.map(\.x).reduce(0, +) / Double(points.count), my = points.map(\.y).reduce(0, +) / Double(points.count)
@@ -113,18 +112,18 @@ struct NunaPoincarePlot: View {
                 var e = Path(ellipseIn: CGRect(x: -CGFloat(sd2) * k, y: -CGFloat(sd1) * k, width: CGFloat(sd2) * k * 2, height: CGFloat(sd1) * k * 2))
                 e = e.applying(CGAffineTransform(rotationAngle: -.pi / 4)).applying(CGAffineTransform(translationX: c.x, y: c.y))
                 var inside = ctx
-                inside.clip(to: Path(roundedRect: CGRect(x: 0, y: 0, width: s, height: s), cornerRadius: 10))
-                inside.fill(e, with: .color(NunaPalette.rest.opacity(0.12)))
-                inside.stroke(e, with: .color(NunaPalette.restText), lineWidth: 1.5)
+                inside.clip(to: Path(CGRect(x: 0, y: 0, width: s, height: s)))
+                inside.fill(e, with: .color(NunaPalette.rest.opacity(0.16)))
+                inside.stroke(e, with: .color(NunaPalette.restText), lineWidth: 2)
             }
-            dots(points, limit: 320, color: NunaPalette.restLight.opacity(0.85))
+            dots(points, limit: 320, color: NunaPalette.restText)
         }
         .aspectRatio(1, contentMode: .fit)
         .overlay(alignment: .bottomTrailing) {
-            Text("This beat (ms) →").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(12)
+            Text("This beat (ms) →").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).padding(12)
         }
         .overlay(alignment: .topLeading) {
-            Text("↑ Next beat").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(12)
+            Text("↑ Next beat").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).padding(12)
         }
         .accessibilityHidden(true)
     }
@@ -248,7 +247,7 @@ struct NunaRhythmView: View {
             NunaPoincarePlot(points: f.poincare, others: others, sd1: f.sd1, sd2: f.sd2)
                 .padding(.horizontal, -(NunaSpacing.screenH - 6))
             HStack(spacing: 14) {
-                key(NunaPalette.restLight, windowName(f.label))
+                key(NunaPalette.restText, windowName(f.label))
                 if !others.isEmpty { key(NunaPalette.ink.opacity(0.3), "Rest of the night") }
             }
         }
