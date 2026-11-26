@@ -177,14 +177,12 @@ struct NunaBloodPressureView: View {
     /// The day tapped on the chart; nil shows the latest of the period.
     @State private var picked: Date?
     @State private var adding = false
-    @State private var showInfo = false
     @State private var reading = false
 
     private var latest: NunaBPReading? { readings.last }
 
     var body: some View {
         NunaDetailScreen("Blood pressure", centersTitle: true) {
-            infoChip
             if !loaded {
                 ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
             } else if let latest {
@@ -210,25 +208,8 @@ struct NunaBloodPressureView: View {
         .sheet(isPresented: $adding) {
             NunaBPAddSheet { drafts in await NunaLabStore.save(drafts, repo: repo) }
         }
-        .sheet(isPresented: $showInfo) {
-            ScrollView { NunaBPMeasureInfo().padding(NunaSpacing.screenH) }
-                .background(NunaBackdrop()).presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
-                .preferredColorScheme(NunaTheme.colorScheme)
-        }
         // Her line is worked out from these figures; nothing is sent anywhere unless she is asked.
         .nunaAnyaFloating(context: "blood pressure", line: anyaLine, detail: anyaDetail, analyses: false)
-    }
-
-    private var infoChip: some View {
-        Button { showInfo = true } label: {
-            HStack(spacing: 8) {
-                Text("How to measure").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                Image(systemName: "info.circle").font(.nuna(size: 15, weight: .regular))
-            }
-            .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34)
-            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-        }
-        .buttonStyle(.plain).frame(maxWidth: .infinity)
     }
 
     // MARK: Anya
@@ -258,32 +239,26 @@ struct NunaBloodPressureView: View {
     // MARK: Hero
 
     private func hero(_ r: NunaBPReading) -> some View {
-        VStack(spacing: 6) {
-            ZStack(alignment: .top) {
-                NunaBPGauge(position: NunaBPCategory.gaugePosition(r.systolic, r.diastolic))
-                VStack(spacing: 14) {
-                    VStack(spacing: 4) {
-                        nunaTrendsCap("Latest reading")
-                        Text(verbatim: r.text).font(.nuna(size: 50, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(50))
-                            .foregroundStyle(NunaPalette.textPrimary).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
-                    }
-                    HStack(spacing: 40) {
-                        figure("Systolic", r.systolic)
-                        figure("Diastolic", r.diastolic)
-                    }
+        ZStack(alignment: .top) {
+            NunaBPGauge(position: NunaBPCategory.gaugePosition(r.systolic, r.diastolic))
+            VStack(spacing: 14) {
+                VStack(spacing: 4) {
+                    nunaTrendsCap("Latest reading")
+                    Text(verbatim: r.text).font(.nuna(size: 50, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(50))
+                        .foregroundStyle(NunaPalette.textPrimary).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
                 }
-                .padding(.top, 78)
+                HStack(spacing: 40) {
+                    figure("Systolic", r.systolic)
+                    figure("Diastolic", r.diastolic)
+                }
             }
-            .frame(height: 262)
-            Text(verbatim: r.category.wordText).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(r.category.color)
-            Text(verbatim: NunaBP.when(r.date) + " · " + NunaBP.sourceName(r.source))
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            if let how = NunaBPContext.display(r.note) {
-                Text(verbatim: how).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
+            .padding(.top, 78)
         }
+        .frame(height: 262)
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
+        // The needle is the only thing on the page that says the range, so it is also said aloud.
+        .accessibilityValue(Text(verbatim: r.category.wordText))
     }
 
     private func figure(_ title: LocalizedStringKey, _ value: Double) -> some View {
@@ -344,9 +319,6 @@ struct NunaBloodPressureView: View {
             }
             NunaBPDayChart(days: days, entries: shown, picked: selected?.date) { picked = $0 }
                 .frame(height: 280)
-            if let d = selected {
-                Text(verbatim: dayLine(d)).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-            }
         }
     }
 
@@ -371,12 +343,6 @@ struct NunaBloodPressureView: View {
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("dMMM")
         guard let a = days.first, let b = days.last else { return "" }
         return f.string(from: a) + " - " + f.string(from: b)
-    }
-
-    private func dayLine(_ d: NunaBP.Day) -> String {
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEEdMMM")
-        let pair = NunaBP.text(d.systolic, d.diastolic)
-        return d.count > 1 ? String(localized: "\(f.string(from: d.date)): average \(pair) from \(d.count) readings") : "\(f.string(from: d.date)): \(pair) mmHg"
     }
 
     // MARK: Readings

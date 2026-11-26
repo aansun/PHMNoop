@@ -136,7 +136,7 @@ struct NunaRhythmMeasureInfo: View {
     }
 }
 
-/// Under the Blood pressure page: how to take a reading worth comparing.
+/// Behind the button on the blood pressure entry sheet: how to take a reading worth comparing.
 struct NunaBPMeasureInfo: View {
     var body: some View {
         NunaInfoCard(title: "How to measure well") {

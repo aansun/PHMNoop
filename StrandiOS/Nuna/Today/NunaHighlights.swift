@@ -430,6 +430,14 @@ struct NunaHighlightsCard: View {
     private func liveHighlights() -> [NunaHighlight] {
         var found = NunaHighlightEngine.build(inputs)
 #if DEBUG
+        // `--demo-highlight-reference` sets the words of the WHOOP card the type sizes were matched to, so the two can be laid side by side.
+        if CommandLine.arguments.contains("--demo-highlight-reference") {
+            found = [
+                .init(id: "reference1", title: "Lower RHR",
+                      message: "Your RHR is 8% lower than usual which signals greater physical fitness and a more efficient heart. Keep this trend going to improve your fitness and health."),
+                .init(id: "reference2", title: "Elevated RHR", message: "A second card, so the count reads 2."),
+            ]
+        }
         // `--demo-highlights` shows two sample highlights, since the demo data has nothing that stands out.
         if CommandLine.arguments.contains("--demo-highlights") {
             found = [
@@ -458,21 +466,20 @@ struct NunaHighlightsCard: View {
         if h.id == "recommended-first" {
             recommendedHero(h)
         } else {
-        NunaCard(padding: EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: h.art != nil ? 160 : (h.bars == nil ? 46 : 140))) {
-            // A card with a picture is the compact one: smaller words, no three-line floor, 138 pt tall with its words centred.
+        NunaCard(padding: EdgeInsets(top: 21, leading: 21, bottom: 19, trailing: h.art != nil ? 160 : (h.bars == nil ? 45 : 140))) {
+            // A card with a picture is the compact one: no three-line floor, 138 pt tall or more with its words centred.
             let compact = h.art != nil
-            VStack(alignment: .leading, spacing: compact ? 8 : 6) {
-                Text(verbatim: h.title).font(.nunaWords(size: (compact || NunaThemePrefs.skin == .whp) ? 13.5 : 14.5, semibold: true)).tracking(0).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            VStack(alignment: .leading, spacing: compact ? 6 : 3) {
+                // The sizes of the WHOOP card, worked out from the widths of its lines: title and message both 15 pt, on every card and in every look.
+                Text(verbatim: h.title).font(.nunaWords(size: 15, semibold: true)).tracking(0).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 // Always at least three lines tall (a hidden three-line stand-in sets the floor), so every card is four lines with its title.
-                // In WHP the card is set as the WHOOP app sets it (measured off its card): a 13.5 pt title over a 12 pt message in a lighter grey, the same on
-                // every card whether or not it carries art. The other skins keep their own sizes.
                 let whp = NunaThemePrefs.skin == .whp
-                let bodySize: CGFloat = (compact || whp) ? 12 : 15
-                let bodyGap: CGFloat = whp ? 1.4 : 2
+                let bodySize: CGFloat = 15
+                let bodyGap: CGFloat = whp ? 0.7 : 1
                 let bodyColor: Color = whp ? Color(hex: "#C0C4C7") : NunaPalette.textSecondary
                 ZStack(alignment: .topLeading) {
-                    if !compact { Text(verbatim: "A\nA\nA").font(.nunaWords(size: bodySize)).tracking(0).lineSpacing(bodyGap).hidden().accessibilityHidden(true) }
-                    Text(verbatim: h.message).font(.nunaWords(size: bodySize)).tracking(0).foregroundStyle(bodyColor).textCase(nil)
+                    if !compact { Text(verbatim: "A\nA\nA").font(.nunaWords(size: bodySize, semibold: true)).tracking(0).lineSpacing(bodyGap).hidden().accessibilityHidden(true) }
+                    Text(verbatim: h.message).font(.nunaWords(size: bodySize, semibold: true)).tracking(0).foregroundStyle(bodyColor).textCase(nil)
                         .lineSpacing(bodyGap).fixedSize(horizontal: false, vertical: true)
                 }
                 if let t = h.actionTitle, let a = h.action {

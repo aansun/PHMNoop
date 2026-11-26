@@ -73,6 +73,7 @@ struct NunaBPAddSheet: View {
     @State private var position: NunaBPPosition?
     @State private var site: NunaBPSite?
     @State private var saving = false
+    @State private var showInfo = false
 
     private enum Field: Hashable { case systolic, diastolic }
     @FocusState private var focused: Field?
@@ -90,6 +91,7 @@ struct NunaBPAddSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
+                    infoChip
                     figures
                     when
                     choices(title: "Position", options: NunaBPPosition.allCases.map { ($0.id, $0.title) }, selected: position?.id) { id in
@@ -115,6 +117,11 @@ struct NunaBPAddSheet: View {
             }
         }
         .preferredColorScheme(NunaTheme.colorScheme)
+        .sheet(isPresented: $showInfo) {
+            ScrollView { NunaBPMeasureInfo().padding(NunaSpacing.screenH) }
+                .background(NunaBackdrop()).presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
+                .preferredColorScheme(NunaTheme.colorScheme)
+        }
         .task {
             // After the sheet has arrived, so the keyboard does not fight its animation.
             try? await Task.sleep(nanoseconds: 450_000_000)
@@ -136,6 +143,18 @@ struct NunaBPAddSheet: View {
         }
         .padding(.horizontal, NunaSpacing.screenH - 10).padding(.top, 14).padding(.bottom, 8)
         .background(NunaBackdrop(top: true))
+    }
+
+    private var infoChip: some View {
+        Button { focused = nil; showInfo = true } label: {
+            HStack(spacing: 8) {
+                Text("How to measure").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                Image(systemName: "info.circle").font(.nuna(size: 15, weight: .regular))
+            }
+            .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34)
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain).frame(maxWidth: .infinity)
     }
 
     private var figures: some View {
