@@ -329,6 +329,7 @@ struct NunaBloodPressureView: View {
                 arrow("chevron.right", "Later", enabled: back > 0) { back -= 1; picked = nil }
             }
             HStack(spacing: 18) {
+                Spacer(minLength: 0)
                 HStack(spacing: 6) {
                     Capsule().fill(NunaPalette.textSecondary).frame(width: 14, height: 3)
                     nunaTrendsCap("Reading")
@@ -337,7 +338,6 @@ struct NunaBloodPressureView: View {
                     Capsule().fill(NunaPalette.ink.opacity(0.18)).frame(width: 8, height: 14)
                     nunaTrendsCap("Upper to lower")
                 }
-                Spacer(minLength: 0)
             }
             NunaBPDayChart(days: days, entries: shown, picked: selected?.date) { picked = $0 }
                 .frame(height: 280)
@@ -455,8 +455,8 @@ private struct NunaBPGauge: View {
     }
 }
 
-/// One column a day: a bar from the lower figure to the upper one, and a mark at each in the colour of that day's zone. The highest and the lowest
-/// figures of the period are lined and named at the left. A day without a reading stays empty; a tap picks a day.
+/// One column a day: a bar from the lower figure to the upper one, and a mark at each in the colour of that day's zone. The top and the bottom line are
+/// named Highest and Lowest, as a guide to the direction. A day without a reading stays empty; a tap picks a day.
 private struct NunaBPDayChart: View {
     let days: [Date]
     let entries: [NunaBP.Day]
@@ -478,15 +478,21 @@ private struct NunaBPDayChart: View {
                 func words(_ s: String, _ size: CGFloat, _ weight: Font.Weight, _ color: Color, _ at: CGPoint, _ anchor: UnitPoint) {
                     ctx.draw(Text(verbatim: s).font(.nuna(size: size, weight: weight)).foregroundColor(color), at: at, anchor: anchor)
                 }
-                func rule(_ yy: CGFloat) {
-                    var p = Path(); p.move(to: CGPoint(x: 0, y: yy)); p.addLine(to: CGPoint(x: size.width, y: yy))
+                func rule(_ yy: CGFloat, from start: CGFloat = 0) {
+                    var p = Path(); p.move(to: CGPoint(x: start, y: yy)); p.addLine(to: CGPoint(x: size.width, y: yy))
                     ctx.stroke(p, with: .color(NunaPalette.ink.opacity(0.1)), lineWidth: 1)
                 }
-                rule(top + h / 2)
-                if let high, let low {
-                    rule(y(high) - 28); rule(y(low) + 28)
-                    words(String(localized: "Highest"), 12, .bold, NunaPalette.caution, CGPoint(x: 0, y: y(high) - 31), .bottomLeading)
-                    words(String(localized: "Lowest"), 12, .bold, NunaPalette.charge, CGPoint(x: 0, y: y(low) + 31), .topLeading)
+                // A word that sits on its own line, which carries on from after it.
+                func named(_ word: String, _ color: Color, _ yy: CGFloat) {
+                    let text = ctx.resolve(Text(verbatim: word).font(.nuna(size: 12.5, weight: .bold)).foregroundColor(color))
+                    ctx.draw(text, at: CGPoint(x: 0, y: yy), anchor: .leading)
+                    rule(yy, from: text.measure(in: size).width + 10)
+                }
+                if !entries.isEmpty {
+                    // Four lines evenly down the chart; the first and the last say which way is higher.
+                    named(String(localized: "Highest"), NunaPalette.caution, top)
+                    rule(top + h / 3); rule(top + h * 2 / 3)
+                    named(String(localized: "Lowest"), NunaPalette.charge, top + h)
                 } else {
                     rule(top); rule(top + h)
                     words(String(localized: "No reading in this period."), 13, .semibold, NunaPalette.textSecondary, CGPoint(x: size.width / 2, y: top + h / 2 - 14), .center)
