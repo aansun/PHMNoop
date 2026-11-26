@@ -1364,41 +1364,44 @@ struct NunaLiveWorkoutView: View {
             }
             .padding(.horizontal, NunaSpacing.screenH)
             .padding(.top, 8)
-            GeometryReader { viewport in
-                // The two tabs sit side by side: slide with a finger, or tap the name above.
-                TabView(selection: $selectedTab) {
-                    ForEach([LiveTab.effort, .heartRate], id: \.self) { page in
-                        ScrollView {
-                            VStack(spacing: NunaSpacing.section) {
-                                if page == .heartRate {
-                                    heartRateBeat(bpm: bpm, zone: zone, width: viewport.size.width, height: viewport.size.height,
-                                                  showMap: hideBpm && usesRoute(w) && gps.isRecording,
-                                                  guidance: goal.zoneOn ? guidance(bpm: bpm, state: state).map { ($0, state == .inZone ? NunaPalette.textPrimary : tone) } : nil)
-                                } else {
-                                    activityRing(w, size: min(330, max(188, viewport.size.height - NunaSpacing.section * 2 - 80)))
-                                    effortHeartRate(bpm: bpm, color: tone)
+            // The two tabs sit side by side, each with its own figures under it, so a finger slides between them from anywhere between the tab
+            // names and the clock; a tap on a name does the same.
+            TabView(selection: $selectedTab) {
+                ForEach([LiveTab.effort, .heartRate], id: \.self) { page in
+                    VStack(spacing: 0) {
+                        GeometryReader { viewport in
+                            ScrollView {
+                                VStack(spacing: NunaSpacing.section) {
+                                    if page == .heartRate {
+                                        heartRateBeat(bpm: bpm, zone: zone, width: viewport.size.width, height: viewport.size.height,
+                                                      showMap: hideBpm && usesRoute(w) && gps.isRecording,
+                                                      guidance: goal.zoneOn ? guidance(bpm: bpm, state: state).map { ($0, state == .inZone ? NunaPalette.textPrimary : tone) } : nil)
+                                    } else {
+                                        activityRing(w, size: min(330, max(188, viewport.size.height - NunaSpacing.section * 2 - 80)))
+                                        effortHeartRate(bpm: bpm, color: tone)
+                                    }
+                                    if !liveActivitiesOn { liveActivityOffCard }
                                 }
-                                if !liveActivitiesOn { liveActivityOffCard }
+                                .padding(.vertical, NunaSpacing.section)
+                                .padding(.horizontal, NunaSpacing.screenH)
                             }
-                            .padding(.vertical, NunaSpacing.section)
-                            .padding(.horizontal, NunaSpacing.screenH)
+                            .scrollIndicators(.hidden)
                         }
-                        .scrollIndicators(.hidden)
-                        .tag(page)
+                        VStack(spacing: NunaSpacing.section) {
+                            if page == .heartRate {
+                                heartStatistics(w, calories: calories)
+                            } else {
+                                metricRow(w, calories: calories)
+                            }
+                        }
+                        .padding(.horizontal, NunaSpacing.screenH)
                     }
-                }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: selectedTab)
-            }
-            VStack(spacing: NunaSpacing.section) {
-                if selectedTab == .heartRate {
-                    heartStatistics(w, calories: calories)
-                } else {
-                    metricRow(w, calories: calories)
+                    .contentShape(Rectangle())
+                    .tag(page)
                 }
             }
-            .transaction(value: selectedTab) { $0.animation = nil }
-            .padding(.horizontal, NunaSpacing.screenH)
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: selectedTab)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             controls(w, elapsed: elapsed)
@@ -1429,8 +1432,8 @@ struct NunaLiveWorkoutView: View {
     /// The Heart rate tab: the beating disc in the colour of the current zone (see `NunaHeartBeat`). With the heart rate hidden and a route being
     /// recorded, the tab shows the map of the run instead.
     private func heartRateBeat(bpm: Int?, zone: Int, width: CGFloat, height: CGFloat, showMap: Bool, guidance: (text: String, color: Color)?) -> some View {
-        let range = zoneSet.zones.first(where: { $0.number == zone })
-        let caption = range.map { String(localized: "Zone \(zone) · \(Int($0.lower.rounded()))–\(Int($0.upper.rounded())) bpm") }
+        // The zone by its number only; below the first zone there is none to name.
+        let caption = zoneSet.zones.contains(where: { $0.number == zone }) ? String(localized: "Zone \(zone)") : nil
         let level = bpm.map { NunaLiveMetrics.barPosition(bpm: $0, zoneSet: zoneSet) }
         // The ring takes the room the zone bar used to: as wide as the page allows, and as tall as the page leaves.
         let room = height - NunaSpacing.section * 2 - (guidance == nil ? 8 : 44)
@@ -1512,9 +1515,6 @@ struct NunaLiveWorkoutView: View {
                 Text(w.samples.isEmpty ? "Waiting for HR" : (w.liveStrain < 33 ? "Light" : (w.liveStrain < 66 ? "Moderate" : "High")))
                     .font(.nuna(size: NunaTypeSize.sub, weight: .bold))
                     .foregroundStyle(NunaPalette.textSecondary)
-                Text("0–100")
-                    .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
-                    .foregroundStyle(NunaPalette.textMuted)
             }
         }
         .frame(maxWidth: .infinity)

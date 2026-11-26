@@ -13,7 +13,7 @@ struct NunaZoneRing: View {
     /// How far round the five zones the heart rate is, 0 to 1; nil leaves only the current zone lit (the heart rate is hidden).
     let level: Double?
     var numberText: String?
-    /// Under the number: the zone and its range.
+    /// Under the number, large: the zone.
     var caption: String?
     /// The zone being aimed for, if the session has a target zone.
     var targetZone: Int?
@@ -114,16 +114,20 @@ struct NunaZoneRing: View {
                     .frame(width: disc, height: disc)
                     .scaleEffect(0.985 + 0.03 * swell)
                 VStack(spacing: 4) {
+                    Text("Heart rate").font(.nuna(size: max(13, size * 0.047), weight: .heavy)).textCase(.uppercase).tracking(nunaTrackingLabel)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                    // No unit under or beside the figure: the name above says what it is, and the zone below gets the room.
                     Text(verbatim: numberText ?? bpm.map(String.init) ?? "–")
                         .font(.nuna(size: size * 0.27, weight: .bold, design: NunaType.design))
                         .tracking(nunaTrackingNumber(size * 0.27))
                         .monospacedDigit().minimumScaleFactor(0.6).lineLimit(1)
                         .contentTransition(.numericText())
-                    Text("bpm").font(.nuna(size: 12, weight: .heavy)).textCase(.uppercase).tracking(nunaTrackingLabel)
-                    Group {
-                        if bpm == nil { Text("Waiting for WHOOP") } else if let caption { Text(verbatim: caption) }
+                    if bpm == nil {
+                        Text("Waiting for WHOOP").font(.nuna(size: 13, weight: .semibold)).textCase(nil).padding(.top, 6).multilineTextAlignment(.center)
+                    } else if let caption {
+                        Text(verbatim: caption).font(.nuna(size: max(18, size * 0.085), weight: .heavy)).textCase(nil).padding(.top, 6)
+                            .lineLimit(1).minimumScaleFactor(0.7)
                     }
-                    .font(.nuna(size: 13, weight: .semibold)).textCase(nil).padding(.top, 6).multilineTextAlignment(.center)
                 }
                 .foregroundStyle(ink)
                 .frame(width: disc * 0.84)
