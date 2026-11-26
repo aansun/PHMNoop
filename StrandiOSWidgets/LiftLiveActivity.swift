@@ -24,11 +24,11 @@ struct LiftLiveActivity: Widget {
                     HStack(spacing: 8) {
                         NOOPLiveRing(symbol: "dumbbell.fill", tint: tint, progress: s.ringProgress)
                         VStack(alignment: .leading, spacing: 1) {
-                            Text("Gym").font(.nuna(size: 14.5, weight: .heavy))
+                            Text("Gym").font(.liveActivity(size: 14.5, weight: .heavy))
                             if s.isResting {
-                                Text("Resting").font(.nuna(size: 11, weight: .heavy)).foregroundStyle(tint)
+                                Text("Resting").font(.liveActivity(size: 11, weight: .heavy)).foregroundStyle(tint)
                             } else if let z = s.heartRateZone {
-                                Text("Zone \(z)").font(.nuna(size: 11, weight: .heavy)).foregroundStyle(tint)
+                                Text("Zone \(z)").font(.liveActivity(size: 11, weight: .heavy)).foregroundStyle(tint)
                             }
                         }
                     }
@@ -36,7 +36,7 @@ struct LiftLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.trailing) {
                     HStack(alignment: .firstTextBaseline, spacing: 5) {
                         Image(systemName: "heart.fill").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.alertText)
-                        Text(verbatim: s.bpm.map(String.init) ?? "–").font(.nuna(size: 18, weight: .bold, design: NunaType.design)).monospacedDigit()
+                        Text(verbatim: s.bpm.map(String.init) ?? "–").font(.liveActivity(size: 18, weight: .bold, design: NunaType.design)).monospacedDigit()
                     }
                 }
                 DynamicIslandExpandedRegion(.center) {
@@ -53,9 +53,9 @@ struct LiftLiveActivity: Widget {
                 HStack(spacing: 6) {
                     NOOPLiveRing(symbol: s.isResting ? "bolt.fill" : "dumbbell.fill", tint: tint, progress: s.ringProgress)
                     if s.isResting {
-                        Text("Resting").font(.nuna(size: 13, weight: .heavy)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
+                        Text("Resting").font(.liveActivity(size: 13, weight: .heavy)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
                     } else {
-                        sessionClock(s).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).monospacedDigit().lineLimit(1)
+                        sessionClock(s).font(.liveActivity(size: 13, weight: .heavy, design: NunaType.design)).monospacedDigit().lineLimit(1)
                             .minimumScaleFactor(0.7).frame(maxWidth: 46, alignment: .leading)
                     }
                 }
@@ -65,7 +65,7 @@ struct LiftLiveActivity: Widget {
                     else if let d = s.setsDone, let p = s.setsPlanned { Text("Set \(d)/\(p)") }
                     else { Text(verbatim: s.status) }
                 }
-                .font(.nuna(size: 12.5, weight: .heavy, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 62)
+                .font(.liveActivity(size: 12.5, weight: .heavy, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 62)
             } minimal: {
                 Image(systemName: s.isResting ? "bolt.fill" : "dumbbell.fill").font(.system(size: 13, weight: .bold)).foregroundStyle(tint)
             }
@@ -114,7 +114,7 @@ private struct LiftLockScreen: View {
             HStack {
                 HStack(spacing: 10) {
                     Circle().fill(NunaPalette.alert).frame(width: 10, height: 10)
-                    Text("Gym").font(.nuna(size: 15.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Gym").font(.liveActivity(size: 15.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                 }
                 Spacer(minLength: 8)
                 if state.isResting {
@@ -123,7 +123,7 @@ private struct LiftLockScreen: View {
                         restClock(state).monospacedDigit().frame(minWidth: 34, alignment: .leading)
                     }
                     .fixedSize()
-                    .font(.nuna(size: 12, weight: .heavy)).foregroundStyle(tint)
+                    .font(.liveActivity(size: 12, weight: .heavy)).foregroundStyle(tint)
                     .padding(.horizontal, 10).frame(height: 26)
                     .background(tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 } else if let e = state.effort {
@@ -134,14 +134,14 @@ private struct LiftLockScreen: View {
                 HStack(spacing: 8) {
                     Image(systemName: "heart.fill").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
                     HStack(alignment: .firstTextBaseline, spacing: 3) {
-                        Text(verbatim: state.bpm.map(String.init) ?? "–").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).monospacedDigit()
+                        Text(verbatim: state.bpm.map(String.init) ?? "–").font(.liveActivity(size: 22, weight: .bold, design: NunaType.design)).monospacedDigit()
                             .foregroundStyle(NunaPalette.textPrimary)
-                        Text("bpm").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("bpm").font(.liveActivity(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     if let z = state.heartRateZone { NOOPLiveChip(text: Text("Zone \(z)"), color: NOOPLive.tint(zone: z)).scaleEffect(0.85, anchor: .leading) }
                 }
                 Spacer(minLength: 6)
-                Text(verbatim: state.exercise + " · " + state.status).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: state.exercise + " · " + state.status).font(.liveActivity(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
             .padding(.top, 8)

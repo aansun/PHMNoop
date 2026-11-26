@@ -53,11 +53,14 @@ enum NunaLiveMetrics {
     /// A session-window step count, preferring WHOOP's calibrated counter just like the daily readout.
     @MainActor static func steps(sport: String, from: Int, to: Int, repo: Repository, ticksPerStep: Double, requestPhonePermission: Bool = false) async -> Int? {
         guard from < to, NunaWorkoutSportKind.of(sport) == .onFoot || StravaActivityType.isTreadmill(sport) else { return nil }
-        if let ticks = await repo.strapStepTicks(from: from, to: to) {
-            return Int((Double(ticks) / max(ticksPerStep, 0.5)).rounded())
-        }
-        guard requestPhonePermission || CMPedometer.authorizationStatus() == .authorized else { return nil }
-        return await WorkoutPedometer.steps(fromSec: from, toSec: to)
+        let strap = await repo.strapStepTicks(from: from, to: to).map { Int((Double($0) / max(ticksPerStep, 0.5)).rounded()) }
+        let treadmill = StravaActivityType.isTreadmill(sport)
+        if let strap, !treadmill { return strap }
+        guard requestPhonePermission || CMPedometer.authorizationStatus() == .authorized else { return strap }
+        let phone = await WorkoutPedometer.steps(fromSec: from, toSec: to)
+        // On a treadmill the strap's steps arrive late, in pieces, and the distance is worked out from them: the fuller of the two counts stands.
+        // A phone left on the machine counts little, so the strap wins once it has caught up.
+        return [strap, phone].compactMap { $0 }.max()
     }
 
     /// Calories so far, with the same estimate the saved workout uses. nil until two samples exist.

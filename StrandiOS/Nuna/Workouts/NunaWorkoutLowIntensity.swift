@@ -268,10 +268,13 @@ struct NunaActivityMilestoneCard: View {
 
 // MARK: - Session metrics
 
-/// The heart-rate figures of the session, each beside the wearer's usual for the activity, scrolling sideways.
+/// The figures of the session (distance and pace where it went somewhere, then the heart rate), each beside the wearer's usual for the activity, scrolling sideways.
 struct NunaSessionMetrics: View {
     struct Item: Identifiable {
         let id: String; let icon: String; let label: LocalizedStringKey; let value: String
+        var unit = "bpm"
+        /// A word under the figure where there is no average to set it against ("Estimate").
+        var note: String?
         var pill: (value: Double, average: Double, text: String)?
     }
     let items: [Item]
@@ -297,10 +300,12 @@ struct NunaSessionMetrics: View {
             .padding(.bottom, 6)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(verbatim: t.value).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
-                if t.value != "–" { Text(verbatim: "bpm").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
+                if t.value != "–" { Text(verbatim: t.unit).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
             }
             .padding(.bottom, 4)
-            if let p = t.pill { NunaAveragePill(value: p.value, average: p.average, text: p.text) } else { Color.clear.frame(height: 28) }
+            if let p = t.pill { NunaAveragePill(value: p.value, average: p.average, text: p.text) }
+            else if let note = t.note { Text(verbatim: note).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).frame(height: 28) }
+            else { Color.clear.frame(height: 28) }
         }
         .padding(14).frame(maxWidth: .infinity, alignment: .leading)
         .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))

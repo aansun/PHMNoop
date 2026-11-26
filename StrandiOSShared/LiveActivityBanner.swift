@@ -13,6 +13,15 @@ import ActivityKit
 // heart rate has climbed with a white marker at it, and the name of the zone under its segment; at the foot three columns split by hairlines: a figure
 // with its name, the PHMN wordmark, and a second figure. Every colour is fixed, so it reads the same on any wallpaper and in either appearance.
 
+extension Font {
+    /// The app's font for a Live Activity: figures as everywhere else, words in the system face (see `NOOPBannerPalette.words`).
+    static func liveActivity(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
+        let figure = design == NunaType.design && !((weight == .heavy || weight == .black) && size < 32)
+        return figure ? .nuna(size: size, weight: weight, design: design)
+                      : .system(size: (size * 0.93 * 2).rounded() / 2, weight: weight, design: .default)
+    }
+}
+
 enum NOOPBannerPalette {
     static let top = Color(hex: "#1B242B")
     static let bottom = Color(hex: "#11181D")
@@ -35,18 +44,10 @@ enum NOOPBannerPalette {
         return .system(size: size, weight: .bold, design: .default).width(.condensed)
     }
 
-    /// The words ("bpm", the units, the captions): Proxima Nova, as the reference.
+    /// The words ("bpm", the units, the captions), in the system face. A Mac that mirrors the phone has its own "Proxima Nova" under the very
+    /// names of the bundled files and draws boxes where its letters should be, so the Live Activity does not use that face.
     static func words(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        let name: String
-        switch weight {
-        case .heavy, .black, .bold: name = "ProximaNova-Extrabld"
-        case .semibold, .medium: name = "ProximaNova-Semibold"
-        default: name = "ProximaNova-Regular"
-        }
-        #if canImport(UIKit)
-        if UIFont(name: name, size: size) != nil { return .custom(name, size: size) }
-        #endif
-        return .system(size: size, weight: weight, design: .default)
+        .system(size: size, weight: weight, design: .default)
     }
 
     /// The zones, easy to hard: slate, blue, teal, bronze, rust.

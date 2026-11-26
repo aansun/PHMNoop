@@ -1,4 +1,5 @@
 import Foundation
+import StrandImport
 import WhoopStore
 #if os(iOS)
 import UIKit
@@ -94,7 +95,8 @@ final class StravaSettingsModel: ObservableObject {
         statusText = String(localized: "Strava disconnected.")
     }
 
-    func upload(_ row: WorkoutRow) async {
+    /// `heartRate` fills the timeline of an indoor session, which has no route to carry it.
+    func upload(_ row: WorkoutRow, heartRate: [FitHeartRate] = []) async {
         guard StravaExperiment.isEnabled else { return }
         guard isConnected else {
             statusText = StravaError.notConnected.localizedDescription
@@ -132,12 +134,15 @@ final class StravaSettingsModel: ObservableObject {
                     row: row,
                     route: route,
                     elevationGainM: storedRoute?.elevationGainM,
-                    allowWithoutRoute: ownGym)
+                    allowWithoutRoute: ownGym,
+                    heartRate: heartRate)
                 response = try await client.waitForUploadCompletion(initialResponse)
             }
             // Strava can accept a file and then refuse it while processing: that is a failure, not "processing", and it is shown as one.
             if let refusal = response.error, !refusal.isEmpty {
-                statusText = String(localized: "Strava could not use this activity: \(refusal)")
+                // Strava words some refusals with a web link in markup; only the words are shown.
+                let words = refusal.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+                statusText = String(localized: "Strava could not use this activity: \(words)")
                 return
             }
             let record = StravaUploadRecord(

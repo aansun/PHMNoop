@@ -54,6 +54,23 @@ final class RouteExporterTests: XCTestCase {
         XCTAssertEqual(Int(a!.end.timeIntervalSince1970), endTs)
     }
 
+    /// A treadmill session has no route; its file still holds a timeline with heart rate and distance, so Strava does not call it empty.
+    func testIndoorSessionWithoutRouteStillHasRecords() {
+        let heart = (0...60).map { FitHeartRate(ts: startTs + $0 * 30, bpm: 110 + $0 % 5) }
+        let with = RouteExporter.render(.fit, route: [], startTs: startTs, endTs: endTs, sport: "Treadmill walk",
+                                        distanceM: 3340, avgHr: 112, maxHr: 114, steps: 4901, heartRate: heart)
+        let none = RouteExporter.render(.fit, route: [], startTs: startTs, endTs: endTs, sport: "Treadmill walk")
+        // Each record is 10 bytes: 61 readings with heart rate, and one every ten seconds plus the end without.
+        XCTAssertGreaterThan(with.count, 61 * 10)
+        XCTAssertGreaterThan(none.count, 181 * 10)
+        let a = ActivityFileImporter.parse(data: with, filename: "treadmill.fit").activity
+        XCTAssertNotNil(a)
+        XCTAssertEqual(a!.distanceM ?? 0, 3340, accuracy: 0.5)
+        XCTAssertEqual(a!.avgHr, 112)
+        XCTAssertEqual(Int(a!.start.timeIntervalSince1970), startTs)
+        XCTAssertEqual(Int(a!.end.timeIntervalSince1970), endTs)
+    }
+
     func testFitHasValidHeaderAndCrc() {
         let bytes = [UInt8](RouteExporter.render(.fit, route: route, startTs: startTs, endTs: endTs, sport: "run"))
         XCTAssertEqual(Int(bytes[0]), 12)                  // header size

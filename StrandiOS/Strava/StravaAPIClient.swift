@@ -71,16 +71,17 @@ final class StravaAPIClient {
     /// shows the exercises, the totals and the muscle map. `strengthSets` empty is every other kind of upload.
     func upload(row: WorkoutRow, route: [RouteMath.LatLng], elevationGainM: Double? = nil,
                 allowWithoutRoute: Bool = false, name: String? = nil, description: String? = nil,
-                strengthSets: [FitStrengthSet] = []) async throws -> StravaUploadResponse {
+                strengthSets: [FitStrengthSet] = [], heartRate: [FitHeartRate] = []) async throws -> StravaUploadResponse {
         guard route.count >= 2 || StravaActivityType.isTreadmill(row.sport) || allowWithoutRoute else { throw StravaError.noRoute }
         let token = try await validAccessToken()
-        let steps = await Self.stepsForUpload(row: row)
+        var steps = row.steps
+        if steps == nil { steps = await Self.stepsForUpload(row: row) }
         let points = route.map { RoutePoint(lat: $0.lat, lon: $0.lon) }
         let distanceM = row.distanceM ?? (route.count >= 2 ? RouteMath.totalMeters(route) : nil) ?? NunaTreadmillEstimate.meters(row: row, steps: steps)
         let file = RouteExporter.render(
             .fit, route: points, startTs: row.startTs, endTs: row.endTs, sport: row.sport,
             distanceM: distanceM, energyKcal: row.energyKcal, avgHr: row.avgHr, maxHr: row.maxHr,
-            movingTimeS: row.durationS, steps: steps, elevationGainM: elevationGainM, strengthSets: strengthSets)
+            movingTimeS: row.durationS, steps: steps, elevationGainM: elevationGainM, strengthSets: strengthSets, heartRate: heartRate)
         let boundary = "Boundary-\(UUID().uuidString)"
         var request = URLRequest(url: StravaOAuth.apiBase.appendingPathComponent("uploads"))
         request.httpMethod = "POST"

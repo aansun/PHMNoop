@@ -65,11 +65,11 @@ struct NOOPLiveMetric<Value: View>: View {
 
     var body: some View {
         VStack(alignment: alignment, spacing: 2) {
-            Text(label).font(.nuna(size: 10, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textSecondary)
+            Text(label).font(.liveActivity(size: 10, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textSecondary)
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                text.font(.nuna(size: size, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                text.font(.liveActivity(size: size, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
                     .lineLimit(1).minimumScaleFactor(0.6)
-                if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: size * 0.42, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                if !unit.isEmpty { Text(verbatim: unit).font(.liveActivity(size: size * 0.42, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
             }
         }
         .frame(maxWidth: .infinity, alignment: alignment == .leading ? .leading : (alignment == .trailing ? .trailing : .center))
@@ -99,7 +99,7 @@ struct NOOPLiveGlyph: View {
     var tint: Color = NunaPalette.charge
     var size: CGFloat = 40
     var body: some View {
-        Image(systemName: symbol).font(.nuna(size: size * 0.45, weight: .bold)).foregroundStyle(tint)
+        Image(systemName: symbol).font(.liveActivity(size: size * 0.45, weight: .bold)).foregroundStyle(tint)
             .frame(width: size, height: size)
             .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: size * 0.28, style: .continuous))
     }
@@ -113,7 +113,7 @@ struct NOOPLiveChip: View {
     var body: some View {
         HStack(spacing: 4) {
             if let systemImage { Image(systemName: systemImage).font(.system(size: 10, weight: .bold)) }
-            text.font(.nuna(size: 12, weight: .heavy))
+            text.font(.liveActivity(size: 12, weight: .heavy))
         }
         .foregroundStyle(color)
         .padding(.horizontal, 10).frame(height: 24)
@@ -132,7 +132,7 @@ struct NOOPBatteryRing: View {
         ZStack {
             Circle().stroke(NunaPalette.hairline, lineWidth: 3)
             Circle().trim(from: 0, to: progress).stroke(NunaPalette.charge.opacity(0.8), style: StrokeStyle(lineWidth: 3, lineCap: .round)).rotationEffect(.degrees(-90))
-            Text(percent.map { "\($0)" } ?? "–").font(.nuna(size: size * 0.32, weight: .bold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary)
+            Text(percent.map { "\($0)" } ?? "–").font(.liveActivity(size: size * 0.32, weight: .bold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary)
         }
         .frame(width: size, height: size)
         .accessibilityLabel(percent.map { Text("Battery \($0) percent") } ?? Text("Battery unavailable"))

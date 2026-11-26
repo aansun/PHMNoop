@@ -9838,5 +9838,7 @@
  "The change around that day's breathing sessions: upper figure above, lower figure below.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Perubahan sekitar sesi napas hari itu: angka sistolik di atas, diastolik di bawah."}}}},
  "Hides the explanation": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menutup penjelasan"}}}},
  "Shows the explanation": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membuka penjelasan"}}}},
- "Sleep, activity, weight, journal and breathing": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur, aktivitas, berat, jurnal, napas"}}}}
+ "Sleep, activity, weight, journal and breathing": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur, aktivitas, berat, jurnal, napas"}}}},
+ "Calculating": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menghitung"}}}},
+ "live.target.completed": {"extractionState": "extracted_with_value", "localizations": {"en": {"stringUnit": {"state": "new", "value": "Completed"}}, "id": {"stringUnit": {"state": "translated", "value": "Completed"}}}}
 }, "version":"1.0" }

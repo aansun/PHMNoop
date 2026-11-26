@@ -1189,6 +1189,9 @@ struct NunaLiveWorkoutView: View {
     /// Whether iOS lets this app run Live Activities; read once and on change, not on every redraw of the live screen.
     @State private var liveActivitiesOn = true
     @State private var sessionSteps: Int?
+    /// When the step count last grew, and how long the session had run then: the treadmill distance is only as new as that.
+    @State private var stepsAt: Date?
+    @State private var stepsElapsed: Double?
     @State private var savedActivity: NunaWorkoutKey?
     @State private var savedActivityRow: WorkoutRow?
     @State private var openingSavedActivity = false
@@ -1208,7 +1211,9 @@ struct NunaLiveWorkoutView: View {
     }
 
     private func stepWindow(_ workout: AppModel.ActiveWorkout, now: Date) -> StepWindow {
-        let end = workout.pausedAt.map { Int($0.timeIntervalSince1970) } ?? (Int(now.timeIntervalSince1970) / 15 * 15)
+        // A treadmill's distance comes from the steps, so they are asked for more often.
+        let every = StravaActivityType.isTreadmill(workout.sport) ? 5 : 15
+        let end = workout.pausedAt.map { Int($0.timeIntervalSince1970) } ?? (Int(now.timeIntervalSince1970) / every * every)
         return StepWindow(start: Int(workout.start.timeIntervalSince1970), end: end, sport: workout.sport, refresh: repo.refreshSeq)
     }
 
@@ -1413,8 +1418,10 @@ struct NunaLiveWorkoutView: View {
         .onChange(of: Int(elapsed)) { _, _ in checkGoal(elapsed: elapsed, zone: zone, distance: gps.distanceM) }
         .task(id: stepWindow(w, now: now)) {
             let window = stepWindow(w, now: now)
-            let steps = await NunaLiveMetrics.steps(sport: w.sport, from: window.start, to: window.end, repo: repo, ticksPerStep: model.profile.stepTicksPerStep)
+            let steps = await NunaLiveMetrics.steps(sport: w.sport, from: window.start, to: window.end, repo: repo, ticksPerStep: model.profile.stepTicksPerStep,
+                                                    requestPhonePermission: StravaActivityType.isTreadmill(w.sport))
             guard !Task.isCancelled, model.activeWorkout?.start == w.start else { return }
+            if let steps, steps != sessionSteps { stepsAt = Date(); stepsElapsed = w.elapsed(at: Date()) }
             sessionSteps = steps
         }
     }
@@ -1537,7 +1544,9 @@ struct NunaLiveWorkoutView: View {
         }
         // The zone only, as a number: the range in bpm is on the Heart rate tab.
         if goal.zoneOn { targetParts.append(String(localized: "Zone \(goal.zone)")) }
-        let targetText = targetParts.joined(separator: " · ")
+        // Once a set time or distance is reached and the session goes on, the bar says so instead of repeating the target.
+        let reached = hasProgress && fraction >= 1
+        let targetText = reached ? String(localized: "live.target.completed", defaultValue: "Completed") : targetParts.joined(separator: " · ")
         return Text(verbatim: targetText)
             .font(.nuna(size: NunaTypeSize.h3, weight: .bold, design: NunaType.design))
             .foregroundStyle(NunaPalette.textPrimary)
@@ -1582,6 +1591,8 @@ struct NunaLiveWorkoutView: View {
         let value: String
         let unit: String
         let icon: String
+        /// The figure is still being worked out: a spinner and that word take the unit's place.
+        var busy = false
     }
 
     private func statisticsRow(_ tiles: [Statistic]) -> some View {
@@ -1608,7 +1619,13 @@ struct NunaLiveWorkoutView: View {
                             .monospacedDigit()
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
-                        if !tile.unit.isEmpty {
+                        if tile.busy {
+                            HStack(spacing: 5) {
+                                ProgressView().controlSize(.mini).tint(NunaPalette.textSecondary)
+                                Text("Calculating").font(.nuna(size: NunaTypeSize.caption, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                    .textCase(nil).lineLimit(1).minimumScaleFactor(0.7)
+                            }
+                        } else if !tile.unit.isEmpty {
                             Text(verbatim: tile.unit)
                                 .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
                                 .foregroundStyle(NunaPalette.textSecondary)
@@ -1650,11 +1667,17 @@ struct NunaLiveWorkoutView: View {
         let sensorSpeed = model.live.sensorSpeedKmh.flatMap { $0 > 0 ? $0 : nil }
         let activeSeconds = w.elapsed(at: Date())
         // A treadmill has no GPS: its own distance when the machine reports one, otherwise steps times a stride taken from the wearer's height.
-        let treadmillMeters: Double? = StravaActivityType.isTreadmill(w.sport) ? treadmillDistance(w, steps: sessionSteps, seconds: activeSeconds) : nil
+        let treadmill = StravaActivityType.isTreadmill(w.sport)
+        // The seconds the step count stands for, so a late count does not read as a slow pace.
+        let countedSeconds = model.live.sensorDistanceM == nil ? min(stepsElapsed ?? activeSeconds, activeSeconds) : activeSeconds
+        let treadmillMeters: Double? = treadmill ? treadmillDistance(w, steps: sessionSteps, seconds: countedSeconds) : nil
         let meters: Double? = gps.pointCount > 0 ? gps.distanceM : treadmillMeters
         let dist = meters.map { NunaWorkoutFormat.liveDistance($0, sys) } ?? (dash, sys == .imperial ? "mi" : "km")
         // Pace: the GPS's, else the machine's speed, else the session average from the distance so far.
-        let averagePace: Double? = treadmillMeters.flatMap { $0 >= 20 && activeSeconds >= 20 ? activeSeconds / ($0 / 1000) : nil }
+        let averagePace: Double? = treadmillMeters.flatMap { $0 >= 20 && countedSeconds >= 20 ? countedSeconds / ($0 / 1000) : nil }
+        // Estimated from steps and nothing new for a while (or nothing yet): the page says it is still working it out.
+        let calculating = treadmill && !w.isPaused && gps.pointCount == 0 && model.live.sensorDistanceM == nil
+            && (treadmillMeters == nil || (stepsAt.map { Date().timeIntervalSince($0) > 20 } ?? true))
         let paceSeconds = gps.paceSecPerKm ?? sensorSpeed.map { 3600 / $0 } ?? averagePace
         // A pace slower than 40 minutes a kilometre is a standstill, not a pace.
         let pace = paceSeconds.map { $0 <= 2400 } == true ? split(UnitFormatter.paceFromSecPerKm(paceSeconds, system: sys)) : (dash, sys == .imperial ? "/mi" : "/km")
@@ -1667,8 +1690,8 @@ struct NunaLiveWorkoutView: View {
         let fields = NunaLiveMetricLayout.fields(sport: w.sport, usesGPS: usesRoute(w))
         let tiles: [Statistic] = fields.map { field in
             switch field {
-            case .distance: return Statistic(label: "Distance", value: dist.0, unit: dist.1, icon: "point.topleft.down.to.point.bottomright.curvepath")
-            case .pace: return Statistic(label: "Pace", value: pace.0, unit: pace.1, icon: "speedometer")
+            case .distance: return Statistic(label: "Distance", value: dist.0, unit: dist.1, icon: "point.topleft.down.to.point.bottomright.curvepath", busy: calculating)
+            case .pace: return Statistic(label: "Pace", value: pace.0, unit: pace.1, icon: "speedometer", busy: calculating)
             case .steps: return Statistic(label: "Steps", value: sessionSteps.map { $0.formatted(.number.locale(AppLanguage.activeLocale)) } ?? dash, unit: "", icon: NunaIcons.steps)
             case .cadence: return Statistic(label: "Cadence", value: cadence, unit: "spm", icon: "figure.run")
             case .speed: return Statistic(label: "Speed", value: speed.0, unit: speed.1, icon: "speedometer")

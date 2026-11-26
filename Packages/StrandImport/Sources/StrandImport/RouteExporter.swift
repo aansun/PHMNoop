@@ -67,6 +67,13 @@ public enum FitExerciseCategory {
     }
 }
 
+/// One heart-rate reading of a session, for the records of a file that has no route.
+public struct FitHeartRate: Equatable, Sendable {
+    public let ts: Int
+    public let bpm: Int
+    public init(ts: Int, bpm: Int) { self.ts = ts; self.bpm = bpm }
+}
+
 public enum RouteExporter {
 
     public enum Format: String, Sendable, Equatable {
@@ -96,7 +103,8 @@ public enum RouteExporter {
         movingTimeS: Double? = nil,
         steps: Int? = nil,
         elevationGainM: Double? = nil,
-        strengthSets: [FitStrengthSet] = []
+        strengthSets: [FitStrengthSet] = [],
+        heartRate: [FitHeartRate] = []
     ) -> Data {
         switch format {
         case .gpx:
@@ -104,7 +112,8 @@ public enum RouteExporter {
         case .fit:
             return buildFit(route: route, startTs: startTs, endTs: endTs, sport: sport,
                             distanceM: distanceM, energyKcal: energyKcal, avgHr: avgHr, maxHr: maxHr,
-                            movingTimeS: movingTimeS, steps: steps, elevationGainM: elevationGainM, strengthSets: strengthSets)
+                            movingTimeS: movingTimeS, steps: steps, elevationGainM: elevationGainM, strengthSets: strengthSets,
+                            heartRate: heartRate)
         }
     }
 
@@ -151,7 +160,8 @@ public enum RouteExporter {
         movingTimeS: Double? = nil,
         steps: Int? = nil,
         elevationGainM: Double? = nil,
-        strengthSets: [FitStrengthSet] = []
+        strengthSets: [FitStrengthSet] = [],
+        heartRate: [FitHeartRate] = []
     ) -> Data {
         let canon = canonicalSport(sport)
         let times = interpolatedTimes(route.count, startTs, endTs)
@@ -177,6 +187,25 @@ public enum RouteExporter {
             if includeRecordSpeed {
                 let speed = i == 0 ? nil : segmentSpeedMps(route[i - 1], route[i], from: times[i - 1], to: times[i])
                 u16(&body, speed.map(fitSpeed) ?? 0xFFFF)
+            }
+        }
+
+        // An indoor session (a treadmill) has no route, and a file without records is turned away as empty. It gets a record at the start, at every
+        // heart-rate reading (every ten seconds without any) and at the end, with the distance so far spread evenly over the session.
+        if route.isEmpty && strengthSets.isEmpty && endTs > startTs {
+            var readings: [Int: Int] = [:]
+            for h in heartRate where h.ts >= startTs && h.ts <= endTs && h.bpm > 0 && h.bpm < 255 { readings[h.ts] = h.bpm }
+            var moments = Set(readings.keys)
+            if moments.isEmpty { moments = Set(stride(from: startTs, to: endTs, by: 10)) }
+            moments.formUnion([startTs, endTs])
+            // record (global 20): timestamp, distance (m x 100), heart rate.
+            defn(&body, local: 5, global: 20, fields: [(253, 4, 0x86), (5, 4, 0x86), (3, 1, 0x02)])
+            for ts in moments.sorted() {
+                body.append(5)
+                u32(&body, fitTime(ts))
+                if let distanceM, distanceM > 0 { u32(&body, UInt32((distanceM * 100 * Double(ts - startTs) / Double(endTs - startTs)).rounded())) }
+                else { u32(&body, 0xFFFF_FFFF) }
+                u8(&body, readings[ts] ?? 0xFF)
             }
         }
 

@@ -47,11 +47,11 @@ struct NOOPLiveActivity: Widget {
                 HStack(spacing: 6) {
                     NOOPLiveRing(symbol: s.compactSymbol, tint: tint, progress: s.progress)
                     if s.isPaused {
-                        Text("Paused").font(.nuna(size: 13, weight: .heavy)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
+                        Text("Paused").font(.liveActivity(size: 13, weight: .heavy)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
                     } else if s.outOfZone, let z = s.heartRateZone {
-                        Text("Zone \(z)").font(.nuna(size: 13, weight: .heavy)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
+                        Text("Zone \(z)").font(.liveActivity(size: 13, weight: .heavy)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
                     } else {
-                        clock(s).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+                        clock(s).font(.liveActivity(size: 13, weight: .heavy, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
                             .frame(maxWidth: 46, alignment: .leading)
                     }
                 }
@@ -67,7 +67,7 @@ struct NOOPLiveActivity: Widget {
                         Text(verbatim: s.bpm.map { "\($0) bpm" } ?? "–")
                     }
                 }
-                .font(.nuna(size: 12.5, weight: .heavy, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 62)
+                .font(.liveActivity(size: 12.5, weight: .heavy, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 62)
             } minimal: {
                 Image(systemName: s.compactSymbol).font(.system(size: 13, weight: .bold)).foregroundStyle(tint)
             }
@@ -129,14 +129,14 @@ private struct LockScreen: View {
         HStack(spacing: 12) {
             Image(systemName: "heart.fill").font(.system(size: 26, weight: .bold)).foregroundStyle(NunaPalette.alertText)
             HStack(alignment: .firstTextBaseline, spacing: 5) {
-                Text(verbatim: state.bpm.map(String.init) ?? "–").font(.nuna(size: 40, weight: .bold, design: NunaType.design)).monospacedDigit()
+                Text(verbatim: state.bpm.map(String.init) ?? "–").font(.liveActivity(size: 40, weight: .bold, design: NunaType.design)).monospacedDigit()
                     .foregroundStyle(state.bonded ? NunaPalette.textPrimary : NunaPalette.textMuted)
-                Text("bpm").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("bpm").font(.liveActivity(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
             Spacer(minLength: 8)
             // The link to the strap dropped: the banner stays and says so, instead of vanishing and needing the app to come back.
             if !state.bonded {
-                Text("Reconnecting…").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
+                Text("Reconnecting…").font(.liveActivity(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
             }
         }
         .padding(EdgeInsets(top: 14, leading: 20, bottom: 14, trailing: 20))
@@ -171,9 +171,9 @@ private struct HeartRate: View {
         HStack(spacing: 8) {
             Image(systemName: "heart.fill").font(.system(size: size * 0.62, weight: .bold)).foregroundStyle(tint)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: state.bpm.map(String.init) ?? "–").font(.nuna(size: size, weight: .bold, design: NunaType.design)).monospacedDigit()
+                Text(verbatim: state.bpm.map(String.init) ?? "–").font(.liveActivity(size: size, weight: .bold, design: NunaType.design)).monospacedDigit()
                     .foregroundStyle(state.outOfZone ? tint : NunaPalette.textPrimary)
-                Text("bpm").font(.nuna(size: max(size * 0.4, 11), weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("bpm").font(.liveActivity(size: max(size * 0.4, 11), weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
             .fixedSize()
         }
@@ -194,7 +194,7 @@ private struct ElapsedPill: View {
         let hours = (state.activityStartedAt.map { Date().timeIntervalSince($0) } ?? 0) >= 3600
         HStack(spacing: 8) {
             Image(systemName: state.isPaused ? "pause.fill" : "stopwatch").font(.system(size: size * 0.8, weight: .bold))
-            clock(state).font(.nuna(size: size, weight: .bold, design: NunaType.design)).monospacedDigit()
+            clock(state).font(.liveActivity(size: size, weight: .bold, design: NunaType.design)).monospacedDigit()
                 .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                 .frame(width: size * (hours ? 3.9 : 2.9), alignment: .leading)
         }
@@ -214,9 +214,9 @@ private struct ZoneStrip: View {
         VStack(spacing: 6) {
             NOOPZoneBar(zone: state.heartRateZone, position: state.zonePosition)
             if state.isPaused {
-                Text("Paused").font(.nuna(size: 11.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.warning)
+                Text("Paused").font(.liveActivity(size: 11.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.warning)
             } else if let z = state.heartRateZone {
-                Text("Zone \(z)").font(.nuna(size: 11.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(tint)
+                Text("Zone \(z)").font(.liveActivity(size: 11.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(tint)
             }
         }
     }
@@ -234,13 +234,13 @@ private struct FigureColumn: View {
     var body: some View {
         VStack(spacing: 4) {
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(verbatim: value).font(.nuna(size: size, weight: .bold, design: NunaType.design)).monospacedDigit()
+                Text(verbatim: value).font(.liveActivity(size: size, weight: .bold, design: NunaType.design)).monospacedDigit()
                     .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                 if !unit.isEmpty {
-                    Text(verbatim: unit).font(.nuna(size: size * 0.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
+                    Text(verbatim: unit).font(.liveActivity(size: size * 0.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
                 }
             }
-            Text(label).font(.nuna(size: 10, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textSecondary)
+            Text(label).font(.liveActivity(size: 10, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textSecondary)
         }
         .frame(maxWidth: .infinity)
     }
@@ -286,7 +286,7 @@ private struct WorkoutFigures: View {
             HStack(spacing: 0) {
                 NOOPLiveMetric(label: "STRAIN", text: Text(verbatim: state.effort.map(String.init) ?? "–"), size: size, alignment: .leading)
                 VStack(spacing: 4) {
-                    Text("Battery").font(.nuna(size: 10, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Battery").font(.liveActivity(size: 10, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textSecondary)
                     NOOPBatteryRing(percent: state.batteryPct, size: size)
                 }.frame(maxWidth: .infinity, alignment: .trailing)
             }

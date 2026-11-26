@@ -12,6 +12,8 @@ import WhoopStore
 struct NunaWorkoutSummaryView: View {
     let key: NunaWorkoutKey
     var initialRow: WorkoutRow? = nil
+    @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
+    @AppStorage(UnitPrefs.distanceSystemKey) private var distanceSystemRaw = ""
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @Environment(\.dismiss) private var dismiss
@@ -169,8 +171,28 @@ struct NunaWorkoutSummaryView: View {
             }
         }
         NunaActivityMilestoneCard(count: m.rows.filter { $0.sport == r.sport && $0.startTs <= r.startTs }.count)
-        NunaSessionMetrics(items: sessionMetrics(r, averages: averages))
+        NunaSessionMetrics(items: distanceMetrics(r, shown: shown) + sessionMetrics(r, averages: averages))
         NunaActivityImpactCard(impact: NunaActivityImpact.compute(row: r, rows: m.rows, days: repo.days))
+    }
+
+    /// Distance and pace for a session that went somewhere, marked as an estimate when it was worked out from the steps.
+    private func distanceMetrics(_ r: WorkoutRow, shown: WorkoutRow) -> [NunaSessionMetrics.Item] {
+        guard let metres = shown.distanceM, metres > 0 else { return [] }
+        let system = UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceSystemRaw)
+        let note: String? = (r.distanceM ?? 0) <= 0 ? String(localized: "Estimate") : nil
+        let distance = NunaWorkoutFormat.liveDistance(metres, system)
+        var items = [NunaSessionMetrics.Item(id: "distance", icon: "point.topleft.down.to.point.bottomright.curvepath", label: "Distance",
+                                             value: distance.value, unit: distance.unit, note: note)]
+        let seconds = shown.durationS ?? Double(shown.endTs - shown.startTs)
+        let pace = seconds / (metres / 1000)
+        // Slower than 40 minutes a kilometre is standing about, not a pace.
+        if seconds >= 20, pace <= 2400 {
+            let text = UnitFormatter.paceFromSecPerKm(pace, system: system)
+            let parts = text.split(separator: " ")
+            items.append(.init(id: "pace", icon: "speedometer", label: "Pace", value: parts.first.map(String.init) ?? text,
+                               unit: parts.count > 1 ? String(parts.last ?? "") : "", note: note))
+        }
+        return items
     }
 
     private func sessionMetrics(_ r: WorkoutRow, averages: NunaWorkoutAverages?) -> [NunaSessionMetrics.Item] {
@@ -283,7 +305,13 @@ struct NunaWorkoutSummaryView: View {
     }
 
     private func sendToStrava(_ r: WorkoutRow) async {
-        await strava.upload(r)
+        // What the page shows goes up: the estimated distance and the steps of an indoor session, and its heart rate for the file's timeline.
+        let shown = NunaTreadmillEstimate.filled(r, steps: data.steps).row
+        let row = WorkoutRow(startTs: shown.startTs, endTs: shown.endTs, sport: shown.sport, source: shown.source, durationS: shown.durationS,
+                             energyKcal: shown.energyKcal, avgHr: shown.avgHr, maxHr: shown.maxHr, strain: shown.strain, distanceM: shown.distanceM,
+                             zonesJSON: shown.zonesJSON, notes: shown.notes, steps: shown.steps ?? data.steps)
+        let heart = await repo.hrSamples(from: r.startTs, to: r.endTs, limit: 20_000).map { FitHeartRate(ts: $0.ts, bpm: $0.bpm) }
+        await strava.upload(row, heartRate: heart)
         stravaState = NunaStravaCheck.state(r)
         stravaMessage = strava.statusText
     }

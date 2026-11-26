@@ -21,9 +21,9 @@ struct SyncLiveActivity: Widget {
                     Image(systemName: glyphName(st.phase)).font(.system(size: 14, weight: .bold)).foregroundStyle(tint)
                         .frame(width: 30, height: 30).background(tint.opacity(0.2), in: Circle())
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(verbatim: context.attributes.title).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.9).textCase(.uppercase)
+                        Text(verbatim: context.attributes.title).font(.liveActivity(size: 10.5, weight: .heavy)).tracking(0.9).textCase(.uppercase)
                             .foregroundStyle(.secondary).lineLimit(1)
-                        Text(verbatim: st.status).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
+                        Text(verbatim: st.status).font(.liveActivity(size: 17, weight: .bold, design: NunaType.design))
                             .foregroundStyle(.primary).lineLimit(1).minimumScaleFactor(0.7)
                     }
                     Spacer(minLength: 6)
@@ -35,7 +35,7 @@ struct SyncLiveActivity: Widget {
                     }
                 }
                 if let detail = st.detail {
-                    Text(verbatim: detail).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(.secondary).lineLimit(1)
+                    Text(verbatim: detail).font(.liveActivity(size: 11.5, weight: .semibold)).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
             .padding(EdgeInsets(top: 10, leading: 14, bottom: 10, trailing: 14))
@@ -49,12 +49,12 @@ struct SyncLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.leading) {
                     HStack(spacing: 8) {
                         NOOPLiveRing(symbol: glyphName(context.state.phase), tint: tint, progress: nil)
-                        Text(verbatim: context.state.status).font(.nuna(size: 14, weight: .heavy)).lineLimit(1)
+                        Text(verbatim: context.state.status).font(.liveActivity(size: 14, weight: .heavy)).lineLimit(1)
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     if isActive(context.state.phase) {
-                        elapsed(since: context.state.startedAt).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).monospacedDigit()
+                        elapsed(since: context.state.startedAt).font(.liveActivity(size: 15, weight: .bold, design: NunaType.design)).monospacedDigit()
                     }
                 }
             } compactLeading: {
@@ -62,7 +62,7 @@ struct SyncLiveActivity: Widget {
             } compactTrailing: {
                 // "…" while connecting and until the first chunk lands; then the chunk count, the only live number a sync has.
                 // Never "0", so the island never claims progress the strap has not made.
-                Text(verbatim: context.state.chunks > 0 ? "\(context.state.chunks)" : "…").font(.nuna(size: 12.5, weight: .heavy, design: NunaType.design)).monospacedDigit()
+                Text(verbatim: context.state.chunks > 0 ? "\(context.state.chunks)" : "…").font(.liveActivity(size: 12.5, weight: .heavy, design: NunaType.design)).monospacedDigit()
             } minimal: {
                 Image(systemName: glyphName(context.state.phase)).foregroundStyle(tint)
             }
@@ -74,8 +74,8 @@ struct SyncLiveActivity: Widget {
 /// One figure: the label small above, the value below, in a fixed width so a ticking clock does not push the row about.
 private func figure<V: View>(_ label: LocalizedStringKey, _ value: V, width: CGFloat) -> some View {
     VStack(alignment: .trailing, spacing: 0) {
-        Text(label).font(.nuna(size: 9.5, weight: .heavy)).tracking(0.6).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.8)
-        value.font(.nuna(size: 19, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(.primary)
+        Text(label).font(.liveActivity(size: 9.5, weight: .heavy)).tracking(0.6).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.8)
+        value.font(.liveActivity(size: 19, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(.primary)
             .lineLimit(1).minimumScaleFactor(0.7)
     }
     .frame(width: width, alignment: .trailing)
