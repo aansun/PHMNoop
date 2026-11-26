@@ -493,6 +493,7 @@ private struct NunaBPDayChart: View {
                 }
                 let width = min(column * 0.56, 20)
                 let f = DateFormatter(); f.locale = AppLanguage.activeLocale
+                var lit: (x: CGFloat, bar: CGRect, day: NunaBP.Day)?
                 for (i, day) in days.enumerated() {
                     let isPicked = day == picked
                     if isPicked {
@@ -509,6 +510,9 @@ private struct NunaBPDayChart: View {
                         if week {
                             words("\(Int(e.systolic.rounded()))", 12, .bold, NunaPalette.textPrimary, CGPoint(x: x(i), y: bar.minY - 3), .bottom)
                             words("\(Int(e.diastolic.rounded()))", 12, .bold, NunaPalette.textSecondary, CGPoint(x: x(i), y: bar.maxY + 3), .top)
+                        } else if isPicked {
+                            // Written after every bar is drawn, so the neighbouring columns cannot cover them.
+                            lit = (x(i), bar, e)
                         }
                     }
                     // Every day of a week is named; a month names a day in seven, counted back from its last.
@@ -519,6 +523,14 @@ private struct NunaBPDayChart: View {
                         let color = isPicked ? NunaPalette.textPrimary : NunaPalette.textSecondary
                         words(first, 12, .semibold, color, CGPoint(x: at, y: size.height - 24), .center)
                         words(second, 12, .semibold, color, CGPoint(x: at, y: size.height - 9), .center)
+                    }
+                }
+                // The picked day of a month: each figure on its own small plate, kept inside the chart's sides.
+                if let lit {
+                    for (value, centre) in [(lit.day.systolic, lit.bar.minY - 13), (lit.day.diastolic, lit.bar.maxY + 13)] {
+                        let at = CGPoint(x: min(max(lit.x, 18), size.width - 18), y: centre)
+                        ctx.fill(Path(roundedRect: CGRect(x: at.x - 17, y: at.y - 10, width: 34, height: 20), cornerRadius: 6), with: .color(NunaPalette.ink))
+                        words("\(Int(value.rounded()))", 12, .heavy, NunaPalette.canvas, at, .center)
                     }
                 }
             }

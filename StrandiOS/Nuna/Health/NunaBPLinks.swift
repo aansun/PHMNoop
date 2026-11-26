@@ -24,13 +24,6 @@ enum NunaBPTopic: String, CaseIterable, Identifiable, Hashable {
         case .breathing: return NunaIcons.breathing
         }
     }
-    var color: Color {
-        switch self {
-        case .sleep: return NunaPalette.restDeep
-        case .journal: return NunaPalette.textSecondary
-        default: return NunaPalette.effortModerate
-        }
-    }
     var title: String {
         switch self {
         case .sleep: return String(localized: "Sleep")
@@ -66,8 +59,6 @@ final class NunaBPLinksModel: ObservableObject {
 
     @Published private(set) var levels: [Level] = []
     @Published private(set) var behaviours: [Behaviour] = []
-    /// Journal questions answered but still short of days.
-    @Published private(set) var waiting = 0
     @Published private(set) var journalAnswered = false
     @Published private(set) var pairs: [PressureLinks.BreathPair] = []
     @Published private(set) var loaded = false
@@ -150,7 +141,6 @@ final class NunaBPLinksModel: ObservableObject {
             let y = b.comparison.verdict == .same ? 0 : abs(b.comparison.difference?.systolic ?? 0)
             return x != y ? x > y : a.question < b.question
         }
-        waiting = compared.count - behaviours.count
 
         pairs = PressureLinks.breathPairs(pressure, sessions: NunaBreathLog.all().map { .init(start: $0.startTs, end: $0.startTs + $0.seconds) })
         breathChange = Dictionary(grouping: pairs) { Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval($0.session.start))) }
@@ -395,19 +385,26 @@ struct NunaBPLinksSection: View {
         }
     }
 
-    /// Under an open row: what its figures are, what they show beside the pressure, how that is worked out and the way to the trend.
+    /// Under an open row: what its figures are, what they show beside the pressure and how that is worked out.
     private func explanation(_ topic: NunaBPTopic) -> some View {
         let question = model.leadQuestion
         var comparison: (String, PressureLinks.Side, String, PressureLinks.Side, Bool)?
+        var early = false
         if topic == .journal {
             if let b = model.behaviours.first(where: { $0.question == question }) {
                 comparison = (String(localized: "After Yes"), b.comparison.first, String(localized: "After No"), b.comparison.second, false)
+                early = b.comparison.early
             }
         } else if let level = model.levels.first(where: { $0.topic == topic }), let c = level.comparison {
             comparison = (level.first, c.first, level.second, c.second, c.verdict == .needMore)
+            early = c.verdict != .needMore && c.early
         }
         return VStack(alignment: .leading, spacing: 12) {
-            nunaTrendsCap(LocalizedStringKey(topic.title))
+            HStack {
+                nunaTrendsCap(LocalizedStringKey(topic.title))
+                Spacer(minLength: 8)
+                if early { NunaChip("Early") }
+            }
             words(figures(topic, question), color: NunaPalette.textSecondary)
             words(model.sentence(topic, question: question))
             if let (first, a, second, b, short) = comparison {
@@ -418,16 +415,6 @@ struct NunaBPLinksSection: View {
             }
             Text(verbatim: NunaBPLinksModel.method(topic)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
                 .textCase(nil).fixedSize(horizontal: false, vertical: true)
-            NavigationLink { NunaBPTrendView(topic: topic) } label: {
-                HStack(spacing: 8) {
-                    Text("View trend").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    Image(systemName: "arrow.right").font(.nuna(size: 13, weight: .bold))
-                }
-                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 42)
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 4).padding(.bottom, 14)
