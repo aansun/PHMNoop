@@ -235,23 +235,24 @@ struct NunaRhythmView: View {
 
     private func hero(_ f: RhythmScreener.WindowResult, index: Int) -> some View {
         let others = windows.indices.filter { $0 != index && windows[$0].label != .unreadable }.flatMap { windows[$0].poincare }
-        return NunaCard {
-            VStack(spacing: 14) {
-                HStack {
-                    nunaTrendsCap("Last night")
-                    Spacer()
-                    NunaChip("Experimental")
-                }
-                Text(label(overall)).font(.nuna(size: 28, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    .multilineTextAlignment(.center).frame(maxWidth: .infinity)
-                NunaPoincarePlot(points: f.poincare, others: others, sd1: f.sd1, sd2: f.sd2)
-                    .frame(maxWidth: 300)
-                HStack(spacing: 14) {
-                    key(NunaPalette.restLight, windowName(f.label))
-                    if !others.isEmpty { key(NunaPalette.ink.opacity(0.3), "Rest of the night") }
-                }
+        // No card behind it: like the dial on Body clock, the picture sits straight on the page.
+        return VStack(spacing: 14) {
+            HStack {
+                nunaTrendsCap("Last night")
+                Spacer()
+                NunaChip("Experimental")
+            }
+            Text(label(overall)).font(.nuna(size: 28, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                .multilineTextAlignment(.center).frame(maxWidth: .infinity)
+            NunaPoincarePlot(points: f.poincare, others: others, sd1: f.sd1, sd2: f.sd2)
+                .frame(maxWidth: 300)
+            HStack(spacing: 14) {
+                key(NunaPalette.restLight, windowName(f.label))
+                if !others.isEmpty { key(NunaPalette.ink.opacity(0.3), "Rest of the night") }
             }
         }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 6)
     }
 
     private func key(_ color: Color, _ text: LocalizedStringKey) -> some View {
