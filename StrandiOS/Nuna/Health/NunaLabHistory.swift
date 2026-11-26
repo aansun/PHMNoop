@@ -27,8 +27,10 @@ enum NunaLabTests {
     static func key(_ r: LabMarkerRow) -> String { r.source == "manual" ? "manual-\(r.takenAt)" : "\(r.source)-\(r.day)" }
 
     static func name(_ rows: [LabMarkerRow]) -> String {
-        // A blood pressure reading keeps its position and cuff place there, shown in the person's language.
-        if let note = rows.compactMap(\.note).first(where: { !$0.isEmpty }), rows.first?.source == "manual" { return NunaBPContext.display(note) ?? note }
+        // A typed blood pressure reading keeps its position and cuff place in the note: those are not a name.
+        if let note = rows.compactMap(\.note).first(where: { !$0.isEmpty && NunaBPContext.display($0) == nil }), rows.first?.source == "manual" { return note }
+        let pressure = [LabBookProjection.bpSystolicKey, LabBookProjection.bpDiastolicKey]
+        if rows.first?.source == "manual", rows.allSatisfy({ pressure.contains($0.markerKey) }) { return String(localized: "Blood pressure") }
         switch rows.first?.source ?? "" {
         case "manual": return String(localized: "Lab result")
         case WhoopBiomarkerExportParser.sourceId: return String(localized: "WHOOP biomarker export")
