@@ -161,7 +161,7 @@ enum NunaBP {
 
 // MARK: - The page
 
-/// The latest reading on an arc of three zones, the week or the month as one mark a day, adding a reading, the averages and the readings, and what the
+/// The latest reading on an arc of three zones, the week or the month as one mark a day, adding a reading and the way to all of them, and what the
 /// ranges mean with what research links to blood pressure. Only readings that were taken are drawn: nothing is estimated.
 struct NunaBloodPressureView: View {
     @EnvironmentObject private var repo: Repository
@@ -190,8 +190,7 @@ struct NunaBloodPressureView: View {
                 if latest.category == .veryHigh { veryHigh }
                 period
                 addButton
-                averages
-                recent
+                allReadings
             } else {
                 empty
                 addButton
@@ -380,62 +379,14 @@ struct NunaBloodPressureView: View {
         return d.count > 1 ? String(localized: "\(f.string(from: d.date)): average \(pair) from \(d.count) readings") : "\(f.string(from: d.date)): \(pair) mmHg"
     }
 
-    // MARK: Averages
-
-    private var averages: some View {
-        let month = NunaBP.within(readings, days: 30)
-        return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Averages") { Text(verbatim: "mmHg").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-            NunaCard(small: true, padding: EdgeInsets(top: 0, leading: 14, bottom: 0, trailing: 18)) {
-                VStack(spacing: 0) {
-                    row("7-day average", "calendar", NunaBP.average(NunaBP.within(readings, days: 7)))
-                    NunaDivider()
-                    row("30-day average", "chart.line.uptrend.xyaxis", NunaBP.average(month))
-                    NunaDivider()
-                    row("Mornings", "sun.max", NunaBP.average(month.filter(NunaBP.isMorning)))
-                    NunaDivider()
-                    row("Evenings", "moon", NunaBP.average(month.filter(NunaBP.isEvening)))
-                }
-            }
-        }
-    }
-
-    private func row(_ title: LocalizedStringKey, _ icon: String, _ value: (systolic: Double, diastolic: Double)?) -> some View {
-        NunaFigureRow(title: title, icon: icon, value: value.map { NunaBP.text($0.systolic, $0.diastolic) } ?? "–")
-    }
-
     // MARK: Readings
 
-    private var recent: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Latest readings") { EmptyView() }
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                VStack(spacing: 0) {
-                    ForEach(Array(readings.suffix(5).reversed().enumerated()), id: \.element.id) { i, r in
-                        if i > 0 { NunaDivider() }
-                        HStack(spacing: 14) {
-                            NunaIcon(name: NunaBP.isMorning(r) ? "sun.max" : (NunaBP.isEvening(r) ? "moon" : "clock"), size: 18, weight: .regular)
-                                .foregroundStyle(NunaPalette.textSecondary).frame(width: 30)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(verbatim: NunaBP.when(r.date)).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: NunaBP.sourceName(r.source)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            }
-                            Spacer(minLength: 6)
-                            VStack(alignment: .trailing, spacing: 2) {
-                                Text(verbatim: r.text).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
-                                Text(verbatim: r.category.wordText).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(r.category.color)
-                            }
-                        }
-                        .padding(.vertical, 12)
-                        .accessibilityElement(children: .combine)
-                    }
-                }
-            }
-            NavigationLink(value: NunaTodayRoute.bloodPressureHistory) {
-                NunaCard(small: true) { NunaListRow("All readings", description: "The full history, where a reading can be edited or deleted", systemImage: "list.bullet", showsChevron: true) }
-            }
-            .buttonStyle(.plain)
+    /// The full list, which is also where a reading is edited or deleted.
+    private var allReadings: some View {
+        NavigationLink(value: NunaTodayRoute.bloodPressureHistory) {
+            NunaCard(small: true) { NunaListRow("All readings", description: "The full history, where a reading can be edited or deleted", systemImage: "list.bullet", showsChevron: true) }
         }
+        .buttonStyle(.plain)
     }
 
     // MARK: Adding
