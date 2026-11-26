@@ -725,8 +725,10 @@ struct NunaBloodPressureCard: View {
         VStack(alignment: .leading, spacing: 4) {
             if let latest {
                 nunaTrendsCap(Calendar.current.isDateInToday(latest.date) ? "Today's reading" : "Latest reading")
+                // In the colour of the range the reading falls in, as its mark on the right.
                 Text(verbatim: latest.text).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(28))
-                    .foregroundStyle(NunaPalette.textPrimary).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+                    .foregroundStyle(latest.category.color).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+                    .accessibilityLabel(Text(verbatim: latest.text + ", " + latest.category.wordText))
                 // An older reading says when it was taken, so it is not read as today's.
                 if !Calendar.current.isDateInToday(latest.date) {
                     Text(verbatim: NunaBP.when(latest.date)).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
