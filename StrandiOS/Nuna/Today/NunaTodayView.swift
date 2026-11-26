@@ -346,6 +346,8 @@ struct NunaTodayView: View {
                     .refreshable { await sync.run() }
                     pinnedHeader
                 }
+                // As the app comes up the page waits for its first read and comes in whole, not card by card with stand-ins.
+                .modifier(NunaPageArrival(ready: model.loaded, patience: 4))
             }
         }
         .overlayPreferenceValue(NunaQuickAnchorKey.self) { anchor in

@@ -177,9 +177,10 @@ extension NunaDetailScreen {
 }
 
 /// The content of a page that reads its data after it opens: out of sight until it is ready, then faded in. The content is laid out all along, so a part
-/// that loads for itself still loads. A read that takes longer than a second does not leave the page blank.
-private struct NunaPageArrival: ViewModifier {
+/// that loads for itself still loads. A read that takes longer than `patience` seconds does not leave the page blank.
+struct NunaPageArrival: ViewModifier {
     let ready: Bool
+    var patience: Double = 1
     @State private var overdue = false
 
     func body(content: Content) -> some View {
@@ -187,9 +188,23 @@ private struct NunaPageArrival: ViewModifier {
             // Only the fade is animated: the layout settling at the same moment is not.
             .animation(.easeOut(duration: 0.22)) { $0.opacity(ready || overdue ? 1 : 0) }
             .task {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                try? await Task.sleep(nanoseconds: UInt64(patience * 1_000_000_000))
                 overdue = true
             }
+    }
+}
+
+extension Repository {
+    /// Waits for the app's first read of the database, so a screen that comes up with the app does not take "not read yet" for "no data": figures, cards
+    /// and calibration notices drawn from an empty store would show for a moment and then go. Gives up after ten seconds, so that a store that cannot be
+    /// opened still draws a screen. False when the calling task was cancelled while waiting.
+    func nunaAwaitFirstRead() async -> Bool {
+        var waited = 0
+        while !loaded, !Task.isCancelled, waited < 200 {
+            try? await Task.sleep(nanoseconds: 50_000_000)
+            waited += 1
+        }
+        return !Task.isCancelled
     }
 }
 
@@ -864,6 +879,7 @@ final class NunaSeriesModel: ObservableObject {
 
     /// `also` is a second source merged on top (a value typed in by hand wins over the imported one for that day).
     func load(repo: Repository, key: String, source: String, days: Int = 190, also: String? = nil) async {
+        guard await repo.nunaAwaitFirstRead() else { return }
         let s = await repo.exploreSeries(key: key, source: source, days: days)
         var map = Dictionary(s.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         if let also {

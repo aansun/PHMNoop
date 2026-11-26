@@ -115,6 +115,8 @@ struct NunaStrapIdleWatcher: View {
     @EnvironmentObject private var live: LiveState
     @EnvironmentObject private var app: AppModel
     @State private var pending: Task<Void, Never>?
+    /// A strap has been connected since the app started. Until then the first connection is still being made, which takes longer than a reconnect.
+    private static var connectedSinceLaunch = false
 
     var body: some View {
         Color.clear.frame(width: 0, height: 0)
@@ -127,9 +129,14 @@ struct NunaStrapIdleWatcher: View {
 
     private func update() {
         pending?.cancel()
-        if live.connected { if idle { withAnimation(.easeInOut(duration: 0.25)) { idle = false } }; return }
+        if live.connected {
+            Self.connectedSinceLaunch = true
+            if idle { withAnimation(.easeInOut(duration: 0.25)) { idle = false } }
+            return
+        }
+        let wait: UInt64 = Self.connectedSinceLaunch ? 6 : 20
         pending = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 6_000_000_000)
+            try? await Task.sleep(nanoseconds: wait * 1_000_000_000)
             guard !Task.isCancelled, !live.connected, hasStrap else { return }
             withAnimation(.easeInOut(duration: 0.25)) { idle = true }
         }

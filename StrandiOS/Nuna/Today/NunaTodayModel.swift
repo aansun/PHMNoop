@@ -99,6 +99,7 @@ final class NunaTodayModel: ObservableObject {
     var displayDate: Date { selectedLogicalDay }
 
     func load(repo: Repository, profile: ProfileStore) async {
+        guard await repo.nunaAwaitFirstRead() else { return }
         let key = dayKey(repo: repo)
         let today = isToday
         let row = today ? (repo.today ?? repo.days.last(where: { $0.day == key }))

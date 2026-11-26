@@ -56,6 +56,7 @@ final class NunaHealthStore: ObservableObject {
 
     /// Reads the page's figures unless they are already those for this state of the data. A call while the same read is under way waits for it.
     func load(repo: Repository, profile: ProfileStore) async {
+        guard await repo.nunaAwaitFirstRead() else { return }
         let key = "\(repo.refreshSeq)-\(NunaDataChanges.shared.seq)-\(day.dayKey(repo: repo))-\(profile.age)-\(profile.sex)-\(profile.waistCm)"
         if key == loadedKey { return }
         if let loading {

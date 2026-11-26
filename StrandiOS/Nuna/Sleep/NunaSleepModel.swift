@@ -248,6 +248,7 @@ final class NunaSleepModel: ObservableObject {
     }
 
     func load(repo: Repository) async {
+        guard await repo.nunaAwaitFirstRead() else { return }
         let hab = await repo.habitualMidsleepSec()
         let sessions = await repo.allSleepSessions(days: 60)
         let motions = await repo.sessionMotions(sessions: sessions)

@@ -110,6 +110,7 @@ struct NunaFitnessAgeView: View {
         .toolbar(.hidden, for: .navigationBar)
         // The age of the latest 7 days and the stored weekly ages: read again when the days or the profile change, and shown together.
         .task(id: "\(days.last?.day ?? "")-\(days.count)-\(repo.refreshSeq)-\(profile.age)-\(profile.sex)-\(profile.waistCm)") {
+            guard await repo.nunaAwaitFirstRead() else { return }
             async let stored = repo.exploreSeries(key: "body_age", source: "my-whoop", days: 400)
             async let latest = NunaHealthspan.latest(repo: repo, profile: profile)
             let (ages, result) = await (stored, latest)
