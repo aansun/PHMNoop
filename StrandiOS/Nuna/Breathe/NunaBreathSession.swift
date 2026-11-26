@@ -27,7 +27,8 @@ struct NunaBreathSessionView: View {
     @AppStorage(NunaBreathPrefs.countdownKey) private var useCountdown = true
     @StateObject private var cue = NunaBreathCue()
 
-    @State private var countdown: Int?
+    /// The 3, 2, 1 before the session is on show.
+    @State private var counting = false
     @State private var running = false
     @State private var paused = false
     @State private var phase: BreathPhase = .inhale
@@ -59,7 +60,6 @@ struct NunaBreathSessionView: View {
     /// again whenever the parent redrew (the strap's heart rate does that every second), which cancelled the one-second timer before it fired
     /// and left the clock crawling on a phone with the strap connected.
     @State private var clockTimer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
-    @State private var countdownFrom = Date()
     @State private var pausedTotal: TimeInterval = 0
     @State private var pausedAt: Date?
     private let step = 10
@@ -91,26 +91,29 @@ struct NunaBreathSessionView: View {
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8)
             GeometryReader { viewport in
-                ScrollView {
-                    VStack(spacing: NunaSpacing.section) {
-                        if tab == 1 {
-                            NunaHeartBeat(bpm: model.bpm, color: zoneColor, zone: zone, size: min(250, max(170, (viewport.size.height - 80) / 1.2)))
-                                .frame(maxWidth: .infinity, minHeight: max(viewport.size.height - NunaSpacing.section * 2, 0), alignment: .center)
-                        } else {
-                            // The heart rate sits at the foot of the page, next to the figures under it.
-                            VStack(spacing: 0) {
-                                pacer(size: min(300, max(200, viewport.size.height - 150)))
-                                Spacer(minLength: NunaSpacing.section)
-                                heartReadout
-                            }
-                            .frame(minHeight: max(viewport.size.height - NunaSpacing.section * 2, 0))
+                // The two tabs sit side by side: slide with a finger, or tap the name above.
+                TabView(selection: $tab) {
+                    ScrollView {
+                        // The heart rate sits at the foot of the page, next to the figures under it.
+                        VStack(spacing: 0) {
+                            pacer(size: min(300, max(200, viewport.size.height - 150)))
+                            Spacer(minLength: NunaSpacing.section)
+                            heartReadout
                         }
+                        .frame(minHeight: max(viewport.size.height - NunaSpacing.section * 2, 0))
+                        .padding(.vertical, NunaSpacing.section).padding(.horizontal, NunaSpacing.screenH)
                     }
-                    .padding(.vertical, NunaSpacing.section).padding(.horizontal, NunaSpacing.screenH)
+                    .scrollIndicators(.hidden).tag(0)
+                    ScrollView {
+                        NunaHeartBeat(bpm: model.bpm, color: zoneColor, zone: zone, size: min(250, max(170, (viewport.size.height - 80) / 1.2)))
+                            .frame(maxWidth: .infinity, minHeight: max(viewport.size.height - NunaSpacing.section * 2, 0), alignment: .center)
+                            .padding(.vertical, NunaSpacing.section).padding(.horizontal, NunaSpacing.screenH)
+                    }
+                    .scrollIndicators(.hidden).tag(1)
                 }
-                .scrollIndicators(.hidden)
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: tab)
             }
-            .transaction(value: tab) { $0.animation = nil }
             statistics.padding(.horizontal, NunaSpacing.screenH)
         }
         .background(NunaBackdrop())
@@ -122,12 +125,16 @@ struct NunaBreathSessionView: View {
         }
         .overlay {
             if full {
-                NunaBreathFullLayer(content: pacer(size: 360, big: true), bpm: model.bpm, timeText: clock(max(0, request.seconds - seconds))) {
+                NunaBreathFullLayer(title: title, headline: headline(big: true), wave: { wave(height: $0) }, bpm: model.bpm,
+                                    figure: (value: "\(breaths)", label: "Breaths"), timeText: clock(max(0, request.seconds - seconds))) {
                     withAnimation(.easeInOut(duration: 0.25)) { full = false }
                 }
             }
         }
         .statusBarHidden(full)
+        .overlay {
+            if counting { NunaBreathCountdown(cue: cue, onDone: { go() }, onCancel: { cancel() }) }
+        }
         .preferredColorScheme(NunaTheme.colorScheme)
         .onReceive(clockTimer) { now in onClock(now) }
         .onRRPackets(live) { ingest($0) }
@@ -165,28 +172,33 @@ struct NunaBreathSessionView: View {
     }
 
     /// The breath as a line under the step's count and name. The count is the big figure, as on the breathing pacers it follows.
-    private func pacer(size: CGFloat, big: Bool = false) -> some View {
+    private func pacer(size: CGFloat) -> some View {
+        VStack(spacing: 10) {
+            headline(big: false)
+            wave(height: max(110, size * 0.48))
+        }
+    }
+
+    private func headline(big: Bool) -> some View {
+        let follows = running && !guided
+        return VStack(spacing: 4) {
+            Text(verbatim: follows && phaseLeft > 0 ? "\(phaseLeft)" : " ").font(.nuna(size: big ? 110 : 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
+            Text(verbatim: phaseWord).font(.nuna(size: big ? 24 : 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                .multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
+            if closing && !paused {
+                Text("Finishing this breath…").font(.nuna(size: big ? 15 : 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func wave(height: CGFloat) -> some View {
         let t = track, idx = stageIndex, follows = running && !guided
-        return VStack(spacing: big ? 20 : 10) {
-            VStack(spacing: 4) {
-                if let c = countdown {
-                    Text(verbatim: "\(c)").font(.nuna(size: big ? 110 : 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
-                    Text("Get ready").font(.nuna(size: big ? 22 : 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                } else {
-                    Text(verbatim: follows && phaseLeft > 0 ? "\(phaseLeft)" : " ").font(.nuna(size: big ? 110 : 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
-                    Text(verbatim: phaseWord).font(.nuna(size: big ? 22 : 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        .multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
-                    if closing && !paused {
-                        Text("Finishing this breath…").font(.nuna(size: big ? 16 : 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity)
-            NunaBreathWave(track: t, tint: request.goal.tint, height: big ? 320 : max(110, size * 0.48)) { now in
-                guard t.length > 0 else { return now.timeIntervalSinceReferenceDate }
-                guard follows else { return t.start(of: 0) }
-                return t.start(of: idx) + max(0, paused ? pausedOffset : now.timeIntervalSince(phaseStart))
-            }
+        return NunaBreathWave(track: t, tint: request.goal.tint, height: height) { now in
+            guard t.length > 0 else { return now.timeIntervalSinceReferenceDate }
+            guard follows else { return t.start(of: 0) }
+            return t.start(of: idx) + max(0, paused ? pausedOffset : now.timeIntervalSince(phaseStart))
         }
     }
 
@@ -235,7 +247,7 @@ struct NunaBreathSessionView: View {
                 }
                 .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 60)
                 .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-            }.buttonStyle(.plain).disabled(countdown != nil).opacity(countdown != nil ? 0.4 : 1)
+            }.buttonStyle(.plain).disabled(counting).opacity(counting ? 0.4 : 1)
             // End is offered only while the session is paused, as in a workout: a running one cannot be ended by a stray tap.
             if paused {
                 // Ending a session that would be kept asks first (save, discard or keep going), as the close button does; one under 20 s is not kept.
@@ -272,32 +284,27 @@ struct NunaBreathSessionView: View {
         cue.apply(audioMode)
         ScreenIdle.keepAwake(true)
         startedAt = Date()
-        if useCountdown { countdown = 3; countdownFrom = Date() } else { go() }
+        if useCountdown { counting = true } else { go() }
     }
 
     private func go() {
-        countdown = nil
+        counting = false
         running = true
         seconds = 0; breaths = 0; stageIndex = 0
         pausedTotal = 0; pausedAt = nil
         rmssdSum = 0; rmssdCount = 0; rmssdPeak = 0; hrSeries = []; rmssdSeries = []
         startedAt = Date()
         closing = false; closeAtPhaseEnd = false
-        cue.started()
+        // No spoken welcome here: the first step is said the moment its line starts to move.
         if guided {
             phase = .textOnly; phaseDeadline = .distantFuture
         } else {
-            arm(from: Date(), buzz: true, firstAfterStart: true)
+            arm(from: Date(), buzz: true)
         }
     }
 
-    /// One clock for everything: the countdown, the session seconds and the phases are all read off `now`.
+    /// One clock for everything: the session seconds and the phases are read off `now`.
     private func onClock(_ now: Date) {
-        if countdown != nil {
-            let left = 3 - Int(now.timeIntervalSince(countdownFrom))
-            if left <= 0 { go() } else if left != countdown { countdown = left }
-            return
-        }
         guard running, !paused else { return }
         let elapsed = max(0, Int(now.timeIntervalSince(startedAt) - pausedTotal))
         // Every second that went by is counted, also after the app was away for a while, so the series keep their spacing.
@@ -338,7 +345,7 @@ struct NunaBreathSessionView: View {
         arm(from: now, buzz: now.timeIntervalSince(phaseDeadline) < 1.5)
     }
 
-    private func arm(from now: Date, buzz: Bool, remaining: TimeInterval? = nil, firstAfterStart: Bool = false) {
+    private func arm(from now: Date, buzz: Bool, remaining: TimeInterval? = nil) {
         guard !stages.isEmpty else { return }
         let stage = stages[stageIndex % stages.count]
         phase = stage.type; phaseLabel = stage.label
@@ -352,7 +359,7 @@ struct NunaBreathSessionView: View {
             if loops > 0, haptics { model.buzz(loops: UInt8(clamping: loops), gate: HapticPrefs.breathing) }
             // A hold is told by its own cue, and by whether the lungs are full or empty: the step before says which.
             let before = stages[(stageIndex + stages.count - 1) % stages.count].type
-            cue.cue(stage.type, previous: before, label: stage.label, queued: firstAfterStart)
+            cue.cue(stage.type, previous: before, label: stage.label)
         }
     }
 
@@ -393,7 +400,7 @@ struct NunaBreathSessionView: View {
     }
 
     private func finish() {
-        guard running || countdown != nil else { onEnd(nil); return }
+        guard running || counting else { onEnd(nil); return }
         let wasRunning = running
         running = false; paused = false
         model.stopHaptics(); ScreenIdle.keepAwake(false)

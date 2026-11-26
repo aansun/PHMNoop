@@ -48,6 +48,8 @@ private struct NunaToolSessionBody: View {
     @AppStorage(NunaBreathAudioMode.key) private var audioModeRaw = ""
     @StateObject private var cue = NunaBreathCue()
     @State private var lastPhase: BreathPhase?
+    @AppStorage(NunaBreathPrefs.countdownKey) private var useCountdown = true
+    @State private var counting = false
 
     private var c: BiofeedbackController { controller }
     private var audioMode: NunaBreathAudioMode {
@@ -84,28 +86,35 @@ private struct NunaToolSessionBody: View {
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8)
             GeometryReader { viewport in
-                ScrollView {
-                    VStack(spacing: NunaSpacing.section) {
-                        if tab == 1 {
-                            NunaHeartBeat(bpm: model.bpm, color: zoneColor, zone: zone, size: min(250, max(170, (viewport.size.height - 80) / 1.2)))
-                                .frame(maxWidth: .infinity, minHeight: max(viewport.size.height - NunaSpacing.section * 2, 0), alignment: .center)
-                        } else if finished || notStarted != nil {
-                            resultCard
-                        } else {
-                            // The heart rate sits at the foot of the page, next to the figures under it.
-                            VStack(spacing: 0) {
-                                visual(size: min(300, max(200, viewport.size.height - 150)))
-                                Spacer(minLength: NunaSpacing.section)
-                                heartReadout
+                // The two tabs sit side by side: slide with a finger, or tap the name above.
+                TabView(selection: $tab) {
+                    ScrollView {
+                        VStack(spacing: NunaSpacing.section) {
+                            if finished || notStarted != nil {
+                                resultCard
+                            } else {
+                                // The heart rate sits at the foot of the page, next to the figures under it.
+                                VStack(spacing: 0) {
+                                    visual(size: min(300, max(200, viewport.size.height - 150)))
+                                    Spacer(minLength: NunaSpacing.section)
+                                    heartReadout
+                                }
+                                .frame(minHeight: max(viewport.size.height - NunaSpacing.section * 2, 0))
                             }
-                            .frame(minHeight: max(viewport.size.height - NunaSpacing.section * 2, 0))
                         }
+                        .padding(.vertical, NunaSpacing.section).padding(.horizontal, NunaSpacing.screenH)
                     }
-                    .padding(.vertical, NunaSpacing.section).padding(.horizontal, NunaSpacing.screenH)
+                    .scrollIndicators(.hidden).tag(0)
+                    ScrollView {
+                        NunaHeartBeat(bpm: model.bpm, color: zoneColor, zone: zone, size: min(250, max(170, (viewport.size.height - 80) / 1.2)))
+                            .frame(maxWidth: .infinity, minHeight: max(viewport.size.height - NunaSpacing.section * 2, 0), alignment: .center)
+                            .padding(.vertical, NunaSpacing.section).padding(.horizontal, NunaSpacing.screenH)
+                    }
+                    .scrollIndicators(.hidden).tag(1)
                 }
-                .scrollIndicators(.hidden)
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: tab)
             }
-            .transaction(value: tab) { $0.animation = nil }
             statistics.padding(.horizontal, NunaSpacing.screenH)
         }
         .background(NunaBackdrop())
@@ -117,21 +126,29 @@ private struct NunaToolSessionBody: View {
         }
         .overlay {
             if full && c.running {
-                NunaBreathFullLayer(content: visual(size: 360, big: true), bpm: model.bpm, timeText: clock(c.elapsedSeconds), timeLabel: "Time") {
+                NunaBreathFullLayer(title: tool.title, headline: headline(big: true), wave: { wave(height: $0) }, bpm: model.bpm,
+                                    figure: nil, timeText: clock(c.elapsedSeconds), timeLabel: "Time") {
                     withAnimation(.easeInOut(duration: 0.25)) { full = false }
                 }
             }
         }
         .statusBarHidden(full && c.running)
+        .overlay {
+            if counting { NunaBreathCountdown(cue: cue, onDone: { counting = false; begin() }, onCancel: { counting = false; onEnd() }) }
+        }
         .preferredColorScheme(NunaTheme.colorScheme)
-        .onAppear { cue.apply(audioMode); begin() }
+        .onAppear {
+            cue.apply(audioMode)
+            // A tool that cannot start says so at once, with no countdown before it.
+            if useCountdown, live.bonded { counting = true } else { begin() }
+        }
         .onDisappear { c.stop(); cue.deactivate() }
         .onChange(of: c.running) { _, now in
             if now {
                 hasRun = true; logged = false; startedAt = Date(); movePhase()
                 cue.apply(audioMode); lastPhase = nil
-                cue.started()
-                if tool == .resonance { cue.cue(c.phase, previous: nil, label: nil, queued: true); lastPhase = c.phase }
+                // Resonance is told breath by breath, the first one the moment it starts; Calm me has only the mark of its start.
+                if tool == .resonance { cue.cue(c.phase, previous: nil, label: nil); lastPhase = c.phase } else { cue.started() }
             } else if hasRun {
                 let kept = !discarding && c.elapsedSeconds >= 20
                 record()
@@ -226,33 +243,41 @@ private struct NunaToolSessionBody: View {
     /// The dust: Resonance breathes with the cue; Calm me beats at the tempo it is buzzing.
     /// The breath as a line under its name. Resonance follows the pace it is breathing at, in step with the controller's phase; Calm me draws the
     /// slow wave of the pace it is easing the heart towards, so the line and the strap's buzz agree.
-    @ViewBuilder private func visual(size: CGFloat, big: Bool = false) -> some View {
+    private func visual(size: CGFloat) -> some View {
+        VStack(spacing: 10) {
+            headline(big: false)
+            wave(height: max(110, size * 0.48))
+        }
+    }
+
+    private func headline(big: Bool) -> some View {
+        VStack(spacing: 4) {
+            if tool == .calmMe, let t = c.calmTargetBpm {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(verbatim: "\(Int(t.rounded()))").font(.nuna(size: big ? 110 : 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
+                    Text("bpm").font(.nuna(size: NunaTypeSize.caption, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                Text(verbatim: centerWord).font(.nuna(size: big ? 22 : 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
+            } else {
+                Text(verbatim: centerWord).font(.nuna(size: big ? 34 : 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    .multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: big ? 150 : 70)
+    }
+
+    private func wave(height: CGFloat) -> some View {
         let calm = tool == .calmMe
         let bpm = calm ? max(40, c.calmTargetBpm ?? Double(model.bpm ?? 70)) : runningBpm
         let track = bpm.map { NunaBreathTrack(bpm: $0, inhaleFraction: BreathPacer.defaultInhaleFraction) } ?? .free
         let index = c.phase == .inhale ? 0 : 1
         let start = phaseStart
         let clock = waveClock
-        VStack(spacing: big ? 20 : 10) {
-            VStack(spacing: 4) {
-                if tool == .calmMe, let t = c.calmTargetBpm {
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(verbatim: "\(Int(t.rounded()))").font(.nuna(size: big ? 110 : 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
-                        Text("bpm").font(.nuna(size: NunaTypeSize.caption, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    Text(verbatim: centerWord).font(.nuna(size: big ? 22 : 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
-                } else {
-                    Text(verbatim: centerWord).font(.nuna(size: big ? 34 : 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        .multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
-                }
-            }
-            .frame(maxWidth: .infinity, minHeight: big ? 150 : 70)
-            NunaBreathWave(track: track, tint: tool.tintColor, height: big ? 320 : max(110, size * 0.48)) { now in
-                if track.length <= 0 { return now.timeIntervalSinceReferenceDate }
-                if calm { return clock.position(at: now, length: track.length) }
-                guard c.running else { return track.start(of: 0) }
-                return track.start(of: index) + max(0, now.timeIntervalSince(start))
-            }
+        return NunaBreathWave(track: track, tint: tool.tintColor, height: height) { now in
+            if track.length <= 0 { return now.timeIntervalSinceReferenceDate }
+            if calm { return clock.position(at: now, length: track.length) }
+            guard c.running else { return track.start(of: 0) }
+            return track.start(of: index) + max(0, now.timeIntervalSince(start))
         }
     }
 

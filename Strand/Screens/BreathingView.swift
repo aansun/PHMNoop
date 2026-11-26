@@ -989,7 +989,7 @@ final class BreathTonePlayer: ObservableObject {
 
     /// `begin`, `pause` and `complete` are the session's own marks, told apart from the phase cues: two notes rising as it starts (and as it
     /// carries on), two falling when it is paused, and four slow rising notes when it is done.
-    enum Tone: Hashable { case inhale, exhale, holdFull, holdEmpty, begin, pause, complete }
+    enum Tone: Hashable { case inhale, exhale, holdFull, holdEmpty, begin, pause, complete, count }
 
     private let engine = AVAudioEngine()
     private let player = AVAudioPlayerNode()
@@ -1027,6 +1027,7 @@ final class BreathTonePlayer: ObservableObject {
             markBuffers[.begin] = makeSequence(frequencies: [392, 523], note: 0.24, format: format)
             markBuffers[.pause] = makeSequence(frequencies: [523, 392], note: 0.2, format: format)
             markBuffers[.complete] = makeSequence(frequencies: [392, 494, 587, 784], note: 0.42, format: format)
+            markBuffers[.count] = makeSequence(frequencies: [440], note: 0.12, format: format)
         }
 
         engine.attach(player)
@@ -1065,7 +1066,7 @@ final class BreathTonePlayer: ObservableObject {
         case .exhale: buffer = exhaleBuffer
         case .holdFull: buffer = holdFullBuffer
         case .holdEmpty: buffer = holdEmptyBuffer
-        case .begin, .pause, .complete: buffer = markBuffers[tone]
+        case .begin, .pause, .complete, .count: buffer = markBuffers[tone]
         }
         guard let buffer else { return }
         player.scheduleBuffer(buffer, at: nil, options: queued ? [] : .interrupts, completionHandler: nil)

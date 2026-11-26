@@ -190,7 +190,7 @@ struct NunaWorkoutStartView: View {
                 .nunaSheetChrome(detents: [.large])
         }
         .fullScreenCover(isPresented: $live) { NunaLiveWorkoutView(goal: NunaWorkoutGoal(target: model.workoutTarget), zoneBuzz: zoneBuzz, onClose: { live = false }) }
-        .overlay { if let c = countdown { countdownView(c) } }
+        .overlay { if let c = countdown { NunaCountdownOverlay(count: c) { countdown = nil } } }
     }
 
     // MARK: Hero
@@ -468,17 +468,6 @@ struct NunaWorkoutStartView: View {
         if isDistance { locationPreview.start() } else { locationPreview.stop() }
     }
 
-    private func countdownView(_ c: Int) -> some View {
-        ZStack {
-            NunaPalette.shade.opacity(0.85).ignoresSafeArea()
-            VStack(spacing: 16) {
-                Text(verbatim: "\(c)").font(.nuna(size: 120, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(120)).foregroundStyle(NunaPalette.mapOverlayText)
-                Button("Cancel") { countdown = nil }.font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.mapOverlayText.opacity(0.8))
-            }
-        }
-        .transition(.opacity)
-    }
-
     private func begin() {
         if model.activeWorkout != nil { live = true; return }
         countdown = 3
@@ -501,6 +490,24 @@ struct NunaWorkoutStartView: View {
                 zone: goal.zoneOn ? goal.zone : nil)
             live = true
         }
+    }
+}
+
+/// 3, 2, 1 over a dimmed page, with the way out under it: before an activity, and before a breathing session.
+struct NunaCountdownOverlay: View {
+    /// Nil keeps the number's place empty until there is one to show.
+    let count: Int?
+    let onCancel: () -> Void
+
+    var body: some View {
+        ZStack {
+            NunaPalette.shade.opacity(0.85).ignoresSafeArea()
+            VStack(spacing: 16) {
+                Text(verbatim: count.map(String.init) ?? " ").font(.nuna(size: 120, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(120)).foregroundStyle(NunaPalette.mapOverlayText)
+                Button("Cancel", action: onCancel).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.mapOverlayText.opacity(0.8))
+            }
+        }
+        .transition(.opacity)
     }
 }
 
@@ -1358,27 +1365,31 @@ struct NunaLiveWorkoutView: View {
             .padding(.horizontal, NunaSpacing.screenH)
             .padding(.top, 8)
             GeometryReader { viewport in
-                ScrollView {
-                    VStack(spacing: NunaSpacing.section) {
-                        if selectedTab == .heartRate {
-                            heartRateBeat(bpm: bpm, zone: zone, width: viewport.size.width, height: viewport.size.height,
-                                          showMap: hideBpm && usesRoute(w) && gps.isRecording,
-                                          guidance: goal.zoneOn ? guidance(bpm: bpm, state: state).map { ($0, state == .inZone ? NunaPalette.textPrimary : tone) } : nil)
-                        } else {
-                            activityRing(w, bpm: bpm, zone: zone, color: tone,
-                                         size: min(330,
-                                                   max(188, viewport.size.height - NunaSpacing.section * 2 - 80)))
-                            effortHeartRate(bpm: bpm, color: tone)
+                // The two tabs sit side by side: slide with a finger, or tap the name above.
+                TabView(selection: $selectedTab) {
+                    ForEach([LiveTab.effort, .heartRate], id: \.self) { page in
+                        ScrollView {
+                            VStack(spacing: NunaSpacing.section) {
+                                if page == .heartRate {
+                                    heartRateBeat(bpm: bpm, zone: zone, width: viewport.size.width, height: viewport.size.height,
+                                                  showMap: hideBpm && usesRoute(w) && gps.isRecording,
+                                                  guidance: goal.zoneOn ? guidance(bpm: bpm, state: state).map { ($0, state == .inZone ? NunaPalette.textPrimary : tone) } : nil)
+                                } else {
+                                    activityRing(w, size: min(330, max(188, viewport.size.height - NunaSpacing.section * 2 - 80)))
+                                    effortHeartRate(bpm: bpm, color: tone)
+                                }
+                                if !liveActivitiesOn { liveActivityOffCard }
+                            }
+                            .padding(.vertical, NunaSpacing.section)
+                            .padding(.horizontal, NunaSpacing.screenH)
                         }
-                        if !liveActivitiesOn { liveActivityOffCard }
+                        .scrollIndicators(.hidden)
+                        .tag(page)
                     }
-                    .padding(.vertical, NunaSpacing.section)
-                    .padding(.horizontal, NunaSpacing.screenH)
                 }
-                .scrollIndicators(.hidden)
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: selectedTab)
             }
-            // The two tabs swap at once: only the underline above moves. A fade between a ring and a beating disc made the switch feel late.
-            .transaction(value: selectedTab) { $0.animation = nil }
             VStack(spacing: NunaSpacing.section) {
                 if selectedTab == .heartRate {
                     heartStatistics(w, calories: calories)
@@ -1476,20 +1487,18 @@ struct NunaLiveWorkoutView: View {
         .accessibilityValue(Text(verbatim: hideBpm ? "–" : (bpm.map { "\($0) bpm" } ?? "–")))
     }
 
-    private func activityRing(_ w: AppModel.ActiveWorkout, bpm: Int?, zone: Int, color: Color, size: CGFloat) -> some View {
-        let isHeartRate = selectedTab == .heartRate
-        let fraction = isHeartRate ? (hideBpm ? 0 : Double(bpm ?? 0) / max(zoneSet.maxHR, 1)) : w.liveStrain / 100
-        let number = isHeartRate ? (hideBpm ? "•••" : bpm.map(String.init) ?? "–") : String(format: "%.1f", locale: AppLanguage.activeLocale, UnitFormatter.effortValue(w.liveStrain, scale: UnitPrefs.resolveEffortScale(effortScaleRaw)))
+    private func activityRing(_ w: AppModel.ActiveWorkout, size: CGFloat) -> some View {
+        let number = String(format: "%.1f", locale: AppLanguage.activeLocale, UnitFormatter.effortValue(w.liveStrain, scale: UnitPrefs.resolveEffortScale(effortScaleRaw)))
         return NunaRingGauge(
-            fraction: fraction,
-            color: isHeartRate ? color : nunaEffortColor(w.liveStrain),
-            gradient: isHeartRate ? nil : nunaEffortRingColors(w.liveStrain),
-            target: !isHeartRate && !goal.isFree ? (goal.estimatedEffort / 100)...(goal.estimatedEffort / 100) : nil,
+            fraction: w.liveStrain / 100,
+            color: nunaEffortColor(w.liveStrain),
+            gradient: nunaEffortRingColors(w.liveStrain),
+            target: !goal.isFree ? (goal.estimatedEffort / 100)...(goal.estimatedEffort / 100) : nil,
             size: size,
             lineWidth: 16
         ) {
             VStack(spacing: 8) {
-                Text(isHeartRate ? "Heart rate" : "Activity strain")
+                Text("Activity strain")
                     .font(.nuna(size: NunaTypeSize.caption, weight: .heavy))
                     .tracking(nunaTrackingLabel)
                     .textCase(.uppercase)
@@ -1500,39 +1509,16 @@ struct NunaLiveWorkoutView: View {
                     .monospacedDigit()
                     .foregroundStyle(NunaPalette.textPrimary)
                     .contentTransition(.numericText())
-                if isHeartRate {
-                    Text(hideBpm ? "Hidden" : "bpm")
-                        .font(.nuna(size: NunaTypeSize.sub, weight: .bold))
-                        .foregroundStyle(NunaPalette.textSecondary)
-                    if bpm == nil {
-                        Text("Waiting for WHOOP")
-                            .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
-                            .foregroundStyle(NunaPalette.textSecondary)
-                    }
-                } else {
-                    Text(w.samples.isEmpty ? "Waiting for HR" : (w.liveStrain < 33 ? "Light" : (w.liveStrain < 66 ? "Moderate" : "High")))
-                        .font(.nuna(size: NunaTypeSize.sub, weight: .bold))
-                        .foregroundStyle(NunaPalette.textSecondary)
-                    Text("0–100")
-                        .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
-                        .foregroundStyle(NunaPalette.textMuted)
-                }
+                Text(w.samples.isEmpty ? "Waiting for HR" : (w.liveStrain < 33 ? "Light" : (w.liveStrain < 66 ? "Moderate" : "High")))
+                    .font(.nuna(size: NunaTypeSize.sub, weight: .bold))
+                    .foregroundStyle(NunaPalette.textSecondary)
+                Text("0–100")
+                    .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
+                    .foregroundStyle(NunaPalette.textMuted)
             }
         }
         .frame(maxWidth: .infinity)
-        .overlay(alignment: .topTrailing) {
-            if isHeartRate {
-                Button { hideBpm.toggle() } label: {
-                    Image(systemName: hideBpm ? "eye" : "eye.slash")
-                        .font(.nuna(size: NunaTypeSize.h3, weight: .semibold))
-                        .foregroundStyle(NunaPalette.textSecondary)
-                        .frame(width: NoopButtonMetrics.minHitTarget, height: NoopButtonMetrics.minHitTarget)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text(hideBpm ? "Show bpm" : "Hide bpm"))
-            }
-        }
-        .animation(reduceMotion ? nil : StrandMotion.gentle, value: fraction)
+        .animation(reduceMotion ? nil : StrandMotion.gentle, value: w.liveStrain)
     }
 
     private func sessionProgress(_ w: AppModel.ActiveWorkout, elapsed: TimeInterval, distance: Double) -> some View {

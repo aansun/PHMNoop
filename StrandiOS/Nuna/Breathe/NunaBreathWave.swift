@@ -153,41 +153,70 @@ struct NunaBreathWave: View {
     }
 }
 
-/// The full-screen view of a session: nothing but the breath with its words, the heart rate and the time left. A small mark at the corner brings
-/// the rest back.
-struct NunaBreathFullLayer<Content: View>: View {
-    let content: Content
+/// The full-screen view of a session, turned on its side so the breath has the long edge to run along: the step and its count at the left, the line
+/// filling the rest, and under them the heart rate, one figure of the session and the time. The app is portrait-only on iPhone, so the view is
+/// rotated, as the full-screen heart rate is; turn the phone a quarter turn and it reads upright. The mark at the top brings the rest back.
+struct NunaBreathFullLayer<Headline: View, Wave: View>: View {
+    let title: String
+    let headline: Headline
+    let wave: (CGFloat) -> Wave
     let bpm: Int?
+    let figure: (value: String, label: LocalizedStringKey)?
     let timeText: String
     var timeLabel: LocalizedStringKey = "Time left"
     let onCollapse: () -> Void
 
     var body: some View {
-        ZStack {
-            NunaBackdrop().ignoresSafeArea()
-            VStack(spacing: 0) {
-                HStack {
-                    Spacer()
-                    Button(action: onCollapse) {
-                        Image(systemName: "arrow.down.right.and.arrow.up.left").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                            .frame(width: 44, height: 44).contentShape(Rectangle())
-                    }.buttonStyle(.plain).accessibilityLabel(Text("Exit full screen"))
+        GeometryReader { geo in
+            page(CGSize(width: geo.size.height, height: geo.size.width))
+                .frame(width: geo.size.height, height: geo.size.width)
+                .rotationEffect(.degrees(90))
+                .frame(width: geo.size.width, height: geo.size.height)
+        }
+        .ignoresSafeArea()
+        .background(NunaBackdrop().ignoresSafeArea())
+        .transition(.opacity)
+    }
+
+    // Laid out in the landscape space, before the turn. The wider leading margin clears the island, the trailing one the home indicator.
+    private func page(_ size: CGSize) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text(verbatim: title).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                Spacer(minLength: 12)
+                Button(action: onCollapse) {
+                    Image(systemName: "arrow.down.right.and.arrow.up.left").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        .frame(width: 44, height: 44).contentShape(Rectangle())
+                }.buttonStyle(.plain).accessibilityLabel(Text("Exit full screen"))
+            }
+            HStack(spacing: 20) {
+                headline.frame(width: min(240, size.width * 0.3))
+                GeometryReader { room in
+                    wave(room.size.height).frame(width: room.size.width, height: room.size.height)
                 }
-                .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8)
-                Spacer(minLength: 0)
-                content.padding(.horizontal, NunaSpacing.screenH)
-                Spacer(minLength: 0)
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    NunaGlyph(NunaIcons.heartRate, pointSize: 16, weight: .semibold).foregroundStyle(bpm == nil ? NunaPalette.textMuted : NunaPalette.alertText)
-                    Text(verbatim: bpm.map(String.init) ?? "–").font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
-                    Text("bpm").font(.nuna(size: NunaTypeSize.caption, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+            .frame(maxHeight: .infinity)
+            HStack(alignment: .bottom) {
+                reading("Heart rate", value: bpm.map(String.init) ?? "–", unit: "bpm")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if let figure {
+                    reading(figure.label, value: figure.value).frame(maxWidth: .infinity, alignment: .center)
                 }
-                Text(verbatim: timeText).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit().padding(.top, 6)
-                Text(timeLabel).font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    .padding(.bottom, 56)
+                reading(timeLabel, value: timeText).frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
-        .transition(.opacity)
+        .padding(.leading, 64).padding(.trailing, 40).padding(.top, 14).padding(.bottom, 22)
+        .frame(width: size.width, height: size.height)
+    }
+
+    private func reading(_ label: LocalizedStringKey, value: String, unit: String = "") -> some View {
+        VStack(spacing: 2) {
+            Text(label).font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(verbatim: value).font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
+                if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: NunaTypeSize.caption, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+            }
+        }
     }
 }
 #endif
