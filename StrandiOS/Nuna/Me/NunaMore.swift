@@ -72,8 +72,9 @@ struct NunaExperimentsView: View {
     @AppStorage(PuffinExperiment.stressPersonalBaselineKey) private var stressBaseline = false
     /// The WHOOP 5/MG wake alarm: the strap is sent the wake time only while this is on (it is the flag `BLEManager.armStrapAlarm` reads).
     @AppStorage(PuffinExperiment.defaultsKey) private var strapAlarm5 = PuffinExperiment.defaultsDefault
+    @AppStorage(EarlyWake.enabledKey) private var earlyWake = false
 
-    private var on: Int { [rhythm, liveSessions, sleepV2, spo2, motionWake, stressBaseline, strapAlarm5].filter { $0 }.count }
+    private var on: Int { [rhythm, liveSessions, sleepV2, spo2, motionWake, stressBaseline, strapAlarm5, earlyWake].filter { $0 }.count }
 
     var body: some View {
         NunaDetailScreen("Experiments") {
@@ -93,6 +94,8 @@ struct NunaExperimentsView: View {
                 NunaSettingsSwitch("Wake refinement from motion", subtitle: "Uses motion to refine the wake time", systemImage: "alarm", isOn: $motionWake)
                 NunaSettingsSwitch("WHOOP 5/MG wake alarm", subtitle: "Sends your wake time to a 5/MG strap so it vibrates. Not yet confirmed on every strap, so keep a backup alarm", systemImage: "alarm.waves.left.and.right",
                                    isOn: Binding(get: { strapAlarm5 }, set: { strapAlarm5 = $0; model.applySmartAlarm() }))
+                NunaSettingsSwitch("Early wake alarm", subtitle: "Sleep goal and In the green may buzz up to an hour before your wake time. Not yet proven on a strap, so keep a backup alarm", systemImage: "alarm.fill",
+                                   isOn: Binding(get: { earlyWake }, set: { earlyWake = $0; model.applySmartAlarm() }))
                 NunaSettingsSwitch("Personal stress baseline", subtitle: "Scores the day's stress against your own baseline", systemImage: NunaIcons.stress, isOn: $stressBaseline)
             }
             NunaSettingsSection("Device research") {

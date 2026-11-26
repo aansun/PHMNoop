@@ -147,7 +147,10 @@ struct NunaWindDownView: View {
         NunaDetailScreen("Bedtime reminder") {
             hero
             settingsCard
-            if wind.isOn { perDayCard }
+            if wind.isOn {
+                // While My Schedule drives the alarm it sets these times, so they are changed there.
+                if AlarmSchedule.load().drives { scheduledDaysCard } else { perDayCard }
+            }
         }
         .onAppear { wind.reload() }
         .nunaDeniedAlert($wind.showDenied)
@@ -211,6 +214,15 @@ struct NunaWindDownView: View {
                 }
             }
         }
+    }
+
+    private var scheduledDaysCard: some View {
+        NavigationLink(value: NunaTodayRoute.smartAlarm) {
+            NunaCard(small: true) {
+                NunaListRow("Wake times per day", description: "Set by My Schedule in the sleep planner. Change them there.", systemImage: "calendar", showsChevron: true)
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     private var perDayCard: some View {

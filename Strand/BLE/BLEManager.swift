@@ -809,6 +809,11 @@ public final class BLEManager: NSObject, ObservableObject {
     /// continuous-capture preference wants it. Keep-alive re-arms it; the post-bond branch arms it on
     /// connect. Recomputed only inside `reconcileRealtime()`.
     private var wantsRealtime = false
+    /// The stretch before an early-wake alarm during which the stream is held open, so the app stays awake enough to judge the night. Nil when no early
+    /// wake is armed. Set by `setAlarmStreamWindow(_:)`; the third input to `wantsRealtime`.
+    private var alarmStreamWindow: ClosedRange<Date>?
+    /// Called on every keep-alive tick (about every 30 s while connected). The early wake looks at the night from here.
+    var onKeepAliveTick: (() -> Void)?
     /// What we last told the strap (armed = TOGGLE_REALTIME_HR 1). Lets `reconcileRealtime()` send the
     /// toggle only on the false↔true edge instead of on every input change. Cleared on disconnect — the
     /// strap forgets the toggle across a connection, and the post-bond branch re-arms from `wantsRealtime`.
@@ -3222,6 +3227,18 @@ public final class BLEManager: NSObject, ObservableObject {
         reconcileRealtime()
     }
 
+    /// Holds the realtime stream open between these two moments (the night before an early-wake alarm), or lets it go with nil.
+    public func setAlarmStreamWindow(_ window: ClosedRange<Date>?) {
+        guard window != alarmStreamWindow else { return }
+        let wanted = wantsRealtime
+        alarmStreamWindow = window
+        reconcileRealtime()
+        // As when the nightly capture window closes: stop the heavy burst too once nothing wants the stream.
+        if wanted, !wantsRealtime, selectedModel.deviceFamily == .whoop4 { send(.sendR10R11Realtime, payload: [0x00]) }
+    }
+
+    private func alarmWantsStreamNow(now: Date = Date()) -> Bool { alarmStreamWindow?.contains(now) ?? false }
+
     /// #477 (Settings): battery-% at/below which the offload cadence stretches while discharging (0 = off).
     /// Applies on the next re-arm; a live sync in flight is never interrupted.
     public func setLowBatteryOffloadThrottle(_ thresholdPct: Int) {
@@ -3322,7 +3339,7 @@ public final class BLEManager: NSObject, ObservableObject {
     /// framing); otherwise the want is remembered and the post-bond branch arms it. Mirrors the Android
     /// `reconcileRealtime`.
     private func reconcileRealtime() {
-        let want = screenWantsRealtime || continuousCaptureWantsNow()
+        let want = screenWantsRealtime || continuousCaptureWantsNow() || alarmWantsStreamNow()
         wantsRealtime = want   // keep-alive + post-bond arm-on-connect read this derived value
         guard want != realtimeArmed else { return }                      // no edge — nothing to send
         guard selectedModel.deviceFamily == .whoop4 || state.bonded else { return }   // can't reach the strap yet
@@ -4577,6 +4594,7 @@ public final class BLEManager: NSObject, ObservableObject {
         // door again rather than letting an unbonded link issue puffin work that cannot land.
         guard keepAliveMayRun(connected: state.connected, didBond: didBond,
                               bonded: state.bonded, family: selectedModel.deviceFamily) else { return }
+        onKeepAliveTick?()
         if didBond { enableLiveNotifications(reason: "keepalive") }
         // Liveness watchdog: if NOTHING has arrived for a while, the stream/link stalled.
         // Bounce the connection — the auto-rescan on disconnect re-bonds and resumes streaming.
@@ -4640,8 +4658,8 @@ public final class BLEManager: NSObject, ObservableObject {
         // the false→true edge. Ticks with no transition cost one predicate evaluation. This runs BEFORE
         // the WHOOP4-only guard below so a 5/MG stream also disarms/re-arms on the window edges (send()
         // routes the 5/MG toggle and drops the WHOOP4-framed R10/R11 stop for it).
-        let captureWantNow = screenWantsRealtime || continuousCaptureWantsNow()
-        if wantsRealtime != captureWantNow, keepRealtimeForData, !screenWantsRealtime {
+        let captureWantNow = screenWantsRealtime || continuousCaptureWantsNow() || alarmWantsStreamNow()
+        if wantsRealtime != captureWantNow, keepRealtimeForData || alarmStreamWindow != nil, !screenWantsRealtime {
             if captureWantNow {
                 log("Continuous HRV: overnight window opened; arming the realtime stream (#927)")
             } else {
@@ -6657,7 +6675,7 @@ extension BLEManager: @preconcurrency CBPeripheralDelegate {
             // #927: RE-DERIVE the want at arm time, never the precomputed `wantsRealtime`: that value can
             // be up to a keep-alive tick (30 s) stale, and a reconnect just OUTSIDE the overnight window
             // would re-arm the flood from it and stay armed until the next tick.
-            let realtimeWantNow = screenWantsRealtime || continuousCaptureWantsNow()
+            let realtimeWantNow = screenWantsRealtime || continuousCaptureWantsNow() || alarmWantsStreamNow()
             wantsRealtime = realtimeWantNow
             if realtimeWantNow && !whoop5RealtimeArmed {
                 whoop5RealtimeArmed = true
@@ -6774,7 +6792,7 @@ extension BLEManager: @preconcurrency CBPeripheralDelegate {
         // #927: RE-DERIVE the want at arm time (same reasoning as the 5/MG branch above): a reconnect
         // outside the overnight window must not arm the flood from a stale precomputed `wantsRealtime`
         // (up to a keep-alive tick stale); the keep-alive would then hold it armed for another 30 s.
-        let realtimeWantNow = screenWantsRealtime || continuousCaptureWantsNow()
+        let realtimeWantNow = screenWantsRealtime || continuousCaptureWantsNow() || alarmWantsStreamNow()
         wantsRealtime = realtimeWantNow
         if realtimeWantNow {
             if standardHRFallback {

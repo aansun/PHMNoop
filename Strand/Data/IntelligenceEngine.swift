@@ -642,6 +642,47 @@ final class IntelligenceEngine: ObservableObject {
         #endif
     }
 
+    /// The night that is still going on, for the early wake: the sleep so far and Recovery so far, from what the strap has handed over up to now.
+    ///
+    /// It runs the one-day analysis the scores come from over the last 16 hours of the active strap and stores nothing, so it is cheap enough to run
+    /// in the background during the wake window and cannot disturb the saved scores. Recovery uses the HRV, resting heart rate and respiration
+    /// baselines of the earlier days; the skin temperature term is left out. Nil when there is too little data to say anything.
+    func nightSoFar(strapId: String, until now: Date = Date()) async -> SmartWake.Night? {
+        guard let store = await repo.storeHandle() else { return nil }
+        let to = Int(now.timeIntervalSince1970), from = to - 16 * 3600
+        let hr = (try? await store.hrSamples(deviceId: strapId, from: from, to: to, limit: 200_000)) ?? []
+        guard hr.count >= Self.minHrSamples, let dataEnd = hr.map(\.ts).max() else { return nil }
+        let rr = (try? await store.rrIntervals(deviceId: strapId, from: from, to: to, limit: 200_000)) ?? []
+        let resp = (try? await store.respSamples(deviceId: strapId, from: from, to: to, limit: 200_000)) ?? []
+        let gravity = (try? await store.gravitySamples(deviceId: strapId, from: from, to: to, limit: 200_000)) ?? []
+
+        let offset = TimeZone.current.secondsFromGMT(for: now)
+        let day = AnalyticsEngine.dayString(to, offsetSec: offset)
+        let earlier = repo.days.filter { $0.day < day }.sorted { $0.day < $1.day }
+        var baselines = AnalyticsEngine.ProfileBaselines()
+        if let hrvCfg = Baselines.metricCfg["hrv"], let rhrCfg = Baselines.metricCfg["resting_hr"], let respCfg = Baselines.metricCfg["resp"] {
+            let epoch = Baselines.recoveryBaselineEpoch()
+            let keys = earlier.map(\.day)
+            let breath = Baselines.foldHistory(earlier.map(\.respRateBpm), dayKeys: keys, cfg: respCfg, baselineEpoch: epoch)
+            baselines = AnalyticsEngine.ProfileBaselines(
+                hrv: Baselines.foldHistory(earlier.map(\.avgHrv), dayKeys: keys, cfg: hrvCfg, baselineEpoch: Baselines.hrvBaselineEpoch()),
+                restingHR: Baselines.foldHistory(earlier.map { $0.restingHr.map(Double.init) }, dayKeys: keys, cfg: rhrCfg, baselineEpoch: epoch),
+                resp: breath.usable ? breath : nil)
+        }
+        let user = UserProfile(weightKg: profile.weightKg, heightCm: profile.heightCm, age: Double(profile.age), sex: profile.sex,
+                               stepTicksPerStep: profile.stepTicksPerStep)
+        let stagerV2 = PuffinExperiment.experimentalSleepV2Enabled
+        let motionWake = PuffinExperiment.motionAwareWakeEnabled
+        let meanRestingHr = Self.usesSessionMeanRestingHR
+        let figures = await Task.detached(priority: .utility) { [baselines] () -> (Double, Double?) in
+            let result = AnalyticsEngine.analyzeDay(day: day, hr: hr, rr: rr, resp: resp, gravity: gravity, profile: user, baselines: baselines,
+                                                    tzOffsetSeconds: offset, useSleepStagerV2: stagerV2, useMotionAwareWake: motionWake,
+                                                    useSessionMeanRestingHR: meanRestingHr)
+            return (result.daily.totalSleepMin ?? 0, result.recovery)
+        }.value
+        return SmartWake.Night(asleepMin: figures.0, recovery: figures.1, dataEnd: Date(timeIntervalSince1970: TimeInterval(dataEnd)))
+    }
+
     /// Rebuild today's measured WHOOP step total directly from the active strap's counter samples.
     ///
     /// WHOOP 5/MG exposes steps as a cumulative counter stream, not as an imported daily metric. A

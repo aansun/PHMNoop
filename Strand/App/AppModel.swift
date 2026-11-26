@@ -225,6 +225,8 @@ final class AppModel: ObservableObject {
     private var readSpineCancellable: AnyCancellable?
     /// Daily re-arm timer for the single-instant firmware smart alarm (see scheduleDailySmartAlarmRearm).
     private var smartAlarmRearmTimer: Timer?
+    /// The early wake's running state (see AppModel+Alarm).
+    let earlyWake = EarlyWakeState()
 
     init() {
         let live = LiveState()
@@ -278,6 +280,8 @@ final class AppModel: ObservableObject {
         // Physical-input + wear hooks (fired live by FrameRouter).
         live.onDoubleTap = { [weak self] in self?.handleDoubleTap() }
         live.onWristChange = { [weak self] worn in self?.handleWristChange(worn) }
+        // The early wake looks at the night from the strap's keep-alive tick; it does nothing outside the hour before an alarm set to wake early.
+        ble.onKeepAliveTick = { [weak self] in self?.earlyWakeTick() }
         // Re-arm the next day's firmware alarm the moment the strap reports it fired (if/when the
         // firmware pushes STRAP_DRIVEN_ALARM_EXECUTED). Gated on enabled inside applySmartAlarm.
         live.onSmartAlarmFired = { [weak self] in
@@ -757,6 +761,8 @@ final class AppModel: ObservableObject {
 
     private func refreshAfterCompletedBackfill() async {
         live.append(log: "Backfill: refreshing dashboard cache from completed sync")
+        // First, while the app is surely awake: fresh records may be what the early wake was waiting for.
+        earlyWakeTick(afterSync: true)
         await repo.refresh(days: 120)
         // Score the freshly-offloaded raw data RIGHT NOW rather than waiting for the next 15-minute
         // analyzeRecent tick , otherwise a just-synced night's Charge / Effort / Rest can take up to
@@ -1747,21 +1753,23 @@ final class AppModel: ObservableObject {
     /// only the evening reminder. Mirrors Android's `reconcileStrapAlarm` which passes `dayOverrides`
     /// to `nextSmartAlarmEpochSec`, and `SmartAlarmScheduler.arm` which reads `targetOverrides`.
     func applySmartAlarm() {
+        mirrorScheduledAlarm()
         let overrides = WindDownNudge.perDayWakeOverrides
         guard behavior.smartAlarmEnabled else {
             ble.disableStrapAlarm()
             Self.cancelSmartAlarmBackupNotification()
+            updateAlarmStreamWindow(latest: nil)
             return
         }
-        guard let next = Self.nextSmartAlarmDate(minutes: behavior.smartAlarmMinutes,
-                                                 weekdays: behavior.smartAlarmWeekdays,
-                                                 overrides: overrides) else {
+        guard let next = nextAlarmDate() else {
             // No enabled weekday in the next week (only possible from a corrupted set) , disarm rather
             // than arm a misleading time the user never asked for.
             ble.disableStrapAlarm()
             Self.cancelSmartAlarmBackupNotification()
+            updateAlarmStreamWindow(latest: nil)
             return
         }
+        updateAlarmStreamWindow(latest: next)
         if Self.wristAlertsOn {
             ble.armStrapAlarm(at: next)
         } else {
@@ -1861,6 +1869,7 @@ final class AppModel: ObservableObject {
         }
         lastDoubleTapAt = now
         // The alarm first: while it is buzzing a double tap turns it off and does nothing else.
+        if dismissEarlyRing(at: now) { return }
         if dismissRingingAlarm(at: now) { return }
         if let override = strapDoubleTapOverride {
             live.append(log: "Double-tap → Lift Log: next")

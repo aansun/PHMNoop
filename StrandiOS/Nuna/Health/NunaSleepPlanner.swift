@@ -1,12 +1,14 @@
 #if os(iOS)
 import SwiftUI
 import StrandDesign
+import StrandAnalytics
 
 /// What the planner says about tonight, from the alarm's wake time and the share of the sleep need aimed for. The one place the suggested bedtime is
 /// worked out, so the planner and the Tonight's sleep card on Today cannot name different times.
 ///
 /// Time in bed is the sleep need at the chosen share, spread over the share of the night actually spent asleep (`assumedEfficiency`). The strap is
-/// armed at the wake time in every mode; the share only decides how early the person should be in bed.
+/// armed at the wake time in every mode; the share decides how early the person should be in bed and, with the early wake on, when the Sleep goal
+/// mode may buzz before that time.
 struct NunaSleepPlan: Equatable {
     /// The wake time, minutes since midnight.
     let wakeMinutes: Int
@@ -49,7 +51,8 @@ enum NunaAlarmMode: String, CaseIterable {
 }
 
 /// The alarm's edit page, as a planner: the bedtime to aim for and the time in bed it leaves, over a sheet that sets the alarm in steps (its mode, the
-/// sleep goal, the wake time). The strap is armed at the wake time; NOOP cannot see sleep as it happens, so a goal never wakes anyone earlier.
+/// sleep goal, the wake time). The strap is armed at the wake time. With the experimental early wake on, Sleep goal and In the green may also buzz
+/// in the hour before it (see `SmartWake`); the words on the page say which of the two applies.
 ///
 /// The sizes below are read off the reference, in points. The words are `.nuna` roles (so they follow the active look), and the figures use the
 /// figure design, except the wheel, which is drawn light to match the reference's thin numerals.
@@ -61,10 +64,14 @@ struct NunaSmartAlarmView: View {
     @AppStorage(NunaGoals.sleepMinutes) private var sleepGoal = 0
     /// Wrist alerts, the master switch of every strap buzz: the alarm buzzes only while it is on.
     @AppStorage(AppModel.wristAlertsMasterKey) private var wristAlerts = false
-    @State private var overrides = WindDownNudge.perDayWakeOverrides
+    /// The experimental early wake (see `EarlyWake`).
+    @AppStorage(EarlyWake.enabledKey) private var earlyWake = false
+    @State private var schedule = AlarmSchedule.load()
     @State private var step: Step = .summary
     @State private var showHelp = false
-    @State private var showRepeat = false
+    @State private var showSchedule = false
+    /// The goal sheet was opened from the pill, so it saves the goal alone.
+    @State private var goalOnly = false
     // What is being set in the steps; written to the alarm only on Save.
     @State private var draftMode: NunaAlarmMode = .goal
     @State private var draftGoal = 100
@@ -79,10 +86,17 @@ struct NunaSmartAlarmView: View {
     private var previewing: Bool { step != .summary }
     private var mode: NunaAlarmMode { previewing ? draftMode : (NunaAlarmMode(rawValue: behavior.smartAlarmMode) ?? .exact) }
     private var goalPercent: Int { previewing ? draftGoal : behavior.smartAlarmGoal }
-    private var wakeMinutes: Int { previewing ? NunaAlarmFormat.minutes(draftWake) : behavior.smartAlarmMinutes }
-    private var plan: NunaSleepPlan {
-        NunaSleepPlan(wakeMinutes: wakeMinutes, needMinutes: NunaSleepPlan.needMinutes(goal: sleepGoal), goalPercent: mode == .exact ? 100 : goalPercent)
+    private var wakeMinutes: Int { previewing && !goalOnly ? NunaAlarmFormat.minutes(draftWake) : nextMinutes }
+    /// The time of the alarm that comes next: a day can have a time of its own.
+    private var nextMinutes: Int {
+        behavior.smartAlarmEnabled ? (model.nextAlarmDate().map(NunaAlarmFormat.minutes) ?? behavior.smartAlarmMinutes) : behavior.smartAlarmMinutes
     }
+    private var plan: NunaSleepPlan {
+        NunaSleepPlan(wakeMinutes: wakeMinutes, needMinutes: NunaSleepPlan.needMinutes(goal: sleepGoal), goalPercent: goalPercent)
+    }
+    /// Whether the mode shown may buzz before the wake time.
+    private var wakesEarly: Bool { earlyWake && mode != .exact }
+    private static func hourBefore(_ minutes: Int) -> Int { (minutes - Int(SmartWake.windowSeconds / 60) + 1440) % 1440 }
     private var accent: Color { mode == .exact ? .white : (mode == .green ? Self.green : Self.mint) }
     private var willArm: Bool { !(model.whoop5Detected && !PuffinExperiment.isEnabled) }
 
@@ -95,8 +109,10 @@ struct NunaSmartAlarmView: View {
                     header(width: w)
                     if step == .summary { message(width: w) }
                     Spacer(minLength: 0)
+                    // A short screen has no room for it; the goal is then set through the Sleep goal mode.
+                    if step == .summary, geo.size.height >= 740 { goalPill.padding(.bottom, 18) }
                     figures(width: w)
-                    Spacer().frame(height: step == .summary ? 59 : 45)
+                    Spacer().frame(height: step == .summary ? 28 : 45)
                     sheet(width: w, bottomInset: geo.safeAreaInsets.bottom)
                 }
             }
@@ -106,9 +122,24 @@ struct NunaSmartAlarmView: View {
         .onChange(of: behavior.smartAlarmMinutes) { _, _ in model.applySmartAlarm() }
         .onChange(of: behavior.smartAlarmWeekdays) { _, _ in model.applySmartAlarm() }
         .onChange(of: wristAlerts) { _, _ in model.applySmartAlarm() }
-        .onAppear { overrides = WindDownNudge.perDayWakeOverrides }
+        .onChange(of: earlyWake) { _, _ in model.applySmartAlarm() }
+        .onAppear {
+            model.mirrorScheduledAlarm()
+            schedule = AlarmSchedule.load()
+#if DEBUG
+            // `--alarm-step=mode|goal|wake|schedule` opens the planner on that step, to look at it.
+            switch CommandLine.arguments.first(where: { $0.hasPrefix("--alarm-step=") })?.dropFirst("--alarm-step=".count) {
+            case "mode": openMode()
+            case "goal": openGoal()
+            case "wake": openWake()
+            case "schedule": showSchedule = true
+            default: break
+            }
+#endif
+        }
+        .onChange(of: showSchedule) { _, open in if !open { schedule = AlarmSchedule.load() } }
+        .navigationDestination(isPresented: $showSchedule) { NunaAlarmScheduleView() }
         .sheet(isPresented: $showHelp) { helpSheet }
-        .sheet(isPresented: $showRepeat) { repeatSheet }
     }
 
     // MARK: Page
@@ -143,14 +174,16 @@ struct NunaSmartAlarmView: View {
                 }
                 Spacer()
                 VStack(spacing: 9) {
-                    Button { showRepeat = true } label: {
+                    Button { showSchedule = true } label: {
                         PlannerCalendarIcon(size: 17).foregroundStyle(Color.white)
                             .frame(width: 36, height: 36).overlay(Circle().strokeBorder(Color.white, lineWidth: 1.8))
                     }
-                    .buttonStyle(.plain).accessibilityLabel(Text("Repeat"))
-                    Text(behavior.smartAlarmWeekdays.isEmpty || behavior.smartAlarmWeekdays.count == 7 ? "Daily" : "Custom")
+                    .buttonStyle(.plain).accessibilityLabel(Text("My schedule"))
+                    // Whether My Schedule drives the alarm.
+                    Text(schedule.drives ? "On" : "Off")
                         .font(.nuna(size: 12, weight: .heavy)).tracking(1.0).textCase(.uppercase)
-                        .foregroundStyle(Self.mint).padding(.horizontal, 8).frame(height: 20).background(Self.mint.opacity(0.18), in: RoundedRectangle(cornerRadius: 3, style: .continuous))
+                        .foregroundStyle(schedule.drives ? Self.mint : Color.white.opacity(0.55)).padding(.horizontal, 8).frame(height: 20)
+                        .background((schedule.drives ? Self.mint : Color.white).opacity(0.14), in: RoundedRectangle(cornerRadius: 3, style: .continuous))
                 }
                 .padding(.top, 4)
             }
@@ -171,11 +204,14 @@ struct NunaSmartAlarmView: View {
                 .multilineTextAlignment(.center).lineSpacing(5.5).fixedSize(horizontal: false, vertical: true).padding(.horizontal, 50)
             if behavior.smartAlarmEnabled && willArm && !wristAlerts {
                 // The alarm is on but the strap will not buzz: say so, and give the way out.
-                Button { wristAlerts = true } label: {
-                    Text("Turn on wrist alerts").font(.nuna(size: 12.5, weight: .heavy)).tracking(1.2).textCase(.uppercase).foregroundStyle(Color.white)
-                        .padding(.horizontal, 18).frame(height: 36).overlay(Capsule().strokeBorder(Color.white.opacity(0.7), lineWidth: 1.4))
-                }
-                .buttonStyle(.plain)
+                smallCapsule("Turn on wrist alerts") { wristAlerts = true }
+            } else if behavior.smartAlarmEnabled && willArm && mode != .exact && !earlyWake {
+                // A mode that can wake early, with the experiment off: the way to turn it on.
+                smallCapsule("Turn on early wake") { earlyWake = true }
+            } else if behavior.smartAlarmEnabled && willArm && wakesEarly {
+                Text("Early wake is experimental. Keep a backup alarm, and double-tap your strap to turn the buzz off.")
+                    .font(.nuna(size: 12.5, weight: .regular)).foregroundStyle(Color.white.opacity(0.6)).textCase(nil)
+                    .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true).padding(.horizontal, 40)
             } else if behavior.smartAlarmEnabled && willArm {
                 Text("Double-tap your strap to turn the alarm off.").font(.nuna(size: 13, weight: .regular)).foregroundStyle(Color.white.opacity(0.6)).textCase(nil)
                     .multilineTextAlignment(.center).padding(.horizontal, 40)
@@ -188,16 +224,46 @@ struct NunaSmartAlarmView: View {
         .padding(.top, 9)
     }
 
+    private func smallCapsule(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title).font(.nuna(size: 12.5, weight: .heavy)).tracking(1.2).textCase(.uppercase).foregroundStyle(Color.white)
+                .padding(.horizontal, 18).frame(height: 36).overlay(Capsule().strokeBorder(Color.white.opacity(0.7), lineWidth: 1.4))
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// What the bedtime below is planned for; a tap changes it.
+    private var goalPill: some View {
+        VStack(spacing: 8) {
+            Text("Tomorrow I want to").font(.nuna(size: 11, weight: .heavy)).tracking(1.2).textCase(.uppercase).foregroundStyle(Color.white.opacity(0.45))
+            Button { openGoal() } label: {
+                Text(verbatim: behavior.smartAlarmGoal == 100 ? String(localized: "Reach my sleep need")
+                                                              : String(localized: "Reach \(behavior.smartAlarmGoal)% of my sleep need"))
+                    .font(.nuna(size: 12.5, weight: .heavy)).tracking(1.1).textCase(.uppercase).foregroundStyle(Color.white.opacity(0.8))
+                    .padding(.horizontal, 18).frame(height: 38).overlay(Capsule().strokeBorder(Color.white.opacity(0.35), lineWidth: 1.4))
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
     private var messageText: String {
         guard behavior.smartAlarmEnabled else { return String(localized: "Your alarm is off. Turn it on below to buzz your wrist at your wake time.") }
         if willArm && !wristAlerts {
-            return String(localized: "Wrist alerts are off, so your strap will not buzz. Your phone will notify you at \(NunaAlarmFormat.clock(behavior.smartAlarmMinutes)).")
+            return String(localized: "Wrist alerts are off, so your strap will not buzz. Your phone will notify you at \(NunaAlarmFormat.clock(nextMinutes)).")
         }
-        let wake = NunaAlarmFormat.clock(behavior.smartAlarmMinutes), bed = NunaAlarmFormat.clock(plan.bedtimeMinutes)
+        let wake = NunaAlarmFormat.clock(nextMinutes), bed = NunaAlarmFormat.clock(plan.bedtimeMinutes)
+        let from = NunaAlarmFormat.clock(Self.hourBefore(nextMinutes))
         switch mode {
-        case .exact: return String(localized: "Your strap will buzz at \(wake).")
-        case .goal: return String(localized: "Your strap will buzz at \(wake). Be in bed by \(bed) to have time for \(behavior.smartAlarmGoal)% of your Sleep Need.")
-        case .green: return String(localized: "Your strap will buzz at \(wake). Be in bed by \(bed) for the best chance of a green Recovery.")
+        case .exact: return String(localized: "Your alarm will go off at \(wake).")
+        case .goal:
+            return earlyWake
+                ? String(localized: "Your alarm will go off once you've slept \(behavior.smartAlarmGoal)% of your sleep need, from \(from), but no later than \(wake).")
+                : String(localized: "Your strap will buzz at \(wake). Be in bed by \(bed) to have time for \(behavior.smartAlarmGoal)% of your Sleep Need.")
+        case .green:
+            return earlyWake
+                ? String(localized: "Your alarm will go off if you're at least 67% Recovered from \(from), but no later than \(wake).")
+                : String(localized: "Your strap will buzz at \(wake). Be in bed by \(bed) for the best chance of a green Recovery.")
         }
     }
 
@@ -306,7 +372,8 @@ struct NunaSmartAlarmView: View {
                         .foregroundStyle(Color.white.opacity(0.55))
                 }
                 HStack {
-                    PlannerCalendarIcon(size: 29).foregroundStyle(Color.white).padding(.leading, 4)
+                    Image(systemName: "applewatch.radiowaves.left.and.right").font(.system(size: 26, weight: .regular))
+                        .foregroundStyle(Color.white).padding(.leading, 2).accessibilityHidden(true)
                     Spacer()
                     Toggle("", isOn: $behavior.smartAlarmEnabled).labelsHidden().tint(Self.mint)
                         .accessibilityLabel(Text("Smart strap alarm"))
@@ -315,7 +382,8 @@ struct NunaSmartAlarmView: View {
             .padding(.horizontal, 20).padding(.top, 20)
             HStack(spacing: 11) {
                 outlined(top: "Alarm set to", bottom: Text(modeTitle).font(.nuna(size: 13, weight: .heavy)).tracking(1.0), action: openMode)
-                outlined(top: "Wake time", bottom: Text(verbatim: NunaAlarmFormat.clock(behavior.smartAlarmMinutes)).font(.nuna(size: 13, weight: .heavy)), action: openWake)
+                outlined(top: wakesEarly ? "Latest wake time" : "Wake time",
+                         bottom: Text(verbatim: NunaAlarmFormat.clock(nextMinutes)).font(.nuna(size: 13, weight: .heavy)), action: openWake)
             }
             .frame(height: 63).padding(.horizontal, 20).padding(.top, 20)
         }
@@ -363,8 +431,17 @@ struct NunaSmartAlarmView: View {
             sheetTitle("Choose your alarm mode.", back: { step = .summary })
             VStack(spacing: 11) {
                 modeCard("Exact time", "Wake up at a specific time.", .exact)
-                modeCard("Sleep goal", "Be in bed long enough for your sleep goal.", .goal)
-                modeCard("In the green", "Be in bed for the best chance of a green Recovery.", .green)
+                modeCard("Sleep goal", earlyWake ? "Wake up once you've hit your sleep goal." : "Be in bed long enough for your sleep goal.", .goal)
+                modeCard("In the green", earlyWake ? "Wake up once you've achieved a green Recovery." : "Be in bed for the best chance of a green Recovery.", .green)
+                Toggle(isOn: $earlyWake) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Early wake · experimental").font(.nuna(size: 12.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(Color.white)
+                        Text(earlyWake ? "Sleep goal and In the green may buzz up to an hour early." : "Off: every mode buzzes at your wake time.")
+                            .font(.nuna(size: 11.5, weight: .regular)).foregroundStyle(Color.white.opacity(0.6)).textCase(nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .tint(Self.mint).padding(.top, 2)
             }
             .padding(.horizontal, w * 0.122)
         }
@@ -388,7 +465,7 @@ struct NunaSmartAlarmView: View {
 
     private func goalSheet(width w: CGFloat, inset: CGFloat) -> some View {
         VStack(spacing: 0) {
-            sheetTitle("Select your Sleep Goal.", back: { step = .mode })
+            sheetTitle("Select your Sleep Goal.", back: { step = goalOnly ? .summary : .mode; goalOnly = false })
             VStack(alignment: .leading, spacing: 20) {
                 ForEach([100, 85, 70], id: \.self) { g in
                     Button { draftGoal = g } label: {
@@ -408,17 +485,25 @@ struct NunaSmartAlarmView: View {
             }
             .padding(.leading, 40).padding(.trailing, 20).padding(.top, 77)
             Spacer(minLength: 0)
-            bigButton("Next", mint: true) { step = .wake }.padding(.bottom, max(54 - inset, 12))
+            bigButton(goalOnly ? "Save" : "Next", mint: true) { if goalOnly { saveGoal() } else { step = .wake } }.padding(.bottom, max(54 - inset, 12))
         }
     }
 
     private func wakeSheet(width w: CGFloat, inset: CGFloat) -> some View {
-        VStack(spacing: 0) {
-            sheetTitle("Set your wake time.", back: { step = draftMode == .goal ? .goal : .mode })
-            PlannerTimeWheel(date: $draftWake).frame(height: 168).padding(.top, 61)
+        let early = earlyWake && draftMode != .exact
+        let chosen = NunaAlarmFormat.minutes(draftWake)
+        return VStack(spacing: 0) {
+            sheetTitle(early ? "Set your latest wake time." : "Set your wake time.", back: { step = draftMode == .goal ? .goal : .mode })
+            PlannerTimeWheel(date: $draftWake).frame(height: 168).padding(.top, 52)
             Spacer(minLength: 0)
-            Text(verbatim: String(localized: "Your strap will buzz at \(NunaAlarmFormat.clock(NunaAlarmFormat.minutes(draftWake)))."))
-                .font(.nuna(size: 14, weight: .regular)).foregroundStyle(Color.white.opacity(0.85)).textCase(nil).padding(.bottom, 14)
+            Text(verbatim: early ? String(localized: "Alarm will vibrate between \(NunaAlarmFormat.clock(Self.hourBefore(chosen))) - \(NunaAlarmFormat.clock(chosen))")
+                                 : String(localized: "Your strap will buzz at \(NunaAlarmFormat.clock(chosen))."))
+                .font(.nuna(size: 14, weight: .regular)).foregroundStyle(Color.white.opacity(0.85)).textCase(nil).padding(.bottom, scheduledDays == nil ? 14 : 4)
+            if let days = scheduledDays {
+                // While My Schedule is on, Save changes the days that share the next alarm.
+                Text(verbatim: String(localized: "Changes \(days) in My Schedule")).font(.nuna(size: 11.5, weight: .regular))
+                    .foregroundStyle(Color.white.opacity(0.55)).textCase(nil).multilineTextAlignment(.center).padding(.horizontal, 24).padding(.bottom, 10)
+            }
             bigButton("Save & set alarm", mint: false) { save() }.padding(.bottom, max(54 - inset, 12))
         }
     }
@@ -437,51 +522,66 @@ struct NunaSmartAlarmView: View {
 
     // MARK: Steps and saving
 
-    private func openMode() { draftMode = mode; draftGoal = behavior.smartAlarmGoal; draftWake = NunaAlarmFormat.date(minutes: behavior.smartAlarmMinutes); step = .mode }
-    private func openWake() { draftMode = mode; draftGoal = behavior.smartAlarmGoal; draftWake = NunaAlarmFormat.date(minutes: behavior.smartAlarmMinutes); step = .wake }
+    private func openMode() { startDraft(); step = .mode }
+    private func openWake() { startDraft(); step = .wake }
+    private func openGoal() { startDraft(); goalOnly = true; step = .goal }
+    private func startDraft() {
+        goalOnly = false
+        draftMode = NunaAlarmMode(rawValue: behavior.smartAlarmMode) ?? .exact
+        draftGoal = behavior.smartAlarmGoal
+        draftWake = NunaAlarmFormat.date(minutes: nextMinutes)
+    }
 
-    /// Writes the choices to the alarm and arms the strap (the `onChange` handlers above re-arm when the time, the days or the switch change).
+    /// The weekday of the alarm that comes next.
+    private var nextWeekday: Int {
+        Calendar.current.component(.weekday, from: model.nextAlarmDate() ?? Date().addingTimeInterval(86_400))
+    }
+
+    /// "Mon · Tue" for the days a save changes while My Schedule drives the alarm; nil otherwise.
+    private var scheduledDays: String? {
+        guard schedule.drives else { return nil }
+        return schedule.group(of: nextWeekday).map(NunaAlarmFormat.weekdayShort).joined(separator: " · ")
+    }
+
+    /// Writes the choices to the alarm and arms the strap.
     private func save() {
-        behavior.smartAlarmMode = draftMode.rawValue
-        if draftMode == .goal { behavior.smartAlarmGoal = draftGoal }
-        behavior.smartAlarmMinutes = NunaAlarmFormat.minutes(draftWake)
-        if behavior.smartAlarmEnabled { model.applySmartAlarm() } else { behavior.smartAlarmEnabled = true }
+        write(AlarmDayPlan(minutes: NunaAlarmFormat.minutes(draftWake), mode: draftMode.rawValue, goal: draftMode == .goal ? draftGoal : behavior.smartAlarmGoal))
+        if !behavior.smartAlarmEnabled { behavior.smartAlarmEnabled = true }
         step = .summary
     }
 
-    // MARK: Repeat and help
-
-    private var repeatSheet: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Text("Repeat").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-            HStack(spacing: 8) {
-                ForEach(NunaAlarmFormat.weekdayOrder, id: \.self) { dow in
-                    let on = SmartAlarmView.alarmWeekdayIsSelected(dow, in: behavior.smartAlarmWeekdays)
-                    Button { behavior.smartAlarmWeekdays = SmartAlarmView.alarmToggledWeekday(dow, in: behavior.smartAlarmWeekdays) } label: {
-                        Text(verbatim: String(NunaAlarmFormat.weekdayShort(dow).prefix(1))).font(.nuna(size: 14, weight: .heavy))
-                            .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textSecondary).frame(maxWidth: .infinity).frame(height: 44)
-                            .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-                    }
-                    .buttonStyle(.plain).accessibilityLabel(Text(verbatim: NunaAlarmFormat.weekdayName(dow))).accessibilityAddTraits(on ? .isSelected : [])
-                }
-            }
-            Text(verbatim: SmartAlarmView.alarmWeekdaySummary(behavior.smartAlarmWeekdays)).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            if !overrides.isEmpty {
-                Text("Some days have a time of their own, set in the bedtime reminder.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(22).frame(maxWidth: .infinity, alignment: .leading)
-        .background(NunaBackdrop())
-        .presentationDetents([.height(280)]).presentationDragIndicator(.visible)
-        .preferredColorScheme(NunaTheme.colorScheme)
+    /// The goal alone, from the pill.
+    private func saveGoal() {
+        write(AlarmDayPlan(minutes: nextMinutes, mode: behavior.smartAlarmMode, goal: draftGoal))
+        goalOnly = false
+        step = .summary
     }
+
+    private func write(_ plan: AlarmDayPlan) {
+        if schedule.drives {
+            var changed = schedule
+            changed.set(plan, on: changed.group(of: nextWeekday))
+            model.setAlarmSchedule(changed)
+            schedule = AlarmSchedule.load()
+        } else {
+            let weekday = nextWeekday
+            behavior.smartAlarmMode = plan.mode
+            behavior.smartAlarmGoal = plan.goal
+            behavior.smartAlarmMinutes = plan.minutes
+            // A day with a time of its own keeps winning over the usual one, so the new time goes to it as well.
+            if WindDownNudge.perDayWakeOverrides[weekday] != nil { WindDownNudge.setWakeOverride(weekday: weekday, minutes: plan.minutes) }
+            model.applySmartAlarm()
+        }
+    }
+
+    // MARK: Help
 
     private var helpSheet: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Sleep planner").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                note("The strap buzzes at your wake time. In Sleep goal and In the green the goal decides the bedtime to aim for, the time in bed it leaves, and the Tonight's sleep card on Today: PHMN cannot see your sleep as it happens, so the buzz is never earlier than the time you set.")
+                note("The strap is armed at your wake time in every mode. The sleep goal decides the bedtime to aim for, the time in bed it leaves, and the Tonight's sleep card on Today.")
+                note("Early wake (experimental): in the hour before your wake time, PHMN reads the night so far on your iPhone and buzzes the strap once your sleep goal is reached, or once Recovery worked out so far is 67% or more after at least four hours of sleep. These are estimates from records that arrive about every ten minutes, and iOS can delay the app, so the buzz may come late or not early at all. The wake time stays armed on the strap, and the phone notification stays at that time.")
                 note("Optimal is the window your sleep need itself asks for, ending at your wake time. The suggested bedtime starts a little earlier, to leave time to fall asleep.")
                 note("The buzz is the same one as your other wrist alerts, so it follows the Wrist alerts switch in Strap automations: with it off the strap stays silent and only the phone notification wakes you. To turn the alarm off, double-tap your strap while it buzzes.")
                 note("The buzz is silent, from the strap's own firmware, so it works even if your phone is asleep or PHMN is closed. A backup notification is scheduled too, but Focus or silent mode can mute it. Keep your phone's Clock alarm as your real backup.")
@@ -516,7 +616,7 @@ struct NunaSmartAlarmView: View {
     /// The weekday the next buzz falls on (tomorrow's while the alarm is off).
     private var nextDayName: String {
         let date: Date = behavior.smartAlarmEnabled && willArm
-            ? (AppModel.nextSmartAlarmDate(minutes: behavior.smartAlarmMinutes, weekdays: behavior.smartAlarmWeekdays, overrides: overrides) ?? Date().addingTimeInterval(86_400))
+            ? (model.nextAlarmDate() ?? Date().addingTimeInterval(86_400))
             : Date().addingTimeInterval(86_400)
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
         return f.string(from: date)

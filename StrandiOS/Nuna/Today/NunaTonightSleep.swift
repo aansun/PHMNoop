@@ -19,7 +19,7 @@ struct NunaTonightSleep: View {
     /// The same bedtime the Sleep planner names, worked out in one place.
     private var bedtimeMinutes: Int {
         NunaSleepPlan(wakeMinutes: behavior.smartAlarmMinutes, needMinutes: NunaSleepPlan.needMinutes(goal: sleepGoal),
-                      goalPercent: behavior.smartAlarmMode == "exact" ? 100 : behavior.smartAlarmGoal).bedtimeMinutes
+                      goalPercent: behavior.smartAlarmGoal).bedtimeMinutes
     }
 
     /// Whether the strap will be sent the alarm: every strap but a 5/MG always, a 5/MG once its alarm is turned on in Experiments.
