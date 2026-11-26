@@ -188,13 +188,13 @@ struct NunaBloodPressureView: View {
                 hero(latest)
                 if latest.category == .veryHigh { veryHigh }
                 period
+                NunaBPLinksSection(readings: readings, days: linkDays, picked: selectedDay)
                 addButton
             } else {
                 empty
                 addButton
             }
             if loaded, !readings.isEmpty { allReadings }
-            if loaded, !readings.isEmpty { NunaBPLinksSection(readings: readings) }
             NunaBPZones()
             NunaBPFindings()
         }
@@ -294,6 +294,20 @@ struct NunaBloodPressureView: View {
         let cal = Calendar.current
         let end = cal.date(byAdding: .day, value: -back * span, to: cal.startOfDay(for: Date())) ?? Date()
         return (0..<span).reversed().compactMap { cal.date(byAdding: .day, value: -$0, to: end) }
+    }
+
+    /// The day the chart has lit: the one tapped, else the newest of the period that has a reading.
+    private var selectedDay: Date? {
+        let days = window
+        let shown = NunaBP.daily(readings).filter { days.contains($0.date) }
+        return (shown.first { $0.date == picked } ?? shown.last)?.date
+    }
+
+    /// The week of the rows under the chart: the chart's own week, or, over a month, the seven days up to the lit one.
+    private var linkDays: [Date] {
+        let cal = Calendar.current
+        guard let end = span == 7 ? window.last : (selectedDay ?? window.last) else { return [] }
+        return (0..<7).reversed().compactMap { cal.date(byAdding: .day, value: -$0, to: end) }
     }
 
     private var hasEarlier: Bool { guard let first = readings.first, let start = window.first else { return false }; return first.date < start }

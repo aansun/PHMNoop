@@ -37,7 +37,7 @@ struct NunaBPTrendView: View {
                 figures
                 VStack(alignment: .leading, spacing: 12) {
                     nunaTrendsCap("How it is compared")
-                    Text(verbatim: method).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3)
+                    Text(verbatim: NunaBPLinksModel.method(topic)).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3)
                         .textCase(nil).fixedSize(horizontal: false, vertical: true)
                     Text("These are patterns in your own readings, not proof of cause: other things change on the same days, and a cuff reading varies by itself. Not a diagnosis.")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).fixedSize(horizontal: false, vertical: true)
@@ -404,8 +404,8 @@ struct NunaBPTrendView: View {
                             if c.verdict != .needMore, c.early { NunaChip("Early") }
                         }
                         HStack(alignment: .top, spacing: 18) {
-                            side(level.first, c.first, size: 30, progress: c.verdict == .needMore)
-                            side(level.second, c.second, size: 30, progress: c.verdict == .needMore)
+                            NunaBPSideView(label: level.first, side: c.first, size: 30, progress: c.verdict == .needMore)
+                            NunaBPSideView(label: level.second, side: c.second, size: 30, progress: c.verdict == .needMore)
                         }
                     }
                 }
@@ -413,30 +413,6 @@ struct NunaBPTrendView: View {
         case .journal: journal
         case .breathing: sessions
         }
-    }
-
-    /// A side of a comparison. While it is short of days, five marks show how far it has come.
-    private func side(_ label: String, _ s: PressureLinks.Side, size: CGFloat, progress: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(verbatim: label).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                .lineLimit(2).fixedSize(horizontal: false, vertical: true)
-            Text(verbatim: s.mean.map { NunaBP.text($0.systolic, $0.diastolic) } ?? "–")
-                .font(.nuna(size: size, weight: .bold, design: NunaType.design))
-                .foregroundStyle(s.mean.map { NunaBPCategory.of($0.systolic, $0.diastolic).color } ?? NunaPalette.textMuted)
-                .monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
-            Text(verbatim: s.days == 1 ? String(localized: "1 day") : String(localized: "\(s.days) days"))
-                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-            if progress {
-                HStack(spacing: 4) {
-                    ForEach(0..<PressureLinks.daysNeeded, id: \.self) { i in
-                        Capsule().fill(i < s.days ? NunaPalette.textPrimary : NunaPalette.ink.opacity(0.14)).frame(height: 4)
-                    }
-                }
-                .accessibilityHidden(true)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
     }
 
     /// Every answered behaviour that has enough days; a tap puts it on the chart.
@@ -455,8 +431,8 @@ struct NunaBPTrendView: View {
                             else if let d = c.difference { NunaChip(verbatim: NunaBPLinksModel.changeText(d) + " mmHg", color: NunaPalette.textPrimary).textCase(nil) }
                         }
                         HStack(alignment: .top, spacing: 18) {
-                            side(String(localized: "After Yes"), c.first, size: 24, progress: false)
-                            side(String(localized: "After No"), c.second, size: 24, progress: false)
+                            NunaBPSideView(label: String(localized: "After Yes"), side: c.first, size: 24)
+                            NunaBPSideView(label: String(localized: "After No"), side: c.second, size: 24)
                         }
                     }
                 }
@@ -486,17 +462,6 @@ struct NunaBPTrendView: View {
                     }
                 }
             }
-        }
-    }
-
-    private var method: String {
-        let needed = PressureLinks.daysNeeded
-        switch topic {
-        case .sleep: return String(localized: "Your measured days are split at the middle of your own sleep, taken from the night before each one. Each day counts once, as the average of its readings. A side needs \(needed) days.")
-        case .activity: return String(localized: "Your measured days are split at the middle of your own strain on the day before each one. Each day counts once, as the average of its readings. A side needs \(needed) days.")
-        case .weight: return String(localized: "Your measured days are split at the middle of your own weight, using the latest weighing in the two weeks up to each one. A side needs \(needed) days.")
-        case .journal: return String(localized: "A day's journal answer is compared with the readings of the day after. Each side needs \(needed) measured days.")
-        case .breathing: return String(localized: "Measure within half an hour before a breathing session and again within half an hour after. Sitting still lowers a reading too, so part of a drop may be the rest itself.")
         }
     }
 }

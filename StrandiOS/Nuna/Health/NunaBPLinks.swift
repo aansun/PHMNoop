@@ -205,6 +205,18 @@ final class NunaBPLinksModel: ObservableObject {
         }
     }
 
+    /// How a topic's sides are worked out.
+    static func method(_ topic: NunaBPTopic) -> String {
+        let needed = PressureLinks.daysNeeded
+        switch topic {
+        case .sleep: return String(localized: "Your measured days are split at the middle of your own sleep, taken from the night before each one. Each day counts once, as the average of its readings. A side needs \(needed) days.")
+        case .activity: return String(localized: "Your measured days are split at the middle of your own strain on the day before each one. Each day counts once, as the average of its readings. A side needs \(needed) days.")
+        case .weight: return String(localized: "Your measured days are split at the middle of your own weight, using the latest weighing in the two weeks up to each one. A side needs \(needed) days.")
+        case .journal: return String(localized: "A day's journal answer is compared with the readings of the day after. Each side needs \(needed) measured days.")
+        case .breathing: return String(localized: "Measure within half an hour before a breathing session and again within half an hour after. Sitting still lowers a reading too, so part of a drop may be the rest itself.")
+        }
+    }
+
     static func verdict(_ c: PressureLinks.Comparison, first: String) -> String {
         let gap = c.difference.map { changeText($0) + "\u{00A0}mmHg" } ?? "–"
         switch c.verdict {
@@ -237,19 +249,53 @@ final class NunaBPLinksModel: ObservableObject {
 
 // MARK: - On the Blood pressure page
 
-/// One card for a week: the blood pressure drawn on top, then under the same days, a row each, the sleep of the night before, the strain of the day
-/// before, the weight, the journal's yes or no and the change around breathing sessions. A row opens that topic's trend page.
+/// A side of a comparison: its name, the mean and its days. While it is short of days, five marks show how far it has come.
+struct NunaBPSideView: View {
+    let label: String
+    let side: PressureLinks.Side
+    var size: CGFloat = 24
+    var progress = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(verbatim: label).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                .lineLimit(2).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+            Text(verbatim: side.mean.map { NunaBP.text($0.systolic, $0.diastolic) } ?? "–")
+                .font(.nuna(size: size, weight: .bold, design: NunaType.design))
+                .foregroundStyle(side.mean.map { NunaBPCategory.of($0.systolic, $0.diastolic).color } ?? NunaPalette.textMuted)
+                .monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+            Text(verbatim: side.days == 1 ? String(localized: "1 day") : String(localized: "\(side.days) days"))
+                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+            if progress {
+                HStack(spacing: 4) {
+                    ForEach(0..<PressureLinks.daysNeeded, id: \.self) { i in
+                        Capsule().fill(i < side.days ? NunaPalette.textPrimary : NunaPalette.ink.opacity(0.14)).frame(height: 4)
+                    }
+                }
+                .accessibilityHidden(true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// The week the chart above stands on, a row a thing: the sleep of the night before, the strain of the day before, the weight, the journal's yes
+/// or no and the change around breathing sessions. A row opens downward to say what its figures are and what they show beside the pressure.
 struct NunaBPLinksSection: View {
     let readings: [NunaBPReading]
+    /// The seven days of the rows, oldest first.
+    let days: [Date]
+    /// The day picked on the chart, named brighter here.
+    var picked: Date?
     @EnvironmentObject private var repo: Repository
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
     @StateObject private var model = NunaBPLinksModel()
-    /// How many weeks back from the one ending today.
-    @State private var back = 0
+    @State private var open: NunaBPTopic?
 
-    /// The width of the column the row icons stand in, left of the seven days.
-    private let gutter: CGFloat = 30
-    private var window: NunaTrendWindow { NunaTrendWindow(range: 7, page: back, endingDaysAgo: 0) }
+    /// The columns beside the seven days: the row's icon at the left, its arrow at the right.
+    private let gutter: CGFloat = 28
+    private let arrow: CGFloat = 22
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -270,71 +316,41 @@ struct NunaBPLinksSection: View {
     }
 
     private var card: some View {
-        let w = window
-        let days = w.noons
         let keys = days.map { Repository.localDayKey($0) }
         let question = model.leadQuestion
         return NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    Spacer(minLength: 0)
-                    NunaDateStepper(label: w.label, canGoBack: model.daily.keys.min().map { Repository.localDayKey(w.start) > $0 } ?? false,
-                                    canGoForward: back > 0, back: { back += 1 }, forward: { back = max(0, back - 1) })
-                    Spacer(minLength: 0)
+            VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                    Color.clear.frame(width: gutter, height: 1)
+                    ForEach(Array(days.enumerated()), id: \.offset) { i, date in
+                        dayLabel(date, lit: picked.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? (i == days.count - 1))
+                    }
+                    Color.clear.frame(width: arrow, height: 1)
                 }
-                .padding(.bottom, 10)
-                VStack(spacing: 0) {
-                    HStack(spacing: 0) {
-                        icon(NunaIcons.bloodPressure)
-                        NunaBPWeekPlot(days: keys.map { model.daily[$0] }).frame(height: 170)
-                    }
-                    HStack(spacing: 0) {
-                        Color.clear.frame(width: gutter, height: 1)
-                        ForEach(Array(days.enumerated()), id: \.offset) { i, date in dayLabel(date, last: back == 0 && i == days.count - 1) }
-                    }
-                    .padding(.vertical, 6)
-                    row(.sleep, keys) { k in model.series[.sleep]?[k].map { Cell(model.figureText(.sleep, $0)) } }
-                    row(.activity, keys) { k in model.series[.activity]?[k].map { Cell(model.figureText(.activity, $0)) } }
-                    row(.weight, keys) { k in model.series[.weight]?[k].map { Cell(model.figureText(.weight, $0)) } }
-                    row(.journal, keys) { k in
-                        question.flatMap { model.answers[$0]?[k] }.map { yes in
-                            Cell(yes ? String(localized: "bp.week.yes", defaultValue: "Y") : String(localized: "bp.week.no", defaultValue: "N"),
-                                 color: yes ? NunaPalette.textPrimary : NunaPalette.textMuted)
-                        }
-                    }
-                    row(.breathing, keys) { k in
-                        model.breathChange[k].map { c in Cell(model.figureText(.breathing, c.systolic), model.figureText(.breathing, c.diastolic)) }
+                .padding(.bottom, 8)
+                row(.sleep, keys) { k in model.series[.sleep]?[k].map { Cell(model.figureText(.sleep, $0)) } }
+                row(.activity, keys) { k in model.series[.activity]?[k].map { Cell(model.figureText(.activity, $0)) } }
+                row(.weight, keys) { k in model.series[.weight]?[k].map { Cell(model.figureText(.weight, $0)) } }
+                row(.journal, keys) { k in
+                    question.flatMap { model.answers[$0]?[k] }.map { yes in
+                        Cell(yes ? String(localized: "bp.week.yes", defaultValue: "Y") : String(localized: "bp.week.no", defaultValue: "N"),
+                             color: yes ? NunaPalette.textPrimary : NunaPalette.textMuted)
                     }
                 }
-                .background(alignment: .topLeading) { if back == 0 { today } }
-                NunaDivider()
-                Text(verbatim: key(question)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                    .lineSpacing(2).fixedSize(horizontal: false, vertical: true).padding(.top, 10)
+                row(.breathing, keys) { k in
+                    model.breathChange[k].map { c in Cell(model.figureText(.breathing, c.systolic), model.figureText(.breathing, c.diastolic)) }
+                }
             }
         }
     }
 
-    /// Today's column, lifted as on the weekly cards.
-    private var today: some View {
-        GeometryReader { g in
-            let column = (g.size.width - gutter) / 7
-            RoundedRectangle(cornerRadius: 10, style: .continuous).fill(NunaPalette.glassStrong)
-                .frame(width: max(column - 2, 0), height: g.size.height).offset(x: gutter + column * 6 + 1)
-        }
-        .accessibilityHidden(true)
-    }
-
-    private func icon(_ name: String) -> some View {
-        NunaIcon(name: name, size: 17, weight: .medium).foregroundStyle(NunaPalette.textSecondary).frame(width: gutter, alignment: .leading)
-    }
-
-    private func dayLabel(_ date: Date, last: Bool) -> some View {
+    private func dayLabel(_ date: Date, lit: Bool) -> some View {
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
         return VStack(spacing: 1) {
-            Text(verbatim: f.string(from: date)).font(.nuna(size: 11.5, weight: .semibold)).textCase(nil)
+            Text(verbatim: f.string(from: date)).font(.nuna(size: 11.5, weight: .semibold)).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
             Text(verbatim: String(Calendar.current.component(.day, from: date))).font(.nuna(size: 12.5, weight: .heavy)).textCase(nil)
         }
-        .foregroundStyle(last ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+        .foregroundStyle(lit ? NunaPalette.textPrimary : NunaPalette.textSecondary)
         .frame(maxWidth: .infinity)
     }
 
@@ -346,87 +362,93 @@ struct NunaBPLinksSection: View {
         init(_ upper: String, _ lower: String? = nil, color: Color = NunaPalette.textPrimary) {
             self.upper = upper; self.lower = lower; self.color = color
         }
+        var spoken: String { [upper, lower].compactMap { $0 }.joined(separator: " ") }
     }
 
     private func row(_ topic: NunaBPTopic, _ keys: [String], _ cell: @escaping (String) -> Cell?) -> some View {
-        NavigationLink { NunaBPTrendView(topic: topic) } label: {
-            VStack(spacing: 0) {
-                NunaDivider()
+        let shown = open == topic
+        return VStack(spacing: 0) {
+            NunaDivider()
+            Button { withAnimation(.easeInOut(duration: 0.2)) { open = shown ? nil : topic } } label: {
                 HStack(spacing: 0) {
-                    icon(topic.icon)
+                    NunaIcon(name: topic.icon, size: 17, weight: .medium).foregroundStyle(NunaPalette.textSecondary).frame(width: gutter, alignment: .leading)
                     ForEach(Array(keys.enumerated()), id: \.offset) { _, k in
                         let c = cell(k)
                         VStack(spacing: 0) {
                             Text(verbatim: c?.upper ?? "–")
                             if let lower = c?.lower { Text(verbatim: lower) }
                         }
-                        .font(.nuna(size: 13.5, weight: .bold, design: NunaType.design)).foregroundStyle(c?.color ?? NunaPalette.textMuted)
+                        .font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(c?.color ?? NunaPalette.textMuted)
                         .monospacedDigit().textCase(nil).lineLimit(1).minimumScaleFactor(0.7)
                         .frame(maxWidth: .infinity)
                     }
+                    Image(systemName: shown ? "chevron.up" : "chevron.down").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        .frame(width: arrow, alignment: .trailing)
                 }
-                .frame(minHeight: 48)
+                .frame(minHeight: 50)
+                .contentShape(Rectangle())
             }
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(verbatim: topic.title + ": " + keys.map { cell($0)?.spoken ?? "–" }.joined(separator: ", ")))
+            .accessibilityHint(Text(shown ? "Hides the explanation" : "Shows the explanation"))
+            if shown { explanation(topic) }
         }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text(verbatim: topic.title + ": " + keys.map { k in cell(k).map { [$0.upper, $0.lower].compactMap { $0 }.joined(separator: " ") } ?? "–" }.joined(separator: ", ")))
     }
 
-    /// What each icon's figures are, once, under the rows.
-    private func key(_ question: String?) -> String {
-        let journal = question.map { NunaBehaviorModel.title($0) } ?? String(localized: "no answer yet")
-        return String(localized: "Sleep: hours the night before. Strain: the day before. Weight in kg. Journal: \(journal), the day before. Breathing: change in pressure around a session. Tap a row for its trend.")
-    }
-}
-
-/// The week's blood pressure over seven equal columns: the upper and the lower figure of each measured day, joined to the day beside it.
-private struct NunaBPWeekPlot: View {
-    let days: [PressureLinks.Pressure?]
-
-    var body: some View {
-        Canvas { ctx, size in
-            let present = days.compactMap { $0 }
-            let column = size.width / CGFloat(max(days.count, 1))
-            for fraction in [0.0, 0.5, 1.0] {
-                var rule = Path(); let y = max(0.5, min(size.height - 0.5, size.height * fraction))
-                rule.move(to: CGPoint(x: 0, y: y)); rule.addLine(to: CGPoint(x: size.width, y: y))
-                ctx.stroke(rule, with: .color(NunaPalette.ink.opacity(0.08)), lineWidth: 1)
+    /// Under an open row: what its figures are, what they show beside the pressure, how that is worked out and the way to the trend.
+    private func explanation(_ topic: NunaBPTopic) -> some View {
+        let question = model.leadQuestion
+        var comparison: (String, PressureLinks.Side, String, PressureLinks.Side, Bool)?
+        if topic == .journal {
+            if let b = model.behaviours.first(where: { $0.question == question }) {
+                comparison = (String(localized: "After Yes"), b.comparison.first, String(localized: "After No"), b.comparison.second, false)
             }
-            guard !present.isEmpty else {
-                ctx.draw(Text("No reading in this period.").font(.nuna(size: 13, weight: .semibold)).foregroundColor(NunaPalette.textSecondary),
-                         at: CGPoint(x: size.width / 2, y: size.height / 2 - 12), anchor: .center)
-                return
-            }
-            let low = (present.map(\.diastolic).min() ?? 70) - 6, high = (present.map(\.systolic).max() ?? 130) + 6
-            // Room over the highest and under the lowest for their figures.
-            let top: CGFloat = 24, bottom: CGFloat = 24
-            func y(_ v: Double) -> CGFloat { top + (size.height - top - bottom) * CGFloat((high - v) / max(high - low, 1)) }
-            func x(_ i: Int) -> CGFloat { column * (CGFloat(i) + 0.5) }
-            for upper in [true, false] {
-                var line = Path()
-                var open = false
-                for (i, day) in days.enumerated() {
-                    guard let day else { open = false; continue }
-                    let at = CGPoint(x: x(i), y: y(upper ? day.systolic : day.diastolic))
-                    if open { line.addLine(to: at) } else { line.move(to: at); open = true }
-                }
-                ctx.stroke(line, with: .color(NunaPalette.ink.opacity(0.35)), style: StrokeStyle(lineWidth: 2, lineJoin: .round, dash: upper ? [] : [4, 3]))
-            }
-            for (i, day) in days.enumerated() {
-                guard let day else { continue }
-                let tone = NunaBPCategory.of(day.systolic, day.diastolic).color
-                for (v, lift) in [(day.systolic, -15.0), (day.diastolic, 15.0)] {
-                    ctx.fill(Path(ellipseIn: CGRect(x: x(i) - 4.5, y: y(v) - 4.5, width: 9, height: 9)), with: .color(tone))
-                    ctx.draw(Text(verbatim: "\(Int(v.rounded()))").font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundColor(tone),
-                             at: CGPoint(x: x(i), y: y(v) + CGFloat(lift)), anchor: .center)
-                }
-            }
+        } else if let level = model.levels.first(where: { $0.topic == topic }), let c = level.comparison {
+            comparison = (level.first, c.first, level.second, c.second, c.verdict == .needMore)
         }
-        .textCase(nil)
-        .accessibilityLabel(Text("Blood pressure"))
-        .accessibilityValue(Text(verbatim: days.map { $0.map { NunaBP.text($0.systolic, $0.diastolic) } ?? "–" }.joined(separator: ", ")))
+        return VStack(alignment: .leading, spacing: 12) {
+            nunaTrendsCap(LocalizedStringKey(topic.title))
+            words(figures(topic, question), color: NunaPalette.textSecondary)
+            words(model.sentence(topic, question: question))
+            if let (first, a, second, b, short) = comparison {
+                HStack(alignment: .top, spacing: 14) {
+                    NunaBPSideView(label: first, side: a, size: 22, progress: short)
+                    NunaBPSideView(label: second, side: b, size: 22, progress: short)
+                }
+            }
+            Text(verbatim: NunaBPLinksModel.method(topic)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                .textCase(nil).fixedSize(horizontal: false, vertical: true)
+            NavigationLink { NunaBPTrendView(topic: topic) } label: {
+                HStack(spacing: 8) {
+                    Text("View trend").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    Image(systemName: "arrow.right").font(.nuna(size: 13, weight: .bold))
+                }
+                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 42)
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 4).padding(.bottom, 14)
+    }
+
+    private func words(_ text: String, color: Color = NunaPalette.textPrimary) -> some View {
+        Text(verbatim: text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(color).textCase(nil).multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// What the numbers of a row are.
+    private func figures(_ topic: NunaBPTopic, _ question: String?) -> String {
+        switch topic {
+        case .sleep: return String(localized: "Each figure is the sleep of the night before that day, in hours and minutes.")
+        case .activity: return String(localized: "Each figure is the strain of the day before.")
+        case .weight: return String(localized: "Each figure is the weight recorded that day, in kg.")
+        case .journal:
+            guard let question else { return String(localized: "Y or N is your journal answer from the day before.") }
+            return String(localized: "Y or N is your answer from the day before for \(NunaBehaviorModel.title(question)).")
+        case .breathing: return String(localized: "The change around that day's breathing sessions: upper figure above, lower figure below.")
+        }
     }
 }
 #endif

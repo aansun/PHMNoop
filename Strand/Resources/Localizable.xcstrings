@@ -9842,8 +9842,14 @@
  "Journal: %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jurnal: %@"}}}},
  "Yes on %lld of %lld days": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ya pada %lld dari %lld hari"}}}},
  "After a Yes to %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Setelah menjawab Ya pada %@"}}}},
- "no answer yet": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "belum ada jawaban"}}}},
- "Sleep: hours the night before. Strain: the day before. Weight in kg. Journal: %@, the day before. Breathing: change in pressure around a session. Tap a row for its trend.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur: lama tidur malam sebelumnya. Strain: sehari sebelumnya. Berat dalam kg. Jurnal: %@, sehari sebelumnya. Napas: perubahan tekanan sekitar sesi. Ketuk satu baris untuk melihat trennya."}}}},
  "bp.week.yes": {"extractionState": "extracted_with_value", "localizations": {"en": {"stringUnit": {"state": "new", "value": "Y"}}, "id": {"stringUnit": {"state": "translated", "value": "Y"}}}},
- "bp.week.no": {"extractionState": "extracted_with_value", "localizations": {"en": {"stringUnit": {"state": "new", "value": "N"}}, "id": {"stringUnit": {"state": "translated", "value": "N"}}}}
+ "bp.week.no": {"extractionState": "extracted_with_value", "localizations": {"en": {"stringUnit": {"state": "new", "value": "N"}}, "id": {"stringUnit": {"state": "translated", "value": "N"}}}},
+ "Each figure is the sleep of the night before that day, in hours and minutes.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tiap angka adalah lama tidur pada malam sebelum hari itu, dalam jam dan menit."}}}},
+ "Each figure is the strain of the day before.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tiap angka adalah strain sehari sebelumnya."}}}},
+ "Each figure is the weight recorded that day, in kg.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tiap angka adalah berat badan yang tercatat hari itu, dalam kg."}}}},
+ "Y or N is your journal answer from the day before.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Y atau N adalah jawaban jurnalmu sehari sebelumnya."}}}},
+ "Y or N is your answer from the day before for %@.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Y atau N adalah jawabanmu sehari sebelumnya untuk %@."}}}},
+ "The change around that day's breathing sessions: upper figure above, lower figure below.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Perubahan sekitar sesi napas hari itu: angka sistolik di atas, diastolik di bawah."}}}},
+ "Hides the explanation": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menutup penjelasan"}}}},
+ "Shows the explanation": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membuka penjelasan"}}}}
 }, "version":"1.0" }
