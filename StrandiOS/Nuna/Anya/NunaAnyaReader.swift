@@ -42,7 +42,7 @@ enum NunaAnyaModule: String, Equatable {
         else if c.contains("sleep") || c.contains("nap") || c.contains("body clock") || c.contains("rest") { self = .sleep }
         else if c.contains("trend") { self = .trends }
         else if c.contains("workout") || c.contains("effort") || c.contains("strain") || c.contains("training") { self = .workouts }
-        else if c.contains("health") || c.contains("rhythm") || c.contains("stress") || c.contains("warning") || c.contains("hrv") || c.contains("heart") || c.contains("oxygen") || c.contains("respir") || c.contains("weight") || c.contains("body") { self = .health }
+        else if c.contains("health") || c.contains("rhythm") || c.contains("pressure") || c.contains("stress") || c.contains("warning") || c.contains("hrv") || c.contains("heart") || c.contains("oxygen") || c.contains("respir") || c.contains("weight") || c.contains("body") { self = .health }
         else if c.contains("nutrition") || c.contains("water") || c.contains("calor") { self = .nutrition }
         else if c.contains("device") || c.contains("battery") || c.contains("strap") { self = .device }
         else { self = .today }
@@ -73,6 +73,7 @@ enum NunaAnyaReader {
         if context.lowercased() == "body" { return await body(repo: repo, profile: profile, scale: scale) }
         if context.lowercased() == "strain" { return await strain(repo: repo, profile: profile, scale: scale) }
         if context.lowercased() == "rhythm" { return rhythm() }
+        if context.lowercased() == "blood pressure" { return bloodPressure() }
         let module = NunaAnyaModule(context: context)
         switch module {
         case .nutrition: return await nutrition(repo: repo, profile: profile)
@@ -97,6 +98,18 @@ enum NunaAnyaReader {
 
     /// What a provider is told on top of the Rhythm page, so her words stay a description and never become a medical verdict.
     static let rhythmGuardrail = "RULES FOR THIS PAGE: it is an experimental, non-diagnostic picture of heartbeat timing from a wrist or arm strap, not an ECG. Do not name any heart condition, do not say whether the reading is normal or abnormal, do not estimate risk and do not suggest treatment. Explain only what the figures show, in plain words, with ordinary causes such as breathing, movement, an imperfect optical reading or a single extra beat. If the person says they feel unwell or are worried, tell them to contact a qualified professional, or emergency services if it is urgent."
+
+    // MARK: Blood pressure
+
+    /// The Blood pressure page hands her its own reading, so this only sets who is speaking and what can be asked.
+    private static func bloodPressure() -> NunaAnyaRead {
+        let asks = [String(localized: "How do I measure it well?"), String(localized: "What can move my blood pressure?"), String(localized: "How is my trend?")]
+        return NunaAnyaRead(headline: String(localized: "Your blood pressure"), detail: nil, read: [], module: .health,
+                            questions: asks.map { NunaAnyaQuestion(title: $0, prompt: $0) })
+    }
+
+    /// What a provider is told on top of the Blood pressure page.
+    static let bloodPressureGuardrail = "RULES FOR THIS PAGE: the figures are home cuff readings the person typed in or saved to Apple Health. Do not diagnose hypertension or any condition, do not estimate risk, and never suggest starting, stopping or changing a medicine. Describe the figures in plain words against general adult reference ranges, give ordinary measuring and lifestyle advice, and point to a health professional for anything persistent. If a reading is 180/120 or higher, say to rest five minutes and measure again, and with chest pain, breathlessness, weakness or trouble speaking or seeing, to call emergency services now."
 
     /// Writes this module's note for the day and adds what moved since the last day it noted to the read's detail.
     private static func remembering(_ read: NunaAnyaRead, values: [String: Double]) -> NunaAnyaRead {

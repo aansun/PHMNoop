@@ -112,9 +112,13 @@ struct NunaAnyaSheet: View {
 
     private var module: NunaAnyaModule { NunaAnyaModule(context: context) }
 
+    /// The Blood pressure page shows Lab Book figures: they go to a provider only while the Lab Book is shared with her.
+    private var withholdsFigures: Bool { context == "blood pressure" && !coach.includeOnDeviceSignals }
+
     /// What the provider is told about this page: the local read and the notes Anya kept in this module (and only this one).
     private var notice: String? {
-        [read.map { NunaMark.plain($0.headline + ($0.detail.map { ". " + $0 } ?? "")) }, NunaAnyaMemory.summary(module)].compactMap { $0 }.joined(separator: "\n\n").nilIfEmpty
+        if withholdsFigures { return nil }
+        return [read.map { NunaMark.plain($0.headline + ($0.detail.map { ". " + $0 } ?? "")) }, NunaAnyaMemory.summary(module)].compactMap { $0 }.joined(separator: "\n\n").nilIfEmpty
     }
 
     var body: some View {
@@ -355,7 +359,11 @@ struct NunaAnyaSheet: View {
         }
         // The page she is asked about: what it is, her own reading of it (with its verdict), and the data this module's questions need beyond the summary.
         var page = context
-        if let r = read { page += "\n\n" + NunaMark.plain(NunaMark.compose(headline: r.headline, detail: r.detail)) }
+        if let r = read, !withholdsFigures { page += "\n\n" + NunaMark.plain(NunaMark.compose(headline: r.headline, detail: r.detail)) }
+        if context == "blood pressure" {
+            page += "\n\n" + NunaAnyaReader.bloodPressureGuardrail
+            if withholdsFigures { page += " The readings are not shared with you; if asked about their own figures, say they can turn on \"Share patterns and Lab Book\" in Anya settings." }
+        }
         if let v = read?.verdict { page += "\n\n" + v.providerLine }
         if context == "rhythm" { page += "\n\n" + NunaAnyaReader.rhythmGuardrail }
         if let pack = await NunaAnyaPack.text(for: module, repo: repo, profile: profile, live: live) { page += "\n\n" + pack }
@@ -454,7 +462,7 @@ extension NunaAnyaSheet {
                     Spacer(minLength: 0)
                 }
             }
-            if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining, context != "rhythm" {
+            if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining, context != "rhythm", context != "blood pressure" {
                 Button { Task { await explain() } } label: {
                     HStack(spacing: 8) {
                         Text("Explain").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)

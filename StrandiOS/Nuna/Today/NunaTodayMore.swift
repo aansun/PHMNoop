@@ -85,6 +85,7 @@ extension NunaTodayView {
             let card: DashboardCard
             switch item {
             case .page(let page): return pageRow(page)
+            case .bloodPressure: return bloodPressureRow()
             case .card(let c): card = c
             }
             let ex = model.extras

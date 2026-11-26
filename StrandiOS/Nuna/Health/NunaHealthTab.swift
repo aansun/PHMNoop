@@ -14,6 +14,7 @@ struct NunaHealthTabView: View {
             VStack(spacing: NunaSpacing.section) {
                 NunaFitnessAgeSummary()
                 NunaLabBookCard()
+                NunaBloodPressureCard()
                 NunaHealthMonitorCard(hrv: day.hrv, restingHr: day.restingHr, spo2: day.spo2, respiratory: day.respiratory, skinTemp: day.extras["skin_temp"])
                 if !day.stressStatus.isReady {
                     // Still learning the person: no stress figure, only how far along it is.

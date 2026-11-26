@@ -134,6 +134,9 @@ final class HealthKitBridge: ObservableObject {
         // === PHM OVERLAY (PHMNOOP) === height, READ-ONLY, for `profile.heightCm` (BMI, waist ratio, calories),
         // asked in the same consolidated request as the waist. === PHM OVERLAY END ===
         .height,
+        // === PHM OVERLAY (PHMNOOP) === blood pressure from a cuff, READ-ONLY, copied into the Lab Book (see PHMBloodPressureImport). The two
+        // halves are asked for; HealthKit does not allow asking for the pair itself. === PHM OVERLAY END ===
+        .bloodPressureSystolic, .bloodPressureDiastolic,
         // Water — READ-ONLY (#949), so drinks logged in a dedicated hydration app (or by a smart bottle)
         // show up without being typed in twice. Lands in the hydration source rather than apple-health,
         // because the hydration screen is what consumes it. Never written back.
@@ -553,6 +556,8 @@ final class HealthKitBridge: ObservableObject {
         // (#949). No-op once the stored signature matches, which is every sync after the first.
         await requestNewReadTypesIfNeeded()
         guard let store = await repo.storeHandle() else { return false }
+        // === PHM OVERLAY (PHMNOOP) === blood pressure into the Lab Book. === PHM OVERLAY END ===
+        await PHMBloodPressureImport.sync(repo: repo)
 
         let cal = Calendar.current
         let end = Date()

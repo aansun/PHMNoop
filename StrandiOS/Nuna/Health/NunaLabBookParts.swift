@@ -173,6 +173,7 @@ enum NunaLabStore {
 
     static func delete(ids: [String], repo: Repository) async {
         guard let store = await repo.storeHandle() else { return }
+        PHMBloodPressureImport.dismiss(ids: ids)
         for id in ids { _ = try? await store.deleteLabMarker(id: id) }
         await repo.refresh()
         NunaDataChanges.shared.bump()

@@ -7,23 +7,27 @@ import StrandDesign
 enum NunaDashItem: Identifiable, Hashable {
     case card(DashboardCard)
     case page(NunaTrendPage)
+    /// Blood pressure: the latest pair, opening its page.
+    case bloodPressure
 
     var id: String {
         switch self {
         case .card(let c): return c.rawValue
         case .page(let p): return "page." + p.rawValue
+        case .bloodPressure: return "bp.pressure"
         }
     }
 
     /// The trend pages that are not already a card (HRV, resting heart rate, respiratory rate, steps and calories are cards of their own).
     static let pages: [NunaTrendPage] = NunaTrendPage.allCases.filter { ![.hrv, .rhr, .respiratory, .steps, .calories, .vo2max, .skinTemp, .weight, .spo2, .stressTotal, .stressNonActivity, .stressSleep].contains($0) }
 
-    static var canonicalOrder: [NunaDashItem] { DashboardCard.canonicalOrder.filter { $0 != .vitality }.map(NunaDashItem.card) + pages.map(NunaDashItem.page) }
+    static var canonicalOrder: [NunaDashItem] { DashboardCard.canonicalOrder.filter { $0 != .vitality }.map(NunaDashItem.card) + pages.map(NunaDashItem.page) + [.bloodPressure] }
 
     var title: String {
         switch self {
         case .card(let c): return c.title
         case .page(let p): return p.titleText
+        case .bloodPressure: return String(localized: "Blood pressure")
         }
     }
 
@@ -31,6 +35,7 @@ enum NunaDashItem: Identifiable, Hashable {
         switch self {
         case .card(let c): return c.subtitle
         case .page(let p): return p.section.titleText
+        case .bloodPressure: return String(localized: "Health")
         }
     }
 
@@ -39,6 +44,7 @@ enum NunaDashItem: Identifiable, Hashable {
         switch self {
         case .card(let c): return c.nunaIcon
         case .page(let p): return p.icon
+        case .bloodPressure: return NunaIcons.bloodPressure
         }
     }
 }
@@ -147,6 +153,18 @@ extension NunaTodayView {
     /// The earlier figure of a page's series: the latest day before `day` that has one.
     func earlier(_ series: [String: Double], before day: String) -> Double? {
         series.keys.filter { $0 < day }.max().flatMap { series[$0] }
+    }
+
+    /// The blood pressure row: the latest pair up to the day on show, the one before it under it.
+    func bloodPressureRow() -> NunaLinkRow {
+        let day = dayKeyNow
+        let upTo = bloodPressure.filter { Repository.localDayKey($0.date) <= day }
+        let now = upTo.last, before = upTo.dropLast().last
+        let trend = now.flatMap { n in
+            NunaTrend.make(current: n.systolic, previous: before?.systolic, upIsGood: false, format: { _ in before?.text ?? "–" })
+        }
+        return NunaLinkRow(id: "bp.pressure", title: String(localized: "Blood pressure"), subtitle: String(localized: "Health"), value: now?.text,
+                           icon: NunaIcons.bloodPressure, tint: nil, target: NunaRowTarget(kind: .nuna(.bloodPressure)), trend: trend)
     }
 
     /// The row of a trend page: the figure of the day on show, the one before it under it, and the page it opens.

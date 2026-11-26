@@ -34,6 +34,9 @@ enum NunaTodayRoute: Hashable {
     /// The weather and the air: the sky now, the day ahead in parts, every three hours, the air hour by hour and the best hours to train.
     case weatherAir
     case rhythm
+    /// Blood pressure from a cuff, and the full list of its readings.
+    case bloodPressure
+    case bloodPressureHistory
     case smartAlarm
     case windDown
     case hydration
@@ -82,6 +85,8 @@ extension View {
             case .cycle: NunaCycleView()
             case .weatherAir: NunaWeatherAirView()
             case .rhythm: NunaRhythmView()
+            case .bloodPressure: NunaBloodPressureView()
+            case .bloodPressureHistory: NunaLabMarkerHost(markerKey: LabBookProjection.bpSystolicKey, isBody: false)
             case .smartAlarm: NunaSmartAlarmView()
             case .windDown: NunaWindDownView()
             case .behaviorInsights: NunaBehaviorInsightsView()

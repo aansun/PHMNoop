@@ -170,6 +170,9 @@ struct NunaTodayView: View {
     @AppStorage("today.keyMetricsWindowDays") private var keyMetricsWindowDays = 14
     @AppStorage(DashboardCardPrefs.selectionKey) var dashboardCardsRaw = ""
     @AppStorage(NunaDashPrefs.key) var myDashboardRaw = ""
+    /// The blood pressure readings, loaded while the dashboard shows them.
+    @State var bloodPressure: [NunaBPReading] = []
+    @ObservedObject private var dataChanges = NunaDataChanges.shared
     @AppStorage(HostedCardPrefs.selectionKey) var hostedCardsRaw = ""
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
 
@@ -415,6 +418,10 @@ struct NunaTodayView: View {
                 ? Self.nunaDefaultMetrics : KeyMetricPrefs.decodeEnabled(keyMetricsRaw)
             await sparks.load(repo: repo, metrics: chosen, days: max(keyMetricsWindowDays, 2))
         }
+        .task(id: "\(repo.refreshSeq)-\(dataChanges.seq)-\(myDashboardRaw)") {
+            guard NunaDashPrefs.items(myDashboardRaw, cardsRaw: dashboardCardsRaw).contains(.bloodPressure) else { return }
+            bloodPressure = await NunaBP.load(repo)
+        }
         // Only the cards that open a trend page, and the Sleep performance card (it compares with the night before), need the long history.
         .task(id: "\(repo.refreshSeq)-\(myDashboardRaw)") {
             guard NunaDashPrefs.items(myDashboardRaw, cardsRaw: dashboardCardsRaw).contains(where: {
@@ -447,6 +454,13 @@ struct NunaTodayView: View {
             NunaTodayDebug.openedPlanner = true
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             router.openMetric(args[i + 1])
+        }
+        // `--open-bp` opens the Blood pressure page, once (with `--demo-bp`, a month of readings).
+        .task {
+            guard CommandLine.arguments.contains("--open-bp"), !NunaTodayDebug.openedPlanner else { return }
+            NunaTodayDebug.openedPlanner = true
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            pushToday(.bloodPressure)
         }
         // `--open-battery` opens the strap's battery page, once (with `--demo-battery`, a charge and a week of readings).
         .task {

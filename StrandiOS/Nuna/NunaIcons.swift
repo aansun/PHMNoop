@@ -29,6 +29,7 @@ enum NunaIcons {
     static let windDown = "moon.stars"
     static let breathing = "act:breathwork"
     static let beatRhythm = "waveform.path.ecg"
+    static let bloodPressure = "heart.text.square"
 
     // Body and log
     static let cycle = "drop.fill"

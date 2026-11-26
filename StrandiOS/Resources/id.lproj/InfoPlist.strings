@@ -1,6 +1,6 @@
 "NSBluetoothAlwaysUsageDescription" = "PHMN terhubung langsung ke strap WHOOP melalui Bluetooth untuk membaca Heart Rate, interval R-R, baterai, dan data sensor di iPhone. Data tidak keluar dari perangkat.";
 "NSLocationWhenInUseUsageDescription" = "PHMN merekam rute saat workout luar ruangan untuk menampilkan distance, pace, dan map. Rute tetap tersimpan di perangkat.";
-"NSHealthShareUsageDescription" = "PHMN membaca data Apple Health di perangkat untuk menghitung recovery, strain, dan sleep. Data tidak keluar dari perangkat.";
+"NSHealthShareUsageDescription" = "PHMN membaca data Apple Health di perangkat untuk menghitung recovery, strain, dan sleep, serta menampilkan tekanan darah. Data tidak keluar dari perangkat.";
 "NSHealthUpdateUsageDescription" = "PHMN menulis metrik dari strap ke Apple Health di perangkat, hanya setelah Anda mengizinkannya.";
 "NSMotionUsageDescription" = "PHMN membaca jumlah langkah iPhone untuk workout walking atau running. Data tetap tersimpan di perangkat.";
 "NSSpeechRecognitionUsageDescription" = "PHMN mengubah pertanyaan Anda menjadi teks di perangkat agar Anda dapat berbicara dengan Coach. Audio tidak keluar dari iPhone.";
