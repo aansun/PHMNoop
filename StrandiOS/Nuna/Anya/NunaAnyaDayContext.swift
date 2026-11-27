@@ -10,6 +10,7 @@ enum NunaAnyaDayContext {
     /// Gives Anya the day's context with every request and the daily brief, and a fresh weather and air reading before the brief.
     @MainActor static func install(on coach: AICoachEngine, repo: Repository, profile: ProfileStore) {
         coach.dayContextProvider = { await build(repo: repo, profile: profile) }
+        NunaAnyaTools.install(on: coach, repo: repo, profile: profile)
         coach.beforeBrief = { await EnvironmentStore.shared.refreshIfNeeded() }
     }
 

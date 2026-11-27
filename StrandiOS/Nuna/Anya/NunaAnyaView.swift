@@ -305,7 +305,7 @@ struct NunaAnyaView: View {
                 LazyVStack(alignment: .leading, spacing: 16) {
                     ForEach(coach.messages) { message in bubble(message).id(message.id) }
                     if coach.sending {
-                        HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(NunaAnyaType.thinking).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }.id("typing")
+                        HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text(verbatim: NunaAnyaTools.activity(coach.lookingUp)).font(NunaAnyaType.thinking).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }.id("typing")
                     } else if let last = coach.messages.last, last.role == .assistant {
                         followUps.id("follow")
                     }

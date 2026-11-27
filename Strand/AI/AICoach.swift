@@ -285,52 +285,31 @@ final class AICoachEngine: ObservableObject {
     /// coach. Exposed (read-only) so the UI's "Reset to default" can restore it and show it when nothing
     /// custom is stored. Editing the live prompt overrides this via `systemPromptKey`.
     static let defaultSystemPrompt = """
-    You are Anya, a perceptive daily companion for recovery and performance. Talk like a warm human coach: \
-    calm, attentive, direct, and conversational. Make the user feel accompanied, never assessed or lectured. \
-    Use the user's wearable summary when provided: charge 0-100 \
-    is readiness, effort 0-100 is cardiovascular load, and rest 0-100 is sleep quality. Sleep \
-    duration/stages, sleep efficiency, HRV, resting heart rate, personal baselines, body-state notes, \
-    and recent workouts are supporting signals. A dash means the figure is not available — never treat it as zero.
-    First form a body-state read from the pattern, not from one number: compare today's signals with the \
-    user's own baseline, notice agreement or conflict between sleep and autonomic signals, and account for \
-    recent training load. The supplied BODY STATE READ is an evidence-based synthesis, not a diagnosis. \
-    Trust it as a useful guide only when enough signals are present; explicitly name what is missing when \
-    confidence is limited. Do not infer illness, injury, dehydration, mood, or motivation from wearable data.
-    Use autoregulation: charge 67-100 supports building or pushing; 34-66 supports maintenance and \
-    controlled quality; 0-33 means active recovery such as easy Zone 2, mobility, or extra sleep. \
-    Respect progressive overload, polarized intensity, spacing of hard sessions, deloads, and sleep.
-    Make the conversation feel alive. Acknowledge the person's situation before advising, even when they \
-    did not ask a direct question. Look for a relationship between signals and explain the meaning in plain \
-    language: what seems to be changing, what is holding steady, and what deserves attention. Do not turn \
-    the answer into a dashboard readout. Use the numbers as quiet evidence, not as the subject. Notice \
-    useful patterns across days, trade-offs between sleep and load, and moments where the data disagrees. \
-    Offer one thoughtful interpretation before offering actions. Vary sentence openings and transitions; \
-    never use a stock greeting, generic praise, or the same closing repeatedly. If the data is mixed, say so \
-    with kindness and explain the trade-off. If the user asks how they feel, answer with the best-supported \
-    body-state interpretation first, then say what to watch over the next several hours.
-    PROACTIVE COMPANION MODE — When opening a page or when there is no direct question, volunteer a useful \
-    observation. Start with the insight, not "Your Recovery is...". A good opening sounds like: "You look \
-    ready for controlled quality today, but your recent load says this is a day to stay measured." Then \
-    connect it to only the evidence that matters. When confidence is limited, be transparent without becoming \
-    cold. End with a small next step or a gentle choice, not a generic question.
-    RESPONSE CONTRACT — follow this every time:
-    1. Lead with the meaning of the pattern or the direct answer. Never begin by listing metrics.
-    2. Explain why that interpretation fits, using only 1-2 relevant metrics or comparisons as evidence.
-    3. Give one clear next step, then an optional second step only when it adds real value. Make the action \
-    feel doable today, not like a program to manage.
-    4. Keep a normal answer under 140 words and no more than 5 bullets. A simple question should be \
-    answered in 1-4 natural sentences. Never pad with generic motivation, repeated conclusions, or long \
-    caveats.
-    5. Use plain Markdown. Use one short heading only when it improves scanning. Do not use tables, \
-    long introductions, or code blocks. Do not add a follow-up question or end with a question unless the \
-    user explicitly asks to explore further.
-    6. When the user asks for a workout recommendation or plan, make it practical and specific: name the \
-    workout type, target duration, intensity or Heart Rate Zone, warm-up, main work, and cooldown. For \
-    strength training include exercises, sets, reps, rest, and a simple progression note. Use the user's \
-    Recovery, Strain, Sleep, recent workouts, and stated goal when available. Never invent a measured value; \
-    label assumptions clearly. End with one clear action such as starting or saving the plan in Workouts.
-    If data is unavailable, say so in one sentence and give general guidance. You are not a doctor: \
-    never diagnose; briefly recommend a qualified professional for concerning symptoms.
+    You are Anya, the person's health and training companion inside PHMN, an app that reads their wearable. This is an ongoing conversation with someone \
+    you know, not a report.
+
+    HOW YOU TALK
+    - Answer what they actually said. A greeting gets a short warm reply. A feeling ("so tired today") is acknowledged first, then one useful thought or \
+    one question. A question gets a direct answer.
+    - Let the message set the length: a sentence or two for small talk, a short paragraph or two for most questions, more only when they ask for a plan \
+    or an explanation. No fixed template and no headings in chat; use a list only for a real list, such as a workout.
+    - Bring numbers in only when they help the point, usually one or two, set beside this person's own usual. Never recite the data.
+    - When something that matters is missing (how they feel, what happened, what they want, how much time they have), ask one short question instead of \
+    guessing. One question at a time, and not in every reply.
+    - Build on earlier turns and on what you remember about them. Do not repeat advice you already gave unless asked.
+    - Say what you think, including when you disagree with their plan, and why.
+
+    BEING ACCURATE
+    - Every figure you state about them comes from the data given or looked up in this conversation. A dash means not available, never zero. If you do not \
+    have it, say so.
+    - The data summary is a starting point, not the limit of what you may talk about: general knowledge on sleep, training, food and recovery is welcome, \
+    said as general when it is not from their numbers.
+    - Wearable figures show patterns, not diagnoses: do not infer illness, injury or mood from them. For anything worrying or lasting, suggest a clinician.
+
+    TRAINING
+    Recovery is readiness (0-100), Strain is cardiovascular load, Sleep is sleep quality (0-100). Recovery 67-100 supports pushing, 34-66 controlled work, \
+    0-33 easy movement and rest: a guide, not an order, and how they feel counts too. A workout or plan is concrete: type, duration, intensity or heart-rate \
+    zone, warm-up, main work and cool-down; for strength, exercises, sets, reps and rest.
     """
 
     /// The system prompt actually sent, read FRESH from UserDefaults on every request so an edit in
@@ -377,7 +356,7 @@ final class AICoachEngine: ObservableObject {
             default: return ""
             }
             return """
-            LANGUAGE: Reply in natural, concise \(languageName). Keep established health and product terms in their original form: Recovery, Strain, Sleep, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline, Apple Health, Strava, GPS, and Live Activity. Do not translate metric names or units.
+            LANGUAGE: Reply in natural, everyday \(languageName), the way people talk. Keep established health and product terms in their original form: Recovery, Strain, Sleep, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline, Apple Health, Strava, GPS, and Live Activity. Do not translate metric names or units.
             """
         }()
         let languagePrompt = localizedLanguageOverlay.isEmpty ? "" : "\n\n\(localizedLanguageOverlay)"
@@ -389,8 +368,8 @@ final class AICoachEngine: ObservableObject {
         // The Nuna experience draws charts, gym programs and workouts from fenced blocks; the Default one does not, so it never asks.
         #if os(iOS)
         let nuna = UserDefaults.standard.string(forKey: "experience.mode") == "nuna"
-        // In the Nuna experience every answer follows the assistant contract (read, explain, advise); the block formats only go to a model that has the room.
-        let actions = nuna ? "\n\n" + AnyaSurface.contract + (compact ? "" : "\n\n" + AnyaActions.instruction + "\n\n" + Self.dayRhythmInstruction) : ""
+        // A card or a brief (compact) follows the three-beat contract. A conversation does not: it gets the block formats and how to use the day.
+        let actions = nuna ? "\n\n" + (compact ? AnyaSurface.contract : AnyaActions.instruction + "\n\n" + Self.dayRhythmInstruction) : ""
         #else
         let actions = ""
         #endif
@@ -414,7 +393,7 @@ final class AICoachEngine: ObservableObject {
     nonisolated static func strainScaleBlock(_ defaults: UserDefaults = .standard) -> String {
         let scale = strainScale(defaults)
         let max = UnitFormatter.effortScaleMax(scale)
-        return "\n\nSTRAIN SCALE: this app shows Strain on a 0-\(max) scale. Every Strain figure in the data is already on that scale: quote it exactly as given, never convert it, and never call it a percentage" + (scale == .whoop ? " or a figure out of 100" : "") + ". Where the text above speaks of effort 0-100, it describes how the score is stored, not what the person sees."
+        return "\n\nSTRAIN SCALE: this app shows Strain on a 0-\(max) scale. Every Strain figure in the data is already on that scale: quote it exactly as given, never convert it, and never call it a percentage" + (scale == .whoop ? " or a figure out of 100" : "") + "."
     }
 
     // MARK: Day rhythm (Nuna)
@@ -422,16 +401,10 @@ final class AICoachEngine: ObservableObject {
     /// How Anya uses the "right now" block and the per-session lines: a planning answer in the morning, a review in the evening,
     /// and a workout explained from the session itself. Appended in the Nuna experience only, beside `AnyaActions.instruction`.
     static let dayRhythmInstruction = """
-    DAY RHYTHM: The context carries RIGHT NOW (the time and part of the day), the session the Plan card suggests, the Strain banked, \
-    tonight's sleep need and a NEXT STEP worked out from them. Use them. Talk like a coach who has just looked at the person's day: \
-    say what you see in one or two sentences, then close with the NEXT STEP in your own words, adjusted only if their message \
-    points elsewhere. In the morning, plan the day around the suggested session and say what would change it. \
-    In the evening, review the day: what its Strain cost, how the night ahead looks, and a bedtime that follows from the sleep need. \
-    Never recommend a session that contradicts the suggested one unless the person gives a reason, and then say what changed. \
-    When asked about a workout, explain it from the session's own line: duration, Strain, average and max heart rate and the time in \
-    zones. Name what drove the Strain, say what it means for the next day or two, and offer one follow-up the person can ask. \
-    If a figure the answer needs is not in the context, say so instead of estimating it. This is guidance from the person's own \
-    numbers, not medical advice.
+    THE DAY: the context may carry the time, the session the Plan card suggests, the Strain so far, tonight's sleep need and a next step worked out from \
+    them. Use these when the message is about today, training or tonight: planning in the morning, looking back in the evening. Offer a next step when it \
+    helps, not at the end of every message. Do not recommend a session that contradicts the suggested one without saying what changed. About a workout, \
+    answer from its own line (duration, Strain, heart rate, zones).
     """
 
     // MARK: Answer style (Nuna Anya settings)
@@ -446,7 +419,7 @@ final class AICoachEngine: ObservableObject {
 
     /// What Anya is told when the wearer has not written instructions of their own: a coach in the manner of the WHOOP app's. A stored text, even an empty
     /// one, replaces it, so clearing the field turns it off.
-    static let defaultExtraInstructions = "Coach me the way a WHOOP-style performance coach would: warm, direct and brief. Lead with the answer, then the numbers behind it: Recovery, Strain, Sleep, HRV and resting heart rate against my own baseline. Give one clear next step for today, tied to my Recovery and my Strain target. Use plain words, never diagnose, and say so when the data is thin."
+    static let defaultExtraInstructions = "Coach me like a performance coach who knows me: warm and direct, in plain everyday words. Say so when the data is thin."
 
     /// The instructions in force: the wearer's own text when one is stored (an empty one meaning none), else the default.
     static func extraInstructions(_ defaults: UserDefaults = .standard) -> String {
@@ -456,7 +429,7 @@ final class AICoachEngine: ObservableObject {
     static func answerStyleBlock(_ defaults: UserDefaults = .standard) -> String {
         var out = ""
         switch defaults.string(forKey: responseLanguageKey) ?? "app" {
-        case "id": out += "\n\nLANGUAGE: Always reply in natural, concise Indonesian, whatever language the question is in. Keep established health and product terms in their original form: Recovery, Strain, Sleep, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline."
+        case "id": out += "\n\nLANGUAGE: Always reply in natural, everyday Indonesian, whatever language the question is in. Keep established health and product terms in their original form: Recovery, Strain, Sleep, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline."
         case "en": out += "\n\nLANGUAGE: Always reply in clear, concise English, whatever language the question is in."
         default: break
         }
@@ -555,7 +528,7 @@ final class AICoachEngine: ObservableObject {
 
         // Restore persisted provider / model (falling back to sane defaults).
         let storedProvider = UserDefaults.standard.string(forKey: Self.providerKey)
-            .flatMap(AIProvider.init(rawValue:)) ?? .openAI
+            .flatMap(AIProvider.init(rawValue:)) ?? .anthropic
         self.provider = storedProvider
 
         let storedModel = UserDefaults.standard.string(forKey: Self.modelKey)
@@ -606,6 +579,14 @@ final class AICoachEngine: ObservableObject {
         self.customConnected = UserDefaults.standard.bool(forKey: Self.customConnectedKey)
         self.includeOnDeviceSignals = UserDefaults.standard.bool(forKey: Self.onDeviceSignalsKey)
         self.multimodalChartEnabled = UserDefaults.standard.bool(forKey: Self.multimodalChartKey)
+
+        // The Simulator test bridge (`AnyaBridge`): set here, inside the initialiser, so that none of it is saved.
+        if AnyaBridge.isActive {
+            provider = .anthropic
+            availableModels = AIProvider.anthropic.modelOptions
+            model = AIProvider.anthropic.defaultModel
+            dataConsent = AnyaBridge.isActive
+        }
     }
 
     // MARK: Key management
@@ -626,6 +607,7 @@ final class AICoachEngine: ObservableObject {
         #if os(iOS)
         case .chatGPT: return ChatGPTAuthStore.isConnected
         #endif
+        case .anthropic: return AnyaBridge.isActive || hasKey
         default: return hasKey
         }
     }
@@ -636,6 +618,8 @@ final class AICoachEngine: ObservableObject {
     /// The key to send with a request: the stored key, or an empty string for the keyless Custom
     /// provider. `nil` means "not configured", the caller surfaces `.noKey`.
     private var resolvedKey: String? {
+        // The bridge on this Mac takes no key, and a saved one is not sent to it.
+        if provider == .anthropic && AnyaBridge.isActive { return "local-bridge" }
         // === PHM OVERLAY (PHMNOOP) === on-device Apple Intelligence takes no key; "" = configured,
         // keyless (same sentinel the Custom local provider uses), so the ask flow never surfaces .noKey.
         if provider == .appleIntelligence { return "" }
@@ -763,6 +747,41 @@ final class AICoachEngine: ObservableObject {
     #if DEBUG
     var fetchModelsOverride: ((_ provider: AIProvider, _ key: String) async throws -> [String])?
     #endif
+
+    /// Runs one of Anya's lookups (`AnyaTools`) on the phone. Set by the Nuna shell; nil elsewhere, and then she answers from the summary.
+    var lookUp: (@MainActor (_ name: String, _ input: [String: Any]) async -> (text: String, failed: Bool))?
+
+    /// What she is looking up right now, by tool name, for the screen to show. Nil when she is not.
+    @Published var lookingUp: String?
+
+    /// Lookups need the person's consent to read their data and a provider this app can run them with.
+    var canLookUp: Bool { lookUp != nil && dataConsent && provider == .anthropic }
+
+    /// One answer in a conversation: with lookups where they are possible, else the plain streamed reply.
+    private func answer(key: String, messages: [(role: ChatMessage.Role, content: String)], inlineImage: String?, onDelta: (String) -> Void) async throws {
+        guard canLookUp, let lookUp else {
+            try await streamProvider(key: key, messages: messages, inlineImage: inlineImage, compact: runsOnDevice, onDelta: onDelta)
+            return
+        }
+        defer { lookingUp = nil }
+        try await AnthropicClient().converse(
+            key: key, model: model,
+            systemPrompt: systemPrompt + "\n\n" + AnyaTools.instruction(today: Self.todayWords()),
+            messages: messages, inlineImage: inlineImage, session: session, tools: AnyaTools.definitions,
+            lookUp: { name, input in
+                self.lookingUp = name
+                return await lookUp(name, input)
+            },
+            onDelta: { delta in
+                self.lookingUp = nil
+                onDelta(delta)
+            })
+    }
+
+    nonisolated static func todayWords(_ now: Date = Date()) -> String {
+        let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "EEEE, yyyy-MM-dd"
+        return f.string(from: now)
+    }
 
     /// Builds the "right now" block (`AnyaDayContext`) appended to every full context. Nil outside the Nuna shell.
     var dayContextProvider: (() async -> String)?
@@ -1190,7 +1209,7 @@ final class AICoachEngine: ObservableObject {
         var accumulated = ""
 
         do {
-            try await streamProvider(key: key, messages: wire, inlineImage: imageBase64, compact: runsOnDevice) { delta in
+            try await answer(key: key, messages: wire, inlineImage: imageBase64) { delta in
                 accumulated += delta
                 // Replace the last message's text with the accumulated stream so far.
                 if let lastIdx = self.messages.indices.last,
@@ -1449,7 +1468,7 @@ final class AICoachEngine: ObservableObject {
         let pageName = pageContext.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: true).first.map(String.init) ?? pageContext
         let module = AnyaSurface.Module.of(context: pageName)
         // No readings at all: say so, rather than let a model that has nothing to read invent figures. Only for a question about the person's own numbers: the
-        // strap, food and breathing questions, and a general one ("what is fitness age"), do not need them and are answered as usual.
+        // strap, food and breathing questions, and a general one ("what is Body age"), do not need them and are answered as usual.
         if repo.days.isEmpty, [.today, .sleep, .workouts, .trends].contains(module) || (module == .health && !trimmed.lowercased().hasPrefix("what is")) { return Self.noReadingsReply }
         // The summary of the body answers a question about the body. A question about the strap, food or breathing is answered from its own data (the page's
         // pack) with only what bears on it beside: given the whole summary instead, the answer turns into a report on Recovery and sleep.
@@ -1465,33 +1484,44 @@ final class AICoachEngine: ObservableObject {
             if module != .today && module != .sleep { full = Self.withoutNextStep(full) }
             context = full
         }
-        let noticeBlock = notice.map { "\n\nCurrent Anya notice:\n\($0)" } ?? ""
-        let historyBlock = history.isEmpty ? "" : "\n\nLocal conversation so far:\n" + history.map {
-            "\($0.role == .user ? "User" : "Anya"): \($0.text)"
-        }.joined(separator: "\n")
-        var prompt = context
-        if let cmp = comparatorBlock(module: module) { prompt += "\n\n" + cmp }
-        prompt += "\n\n" + Self.timeLine()
-        prompt += "\n\n---\n\n"
-        prompt += contextualQuestionInstruction(pageName)
+        // The data, the page and its manner open the conversation; what was said before follows as real turns, and the question is the last one.
+        var opening = context
+        if let cmp = comparatorBlock(module: module) { opening += "\n\n" + cmp }
+        if !context.contains("THE TIME NOW") { opening += "\n\n" + Self.timeLine() }
+        opening += "\n\n---\n\n" + contextualQuestionInstruction(pageName)
         let pageBody = pageContext.dropFirst(pageName.count).trimmingCharacters(in: .whitespacesAndNewlines)
-        if !pageBody.isEmpty { prompt += "\n\nTHE PAGE (her own reading of it, and the data this surface needs):\n" + pageBody }
-        prompt += noticeBlock
-        prompt += historyBlock
-        prompt += "\n\nUser's new question:\n"
-        prompt += trimmed
+        if !pageBody.isEmpty { opening += "\n\nTHE PAGE (the app's own reading of it, and the data this page needs):\n" + pageBody }
+        if let notice { opening += "\n\nWhat you had said on this page:\n" + notice }
+        let wire = Self.conversation(opening: opening, history: history, question: trimmed)
 
         var reply = ""
         do {
-            if let imageBase64 {
+            if canLookUp {
+                try await answer(key: key, messages: wire, inlineImage: imageBase64) { reply += $0 }
+            } else if let imageBase64 {
                 // As in the Anya tab: a provider that cannot read images still gets the text of the question.
-                try await streamProvider(key: key, messages: [(.user, prompt)], inlineImage: imageBase64, compact: runsOnDevice) { reply += $0 }
+                try await streamProvider(key: key, messages: wire, inlineImage: imageBase64, compact: runsOnDevice) { reply += $0 }
             } else {
-                reply = try await callProvider(key: key, messages: [(.user, prompt)], compact: runsOnDevice)
+                reply = try await callProvider(key: key, messages: wire, compact: runsOnDevice)
             }
         } catch { NSLog("[AnyaDebug] contextual send failed: %@", String(describing: error)); return nil }
-        let clean = AnyaReplyCleaner.clean(reply.trimmingCharacters(in: .whitespacesAndNewlines))
+        var clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        // The cleaner takes out habits of the small on-device model; a larger model's hedges are said on purpose.
+        if runsOnDevice { clean = AnyaReplyCleaner.clean(clean) }
         return clean.isEmpty ? nil : clean
+    }
+
+    /// Turns that alternate and begin with the person, which every provider accepts: the opening block travels in front of the first thing they said.
+    nonisolated static func conversation(opening: String, history: [ChatMessage], question: String) -> [(role: ChatMessage.Role, content: String)] {
+        var turns: [(role: ChatMessage.Role, content: String)] = [(.user, opening)]
+        for m in history + [ChatMessage(role: .user, text: question)] {
+            if let last = turns.last, last.role == m.role {
+                turns[turns.count - 1].content = last.content + "\n\n---\n\n" + m.text
+            } else {
+                turns.append((m.role, m.text))
+            }
+        }
+        return turns
     }
 
     /// Whether the on-device model answers: its window holds the instructions, the data and the reply together, so what it is sent is kept short and its
@@ -1551,7 +1581,7 @@ final class AICoachEngine: ObservableObject {
     }
 
     private func contextualQuestionInstruction(_ page: String) -> String {
-        AnyaSurface.chatInstruction(AnyaSurface.Module.of(context: page)) + " Continue this local notice conversation without referring to the full Coach history."
+        AnyaSurface.chatInstruction(AnyaSurface.Module.of(context: page))
     }
 
     /// K5: The brief instruction shared by the interactive `startBriefIfNeeded()` (streamed into the
@@ -1594,7 +1624,7 @@ final class AICoachEngine: ObservableObject {
     /// `compact` is for the surfaces that answer in a few lines (page insights, module answers): a week of days and three sessions rather than two weeks and
     /// six, and no Lab Book or pattern block, so the data, the instructions and the reply fit the on-device model's window together.
     func buildFullContext(compact: Bool = false, includeDayContext: Bool = true) async -> String {
-        var ctx = buildContext(recentDays: compact ? 7 : 14)
+        var ctx = Self.timeLine() + "\n\n" + buildContext(recentDays: compact ? 7 : 14)
         ctx += "\n\n" + (await recentWorkoutsBlock(limit: compact ? 3 : 6))
         // Derived stress: a single Baevsky Stress Index summary line over today's R-R, computed the same
         // way StressView does. Gated here under `dataConsent` (the caller only reaches buildFullContext()
@@ -1778,7 +1808,7 @@ final class AICoachEngine: ObservableObject {
     /// The time now, so a step is never set for an hour that has gone ("by 7 p.m." at 20:50).
     nonisolated static func timeLine(_ now: Date = Date()) -> String {
         let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "HH:mm"
-        return "THE TIME NOW: \(f.string(from: now)). Never set a step for an hour that has already passed; late in the evening the step is the evening and bedtime."
+        return "THE TIME NOW: \(f.string(from: now)). Suggest nothing for an hour that has already passed; late in the evening, think of the evening and bedtime."
     }
 
     /// The maintenance plan for a person with no goal weight, written without a model: their estimated energy use, protein at 1.6 g per kg and fat at 28% of energy.

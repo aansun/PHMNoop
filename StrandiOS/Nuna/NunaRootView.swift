@@ -165,7 +165,7 @@ struct NunaRootView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { CoachBriefScheduler.activateIfEnabled { await model.coach.generateBrief() } }
         }
-        .onDisappear { model.coach.dayContextProvider = nil; model.coach.beforeBrief = nil }
+        .onDisappear { model.coach.dayContextProvider = nil; model.coach.beforeBrief = nil; model.coach.lookUp = nil }
         // A session left running by a previous launch comes back as the bar; if its screen was open when the app was killed, the screen comes back too.
         .task {
             guard !liftSession.isActive, let snapshot = LiftSessionPersistence.load() else { return }

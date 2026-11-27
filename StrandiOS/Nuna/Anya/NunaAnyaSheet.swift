@@ -302,7 +302,7 @@ struct NunaAnyaSheet: View {
                     NunaAnyaReply(text: t.text, font: NunaAnyaType.reply, lineSpacing: NunaAnyaType.replySpacing, question: question(before: t)).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(NunaAnyaType.thinking).foregroundStyle(NunaPalette.textSecondary).textCase(nil) } }
+            if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text(verbatim: NunaAnyaTools.activity(coach.lookingUp)).font(NunaAnyaType.thinking).foregroundStyle(NunaPalette.textSecondary).textCase(nil) } }
         }
     }
 
@@ -352,8 +352,8 @@ struct NunaAnyaSheet: View {
         guard coach.dataConsent else { coach.pendingChartImage = image; coach.pendingPrompt = prompt; openFull(); return }
         turns.append(ChatMessage(id: UUID(), role: .user, text: shown))
         sending = true; defer { sending = false }
-        // The strap's questions are answered from what the app knows about the strap, not by a model that has none of it.
-        if module == .device {
+        // The on-device model has too little room to answer about the strap well, so those answers are worked out from what the app knows.
+        if module == .device && coach.provider == .appleIntelligence {
             turns.append(ChatMessage(id: UUID(), role: .assistant, text: NunaAnyaPack.deviceAnswer(question: prompt, live: live)))
             return
         }

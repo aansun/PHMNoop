@@ -70,14 +70,20 @@ final class AICoachPromptAndStressTests: XCTestCase {
         XCTAssertFalse(engine.hasCustomSystemPrompt)
     }
 
-    func testBuiltInPromptPrioritizesConciseActionableReplies() {
+    func testBuiltInPromptIsAConversationNotATemplate() {
         let prompt = AICoachEngine.defaultSystemPrompt
-        XCTAssertTrue(prompt.contains("Answer the user's question first"))
-        XCTAssertTrue(prompt.contains("under 120 words"))
-        XCTAssertTrue(prompt.contains("2-3 concrete actions"))
-        XCTAssertTrue(prompt.contains("Do not use tables"))
-        XCTAssertTrue(prompt.contains("Talk like a perceptive human coach"))
-        XCTAssertTrue(prompt.contains("First form a body-state read from the pattern"))
+        XCTAssertTrue(prompt.contains("Answer what they actually said"))
+        XCTAssertTrue(prompt.contains("ask one short question"))
+        XCTAssertTrue(prompt.contains("No fixed template"))
+        XCTAssertTrue(prompt.contains("Never recite the data"))
+        XCTAssertTrue(prompt.contains("not diagnoses"))
+    }
+
+    func testASheetConversationAlternatesAndStartsWithThePerson() {
+        let history = [ChatMessage(role: .assistant, text: "notice"), ChatMessage(role: .user, text: "q1"), ChatMessage(role: .assistant, text: "a1")]
+        let wire = AICoachEngine.conversation(opening: "DATA", history: history, question: "q2")
+        XCTAssertEqual(wire.map(\.role), [.user, .assistant, .user, .assistant, .user])
+        XCTAssertEqual(AICoachEngine.conversation(opening: "DATA", history: [], question: "q").map(\.content), ["DATA\n\n---\n\nq"])
     }
 
     // MARK: - Feature 3: body-state synthesis

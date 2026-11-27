@@ -31,7 +31,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
     var defaultModel: String {
         switch self {
         case .openAI:    return "gpt-6-sol"
-        case .anthropic: return "claude-sonnet-4-6"
+        case .anthropic: return "claude-haiku-5-5"
         case .gemini:    return "gemini-flash-latest"   // stable alias → current Flash, no version churn (#400)
         case .custom:    return ""   // the user picks the model their server serves
         case .appleIntelligence: return AppleIntelligenceClient.modelId
@@ -79,13 +79,12 @@ enum AIProvider: String, CaseIterable, Identifiable {
             ]
         case .anthropic:
             return [
-                "claude-opus-4-8",
+                "claude-haiku-5-5",
+                "claude-sonnet-5-5",
+                "claude-opus-5-5",
+                "claude-haiku-4-5",
                 "claude-sonnet-4-6",
-                "claude-haiku-4-5-20251001",
-                "claude-3-7-sonnet-latest",
-                "claude-3-5-sonnet-latest",
-                "claude-3-5-haiku-latest",
-                "claude-3-opus-latest"
+                "claude-opus-4-8"
             ]
         case .gemini:
             // Stable `-latest` ALIASES, not pinned versions (#400): they always resolve to the current
@@ -117,7 +116,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
     var endpoint: URL {
         switch self {
         case .openAI:    return URL(string: "https://api.openai.com/v1/chat/completions")!
-        case .anthropic: return URL(string: "https://api.anthropic.com/v1/messages")!
+        case .anthropic: return AnyaBridge.url?.appendingPathComponent("v1/messages") ?? URL(string: "https://api.anthropic.com/v1/messages")!
         case .gemini:    return URL(string: "https://generativelanguage.googleapis.com/v1beta/models")!
         case .custom:    return AIProvider.customURL(path: "/chat/completions")
         case .appleIntelligence: return URL(string: "about:blank")!   // on-device: no network endpoint
@@ -130,7 +129,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
     var modelsEndpoint: URL {
         switch self {
         case .openAI:    return URL(string: "https://api.openai.com/v1/models")!
-        case .anthropic: return URL(string: "https://api.anthropic.com/v1/models")!
+        case .anthropic: return AnyaBridge.url?.appendingPathComponent("v1/models") ?? URL(string: "https://api.anthropic.com/v1/models")!
         case .gemini:    return URL(string: "https://generativelanguage.googleapis.com/v1beta/models")!
         case .custom:    return AIProvider.customURL(path: "/models")
         case .appleIntelligence: return URL(string: "about:blank")!   // on-device: no network endpoint

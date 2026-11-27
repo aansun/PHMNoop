@@ -48,8 +48,8 @@ struct NunaAnyaSettingsView: View {
             }
 
             NunaSettingsSection("Data access") {
-                NunaSettingsSwitch("Let Anya use my numbers", subtitle: "Summaries of computed scores", systemImage: "lock.open", isOn: $coach.dataConsent)
-                NunaSettingsSwitch("Share patterns and Lab Book", subtitle: "Correlations and lab markers. Off by default", systemImage: "chart.xyaxis.line", isOn: $coach.includeOnDeviceSignals).disabled(!coach.dataConsent)
+                NunaSettingsSwitch("Let Anya use my numbers", subtitle: "Scores, sleep, workouts, food diary and profile, looked up as needed", systemImage: "lock.open", isOn: $coach.dataConsent)
+                NunaSettingsSwitch("Share patterns and Lab Book", subtitle: "Patterns, journal, blood pressure and lab results. Off by default", systemImage: "chart.xyaxis.line", isOn: $coach.includeOnDeviceSignals).disabled(!coach.dataConsent)
                 if coach.provider == .gemini {
                     NunaSettingsSwitch("Send chart images to Gemini", subtitle: "Only with the Gemini provider", systemImage: "photo", isOn: $coach.multimodalChartEnabled).disabled(!coach.dataConsent)
                 }
@@ -188,6 +188,7 @@ struct NunaAnyaMemoryView: View {
     @State private var snapshot = false
     @State private var editing: CoachMemory?
     @State private var confirmDeleteAll = false
+    @State private var confirmDeleteUnreviewed = false
     /// nil is the timeline: everything, newest first.
     @State private var tab: CoachMemoryCategory?
 
@@ -204,6 +205,7 @@ struct NunaAnyaMemoryView: View {
                 NavigationLink(value: NunaAnyaRoute.history) { linkRow("clock.arrow.circlepath", "Chat History") }.buttonStyle(.plain)
                 Button { snapshot = true } label: { linkRow("lightbulb.max", "My Memory Snapshot") }.buttonStyle(.plain)
             }
+            if all.contains(where: \.awaitsReview) { reviewCard(all.filter(\.awaitsReview).count) }
             tabs(all)
             if shown.isEmpty {
                 Text(all.isEmpty ? "Nothing yet. Tell Anya things like “remember I race on 5 December”, or share something above." : "Nothing in this group yet.")
@@ -273,6 +275,30 @@ struct NunaAnyaMemoryView: View {
         .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Color(red: 0.36, green: 0.34, blue: 0.70).opacity(0.8), lineWidth: 1.2))
     }
 
+    /// Memories an earlier version saved by itself, often from ordinary questions: nothing is thrown away without the person saying so.
+    private func reviewCard(_ count: Int) -> some View {
+        NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("\(count) memories were saved by themselves from your chats. Anya does not use them until you keep them.")
+                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 10) {
+                    Button { confirmDeleteUnreviewed = true } label: { reviewButton("Delete them", tint: NunaPalette.alertText) }.buttonStyle(.plain)
+                    Button { store.keepUnreviewed() } label: { reviewButton("Keep them", tint: NunaPalette.textPrimary) }.buttonStyle(.plain)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .alert("Delete the memories saved by themselves?", isPresented: $confirmDeleteUnreviewed) {
+            Button("Delete", role: .destructive) { store.deleteUnreviewed() }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("Memories you wrote or asked Anya to remember stay.") }
+    }
+
+    private func reviewButton(_ title: LocalizedStringKey, tint: Color) -> some View {
+        Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(tint)
+            .frame(maxWidth: .infinity, minHeight: 40).background(NunaPalette.glassStrong, in: Capsule())
+    }
+
     private func linkRow(_ icon: String, _ title: LocalizedStringKey) -> some View {
         HStack(spacing: 16) {
             Image(systemName: icon).font(.system(size: 21, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30)
@@ -321,7 +347,7 @@ struct NunaAnyaMemoryView: View {
                             .fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                     HStack(spacing: 10) {
-                        Text(m.isActive ? "Active" : "Paused").font(.nuna(size: 14, weight: .regular)).textCase(nil)
+                        Text(m.awaitsReview ? "Not used yet" : (m.isActive ? "Active" : "Paused")).font(.nuna(size: 14, weight: .regular)).textCase(nil)
                             .foregroundStyle(m.isActive ? Color(red: 0.50, green: 0.55, blue: 0.98) : NunaPalette.textSecondary)
                             .padding(.horizontal, 14).frame(height: 32)
                             .background((m.isActive ? Color(red: 0.30, green: 0.34, blue: 0.62) : Color.white.opacity(0.1)).opacity(m.isActive ? 0.55 : 1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))

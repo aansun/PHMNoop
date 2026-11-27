@@ -164,7 +164,7 @@ enum AnyaDayContext {
             lines.append("STRESS: \(n) There is no stress reading yet: never state, estimate or infer a stress level or a stress figure from anything else; if asked about stress, say it is still calibrating and how far along it is.")
         }
         if let step = nextStep(i) {
-            lines.append("NEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): \(step)")
+            lines.append("NEXT STEP (worked out from the numbers above, for this moment; use it when the message calls for a next step): \(step)")
         }
         return lines.joined(separator: "\n")
     }

@@ -48,8 +48,14 @@ struct CoachMemory: Identifiable, Codable, Equatable {
     var isActive: Bool = true
     var createdAt: Date = Date()
     var source: CoachMemorySource? = .manual
+    /// Set when the person has looked at a memory and kept it.
+    var reviewed: Bool? = nil
 
     var fromConversation: Bool { source == .conversation }
+
+    /// Saved from a chat by matching words ("I want", "tomorrow", "at 4"), which an earlier version did to ordinary questions too. Such a
+    /// memory is kept but not given to Anya until the person keeps it. One saved because they asked ("remember that ...") is a note.
+    var awaitsReview: Bool { fromConversation && category != .note && reviewed != true }
 }
 
 // MARK: - Auto-capture from conversation
@@ -64,12 +70,7 @@ enum CoachMemoryExtractor {
         let lower = text.lowercased()
 
         // 1) Explicit "remember this" directive (highest signal) — strip the cue for a cleaner title.
-        let rememberCues = ["ingat kalau", "ingat bahwa", "ingatlah", "tolong ingat", "catat kalau",
-                            "catat bahwa", "simpan bahwa", "remember that", "please remember", "note that"]
-        for cue in rememberCues where lower.contains(cue) {
-            let captured = after(cue, in: text) ?? text
-            return (summaryTitle(captured), captured, .note)
-        }
+        if let asked = requested(from: text) { return asked }
 
         // 2) Coaching preferences.
         let prefCues = ["lebih suka", "lebih memilih", "aku suka", "saya suka", "prefer", "panggil aku",
@@ -93,6 +94,22 @@ enum CoachMemoryExtractor {
                          "juni", "juli", "agustus", "september", "oktober", "november", "desember"]
         if eventCues.contains(where: { lower.contains($0) }) {
             return (summaryTitle(text), text, .event)
+        }
+        return nil
+    }
+
+    private static let rememberCues = ["ingat kalau", "ingat bahwa", "ingat ya", "ingatlah", "tolong ingat", "tolong diingat", "catat kalau",
+                                       "catat bahwa", "tolong catat", "simpan bahwa", "remember that", "please remember", "note that"]
+
+    /// A memory only when the message asks for one. This is all a chat saves by itself: guessing from ordinary words kept questions as goals
+    /// and events. `extract` still sorts what the person writes on the Memory page, where they mean to save it.
+    static func requested(from message: String) -> (title: String, detail: String, category: CoachMemoryCategory)? {
+        let text = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard text.count >= 6, text.count <= 280 else { return nil }
+        let lower = text.lowercased()
+        for cue in rememberCues where lower.contains(cue) {
+            let captured = after(cue, in: text) ?? text
+            return (summaryTitle(captured), captured, .note)
         }
         return nil
     }
@@ -162,6 +179,18 @@ final class CoachMemoryStore: ObservableObject {
         return n
     }
 
+    /// Keeps every memory that was saved by itself and has not been looked at.
+    func keepUnreviewed() {
+        for i in memories.indices where memories[i].awaitsReview { memories[i].reviewed = true }
+        persist()
+    }
+
+    /// Removes the memories that were saved by itself and have not been looked at.
+    func deleteUnreviewed() {
+        memories.removeAll { $0.awaitsReview }
+        persist()
+    }
+
     func setActive(_ memory: CoachMemory, _ active: Bool) {
         guard let i = memories.firstIndex(where: { $0.id == memory.id }) else { return }
         memories[i].isActive = active
@@ -180,13 +209,13 @@ final class CoachMemoryStore: ObservableObject {
     /// Prompt block of ACTIVE memories, appended to the Coach system prompt so they steer replies.
     /// Empty when there are none, so the prompt is unchanged for users who never add any.
     nonisolated static func activePromptBlock() -> String {
-        let active = loadAll().filter { $0.isActive }
+        let active = loadAll().filter { $0.isActive && !$0.awaitsReview }
         guard !active.isEmpty else { return "" }
         let lines = active.map { m -> String in
             let d = m.detail.isEmpty ? "" : " — \(m.detail)"
             return "- [\(m.category.displayName)] \(m.title)\(d)"
         }
-        return "\n\nBefore anything else, apply these saved memories the user set. Honour them in every reply:\n"
+        return "\n\nWHAT THE PERSON HAS ASKED YOU TO REMEMBER. Use it where it bears on the conversation; do not bring it up otherwise:\n"
             + lines.joined(separator: "\n")
     }
 
@@ -198,7 +227,7 @@ final class CoachMemoryStore: ObservableObject {
     nonisolated static func autoCapture(from message: String) {
         // The switch in Anya settings; on unless the wearer turned it off.
         guard UserDefaults.standard.object(forKey: autoCaptureKey) as? Bool ?? true else { return }
-        guard let cand = CoachMemoryExtractor.extract(from: message) else { return }
+        guard let cand = CoachMemoryExtractor.requested(from: message) else { return }
         var all = loadAll()
         let normDetail = cand.detail.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         let normTitle = cand.title.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)

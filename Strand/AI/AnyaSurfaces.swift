@@ -239,10 +239,12 @@ enum AnyaSurface: Equatable {
         return contract + "\n\nTHIS SURFACE: " + p.focus + ". Read: " + p.reads + ". If the PAGE VERDICT says needs attention, or steady but slipping: " + p.improve + ". If it says good: " + p.maintain + ". With no verdict, describe the direction without calling it good or bad. Avoid: " + p.watch + ". At most \(p.words + 30) words in all, as complete sentences, never fragments."
     }
 
-    /// How a question asked inside a module is answered: the answer first, then why, then the step.
+    /// What a question asked from a module's sheet should know about where it was asked. The manner of talking is the conversation's own
+    /// (the system prompt), so this names the subject without fixing a shape or a length, and leaves room to go where the person goes.
     static func chatInstruction(_ module: Module) -> String {
         let p = profile(.chat(module))
-        return contract + "\n\nTHIS SURFACE: " + p.focus + ". Answer the question in your first sentence, then explain it from their data, then give one next step. Read: " + p.reads + ". When the picture is poor: " + p.improve + ". When it is good: " + p.maintain + ". Avoid: " + p.watch + ". At most \(p.words) words, in short paragraphs; offer one follow-up only if it is worth asking."
+        return "The person is asking from the part of the app about " + p.focus + ". Usually useful here: " + p.reads + ". Keep in mind: " + p.watch
+            + ". Answer their message the way you normally talk, and bring in anything else that bears on it. No diagnosis."
     }
 
     /// The brief's manner, appended to its own instruction.

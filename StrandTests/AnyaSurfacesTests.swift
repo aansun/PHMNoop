@@ -20,7 +20,7 @@ final class AnyaSurfacesTests: XCTestCase {
         }
     }
 
-    /// The assistant contract (read, explain, advise; no metaphors; no invented figures) reaches every instruction.
+    /// The page contract (read, explain, advise) holds for page cards; a question in a sheet is a conversation.
     func testInstructionsCarryTheContract() {
         for t in AnyaSurface.Topic.allCases {
             let text = AnyaSurface.pageInstruction(t)
@@ -30,8 +30,9 @@ final class AnyaSurfacesTests: XCTestCase {
         }
         for m in AnyaSurface.Module.allCases {
             let text = AnyaSurface.chatInstruction(m)
-            XCTAssertTrue(text.contains("Answer the question in your first sentence"), "\(m)")
+            XCTAssertTrue(text.contains("the way you normally talk"), "\(m)")
             XCTAssertTrue(text.contains("No diagnosis"), "\(m)")
+            XCTAssertFalse(text.contains(AnyaSurface.contract), "a chat is not held to the page contract")
         }
     }
 

@@ -140,7 +140,7 @@ struct StrandiOSApp: App {
             guard let model else { return nil }
             let hadContext = model.coach.dayContextProvider != nil
             if !hadContext { NunaAnyaDayContext.install(on: model.coach, repo: model.repo, profile: model.profile) }
-            defer { if !hadContext { model.coach.dayContextProvider = nil; model.coach.beforeBrief = nil } }
+            defer { if !hadContext { model.coach.dayContextProvider = nil; model.coach.beforeBrief = nil; model.coach.lookUp = nil } }
             return await model.coach.generateBrief()
         }
         let bridge = HealthKitBridge(
