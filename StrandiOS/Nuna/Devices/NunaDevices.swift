@@ -140,8 +140,8 @@ private struct NunaDevicesContent: View {
         if let d = active {
             hero(d)
             if live.lastSyncedAt != nil || live.backfilling { syncRow }
-            if SourceCoordinator.isWhoop(d), model.whoop5Detected || live.strapCertificate(for: d.id) != nil || NunaStrapCertificateCard.demo { NunaStrapCertificateCard(deviceId: d.id) }
             broadcastCard
+            if SourceCoordinator.isWhoop(d), model.whoop5Detected || live.strapCertificate(for: d.id) != nil || NunaStrapCertificateCard.demo { NunaStrapCertificateCard(deviceId: d.id) }
         } else {
             emptyCard
             addButton
