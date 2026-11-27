@@ -13,7 +13,6 @@ struct NunaMeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 NunaHeader("Settings", onBack: pushed ? { dismiss() } : nil) {
-                    NunaKofiBadge()
                     NavigationLink(value: NunaMeRoute.search) {
                         NunaGlyph("magnifyingglass", pointSize: 16).foregroundStyle(NunaPalette.textPrimary)
                             .frame(width: 44, height: 44)
@@ -33,6 +32,7 @@ struct NunaMeView: View {
                     NunaSettingsLink(route: .whatsNew, icon: "graduationcap", title: "What's new")
                     NunaSettingsLink(route: .feedback, icon: "bubble.left.and.bubble.right", title: "Feedback", subtitle: "Tell us what you think")
                     NunaSettingsLink(route: .about, icon: NunaIcons.about, title: "About")
+                    NunaKofiButton().padding(.top, 6).frame(maxWidth: .infinity)
                 }
                 Text(verbatim: NunaAppVersion.text).font(.nuna(size: 13, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                     .frame(maxWidth: .infinity).padding(.top, 30)
@@ -45,15 +45,15 @@ struct NunaMeView: View {
     }
 }
 
-/// Ko-fi's "Support me on Ko-fi" badge beside the search button, where it is seen without scrolling. It opens the support page in the browser. The
+/// Ko-fi's own "Support me on Ko-fi" button, under About. It opens the support page in the browser. The
 /// picture is part of the app, so nothing is asked of Ko-fi until it is tapped.
-private struct NunaKofiBadge: View {
+private struct NunaKofiButton: View {
     private static let page = URL(string: "https://ko-fi.com/S4U32BCYG3")!
 
     var body: some View {
         Link(destination: Self.page) {
-            Image("KofiBadge").resizable().scaledToFit().frame(height: 40)
-                .frame(height: 44).contentShape(Rectangle())
+            Image("KofiButton").resizable().scaledToFit().frame(height: 46)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(verbatim: "Support me on Ko-fi"))

@@ -1,6 +1,6 @@
 {
   "images" : [
-    { "filename" : "kofi-badge.png", "idiom" : "universal" }
+    { "filename" : "kofi-button.png", "idiom" : "universal" }
   ],
   "info" : { "author" : "xcode", "version" : 1 }
 }
