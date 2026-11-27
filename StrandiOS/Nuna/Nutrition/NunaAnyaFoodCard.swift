@@ -5,7 +5,8 @@ import StrandAnalytics
 import WhoopStore
 
 /// A meal Anya estimated from a description. Nothing goes in the diary until the person taps Add: each item can be left out or scaled, the meal and the
-/// day can be changed, and the numbers are shown as an estimate. Used in the chat and inside the Add food sheet.
+/// day can be changed, and the numbers are shown as an estimate. Used in the chat and inside the Add food sheet. Figures the person changes are
+/// remembered (`FoodMemory`) and used in place of Anya's the next time she estimates the same food.
 struct NunaAnyaFoodCard: View {
     let spec: AnyaFoodSpec
     /// Set inside the Add food sheet, where the meal and the day are already chosen: the card then shows no meal chips or day row.
@@ -15,11 +16,15 @@ struct NunaAnyaFoodCard: View {
 
     @EnvironmentObject private var repo: Repository
     /// One item's numbers as the person sees and edits them: text, so a half-typed number is never lost.
-    struct Draft { var name: String; var kcal: String; var protein: String; var carbs: String; var fat: String }
+    struct Draft: Equatable { var name: String; var kcal: String; var protein: String; var carbs: String; var fat: String }
 
     @State private var excluded: Set<Int> = []
     @State private var scale: [Int: Double] = [:]
     @State private var drafts: [Draft]
+    /// The figures the card opened with, to tell what the person changed.
+    @State private var original: [Draft]
+    /// The items that opened with the person's own figures instead of Anya's.
+    @State private var learned: Set<Int>
     @State private var editing: Int?
     @State private var meal: NunaMeal
     @State private var date: Date
@@ -29,14 +34,26 @@ struct NunaAnyaFoodCard: View {
 
     init(spec: AnyaFoodSpec, fixed: (meal: NunaMeal, day: String)? = nil, onAdded: (() -> Void)? = nil) {
         self.spec = spec; self.fixed = fixed; self.onAdded = onAdded
-        func text(_ v: Double?) -> String { v.map { $0 == $0.rounded() ? String(Int($0)) : String(format: "%.1f", $0) } ?? "" }
-        _drafts = State(initialValue: spec.items.map { Draft(name: $0.name, kcal: text($0.kcal), protein: text($0.proteinG), carbs: text($0.carbsG), fat: text($0.fatG)) })
+        let known = NunaFoodMemoryStore.load()
+        let mine = spec.items.map { FoodMemory.figures(for: $0, in: known) }
+        let opening = spec.items.indices.map { Self.draft(mine[$0] ?? spec.items[$0]) }
+        _drafts = State(initialValue: opening)
+        _original = State(initialValue: opening)
+        _learned = State(initialValue: Set(spec.items.indices.filter { mine[$0] != nil }))
         _meal = State(initialValue: spec.meal.flatMap(NunaMeal.init(rawValue:)) ?? NunaMeal.suggested())
         let day = spec.day.flatMap { d -> Date? in
             let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; return f.date(from: d)
         }
         _date = State(initialValue: min(day ?? Date(), Date()))
     }
+
+    private static func draft(_ item: AnyaFoodItem) -> Draft {
+        func text(_ v: Double?) -> String { v.map { $0 == $0.rounded() ? String(Int($0)) : String(format: "%.1f", $0) } ?? "" }
+        return Draft(name: item.name, kcal: text(item.kcal), protein: text(item.proteinG), carbs: text(item.carbsG), fat: text(item.fatG))
+    }
+
+    /// Whether an item's figures are the person's, from before or changed just now.
+    private func isMine(_ i: Int) -> Bool { learned.contains(i) || drafts[i] != original[i] }
 
     private func factor(_ i: Int) -> Double { scale[i] ?? 1 }
     private func num(_ s: String) -> Double? { Double(s.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")) }
@@ -53,7 +70,8 @@ struct NunaAnyaFoodCard: View {
                     NunaIconTile("fork.knife")
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Meal estimate").font(.nuna(size: 16.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                        Text(verbatim: String(localized: "\(Int(totalKcal.rounded())) kcal · estimated by Anya")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        Text(verbatim: chosen.contains(where: isMine) ? String(localized: "\(Int(totalKcal.rounded())) kcal · with your own figures")
+                             : String(localized: "\(Int(totalKcal.rounded())) kcal · estimated by Anya")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer(minLength: 0)
                 }
@@ -159,6 +177,13 @@ struct NunaAnyaFoodCard: View {
             } label: {
                 Text("Work calories out from the macros").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity, alignment: .leading)
             }.buttonStyle(.plain)
+            if learned.contains(i) {
+                Button { useAnyas(i) } label: {
+                    Text("Forget my figures and use Anya's").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
+                }.buttonStyle(.plain)
+            }
+            Text("Figures you change are remembered and used the next time Anya estimates this food.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
         .padding(.leading, 30)
     }
@@ -174,7 +199,28 @@ struct NunaAnyaFoodCard: View {
         if let c = macro(i, drafts[i].carbs) { macros.append("C \(Int(c.rounded()))") }
         if let g = macro(i, drafts[i].fat) { macros.append("F \(Int(g.rounded()))") }
         if !macros.isEmpty { parts.append(macros.joined(separator: " · ")) }
+        if isMine(i) { parts.append(String(localized: "your figures")) }
         return parts.joined(separator: " · ")
+    }
+
+    private func useAnyas(_ i: Int) {
+        let known = NunaFoodMemoryStore.load()
+        let item = spec.items[i]
+        if let used = known.first(where: { FoodMemory.key($0.name) == FoodMemory.key(item.name) && FoodMemory.unit(of: $0.amount) == FoodMemory.unit(of: item.amount) }) {
+            NunaFoodMemoryStore.forget(id: used.id)
+        }
+        drafts[i] = Self.draft(item); original[i] = drafts[i]; learned.remove(i)
+    }
+
+    /// Keeps what the person changed, for the portion Anya named: the size chosen on the card is how much was eaten, not a correction.
+    private func remember() {
+        let now = Int(Date().timeIntervalSince1970)
+        for i in chosen where drafts[i] != original[i] {
+            let d = drafts[i]
+            guard let kcal = num(d.kcal), kcal > 0 else { continue }
+            let name = d.name.trimmingCharacters(in: .whitespaces).isEmpty ? spec.items[i].name : d.name
+            NunaFoodMemoryStore.remember(LearnedFood(name: name, amount: spec.items[i].amount, kcal: kcal, proteinG: num(d.protein), carbsG: num(d.carbs), fatG: num(d.fat), updatedAt: now))
+        }
     }
 
     private func add() async {
@@ -184,9 +230,12 @@ struct NunaAnyaFoodCard: View {
         let entries = chosen.map { i -> FoodEntryRow in
             let d = drafts[i]
             let name = d.name.trimmingCharacters(in: .whitespaces).isEmpty ? spec.items[i].name : d.name
-            return NunaFoodStore.entry(day: day, meal: target, name: name, kcal: kcal(i), proteinG: macro(i, d.protein), carbsG: macro(i, d.carbs), fatG: macro(i, d.fat), source: "anya", repo: repo)
+            // Figures the person set are theirs, so the diary does not call them an estimate.
+            return NunaFoodStore.entry(day: day, meal: target, name: name, kcal: kcal(i), proteinG: macro(i, d.protein), carbsG: macro(i, d.carbs), fatG: macro(i, d.fat),
+                                       source: isMine(i) ? "manual" : "anya", repo: repo)
         }
         await NunaFoodStore.add(entries, repo: repo)
+        remember()
         addedCount = entries.count
         onAdded?()
     }

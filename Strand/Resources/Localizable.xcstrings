@@ -9919,5 +9919,11 @@
  "No readings for today yet. Recovery on %@ was %lld%%": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum ada data hari ini. Recovery %1$@ adalah %2$lld%%"}}}},
  "Greet me from Home": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sapa aku dari Home"}}}},
  "Opening Anya on Home sends today's figures to your AI provider": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membuka Anya di Home mengirim angka hari ini ke penyedia AI-mu"}}}},
- "Anya sees no food or drink in this photo. Try another one, or type what you ate.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Anya tidak melihat makanan atau minuman di foto ini. Coba foto lain, atau ketik apa yang kamu makan."}}}}
+ "Anya sees no food or drink in this photo. Try another one, or type what you ate.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Anya tidak melihat makanan atau minuman di foto ini. Coba foto lain, atau ketik apa yang kamu makan."}}}},
+ "%lld kcal · with your own figures": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld kkal · memakai angkamu sendiri"}}}},
+ "your figures": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "angkamu"}}}},
+ "Forget my figures and use Anya's": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lupakan angkaku, pakai angka Anya"}}}},
+ "Figures you change are remembered and used the next time Anya estimates this food.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Angka yang kamu ubah diingat dan dipakai saat Anya memperkirakan makanan ini lagi."}}}},
+ "Your food figures": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Angka makananmu"}}}},
+ "Nothing yet. Change a figure with the pencil on an estimate and it is remembered here.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum ada. Ubah angka lewat ikon pensil pada perkiraan, nanti diingat di sini."}}}}
 }, "version":"1.0" }

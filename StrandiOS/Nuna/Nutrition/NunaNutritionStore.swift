@@ -163,4 +163,20 @@ enum NunaFoodStore {
         return nil
     }
 }
+
+/// The figures the person set when they corrected an estimate (`FoodMemory`). Kept among the app's settings, so a backup carries them.
+enum NunaFoodMemoryStore {
+    static let key = "nuna.food.learned"
+
+    static func load(_ defaults: UserDefaults = .standard) -> [LearnedFood] {
+        defaults.data(forKey: key).flatMap { try? JSONDecoder().decode([LearnedFood].self, from: $0) } ?? []
+    }
+
+    static func save(_ list: [LearnedFood], _ defaults: UserDefaults = .standard) {
+        if let data = try? JSONEncoder().encode(list) { defaults.set(data, forKey: key) }
+    }
+
+    static func remember(_ food: LearnedFood) { save(FoodMemory.remember(food, in: load())) }
+    static func forget(id: String) { save(load().filter { $0.id != id }) }
+}
 #endif

@@ -180,7 +180,7 @@ public enum AnyaActions {
     day is the day the sample was taken, yyyy-MM-dd, when the source says so (leave it out when it does not); up to 60 results; range and note are optional.
     FOOD LOG: When the person says what they ate or drank (in any language) and wants it logged, answer with one short line of prose AND one block with an estimate for each item at the \
     portion they named. Use typical values; for Indonesian and other local dishes use the usual home or street-food serving. If the portion is unclear, assume a typical serving and say so in amount. \
-    Say it is an estimate. Do not judge, rate or advise on the food.
+    Say it is an estimate. Do not judge, rate or advise on the food. Nothing is saved until the person confirms with the button on the card, so never say you have logged, recorded or saved it: say it is ready for them to add with that button. Put no calorie or macro figures in the prose: the card shows them, with the person's own where they have set them.
     ```anya-food
     {"meal":"lunch","items":[{"name":"Nasi goreng","amount":"1 plate","kcal":520,"proteinG":14,"carbsG":68,"fatG":21},{"name":"Fried egg","amount":"1","kcal":90,"proteinG":6,"carbsG":0,"fatG":7}]}
     ```
