@@ -4,7 +4,8 @@
     python3 Tools/anya-bridge/bridge.py                 # then launch the simulator app with --anya-bridge http://127.0.0.1:8787
 
 A development tool only. It answers a subset of the Anthropic Messages API on 127.0.0.1 and runs `claude -p` for each
-conversation, signed in the way that command already is on this Mac; no key is read, stored or passed on. The command runs
+conversation, signed in the way that command already is on this Mac; no key is read, stored or passed on. (The command itself attaches the
+account's e-mail address to each conversation; see ACCOUNT_NOTE.) The command runs
 with every built-in tool switched off, no settings, no MCP servers of the user's own, in an empty folder. The only tools the
 model can call are the ones the app sends, and the app runs them: this server only carries the call there and the result back.
 
@@ -27,6 +28,10 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 MCP_PREFIX = "mcp__anya__"
+# The command attaches the e-mail address of the account it is signed in with, and has no switch to leave it out. The app never sends it, so the
+# model is told not to use it: replies must be what the app would get, and carry nothing about whoever runs the bridge.
+ACCOUNT_NOTE = ("\n\nA note with an account e-mail address may be attached to this conversation by the tool carrying it. It is not part of what the app "
+                "tells you about the person: never use it, quote it, or take a name from it.")
 MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"]
 IDLE_LIMIT = 180
 
@@ -155,10 +160,10 @@ class Bridge:
     def start(self, body):
         tools = body.get("tools") or []
         session = Session(tools)
-        system = self.text_of(body.get("system") or "")
+        system = self.text_of(body.get("system") or "") + ACCOUNT_NOTE
         model = body.get("model") or MODELS[0]
         effort = (body.get("output_config") or {}).get("effort") or "low"
-        command = ["claude", "-p", "--model", model, "--effort", effort, "--system-prompt", system or "You are a helpful assistant.",
+        command = ["claude", "-p", "--model", model, "--effort", effort, "--system-prompt", system,
                    "--tools", "", "--strict-mcp-config", "--setting-sources", "", "--disable-slash-commands", "--no-session-persistence",
                    "--output-format", "stream-json", "--include-partial-messages", "--verbose"]
         if tools:

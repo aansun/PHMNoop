@@ -27,6 +27,12 @@ final class NotificationPresenter: NSObject, UNUserNotificationCenterDelegate {
     static let bloodPressureCategoryId = "bp.reminder"
     var onBloodPressureReminderTapped: (() -> Void)?
 
+    /// Anya's evening check-in and the summary after a workout, and where a tap on each goes (wired by the iOS app root).
+    static let anyaEveningCategoryId = "anya.evening"
+    static let workoutReportCategoryId = "workout.report"
+    var onAnyaEveningTapped: (() -> Void)?
+    var onWorkoutReportTapped: (() -> Void)?
+
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
@@ -48,6 +54,12 @@ final class NotificationPresenter: NSObject, UNUserNotificationCenterDelegate {
         }
         if response.notification.request.content.categoryIdentifier == Self.bloodPressureCategoryId {
             onBloodPressureReminderTapped?()
+        }
+        if response.notification.request.content.categoryIdentifier == Self.anyaEveningCategoryId {
+            onAnyaEveningTapped?()
+        }
+        if response.notification.request.content.categoryIdentifier == Self.workoutReportCategoryId {
+            onWorkoutReportTapped?()
         }
         completionHandler()
     }

@@ -79,6 +79,7 @@ struct NunaAnyaSettingsView: View {
                         NunaListRow("Morning brief", subtitle: LocalizedStringKey(briefOn ? String(localized: "Every day at \(Self.clock(CoachBriefScheduler.timeMinutes))") : String(localized: "Off")), systemImage: "sunrise", showsChevron: true)
                     }.buttonStyle(.plain)
                 }
+                NunaAnyaEveningCard()
                 NunaSettingsCard {
                     NavigationLink(value: NunaAnyaRoute.voiceCoach) {
                         NunaListRow("Audio coach during sessions", subtitle: LocalizedStringKey(voiceOn ? String(localized: "On") : String(localized: "Off")), systemImage: "speaker.wave.2", showsChevron: true)
@@ -96,6 +97,11 @@ struct NunaAnyaSettingsView: View {
             }
 
             NunaSettingsSection("Memory and history") {
+                NunaSettingsCard {
+                    NavigationLink(value: NunaAnyaRoute.aboutYou) {
+                        NunaListRow("About you", description: "Goals, your week, equipment, limits", systemImage: "person.text.rectangle", showsChevron: true)
+                    }.buttonStyle(.plain)
+                }
                 NunaSettingsCard {
                     NavigationLink(value: NunaAnyaRoute.memory) {
                         NunaListRow("Memory", subtitle: LocalizedStringKey(String(localized: "\(memory.memories.filter(\.isActive).count) active")), systemImage: "brain", showsChevron: true)

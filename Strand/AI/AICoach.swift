@@ -373,7 +373,7 @@ final class AICoachEngine: ObservableObject {
         #else
         let actions = ""
         #endif
-        return base + languagePrompt + Self.answerStyleBlock() + Self.strainScaleBlock() + CoachMemoryStore.activePromptBlock() + actions
+        return base + languagePrompt + Self.answerStyleBlock() + Self.strainScaleBlock() + AnyaAboutYou.load().promptBlock + CoachMemoryStore.activePromptBlock() + actions
     }
 
     // MARK: Strain scale
@@ -758,24 +758,86 @@ final class AICoachEngine: ObservableObject {
     var canLookUp: Bool { lookUp != nil && dataConsent && provider == .anthropic }
 
     /// One answer in a conversation: with lookups where they are possible, else the plain streamed reply.
-    private func answer(key: String, messages: [(role: ChatMessage.Role, content: String)], inlineImage: String?, onDelta: (String) -> Void) async throws {
+    /// Returns the tools she read the person's data with, in the order first used.
+    @discardableResult
+    private func answer(key: String, messages: [(role: ChatMessage.Role, content: String)], inlineImage: String?, onDelta: (String) -> Void) async throws -> [String] {
         guard canLookUp, let lookUp else {
             try await streamProvider(key: key, messages: messages, inlineImage: inlineImage, compact: runsOnDevice, onDelta: onDelta)
-            return
+            return []
         }
         defer { lookingUp = nil }
+        var saved: [String] = []
+        var used: [String] = []
         try await AnthropicClient().converse(
             key: key, model: model,
             systemPrompt: systemPrompt + "\n\n" + AnyaTools.instruction(today: Self.todayWords()),
             messages: messages, inlineImage: inlineImage, session: session, tools: AnyaTools.definitions,
             lookUp: { name, input in
                 self.lookingUp = name
-                return await lookUp(name, input)
+                let result = await lookUp(name, input)
+                if !result.failed, name != AnyaTools.Name.saveAboutYou.rawValue, !used.contains(name) { used.append(name) }
+                if !result.failed, name == AnyaTools.Name.saveAboutYou.rawValue,
+                   let field = (input["field"] as? String).flatMap(AnyaAboutYou.Field.init(rawValue:)) {
+                    let title = String(localized: String.LocalizationValue(field.title))
+                    if !saved.contains(title) { saved.append(title) }
+                }
+                return result
             },
             onDelta: { delta in
                 self.lookingUp = nil
                 onDelta(delta)
             })
+        // What was written down is always said, so nothing is kept without the person seeing it.
+        if !saved.isEmpty { onDelta("\n\n✓ " + String(localized: "Saved to About you: \(saved.joined(separator: ", "))")) }
+        return used
+    }
+
+    /// What was looked up for each recent reply, by message id, so the screen can say what a reply was read from.
+    @Published private(set) var lookedUp: [String: [String]] = (UserDefaults.standard.dictionary(forKey: "coach.lookedUp") as? [String: [String]]) ?? [:]
+
+    private func recordLookups(_ names: [String], for id: UUID) {
+        guard !names.isEmpty else { return }
+        lookedUp[id.uuidString] = names
+        // Only what a stored conversation can still show is worth keeping.
+        if lookedUp.count > 200 {
+            let live = Set(messages.map(\.id.uuidString) + conversationHistory.flatMap { $0.messages.map(\.id.uuidString) })
+            lookedUp = lookedUp.filter { live.contains($0.key) }
+        }
+        UserDefaults.standard.set(lookedUp, forKey: "coach.lookedUp")
+    }
+
+    /// A notification tapped: Anya's screen opens the conversation when it appears.
+    @Published var pendingCheckIn: AnyaCheckIn?
+
+    /// Anya speaks first. The instruction that asks for it is sent but never shown or stored; only her reply joins the conversation.
+    func checkIn(_ kind: AnyaCheckIn) async {
+        guard CoachBriefScheduler.coachMasterEnabled, dataConsent, !sending, let key = resolvedKey else { return }
+        await loadPersistedMessagesIfNeeded()
+        let today = Self.localEpochDay()
+        if Self.isStaleConversation(lastEpochDay: conversationDay, todayEpochDay: today) {
+            archiveCurrentConversation()
+            messages = []
+            currentConversationID = nil
+        }
+        conversationDay = today
+        errorText = nil
+        sending = true
+        defer { sending = false; persistMessages() }
+        let context = await buildFullContext(compact: runsOnDevice)
+        let wire = Self.conversation(opening: context, history: Array(messages.suffix(Self.maxHistoryMessages)), question: kind.instruction)
+        let placeholder = ChatMessage(role: .assistant, text: "")
+        appendMessage(placeholder)
+        var reply = ""
+        do {
+            let used = try await answer(key: key, messages: wire, inlineImage: nil) { delta in
+                reply += delta
+                if let i = self.messages.indices.last, self.messages[i].id == placeholder.id { self.messages[i] = ChatMessage(id: placeholder.id, role: .assistant, text: reply) }
+            }
+            recordLookups(used, for: placeholder.id)
+        } catch {
+            errorText = (error as? AICoachError)?.errorDescription ?? AICoachError.network(error.localizedDescription).errorDescription
+        }
+        if reply.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { messages.removeAll { $0.id == placeholder.id } }
     }
 
     nonisolated static func todayWords(_ now: Date = Date()) -> String {
@@ -1209,7 +1271,7 @@ final class AICoachEngine: ObservableObject {
         var accumulated = ""
 
         do {
-            try await answer(key: key, messages: wire, inlineImage: imageBase64) { delta in
+            let used = try await answer(key: key, messages: wire, inlineImage: imageBase64) { delta in
                 accumulated += delta
                 // Replace the last message's text with the accumulated stream so far.
                 if let lastIdx = self.messages.indices.last,
@@ -1219,6 +1281,7 @@ final class AICoachEngine: ObservableObject {
                     )
                 }
             }
+            recordLookups(used, for: placeholder.id)
             // Finalize: trim whitespace. If the stream produced nothing, show "(no reply)".
             let clean = accumulated.trimmingCharacters(in: .whitespacesAndNewlines)
             if let lastIdx = messages.indices.last, messages[lastIdx].role == .assistant {
@@ -2032,7 +2095,13 @@ final class AICoachEngine: ObservableObject {
     private func wireMessages(context: String) -> [(role: ChatMessage.Role, content: String)] {
         var out: [(role: ChatMessage.Role, content: String)] = []
         var contextInjected = false
-        for m in windowedMessages() {
+        let window = windowedMessages()
+        // A conversation Anya opened (a check-in, a brief) still has to begin with the person for a provider: the data goes there.
+        if window.first?.role == .assistant {
+            out.append((.user, context))
+            contextInjected = true
+        }
+        for m in window {
             if m.role == .user && !contextInjected {
                 contextInjected = true
                 out.append((.user, context + "\n\n---\n\nQuestion: " + m.text))

@@ -51,6 +51,34 @@ final class AnyaToolsTests: XCTestCase {
     }
 }
 
+final class AnyaAboutYouTests: XCTestCase {
+    func testNotesAddUpWithoutRepeating() {
+        var about = AnyaAboutYou()
+        XCTAssertEqual(about.promptBlock, "")
+        XCTAssertTrue(about.note(.equipment, " dumbbells "))
+        XCTAssertTrue(about.note(.equipment, "Dumbbells"))
+        XCTAssertTrue(about.note(.equipment, "a bike"))
+        XCTAssertEqual(about[.equipment], "dumbbells; a bike")
+        XCTAssertTrue(about.note(.equipment, "only a bike", replacing: true))
+        XCTAssertTrue(about.promptBlock.hasSuffix("- Equipment and places: only a bike"))
+        XCTAssertFalse(about.note(.goals, "  "))
+        XCTAssertFalse(about.note(.equipment, String(repeating: "x", count: AnyaAboutYou.longest)))
+        XCTAssertEqual(about[.equipment], "only a bike")
+    }
+
+    func testItIsStoredAndClearedWithItsLastLine() {
+        let defaults = UserDefaults(suiteName: "anya-about-you-test")!
+        defer { defaults.removePersistentDomain(forName: "anya-about-you-test") }
+        var about = AnyaAboutYou()
+        about[.goals] = "10 km"
+        about.save(defaults)
+        XCTAssertEqual(AnyaAboutYou.load(defaults), about)
+        about[.goals] = ""
+        about.save(defaults)
+        XCTAssertNil(defaults.data(forKey: AnyaAboutYou.defaultsKey))
+    }
+}
+
 final class AnthropicWireTests: XCTestCase {
     func testOnlyNewerModelsAreSentAnEffort() {
         XCTAssertTrue(AnthropicWire.takesEffort("claude-haiku-5-5"))

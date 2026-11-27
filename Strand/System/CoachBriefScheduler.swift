@@ -76,6 +76,7 @@ enum CoachBriefScheduler {
     static func applyMasterSwitch(_ on: Bool) {
         guard !on else { return }
         cancel()
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [AnyaCheckIn.eveningRequestId])
         // A brief already DELIVERED sits in Notification Centre until the wearer clears it, and tapping it
         // routes to Coach. Same leak as the widget, one surface over: AI output still on display, and in
         // this case still interactive, after the AI was switched off. Pending requests go too, so nothing

@@ -46,6 +46,8 @@ enum PHMNBackupExtras {
         "workouts.",
         "breathe.",
         "coach.memor",               // Anya's memory and whether she may add to it
+        "coach.aboutYou",            // what the person told Anya about themselves
+        "anya.evening.",             // the evening check-in and its time
         "coach.conversationHistory",
         "coachBrief.enabled",
         "coachBrief.timeMinutes",

@@ -108,6 +108,17 @@ struct StrandiOSApp: App {
         }
         let model = AppModel()
         _model = StateObject(wrappedValue: model)
+        // A tapped check-in, or a workout summary, opens Anya and has her speak first. Without a connected Anya the tap only opens the app.
+        let anyaOpens: (AnyaCheckIn) -> Void = { [weak router, weak model] kind in
+            Task { @MainActor in
+                guard let router, let coach = model?.coach, CoachBriefScheduler.coachMasterEnabled, coach.isConfigured, coach.dataConsent else { return }
+                coach.pendingCheckIn = kind
+                router.openCoach()
+            }
+        }
+        NotificationPresenter.shared.onAnyaEveningTapped = { anyaOpens(.evening) }
+        NotificationPresenter.shared.onWorkoutReportTapped = { anyaOpens(.afterWorkout) }
+        NunaAnyaEvening.refresh()
         // Settings → "Keep screen on while syncing". Wired once here, not as another modifier on `body`.
         SyncKeepAwake.shared.attach(to: model.live)
         // The strap-sync Live Activity (Lock Screen + Dynamic Island). Same placement, same reason — and

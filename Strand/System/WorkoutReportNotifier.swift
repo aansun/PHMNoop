@@ -31,6 +31,7 @@ enum WorkoutReportNotifier {
             content.title = copy.title
             content.body = copy.body
             content.sound = .default
+            content.categoryIdentifier = NotificationPresenter.workoutReportCategoryId
 
             let request = UNNotificationRequest(
                 identifier: "workout-summary-\(row.startTs)",

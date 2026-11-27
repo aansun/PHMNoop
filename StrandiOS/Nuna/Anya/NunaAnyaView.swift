@@ -14,7 +14,7 @@ enum NunaAnyaRoute: Hashable {
     case apiKey(String)          // AIProvider.rawValue
     case custom
     case chatGPT
-    case settings, memory, history, instructions, brief, voiceCoach, plan, environment
+    case settings, memory, history, instructions, brief, voiceCoach, plan, environment, aboutYou
 
     /// The pages that belong to AI Settings (Settings > App Settings > AI Settings) take the Settings page title and type scale. The chat history and the
     /// plan are pages of the Anya tab and keep their own.
@@ -38,6 +38,7 @@ extension View {
             case .memory: NunaAnyaMemoryView()
             case .history: NunaAnyaHistoryView()
             case .instructions: NunaAnyaInstructionsView()
+            case .aboutYou: NunaAnyaAboutYouView()
             case .brief: NunaAnyaBriefView()
             case .voiceCoach: NunaAnyaVoiceCoachView()
             case .plan: NunaAnyaPlanView()
@@ -119,6 +120,20 @@ struct NunaAnyaView: View {
             CoachBriefScheduler.activateIfEnabled { await coach.generateBrief() }
         }
         .task(id: repo.refreshSeq) { reading = await NunaAnyaReader.read(context: "today", repo: repo, profile: profile, scale: scale) }
+        #if DEBUG
+        // `--anya-checkin evening|afterWorkout` opens Anya as a tapped notification would, without needing the notification permission.
+        .onAppear {
+            let args = CommandLine.arguments
+            if let i = args.firstIndex(of: "--anya-checkin"), i + 1 < args.count, let kind = AnyaCheckIn(rawValue: args[i + 1]) { coach.pendingCheckIn = kind }
+        }
+        #endif
+        .task(id: coach.pendingCheckIn) {
+            guard let kind = coach.pendingCheckIn else { return }
+            coach.pendingCheckIn = nil
+            guard coach.isConfigured else { return }
+            // Its own task: clearing the pending value above cancels this one.
+            Task { await coach.checkIn(kind) }
+        }
         .task(id: coach.pendingPrompt) {
             guard let prompt = coach.pendingPrompt, !prompt.isEmpty else { return }
             coach.pendingPrompt = nil
@@ -174,8 +189,10 @@ struct NunaAnyaView: View {
         Image(systemName: symbol).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             .frame(width: 42, height: 42)
     }
-    private var readNames: [String] {
+    /// The summary every question carries, then whatever was looked up for this reply.
+    private func readNames(_ m: ChatMessage) -> [String] {
         [String(localized: "Recovery"), String(localized: "Sleep"), String(localized: "Workouts 7 days")]
+            + (coach.lookedUp[m.id.uuidString] ?? []).compactMap(NunaAnyaTools.readName)
     }
 
     private func chip(_ t: String) -> some View {
@@ -285,6 +302,8 @@ struct NunaAnyaView: View {
 
     private struct Starter { let title: String; let subtitle: String; let prompt: String }
     private var starters: [Starter] {
+        (AnyaAboutYou.load().isEmpty ? [Starter(title: String(localized: "Get to know me"), subtitle: String(localized: "A few questions, so the coaching fits you"),
+                 prompt: NunaAnyaAboutYouView.interviewPrompt)] : []) +
         (environment.isActive ? [Starter(title: String(localized: "Is it a good time to train outside?"), subtitle: String(localized: "From the weather and air where you are"),
                  prompt: "Given the weather and air quality around me right now, is it a good time to train outside? Tell me what to change: the hour, the length, the intensity, or whether to move indoors.")] : []) +
         [Starter(title: String(localized: "Recommend a workout"), subtitle: String(localized: "From Recovery, Strain, Sleep and your goal"),
@@ -346,7 +365,8 @@ struct NunaAnyaView: View {
                 HStack(spacing: 8) {
                     if coach.dataConsent {
                         Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        ForEach(readNames, id: \.self) { n in Text(verbatim: n).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+                        Text(verbatim: readNames(m).joined(separator: " · ")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            .fixedSize(horizontal: false, vertical: true)
                     } else {
                         Text("Based only on your question").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                     }

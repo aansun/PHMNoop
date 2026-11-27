@@ -11,6 +11,8 @@ public enum AnyaTools {
         case foodDiary = "get_food_diary"
         case healthLog = "get_health_log"
         case profile = "get_profile"
+        /// The one tool that writes: a standing fact the person told her, onto their "About you" page.
+        case saveAboutYou = "save_about_you"
     }
 
     /// The daily figures she can ask for, by the name used in a request.
@@ -44,6 +46,11 @@ public enum AnyaTools {
             tool(.healthLog, "The person's own journal answers, blood pressure readings or lab results. Only available if they share patterns and the Lab Book.",
                  ["kind": ["type": "string", "enum": logKinds] as [String: Any], "days": days(30, 730)], required: ["kind"]),
             tool(.profile, "Age, sex, height, weight, waist, maximum heart rate and the goals the person has set."),
+            tool(.saveAboutYou, "Save a lasting fact the person has just told you about themselves to their About you page, which you are given in every conversation.",
+                 ["field": ["type": "string", "enum": AnyaAboutYou.Field.allCases.map(\.rawValue)] as [String: Any],
+                  "text": ["type": "string", "description": "The fact in their own terms and language, short."] as [String: Any],
+                  "replace": ["type": "boolean", "description": "True when it corrects what is there, so the old text is replaced."] as [String: Any]],
+                 required: ["field", "text"]),
         ]
     }
 
@@ -54,6 +61,9 @@ public enum AnyaTools {
         When the question reaches further back, names something the summary does not hold (a particular night or session, bed times, food, weight, journal, \
         blood pressure, their age), or asks how something has changed, fetch it instead of saying you do not have it, and do not state a figure you have not \
         seen. Small talk needs no lookup. Do not mention tools or fetching; just answer.
+
+        KEEPING IN MIND: when they tell you something lasting that helps you coach them (a goal, their usual training days, equipment, an injury or limit, \
+        how they like to be coached), save it with save_about_you. Save only what they said, never a guess or a passing mood. The app tells them it was saved.
         """
     }
 

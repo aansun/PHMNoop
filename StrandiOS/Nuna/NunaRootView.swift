@@ -190,6 +190,16 @@ struct NunaRootView: View {
             try? await Task.sleep(nanoseconds: 1_500_000_000)
             journalOpen = true
         }
+        // `--anya-chat` opens Anya's full conversation; `--anya-checkin evening|afterWorkout` opens it as a tapped notification would, so neither
+        // needs the notification permission.
+        .task {
+            let args = CommandLine.arguments
+            let checkIn = args.firstIndex(of: "--anya-checkin").flatMap { $0 + 1 < args.count ? AnyaCheckIn(rawValue: args[$0 + 1]) : nil }
+            guard checkIn != nil || args.contains("--anya-chat") else { return }
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            model.coach.pendingCheckIn = checkIn
+            router.openCoach()
+        }
         #endif
         .onChange(of: router.pendingMetricKey) { _, key in openMetric(key) }
         .onChange(of: router.openNotificationSettings) { _, on in

@@ -182,7 +182,7 @@ struct NunaNotificationsView: View {
             NunaSettingsSection("Alerts") {
                 NunaSettingsSwitch("Early-illness warning", subtitle: "When two signals drift together", systemImage: NunaIcons.earlyWarning, isOn: Binding(get: { behavior.illnessWatch }, set: { behavior.illnessWatch = $0; if $0 { IllnessNotifier.requestAuthorization() } }))
                 NunaSettingsSwitch("Strain target reached", subtitle: "Once a day, after the strap syncs", systemImage: "target", isOn: Binding(get: { behavior.strainTargetNudge }, set: { behavior.strainTargetNudge = $0; if $0 { StrainTargetNotifier.requestAuthorization(); model.evaluateStrainTarget() } }))
-                NunaSettingsSwitch("Summary after a workout", subtitle: "Strain, duration and heart rate", systemImage: "list.bullet.clipboard", isOn: Binding(get: { workoutReport }, set: { workoutReport = $0; if $0 { WorkoutReportNotifier.requestAuthorization() } }))
+                NunaSettingsSwitch("Summary after a workout", subtitle: "Strain, duration and heart rate; tap it to go over it with Anya", systemImage: "list.bullet.clipboard", isOn: Binding(get: { workoutReport }, set: { workoutReport = $0; if $0 { WorkoutReportNotifier.requestAuthorization() } }))
                 NunaSettingsSwitch("Strap battery", subtitle: "Low and full, plus the estimate", systemImage: "battery.25percent", isOn: Binding(get: { behavior.batteryAlerts }, set: { behavior.batteryAlerts = $0; if $0 { BatteryNotifier.requestAuthorization() } }))
             }
             NunaSettingsSection("Journal") {

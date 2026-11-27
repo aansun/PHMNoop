@@ -23,7 +23,22 @@ enum NunaAnyaTools {
         case .foodDiary: return String(localized: "Reading your food diary…")
         case .healthLog: return String(localized: "Reading your health log…")
         case .profile: return String(localized: "Reading your profile…")
+        case .saveAboutYou: return String(localized: "Making a note…")
         case nil: return String(localized: "Anya is thinking…")
+        }
+    }
+
+    /// The short name of what a lookup read, for the line under a reply.
+    static func readName(_ name: String) -> String? {
+        switch AnyaTools.Name(rawValue: name) {
+        case .dailyMetrics: return String(localized: "Daily figures")
+        case .sleepNights: return String(localized: "Nights")
+        case .workouts: return String(localized: "Workouts")
+        case .bodyTrend: return String(localized: "Body trend")
+        case .foodDiary: return String(localized: "Food diary")
+        case .healthLog: return String(localized: "Health log")
+        case .profile: return String(localized: "Profile")
+        case .saveAboutYou, nil: return nil
         }
     }
 
@@ -39,8 +54,21 @@ enum NunaAnyaTools {
         case .foodDiary: text = await food(input, repo: repo, today: today)
         case .healthLog: text = await healthLog(input, repo: repo, shares: sharesRecords, now: now)
         case .profile: text = await person(profile, repo: repo)
+        case .saveAboutYou: return note(input)
         }
         return (AnyaTools.capped(text), false)
+    }
+
+    private static func note(_ input: [String: Any]) -> (text: String, failed: Bool) {
+        guard let field = (input["field"] as? String).flatMap(AnyaAboutYou.Field.init(rawValue:)), let text = input["text"] as? String else {
+            return ("field and text are needed; field is one of: " + AnyaAboutYou.Field.allCases.map(\.rawValue).joined(separator: ", ") + ".", true)
+        }
+        var about = AnyaAboutYou.load()
+        guard about.note(field, text, replacing: input["replace"] as? Bool ?? false) else {
+            return ("Not saved: nothing to save, or that line is full. To rewrite it, send the whole new text with replace true.", true)
+        }
+        about.save()
+        return ("Saved. \(field.title) is now: \(about[field])", false)
     }
 
     private static func daily(_ input: [String: Any], repo: Repository, today: String) async -> String {
