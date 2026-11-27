@@ -9,7 +9,8 @@
 <p align="center"><sub>A personal project, built for my own needs. Offline, on-device, no account, no cloud.<br>I focus on iOS only. NOOP's Mac and Android apps are not maintained here.</sub></p>
 
 <p align="center">
-  <img src="docs/media/experience.gif" alt="Switching the app between the original NOOP look and the PHMN design" width="230">
+  <img src="docs/media/opening.png" alt="The opening screen: the PHMN wordmark with a turning ring" width="230">
+  <img src="docs/media/experience.png" alt="The Experience page: the classic look or the new design" width="230">
 </p>
 
 <p align="center">
