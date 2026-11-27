@@ -1,5 +1,6 @@
 #if os(iOS)
 import SwiftUI
+import StrandAnalytics
 import UIKit
 import MuscleMap
 import WhoopStore
@@ -164,8 +165,19 @@ enum NunaExerciseLibrary {
     /// The library entry for an exercise logged under a person's own name: the same words, or the same words in another order, or a
     /// known alias. Nil when the library has nothing by that name.
     static func matchBundled(_ name: String) -> NunaLibraryExercise? {
-        ordered[normalized(name)] ?? unordered[wordSet(name)]
-            ?? { let bare = withoutBracketedEquipment(name); return bare == name ? nil : (ordered[normalized(bare)] ?? unordered[wordSet(bare)]) }()
+        // A name that is not the entry's own (an alias) is not followed to other equipment: the library lists the dumbbell Romanian deadlift
+        // under the barbell one.
+        let direct = (ordered[normalized(name)] ?? unordered[wordSet(name)]).flatMap { found in
+            wordSet(found.name) != wordSet(name) && ExerciseNameMatch.contradicts(asked: name, entryEquipment: found.equipment) ? nil : found
+        }
+        return direct
+            ?? {
+                // "Romanian Deadlift (Barbell)" may be read without the bracket, but never as an exercise done with something else.
+                let bare = withoutBracketedEquipment(name)
+                guard bare != name, let found = ordered[normalized(bare)] ?? unordered[wordSet(bare)],
+                      ExerciseNameMatch.sameEquipment(asked: name, entryName: found.name, entryEquipment: found.equipment) else { return nil }
+                return found
+            }()
     }
 
     /// The exercise a name stands for: the bundled library's, or else the person's own exercise of that name, which is given the same shape

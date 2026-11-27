@@ -88,6 +88,14 @@ enum NunaAnyaQA {
         let matches = items.map { "\($0.exercise) -> " + (NunaAnyaProgramNames.library(for: $0.exercise)?.name ?? "(not in the library)") }
         out["program"] = ["output": prog ?? "nil", "parsed": prog.flatMap { AnyaActions.parseProgram(from: $0) } != nil, "seconds": tp, "matches": matches]
         }
+        // The names a generated program has been seen to use, run through the same matching, with no model.
+        if on("match") {
+            let names = ["Dumbbell Bent Over Row", "Dumbbell Single Arm Row", "Dumbbell Triceps Extension", "Dumbbell Incline Bench Press", "Dumbbell Romanian Deadlift",
+                         "Dumbbell Bench Press", "One Arm Dumbbell Row", "Dumbbell Lateral Raise", "Dumbbell Hammer Curl", "Goblet Squat", "Dumbbell Goblet Squat", "Dumbbell Lunge",
+                         "Dumbbell Shoulder Press", "Dumbbell Pullover", "Dumbbell Rear Delt Raise", "Dumbbell Biceps Curl", "Dumbbell Calf Raise", "Dumbbell Step-up", "Dumbbell Reverse Fly",
+                         "Barbell Bench Press - Medium Grip", "Romanian Deadlift", "Lat Pulldown", "Bench Press (Dumbbell)", "Romanian Deadlift (Barbell)"]
+            out["match"] = names.map { "\($0) -> " + (NunaAnyaProgramNames.library(for: $0).map { "\($0.name) [\($0.equipment ?? "-")]" } ?? "(kept as written)") }
+        }
         if on("breath") {
         let (br, tbr) = await timed { await coach.suggestBreath(request: "calm down before sleep, 5 minutes", context: "") }
         out["breath"] = ["output": br ?? "nil", "parsed": br.flatMap { AnyaActions.parseBreath(from: $0) } != nil, "seconds": tbr]

@@ -224,8 +224,10 @@ enum NunaCustomExercises {
                                               "hevy", "custom", "my", "the", "a", "with", "on", "to", "seated", "standing", "lying"]
 
     /// The library exercise whose words overlap the name's the most, when they overlap enough to trust: at least two thirds of the smaller
-    /// set of words, and two words in common, so "Cable Fly" does not claim "Cable Crossover Fly Machine Pec Deck".
-    static func closestLibraryExercise(to name: String) -> NunaLibraryExercise? {
+    /// set of words, and two words in common, so "Cable Fly" does not claim "Cable Crossover Fly Machine Pec Deck". Words alone are enough
+    /// to guess which muscles a made-up exercise works; to stand in for the name itself (`sameExercise`) the equipment and the variation must
+    /// agree as well.
+    static func closestLibraryExercise(to name: String, sameExercise: Bool = false) -> NunaLibraryExercise? {
         let target = Set(NunaExerciseLibrary.words(name).filter { !filler.contains($0) })
         guard target.count >= 2 else { return nil }
         var best: (score: Double, entry: NunaLibraryExercise)?
@@ -233,6 +235,8 @@ enum NunaCustomExercises {
             let words = Set(NunaExerciseLibrary.words(e.name).filter { !filler.contains($0) })
             let common = target.intersection(words).count
             guard common >= 2 else { continue }
+            if sameExercise, !ExerciseNameMatch.sameEquipment(asked: name, entryName: e.name, entryEquipment: e.equipment)
+                || !ExerciseNameMatch.sameVariation(asked: name, entryName: e.name) { continue }
             let score = Double(common) / Double(min(target.count, words.count)) * (Double(common) / Double(max(target.count, words.count)) + 1) / 2
             if Double(common) / Double(min(target.count, words.count)) >= 0.67, score > (best?.score ?? 0) { best = (score, e) }
         }

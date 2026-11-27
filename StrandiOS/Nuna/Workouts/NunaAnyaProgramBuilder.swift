@@ -64,7 +64,7 @@ struct NunaProgramBrief: Equatable {
 enum NunaAnyaProgramNames {
     /// The library entry for a name: the same words, or the closest exercise when the words overlap enough.
     static func library(for name: String) -> NunaLibraryExercise? {
-        NunaExerciseLibrary.matchBundled(name) ?? NunaCustomExercises.closestLibraryExercise(to: name)
+        NunaExerciseLibrary.matchBundled(name) ?? NunaCustomExercises.closestLibraryExercise(to: name, sameExercise: true)
     }
 
     /// The program with each exercise renamed to the library's where there is one. A name the library does not have stays as Anya wrote it,
