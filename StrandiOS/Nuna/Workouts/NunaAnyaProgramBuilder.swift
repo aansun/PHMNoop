@@ -220,7 +220,8 @@ struct NunaAnyaProgramBuilder: View {
             if let explanation, !explanation.isEmpty {
                 Text(verbatim: explanation).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
-            NunaAnyaProgramCard(spec: spec)
+            // A changed program is a new card: it must not keep the old one's "Saved".
+            NunaAnyaProgramCard(spec: spec).id(NunaAnyaProgramNames.text(spec))
             section("Change something") {
                 TextField("", text: $change, prompt: Text("Swap the leg day for a lighter one, add arms…").foregroundStyle(NunaPalette.textMuted), axis: .vertical)
                     .lineLimit(2...4).focused($focused).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)

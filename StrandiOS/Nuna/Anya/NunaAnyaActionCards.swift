@@ -164,11 +164,12 @@ struct NunaAnyaProgramCard: View {
         guard let store = await repo.storeHandle() else { return }
         saving = true; defer { saving = false }
         let now = Int(Date().timeIntervalSince1970)
-        for d in spec.days {
+        for (day, d) in spec.days.enumerated() {
             let id = UUID().uuidString
             let name = spec.days.count > 1 ? "\(spec.name) · \(d.title)" : spec.name
+            // The list shows the newest first, so each later day is stamped a second older and the first day stays on top.
             _ = try? await store.upsertLiftPrograms([LiftProgramRow(id: id, deviceId: repo.deviceId, name: String(name.prefix(80)), note: spec.note,
-                                                                    createdAt: now, updatedAt: now, archived: false)])
+                                                                    createdAt: now - day, updatedAt: now - day, archived: false)])
             let items = d.items.enumerated().map { i, it in
                 LiftProgramItemRow(id: UUID().uuidString, deviceId: repo.deviceId, programId: id, ord: i, exercise: it.exercise, targetSets: it.sets,
                                    targetRepsLow: it.repsLow, targetRepsHigh: it.repsHigh, targetRpe: nil, targetWeightKg: nil, restSec: it.restSec, note: it.note)

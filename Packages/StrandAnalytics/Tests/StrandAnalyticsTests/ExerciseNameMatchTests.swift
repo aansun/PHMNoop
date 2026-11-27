@@ -33,6 +33,11 @@ final class ExerciseNameMatchTests: XCTestCase {
         XCTAssertFalse(ExerciseNameMatch.contradicts(asked: "Smith Machine Squat", entryEquipment: "machine"))
     }
 
+    func testAPlainNameIsNotTurnedIntoOneThatNeedsATool() {
+        XCTAssertFalse(ExerciseNameMatch.sameEquipment(asked: "Close-Grip Push-up", entryName: "Close-Grip Push-Up off of a Dumbbell", entryEquipment: "body only"))
+        XCTAssertTrue(ExerciseNameMatch.sameEquipment(asked: "Close-Grip Push-up", entryName: "Close-Grip Push-Up", entryEquipment: "body only"))
+    }
+
     func testAnEntryNeedingOtherKitIsNoticed() {
         XCTAssertTrue(ExerciseNameMatch.needsOther(entryEquipment: "barbell", than: [.dumbbell]))
         XCTAssertFalse(ExerciseNameMatch.needsOther(entryEquipment: "dumbbell", than: [.dumbbell]))

@@ -50,10 +50,13 @@ public enum ExerciseNameMatch {
         }
     }
 
-    /// Whether a library entry uses the equipment the asked name states. A name that states none accepts any entry.
+    /// Whether a library entry uses the equipment the asked name states. A name that states none accepts any entry, except a body-weight one whose
+    /// own name calls for a tool ("Push-Up off of a Dumbbell"): that is not the plain exercise.
     public static func sameEquipment(asked: String, entryName: String, entryEquipment: String?) -> Bool {
         let wanted = equipment(inName: asked)
-        guard !wanted.isEmpty else { return true }
+        guard !wanted.isEmpty else {
+            return equipment(libraryValue: entryEquipment) != .bodyweight || equipment(inName: entryName).subtracting([.bodyweight]).isEmpty
+        }
         var has = equipment(inName: entryName)
         if let own = equipment(libraryValue: entryEquipment) {
             // The library files a Smith machine exercise under "machine"; its name is what says which.

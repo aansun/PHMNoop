@@ -627,7 +627,9 @@ struct NunaGymView: View {
         HStack(spacing: 8) {
             NavigationLink(value: NunaWorkoutRoute.program(p.id)) {
                 Text(verbatim: p.name).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                    .lineLimit(1).frame(maxWidth: .infinity, alignment: .leading).frame(height: 62).contentShape(Rectangle())
+                    // Two lines, because the days of one program differ only at the end of the name.
+                    .lineLimit(2).multilineTextAlignment(.leading).padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading).contentShape(Rectangle())
             }.buttonStyle(.plain)
             programMenu(p)
         }
