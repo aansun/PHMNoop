@@ -347,7 +347,7 @@ struct NunaTodayView: View {
                     pinnedHeader
                 }
                 // As the app comes up the page waits for its first read and comes in whole, not card by card with stand-ins.
-                .modifier(NunaPageArrival(ready: model.loaded, patience: 15, spins: true))
+                .modifier(NunaPageArrival(ready: model.loaded, patience: 15))
             }
         }
         .overlayPreferenceValue(NunaQuickAnchorKey.self) { anchor in
@@ -523,6 +523,7 @@ struct NunaTodayView: View {
             pushToday(.smartAlarm)
         }
         #endif
+        .onChange(of: model.loaded, initial: true) { _, loaded in if loaded { NunaLaunch.todayReady = true } }
         .onChange(of: model.dayOffset) { _, v in router.todayDayOffset = v }
         .onAppear { router.todayDayOffset = model.dayOffset }
         .task(id: "\(repo.refreshSeq)-\(model.dayOffset)-\(savedSessions)") {

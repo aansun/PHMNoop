@@ -271,7 +271,10 @@ targets:
         # hard-coded in Swift; stays in sync with the application-groups entitlement (both $(APP_GROUP_ID)).
         AppGroupIdentifier: "$(APP_GROUP_ID)"
         LSApplicationCategoryType: public.app-category.healthcare-fitness
-        UILaunchScreen: {}
+        # The wordmark on black, where the app's own opening screen (NunaLaunchCover) draws it, so the two run into each other.
+        UILaunchScreen:
+          UIColorName: LaunchGround
+          UIImageName: LaunchWordmark
         # Alternate app icon. The primary icon is the asset-catalog AppIcon (the butterfly and blade inside the orbit ring); the
         # alternate "AppIcon-Butterfly" (the same mark without the ring) is declared here so
         # UIApplication.setAlternateIconName("AppIcon-Butterfly") can switch to it at runtime.

@@ -36,6 +36,7 @@ enum PHMNChangelog {
                 "**Live activity.** The dial names your heart rate and shows the zone large, you can swipe between Strain and Heart Rate from anywhere, and a reached target reads Completed.",
                 "**Treadmill.** Distance and pace appear after the session, and the live screen says when the distance is still being calculated.",
                 "**Smoother pages.** Today, Health and the detail pages come in whole and fade in, instead of filling in card by card.",
+                "**Opening screen.** PHMN on black with a turning ring while the app reads your data.",
                 "**Support on Ko-fi.** The Ko-fi button under About on More opens the support page in your browser.",
             ],
             fixes: [

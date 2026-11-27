@@ -110,6 +110,10 @@ public enum NunaPalette {
     public static var ringTrack: Color { skinned(light: "#0A0D1020", dark: "#FFFFFF1F", whp: "#FFFFFF1F", flow: ("#E6D6CE", "#3D2D36")) }
     public static var zoneBase: Color { skinned(light: "#C3C9D6", dark: "#3F3F46", whp: "#3A4650", flow: ("#E6D6CE", "#3D2D36")) }   // zone 1 / awake track
 
+    // The opening screen: white on black in every skin and appearance, as the system's launch screen before it.
+    public static let launchGround = Color(hex: "#000000")
+    public static let launchInk = Color(hex: "#FFFFFF")
+
     // Primary action: white (the theme ink) on dark.
     public static var accent: Color { NunaThemePrefs.Accent.fill }
     public static var onAccent: Color { NunaThemePrefs.Accent.label }

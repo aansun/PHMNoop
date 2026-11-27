@@ -21,6 +21,7 @@ struct NunaRootView: View {
     @State private var sessionPresenter = NunaLiftSessionPresenter()
     /// The Health tab's figures, read ahead of the first visit.
     @StateObject private var healthStore = NunaHealthStore()
+    @State private var showsLaunch = !NunaLaunch.done
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     /// The theme choices. The palette reads them from UserDefaults, so a change rebuilds the tabs (the navigation paths are kept).
     @AppStorage(NunaTheme.storageKey) private var themeRaw = NunaTheme.Mode.dark.rawValue
@@ -117,6 +118,12 @@ struct NunaRootView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
         .nunaScreenBackground()
+        // The opening screen, over everything the shell draws, until Today has its figures.
+        .overlay {
+            if showsLaunch {
+                NunaLaunchCover(repo: model.repo) { showsLaunch = false }
+            }
+        }
         // WHP sets every label in capitals; sentences and Anya opt out with `.textCase(nil)` where they are drawn.
         .textCase(skinRaw == NunaThemePrefs.Skin.whp.rawValue ? .uppercase : nil)
         .tracking(skinRaw == NunaThemePrefs.Skin.whp.rawValue ? 0.6 : 0)
