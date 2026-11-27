@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "3.2.0",
+          "buildVersion": "475",
+          "date": "2026-11-27",
+          "localizedDescription": "Blood pressure, a new Beat rhythm page, a fuller sleep planner, and pages that open complete.",
+          "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.2.0/PHMN-v3.2.0-ios-unsigned.ipa",
+          "size": 87702261,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "3.1.3",
           "buildVersion": "466",
           "date": "2026-11-25",
@@ -168,12 +177,12 @@
           "NSSpeechRecognitionUsageDescription": "PHMN transcribes your question on-device so you can ask the coach out loud instead of typing. Audio never leaves your iPhone."
         }
       },
-      "version": "3.1.0",
-      "buildVersion": "443",
-      "versionDate": "2026-11-21",
-      "versionDescription": "Weather and air on Today, an Anya that writes like a coach and knows the forecast, and steps that no longer lose a walk.",
-      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.1.0/PHMN-v3.1.0-ios-unsigned.ipa",
-      "size": 86799267,
+      "version": "3.2.0",
+      "buildVersion": "475",
+      "versionDate": "2026-11-27",
+      "versionDescription": "Blood pressure, a new Beat rhythm page, a fuller sleep planner, and pages that open complete.",
+      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.2.0/PHMN-v3.2.0-ios-unsigned.ipa",
+      "size": 87702261,
       "minOSVersion": "17.0"
     }
   ],
