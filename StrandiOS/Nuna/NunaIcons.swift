@@ -55,6 +55,7 @@ enum NunaIcons {
     static let share = "square.and.arrow.up"
     static let privacy = "lock.shield.fill"
     static let about = "info.circle"
+    static let support = "cup.and.saucer.fill"
     static let backup = "externaldrive"
 }
 #endif

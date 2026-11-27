@@ -105,6 +105,8 @@ public enum NunaPalette {
     public static var scoreHigh: Color { whpOverride("#16EC06", Color(light: "#2EA800", dark: "#46D200")) }
     public static var effortMinimal: Color { whpOverride("#00538F", Color(light: "#1D4C9C", dark: "#2A66C8")) }
     public static var effortModerate: Color { whpOverride("#0093E7", Color(light: "#1480DA", dark: "#2BA0F5")) }
+    /// Ko-fi's own blue, for the row that opens the support page there. The same in every skin: it is their colour, not one of the app's.
+    public static let kofi = Color(hex: "#72A4F2")
     public static var effortAllOut: Color { whpOverride("#5CC0F5", Color(light: "#19A8E0", dark: "#66DCFF")) }
     /// The full circle behind a score ring, so the ring always reads as a closed loop whatever the style or theme.
     public static var ringTrack: Color { skinned(light: "#0A0D1020", dark: "#FFFFFF1F", whp: "#FFFFFF1F", flow: ("#E6D6CE", "#3D2D36")) }

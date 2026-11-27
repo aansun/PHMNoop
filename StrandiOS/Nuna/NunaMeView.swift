@@ -5,6 +5,9 @@ import StrandDesign
 /// Settings, as the reference lays them out: "Account & settings" (My Account, Device Settings, App Settings, Privacy Settings) and "Support", each row
 /// one card. The long list of what used to sit here lives one level down, in App Settings.
 struct NunaMeView: View {
+    /// The developer's support page. It opens in the browser: the app loads nothing from Ko-fi itself, so nothing leaves the phone until it is tapped.
+    private static let supportPage = URL(string: "https://ko-fi.com/S4U32BCYG3")!
+
     /// Opened from the profile page: it then has a way back, as the Settings tab does not need.
     var pushed = false
     @Environment(\.dismiss) private var dismiss
@@ -32,6 +35,10 @@ struct NunaMeView: View {
                     NunaSettingsLink(route: .whatsNew, icon: "graduationcap", title: "What's new")
                     NunaSettingsLink(route: .feedback, icon: "bubble.left.and.bubble.right", title: "Feedback", subtitle: "Tell us what you think")
                     NunaSettingsLink(route: .about, icon: NunaIcons.about, title: "About")
+                    Link(destination: Self.supportPage) {
+                        NunaSettingsCardRow(icon: NunaIcons.support, title: "Support me on Ko-fi", subtitle: "Opens ko-fi.com in your browser", tint: NunaPalette.kofi)
+                    }
+                    .buttonStyle(.plain)
                 }
                 Text(verbatim: NunaAppVersion.text).font(.nuna(size: 13, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                     .frame(maxWidth: .infinity).padding(.top, 30)
