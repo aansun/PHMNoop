@@ -5,9 +5,6 @@ import StrandDesign
 /// Settings, as the reference lays them out: "Account & settings" (My Account, Device Settings, App Settings, Privacy Settings) and "Support", each row
 /// one card. The long list of what used to sit here lives one level down, in App Settings.
 struct NunaMeView: View {
-    /// The developer's support page. It opens in the browser: the app loads nothing from Ko-fi itself, so nothing leaves the phone until it is tapped.
-    private static let supportPage = URL(string: "https://ko-fi.com/S4U32BCYG3")!
-
     /// Opened from the profile page: it then has a way back, as the Settings tab does not need.
     var pushed = false
     @Environment(\.dismiss) private var dismiss
@@ -35,19 +32,38 @@ struct NunaMeView: View {
                     NunaSettingsLink(route: .whatsNew, icon: "graduationcap", title: "What's new")
                     NunaSettingsLink(route: .feedback, icon: "bubble.left.and.bubble.right", title: "Feedback", subtitle: "Tell us what you think")
                     NunaSettingsLink(route: .about, icon: NunaIcons.about, title: "About")
-                    Link(destination: Self.supportPage) {
-                        NunaSettingsCardRow(icon: NunaIcons.support, title: "Support me on Ko-fi", subtitle: "Opens ko-fi.com in your browser", tint: NunaPalette.kofi)
-                    }
-                    .buttonStyle(.plain)
                 }
                 Text(verbatim: NunaAppVersion.text).font(.nuna(size: 13, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                     .frame(maxWidth: .infinity).padding(.top, 30)
+                NunaKofiButton().frame(maxWidth: .infinity).padding(.top, 18)
             }
             .padding(.horizontal, 20).padding(.top, 14).padding(.bottom, 130)
         }
         .scrollIndicators(.hidden)
         .nunaScreenBackground()
         .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+/// The "Support me on Ko-fi" button as Ko-fi draws it: their cup, their wording and the navy chosen there, whatever the app's skin. It opens the support
+/// page in the browser. The picture is part of the app, so nothing is asked of Ko-fi until the button is tapped.
+private struct NunaKofiButton: View {
+    private static let page = URL(string: "https://ko-fi.com/S4U32BCYG3")!
+
+    var body: some View {
+        Link(destination: Self.page) {
+            HStack(spacing: 9) {
+                Image("KofiCup").resizable().scaledToFit().frame(height: 20)
+                Text(verbatim: "Support me on Ko-fi").font(.system(size: 16, weight: .bold)).tracking(0).textCase(nil).foregroundStyle(Color.white)
+                    .lineLimit(1).minimumScaleFactor(0.8)
+            }
+            .padding(.horizontal, 18).frame(height: 46)
+            // The shadow is the button's alone: put on the whole label it would shade the wording too.
+            .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(NunaPalette.kofiButton).shadow(color: .black.opacity(0.3), radius: 1.5, x: 1, y: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(Text("Opens ko-fi.com in your browser"))
     }
 }
 

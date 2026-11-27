@@ -9841,6 +9841,5 @@
  "Sleep, activity, weight, journal and breathing": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur, aktivitas, berat, jurnal, napas"}}}},
  "Calculating": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menghitung"}}}},
  "live.target.completed": {"extractionState": "extracted_with_value", "localizations": {"en": {"stringUnit": {"state": "new", "value": "Completed"}}, "id": {"stringUnit": {"state": "translated", "value": "Completed"}}}},
- "Support me on Ko-fi": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dukung saya di Ko-fi"}}}},
  "Opens ko-fi.com in your browser": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membuka ko-fi.com di browser"}}}}
 }, "version":"1.0" }
