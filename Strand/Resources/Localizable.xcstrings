@@ -173,7 +173,7 @@
  "You're %@ kcal over today's target.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu %@ kkal melebihi target hari ini."}}}},
  "That day ended %@ kcal over the target.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hari itu berakhir %@ kkal melebihi target."}}}},
  "Tap to see how Anya would balance the rest of the week.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ketuk untuk melihat bagaimana Anya menyeimbangkan sisa minggu ini."}}}},
- "You've eaten %@ of %@ kcal and the day is getting on.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu sudah makan %1$@ dari %2$@ kkal dan hari sudah siang."}}}},
+ "You've eaten %@ of %@ kcal and the day is getting on.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu baru makan %1$@ dari %2$@ kkal, padahal hari sudah jauh berjalan."}}}},
  "That day ended %@ kcal under the target.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hari itu berakhir %@ kkal di bawah target."}}}},
  "%@ kcal to go. A meal with protein would close most of it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%@ kkal lagi. Satu kali makan dengan protein akan menutup sebagian besar."}}}},
  "Tap to see what Anya makes of it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ketuk untuk melihat pendapat Anya."}}}},

@@ -165,7 +165,7 @@ struct NunaFoodAddSheet: View {
                             Text(readingPhoto ? "Reading the photo…" : (coach.supportsImages ? "Anya will look at it" : "Read on this iPhone"))
                                 .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             Spacer(minLength: 0)
-                            Button { mealPhoto = nil; photoBase64 = nil; photoItem = nil; estimateError = nil } label: {
+                            Button { mealPhoto = nil; photoBase64 = nil; photoItem = nil; estimate = nil; estimateError = nil } label: {
                                 Image(systemName: "xmark.circle.fill").font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(width: 44, height: 44)
                             }.buttonStyle(.plain).accessibilityLabel(Text("Remove photo"))
                         }
