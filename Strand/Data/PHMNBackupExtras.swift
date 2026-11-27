@@ -48,6 +48,7 @@ enum PHMNBackupExtras {
         "coach.memor",               // Anya's memory and whether she may add to it
         "coach.aboutYou",            // what the person told Anya about themselves
         "anya.evening.",             // the evening check-in and its time
+        "anya.homeGreeting",         // whether Anya greets from Home
         "coach.conversationHistory",
         "coachBrief.enabled",
         "coachBrief.timeMinutes",
@@ -71,7 +72,7 @@ enum PHMNBackupExtras {
     /// Parts of an allowed family that are state, not a choice: a flag that an alert was shown, the day something was last announced, a draft, a place.
     private static let deniedFragments: [String] = [
         "Alerted", "LastDay", "LastNotified", "DayKey", "Unconsumed", "storedText", "composerDraft", "lastLocation", "environment.",
-        "ai.keyProvider", "ai.customConnected", "demo.", ".seenDay", ".opened",
+        "ai.keyProvider", "ai.customConnected", "anya.homeGreeting.cache", "demo.", ".seenDay", ".opened",
     ]
 
     static func isBackedUp(_ key: String) -> Bool {

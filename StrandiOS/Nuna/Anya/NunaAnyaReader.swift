@@ -124,27 +124,38 @@ enum NunaAnyaReader {
 
     // MARK: Today
 
+    private static func shortDay(_ key: String) -> String {
+        let parser = DateFormatter(); parser.locale = Locale(identifier: "en_US_POSIX"); parser.dateFormat = "yyyy-MM-dd"
+        guard let date = parser.date(from: key) else { return key }
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM")
+        return f.string(from: date)
+    }
+
     private static func today(_ module: NunaAnyaModule, repo: Repository, profile: ProfileStore, scale: EffortScale) async -> NunaAnyaRead? {
         let m = NunaTodayModel()
         await m.load(repo: repo, profile: profile)
         guard let charge = m.charge.pct else { return nil }
         let c = Int(charge.rounded())
+        // A figure carried from another day is said with its day, and no advice for today is drawn from it.
+        let scored = repo.days.last { $0.recovery != nil }
+        let carried = scored.map { $0.day != Repository.localDayKey(Date()) } ?? false
         let level = m.readiness?.level
-        let tail: String
+        let tail: String?
         switch level {
         case .primed: tail = String(localized: "ready for a hard session")
         case .balanced: tail = String(localized: "ready for a moderate load")
         case .strained, .rundown: tail = String(localized: "take it easy today")
-        default: tail = String(localized: "still learning your baseline")
+        // "Not enough history" is only true when there is little of it; a day with nothing recorded yet is not that.
+        default: tail = repo.days.compactMap(\.recovery).count < 4 ? String(localized: "still learning your baseline") : nil
         }
         var bits: [String] = []
         if let d = m.restingHrDelta, abs(d) >= 1 {
             let n = Int(abs(d).rounded())
-            bits.append(d < 0 ? String(localized: "Resting heart rate down \(n) bpm") : String(localized: "Resting heart rate up \(n) bpm"))
+            bits.append(d < 0 ? String(localized: "Resting heart rate down \(n) bpm on the night before") : String(localized: "Resting heart rate up \(n) bpm on the night before"))
         }
         if let d = m.hrvDelta, abs(d) >= 1 {
             let n = Int(abs(d).rounded())
-            bits.append(d > 0 ? String(localized: "HRV up \(n) ms") : String(localized: "HRV down \(n) ms"))
+            bits.append(d > 0 ? String(localized: "HRV up \(n) ms on the night before") : String(localized: "HRV down \(n) ms on the night before"))
         }
         var read = ["Recovery"]
         if m.restingHr != nil { read.append("Resting HR") }
@@ -156,12 +167,20 @@ enum NunaAnyaReader {
         if let v = m.rest { vals["rest"] = v }
         if let v = m.hrv { vals["hrv"] = v }
         if let v = m.restingHr { vals["rhr"] = v }
-        var out = remembering(NunaAnyaRead(headline: String(localized: "Recovery \(c)%, \(tail)"),
+        let headline: String
+        if carried, let day = scored?.day {
+            headline = String(localized: "No readings for today yet. Recovery on \(Self.shortDay(day)) was \(c)%")
+        } else if let tail {
+            headline = String(localized: "Recovery \(c)%, \(tail)")
+        } else {
+            headline = "Recovery \(c)%"
+        }
+        var out = remembering(NunaAnyaRead(headline: headline,
                                            detail: bits.isEmpty ? nil : bits.joined(separator: ". ") + ".",
                                            read: read, module: module, questions: questions(.today)), values: vals)
         let band: (NunaAnyaVerdict.Level, String) = charge >= 67 ? (.good, String(localized: "Recovery \(c)% is in the green band"))
             : (charge >= 34 ? (.steady, String(localized: "Recovery \(c)% is in the yellow band")) : (.attention, String(localized: "Recovery \(c)% is in the red band")))
-        out.verdict = NunaAnyaVerdict(level: band.0, why: band.1, topic: .recovery)
+        if !carried { out.verdict = NunaAnyaVerdict(level: band.0, why: band.1, topic: .recovery) }
         // The weather and air, when they are on: what they mean for training today, in plain words (the memory above keeps only the figures).
         let environment = EnvironmentStore.shared
         if environment.isActive, let s = environment.snapshot, Date().timeIntervalSince1970 - Double(s.ts) < 3 * 3600, let a = environment.advice {

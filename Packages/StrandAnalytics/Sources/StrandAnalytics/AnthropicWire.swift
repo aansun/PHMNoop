@@ -16,11 +16,16 @@ public enum AnthropicWire {
     /// The most a reply may take, thinking included: the cap counts both, so it is well above what a chat answer needs.
     public static let maxTokens = 8000
 
-    /// A request body. `messages` are in wire form already. Effort is low: a chat should answer quickly, and a small model at low effort
-    /// still thinks when a question calls for it.
-    public static func body(model: String, system: String, messages: [[String: Any]], tools: [[String: Any]] = [], stream: Bool) -> [String: Any] {
-        var body: [String: Any] = ["model": model, "max_tokens": maxTokens, "system": system, "messages": messages]
-        if takesEffort(model) { body["output_config"] = ["effort": "low"] }
+    /// The effort and room for something built to rules (a program, a food estimate, an explanation of figures): a small model keeps to the rules
+    /// better when it thinks longer, and the thinking counts against the cap.
+    public static let buildEffort = "high"
+    public static let buildMaxTokens = 16000
+
+    /// A request body. `messages` are in wire form already. Effort is low unless asked otherwise: a chat should answer quickly, and a small
+    /// model at low effort still thinks when a question calls for it.
+    public static func body(model: String, system: String, messages: [[String: Any]], tools: [[String: Any]] = [], stream: Bool, effort: String = "low") -> [String: Any] {
+        var body: [String: Any] = ["model": model, "max_tokens": effort == "low" ? maxTokens : buildMaxTokens, "system": system, "messages": messages]
+        if takesEffort(model) { body["output_config"] = ["effort": effort] }
         if !tools.isEmpty {
             body["tools"] = tools
             // A tool loop sends the same prefix again on every step; caching it is what keeps that cheap.

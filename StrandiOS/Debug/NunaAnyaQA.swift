@@ -74,6 +74,39 @@ enum NunaAnyaQA {
         }
         out["chat"] = chatOut
 
+        // `--qa-repeat 5`: the three builders asked several times over, to see how steady they are. Written after each answer, so a long run can be read as it goes.
+        if let j = CommandLine.arguments.firstIndex(of: "--qa-repeat"), j + 1 < CommandLine.arguments.count, let n = Int(CommandLine.arguments[j + 1]) {
+            let meals = ["semangkuk soto ayam, 2 potong tempe goreng, segelas es teh manis, makan siang tadi", "sarapan bubur ayam satu mangkuk dan kopi susu",
+                         "nasi putih secentong, ayam bakar paha, sambal, dan lalapan untuk makan malam", "camilan: 1 pisang goreng dan 5 butir bakso kuah", "2 slices of pepperoni pizza and a can of cola"]
+            var food: [[String: Any]] = [], program: [[String: Any]] = [], plans: [[String: Any]] = []
+            func write() {
+                out["food"] = food; out["program"] = program; out["plan"] = plans; out["done"] = plans.count
+                if let data = try? JSONSerialization.data(withJSONObject: out, options: [.prettyPrinted, .sortedKeys]),
+                   let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+                    try? data.write(to: dir.appendingPathComponent("qa-\(scenario).json"))
+                }
+            }
+            for k in 0..<n {
+                let meal = meals[k % meals.count]
+                let (f, tf) = await timed { await coach.estimateFood(meal) }
+                food.append(["input": meal, "output": f ?? "nil", "parsed": f.flatMap { AnyaActions.parseFood(from: $0) } != nil, "seconds": tf])
+                let (p, tp) = await timed { await coach.suggestProgram(brief: "Goal: build muscle\nTraining days per week: 3\nSession length: 45 minutes\nEquipment: dumbbells and a bench only\nLevel: intermediate",
+                                                                      trainingSummary: "Chest 6 sets last week, back 4, legs 2, shoulders 4. Legs recovered, chest not fully recovered.") }
+                let spec = p.flatMap { AnyaActions.parseProgram(from: $0) }
+                // The names as the screen would save them for a person with dumbbells only.
+                let saved = spec.map { NunaAnyaProgramNames.resolve($0, gear: .dumbbells).days.flatMap(\.items).map { item in
+                    "\(item.exercise) [\(NunaExerciseLibrary.matchBundled(item.exercise)?.equipment ?? "own")]" } } ?? []
+                program.append(["output": p ?? "nil", "parsed": spec != nil, "seconds": tp, "sets": spec?.days.map { $0.items.reduce(0) { $0 + ($1.sets ?? 0) } } ?? [],
+                                "saved": saved, "matches": spec?.days.flatMap(\.items).map { "\($0.exercise) -> " + (NunaAnyaProgramNames.library(for: $0.exercise).map { "\($0.name) [\($0.equipment ?? "-")]" } ?? "(kept)") } ?? []])
+                let (plan, tpl) = await timed { await NunaNutritionPlanAdvice.make(repo: model.repo, profile: model.profile, coach: coach) }
+                plans.append(["target": plan?.targetKcal ?? -1, "pace": plan?.paceKgPerWeek ?? -99, "protein": plan?.proteinPerKg ?? -1, "explanation": plan?.explanation ?? "nil",
+                              "reasons": plan?.reasons ?? [], "cautions": plan?.cautions ?? [], "seconds": tpl])
+                write()
+            }
+            NSLog("[AnyaQA] done %@", scenario)
+            return
+        }
+
         // Artefacts and the brief.
         if on("food") {
         let args = CommandLine.arguments
@@ -101,9 +134,9 @@ enum NunaAnyaQA {
         out["breath"] = ["output": br ?? "nil", "parsed": br.flatMap { AnyaActions.parseBreath(from: $0) } != nil, "seconds": tbr]
         }
         if on("plan") {
-        let snap = await NunaNutritionSnapshot.build(repo: model.repo, profile: model.profile, includeLabBook: false)
-        let (plan, tpl) = await timed { await coach.suggestNutritionPlan(snapshot: snap) }
-        out["plan"] = ["output": plan ?? "nil", "parsed": (plan.map { AnyaActions.parse($0) } ?? []).contains { if case .plan = $0 { return true } else { return false } }, "seconds": tpl]
+        let (plan, tpl) = await timed { await NunaNutritionPlanAdvice.make(repo: model.repo, profile: model.profile, coach: coach) }
+        out["plan"] = ["target": plan?.targetKcal ?? -1, "pace": plan?.paceKgPerWeek ?? -99, "protein": plan?.proteinPerKg ?? -1, "explanation": plan?.explanation ?? "nil",
+                       "reasons": plan?.reasons ?? [], "cautions": plan?.cautions ?? [], "seconds": tpl]
         }
         if on("brief") {
         let (mb, tmb) = await timed { await coach.generateBrief() }

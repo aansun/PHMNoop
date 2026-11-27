@@ -10,8 +10,29 @@ struct AnthropicClient: AIProviderClient {
         messages: [(role: ChatMessage.Role, content: String)],
         session: URLSession
     ) async throws -> String {
+        try await send(key: key, model: model, systemPrompt: systemPrompt, messages: messages, session: session, effort: "low", inlineImage: nil)
+    }
+
+    /// One whole reply at the effort asked, with an optional photo on the last turn.
+    func send(
+        key: String,
+        model: String,
+        systemPrompt: String,
+        messages: [(role: ChatMessage.Role, content: String)],
+        session: URLSession,
+        effort: String,
+        inlineImage: String?
+    ) async throws -> String {
+        var turns = wire(messages)
+        if let inlineImage, !inlineImage.isEmpty, let last = messages.last, last.role == .user {
+            turns[turns.count - 1] = ["role": "user", "content": [
+                ["type": "image", "source": ["type": "base64", "media_type": "image/png", "data": inlineImage]],
+                ["type": "text", "text": last.content],
+            ]]
+        }
         // Anthropic: system prompt is a top-level field, not a message role.
-        let req = try request(key: key, body: AnthropicWire.body(model: model, system: systemPrompt, messages: wire(messages), stream: false))
+        var req = try request(key: key, body: AnthropicWire.body(model: model, system: systemPrompt, messages: turns, stream: false, effort: effort))
+        if effort != "low" { req.timeoutInterval = 180 }
         let json = try await performRequest(req, session: session)
         if json["stop_reason"] as? String == "refusal" { throw AICoachError.emptyReply(Self.declined) }
         // A reply can open with a thinking block, so the text is every text block, not the first block.

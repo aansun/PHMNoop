@@ -83,6 +83,8 @@ struct NunaAnyaSheet: View {
     @State private var loaded = false
     @State private var explanation: String?
     @State private var explaining = false
+    /// The day's figures, for Anya's button on Home.
+    @State private var home: NunaAnyaHome.Summary?
     @State private var turns: [ChatMessage] = []
     @State private var draft = ""
     @State private var sending = false
@@ -112,13 +114,17 @@ struct NunaAnyaSheet: View {
 
     private var module: NunaAnyaModule { NunaAnyaModule(context: context) }
 
+    /// Opened by the button on Home itself: not from a card, a metric or the Outlook.
+    private var isHome: Bool { floating && !outlook && cardLine == nil && metric == nil && seed == nil && context == "Today" }
+
     /// The Blood pressure page shows Lab Book figures: they go to a provider only while the Lab Book is shared with her.
     private var withholdsFigures: Bool { context == "blood pressure" && !coach.includeOnDeviceSignals }
 
     /// What the provider is told about this page: the local read and the notes Anya kept in this module (and only this one).
     private var notice: String? {
         if withholdsFigures { return nil }
-        return [read.map { NunaMark.plain($0.headline + ($0.detail.map { ". " + $0 } ?? "")) }, NunaAnyaMemory.summary(module)].compactMap { $0 }.joined(separator: "\n\n").nilIfEmpty
+        // On Home what she greeted with is what a follow-up answers.
+        return [read.map { NunaMark.plain($0.headline + ($0.detail.map { ". " + $0 } ?? "")) }, isHome ? explanation : nil, NunaAnyaMemory.summary(module)].compactMap { $0 }.joined(separator: "\n\n").nilIfEmpty
     }
 
     var body: some View {
@@ -143,7 +149,17 @@ struct NunaAnyaSheet: View {
             }
             if explanation == nil, let seed { explanation = seed }
             if outlook { await loadOutlook() }
+            if isHome { home = await NunaAnyaHome.summary(repo: repo, profile: profile) }
             loaded = true
+            // Anya greets once the figures are up; a kept greeting shows at once.
+            if isHome, let home, explanation == nil {
+                explanation = NunaAnyaHome.cachedGreeting(home, coach: coach)
+                if explanation == nil, NunaAnyaHome.greets, coach.isConfigured, coach.dataConsent {
+                    explaining = true
+                    explanation = await NunaAnyaHome.greeting(home, coach: coach)
+                    explaining = false
+                }
+            }
             // The review keeps its own figures: the provider's brief is a different shape, so it only answers the follow-ups.
             if outlook, !review { await explainOutlook() }
         }
@@ -478,6 +494,17 @@ extension NunaAnyaSheet {
     @ViewBuilder private var floatingMessage: some View {
         if outlook {
             outlookMessage
+        } else if isHome, let home {
+            VStack(alignment: .leading, spacing: 18) {
+                if explaining {
+                    HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(NunaAnyaType.thinking).foregroundStyle(.white.opacity(0.7)) }
+                } else if let explanation {
+                    NunaAnyaReply(text: explanation, font: NunaAnyaType.lead, lineSpacing: NunaAnyaType.leadSpacing, color: nil)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                NunaAnyaHomeCard(summary: home)
+                if turns.isEmpty, let explanation { feedbackRow(copying: AnyaActions.proseOnly(explanation), note: String(explanation.prefix(80))) }
+            }
         } else if explaining {
             HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(NunaAnyaType.thinking).foregroundStyle(.white.opacity(0.7)) }
         } else if let explanation {

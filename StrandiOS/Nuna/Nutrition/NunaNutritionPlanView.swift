@@ -152,12 +152,10 @@ struct NunaNutritionPlanView: View {
     private func askAnya() async {
         asking = true; suggestion = nil; askError = nil
         defer { asking = false }
-        let snapshot = await NunaNutritionSnapshot.build(repo: repo, profile: profile, includeLabBook: coach.includeOnDeviceSignals)
-        guard let reply = await coach.suggestNutritionPlan(snapshot: snapshot) else {
-            askError = String(localized: "Anya couldn't answer. Check her connection in More, then try again."); return
+        guard let spec = await NunaNutritionPlanAdvice.make(repo: repo, profile: profile, coach: coach) else {
+            askError = String(localized: "A plan needs your weight, height and age in your profile first."); return
         }
-        if let spec = AnyaActions.parse(reply).compactMap({ b -> AnyaPlanSpec? in if case .plan(let p) = b { return p } else { return nil } }).first { suggestion = spec }
-        else { askError = String(localized: "Anya didn't return a plan this time. Try again.") }
+        suggestion = spec
     }
 
     private func row<T: View>(_ label: LocalizedStringKey, @ViewBuilder trailing: () -> T) -> some View {

@@ -117,6 +117,11 @@ public struct AnyaPlanSpec: Equatable, Sendable {
     public var reasons: [String]
     /// What to watch or take to a clinician, one line each.
     public var cautions: [String]
+
+    public init(targetKcal: Double, paceKgPerWeek: Double?, proteinPerKg: Double?, fatShare: Double?, explanation: String?, reasons: [String], cautions: [String]) {
+        self.targetKcal = targetKcal; self.paceKgPerWeek = paceKgPerWeek; self.proteinPerKg = proteinPerKg; self.fatShare = fatShare
+        self.explanation = explanation; self.reasons = reasons; self.cautions = cautions
+    }
 }
 
 /// Results for the person to check before anything is saved to the Lab Book. `day` is the day of the whole report, used for a result without its own.
@@ -610,7 +615,7 @@ extension AnyaActions {
     ("Barbell Bench Press - Medium Grip", "Lat Pulldown", "Romanian Deadlift", "Dumbbell Lateral Raise"), never a nickname or a brand. Use ONLY equipment the person \
     has. Rep ranges by goal: strength 3 to 6 with 150 to 240 s rest, muscle 6 to 12 with 60 to 120 s, endurance or fat loss 12 to 20 with 30 to 60 s. For muscle, aim at \
     10 to 20 working sets a week for each big muscle, balance push and pull, and do not leave out legs or core unless told. Build on what they already do when it fits, and \
-    go easier on a muscle the summary shows is not recovered. Obey their instructions, including movements to avoid. Never invent weights. Put a note only where one short \
+    go easier on a muscle the summary shows is not recovered. Obey their instructions, including movements to avoid. Never invent weights. Do not say how many sets a muscle gets in a week: the app counts them. Put a note only where one short \
     cue helps. If the instructions mention pain, an injury or a medical condition, choose gentle, general movements and say in the paragraph to check with a clinician first. \
     If you cannot make a program from what was given, say what is missing and leave out the block.
     """

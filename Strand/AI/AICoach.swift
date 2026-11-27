@@ -331,15 +331,9 @@ final class AICoachEngine: ObservableObject {
     Answer general questions in general terms, and where an answer needs their numbers say what to do to get them: wear the strap overnight and sync in the morning.
     """
 
-    func buildSystemPrompt(compact: Bool) -> String {
-        let stored = UserDefaults.standard.string(forKey: Self.systemPromptKey)?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        // With no readings the bands (Recovery 67-100 and so on) are left out of the persona: a model with no figure to read quotes the bands as the person's own.
-        let base = compact ? (repo.days.isEmpty ? Self.compactPersonaNoData : Self.compactPersona) : ((stored?.isEmpty == false) ? stored! : Self.defaultSystemPrompt)
-        // iOS follows the user's selected app/system language. Keep the health vocabulary stable,
-        // but make the coach's prose match the active language instead of relying on the provider to guess.
+    /// The language Anya writes in, following the app's own. Empty for English.
+    nonisolated static func languageBlock() -> String {
         #if os(iOS)
-        let localizedLanguageOverlay: String = {
             let language = AppLanguage.activeLocale.identifier
                 .split(separator: "_", maxSplits: 1)
                 .first
@@ -357,14 +351,20 @@ final class AICoachEngine: ObservableObject {
             }
             // The pronouns a companion uses, where the language has a formal and a familiar pair.
             let address = language == "id" ? " Speak to the person as \"kamu\" and call yourself \"aku\"; never \"Anda\" or \"saya\"." : ""
-            return """
+            return "\n\n" + """
             LANGUAGE: Reply in natural, everyday \(languageName), the way people talk.\(address) Keep established health and product terms in their original form: Recovery, Strain, Sleep, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline, Apple Health, Strava, GPS, and Live Activity. Do not translate metric names or units.
             """
-        }()
-        let languagePrompt = localizedLanguageOverlay.isEmpty ? "" : "\n\n\(localizedLanguageOverlay)"
         #else
-        let languagePrompt = ""
+        return ""
         #endif
+    }
+
+    func buildSystemPrompt(compact: Bool) -> String {
+        let stored = UserDefaults.standard.string(forKey: Self.systemPromptKey)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        // With no readings the bands (Recovery 67-100 and so on) are left out of the persona: a model with no figure to read quotes the bands as the person's own.
+        let base = compact ? (repo.days.isEmpty ? Self.compactPersonaNoData : Self.compactPersona) : ((stored?.isEmpty == false) ? stored! : Self.defaultSystemPrompt)
+        let languagePrompt = Self.languageBlock()
         // === PHM OVERLAY (PHMNOOP) === fold the user's ACTIVE Coach memories into every request so
         // saved goals/events/preferences steer replies. Empty when none exist (prompt unchanged).
         // The Nuna experience draws charts, gym programs and workouts from fenced blocks; the Default one does not, so it never asks.
@@ -1409,24 +1409,48 @@ final class AICoachEngine: ObservableObject {
         return clean.isEmpty ? nil : clean
     }
 
-    /// Anya's suggestion for the nutrition plan. The whole health context goes first (profile, sleep, recovery, training and, when the person shares them,
-    /// the Lab Book and patterns), then the nutrition snapshot the screen put together. Nothing is applied: the reply carries a plan block the person reads and applies.
-    /// nil when Anya is off or not connected, or the provider did not answer.
-    func suggestNutritionPlan(snapshot: String) async -> String? {
-        guard CoachBriefScheduler.coachMasterEnabled, isConfigured, dataConsent, let key = resolvedKey else { return nil }
-        // No goal weight: the plan is maintenance at the estimated energy use. That is arithmetic, not judgement, so no model is asked (a small one kept a loss pace and
-        // invented an intake); with a goal, the model works the pace out below.
-        if let kcal = Self.maintenanceKcal(in: snapshot) { return Self.maintenancePlanReply(kcal: kcal) }
-        // The plan rests on the profile, the weight trend and the diary in the snapshot; the wearable summary only goes along when there is one.
-        var prompt = repo.days.isEmpty ? "" : await buildFullContext(compact: runsOnDevice)
-        prompt += "\n\n---\n\n" + AnyaActions.planInstruction + "\n\nNUTRITION SNAPSHOT:\n" + snapshot
-        if runsOnDevice, let guided = await AppleIntelligenceClient.nutritionPlan(rules: AnyaActions.planRules, prompt: (repo.days.isEmpty ? "" : await buildFullContext(compact: true)) + "\n\nNUTRITION SNAPSHOT:\n" + snapshot, maintenanceKcal: Self.maintenanceKcal(in: snapshot)) { return guided }
-        let reply = try? await callProvider(key: key, messages: [(.user, prompt)], compact: runsOnDevice)
-        let clean = reply?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        // A reply with no plan block in it (a small model drifts) is no plan: with no goal weight the plan is the maintenance one the snapshot already implies, so that is given instead.
-        let hasPlan = AnyaActions.parse(clean).contains { if case .plan = $0 { return true } else { return false } }
-        if !hasPlan, let kcal = Self.maintenanceKcal(in: snapshot) { return Self.maintenancePlanReply(kcal: kcal) }
+    /// Something built to rules is asked of Anthropic with more thinking; other providers answer as they always do.
+    private func build(key: String, system: String, prompt: String, image: String? = nil) async -> String? {
+        let messages: [(role: ChatMessage.Role, content: String)] = [(.user, prompt)]
+        var reply = ""
+        do {
+            if provider == .anthropic {
+                reply = try await AnthropicClient().send(key: key, model: model, systemPrompt: system, messages: messages, session: session,
+                                                         effort: AnthropicWire.buildEffort, inlineImage: image)
+            } else if let image {
+                try await provider.client.streamWithImage(key: key, model: model, systemPrompt: system, messages: messages, inlineImage: image, session: session) { reply += $0 }
+            } else {
+                reply = try await provider.client.send(key: key, model: model, systemPrompt: system, messages: messages, session: session)
+            }
+        } catch {
+            NSLog("[Anya] build failed: %@", String(describing: error))
+            return nil
+        }
+        let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
         return clean.isEmpty ? nil : clean
+    }
+
+    /// The few words Anya opens with when her button on Home is tapped, from the day's summary alone: given the whole context and its next step,
+    /// she turns a greeting into a plan. nil when she is off or not connected, or the provider did not answer.
+    func homeGreeting(summary: String) async -> String? {
+        guard CoachBriefScheduler.coachMasterEnabled, isConfigured, dataConsent, !repo.days.isEmpty, let key = resolvedKey else { return nil }
+        let task = "(From the app, not typed by the person: they have just opened you from Home. Write at most 45 words: one or two sentences on what matters about "
+            + "their day right now, then one short, simple question about how they feel or what they plan. The app shows the figures under your words, so quote "
+            + "at most one. If there are no readings for today, say so and say which day yours are from. Give no plan, session or bedtime unless asked. No greeting formula, no headings, no lists, no blocks.)"
+        let prompt = Self.timeLine() + "\n\n" + task + "\n\nWHAT THE SCREEN SHOWS:\n" + summary
+        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)], compact: runsOnDevice) else { return nil }
+        let clean = AnyaActions.proseOnly(reply).trimmingCharacters(in: .whitespacesAndNewlines)
+        return clean.isEmpty ? nil : clean
+    }
+
+    /// Puts a nutrition plan the app has worked out into words. Only the plan's own figures go to the provider. nil when Anya is off, not
+    /// connected, runs on the device (its window and habits are not up to quoting figures), or did not answer; the app then explains it itself.
+    func explainNutritionPlan(facts: String) async -> String? {
+        guard CoachBriefScheduler.coachMasterEnabled, isConfigured, dataConsent, provider != .appleIntelligence, let key = resolvedKey else { return nil }
+        let system = "You explain to someone the nutrition plan an app has already worked out for them. Every figure is decided: quote only figures from the list, "
+            + "change none, add none, and recommend nothing else (no exercise, no sleep, no foods). Say whether a share sits inside, below or above a range exactly as the "
+            + "list says. Three to five plain sentences, no headings, no lists, no markdown. Not medical advice, and do not say so." + Self.languageBlock()
+        return await build(key: key, system: system, prompt: "THE PLAN AND THE FIGURES BEHIND IT:\n" + facts)
     }
 
     /// Estimates the calories and macros of a meal the person described. Only their description goes to the provider, none of their health data, and nothing
@@ -1444,18 +1468,7 @@ final class AICoachEngine: ObservableObject {
         if imageBase64 != nil { prompt += "\n\nA photo of the meal is attached. Estimate each item you can see at the portion shown, and use the description for anything the photo does not show." }
         // A short system prompt of its own: the coach's (her persona, every block she can draw, the day's rhythm, memories) has nothing to do with a food
         // estimate, and it crowds a small model into answering in prose.
-        let system = Self.foodSystemPrompt
-        if let imageBase64, supportsImages {
-            var reply = ""
-            do {
-                try await provider.client.streamWithImage(key: key, model: model, systemPrompt: system, messages: [(.user, prompt)], inlineImage: imageBase64, session: session) { reply += $0 }
-            } catch { return nil }
-            let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
-            return clean.isEmpty ? nil : clean
-        }
-        guard let reply = try? await provider.client.send(key: key, model: model, systemPrompt: system, messages: [(.user, prompt)], session: session) else { return nil }
-        let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
-        return clean.isEmpty ? nil : clean
+        return await build(key: key, system: Self.foodSystemPrompt + Self.languageBlock(), prompt: prompt, image: supportsImages ? imageBase64 : nil)
     }
 
     /// A gym program built from a goal and instructions. The provider gets the brief the person filled in and a short summary of their training (never the
@@ -1467,9 +1480,7 @@ final class AICoachEngine: ObservableObject {
         prompt += "\n\nTRAINING SUMMARY:\n" + String(trainingSummary.prefix(1500))
         if let previous { prompt += "\n\nTHE PROGRAM TO CHANGE (keep everything the new instruction does not touch):\n" + String(previous.prefix(2500)) }
         if runsOnDevice, let guided = await AppleIntelligenceClient.program(rules: AnyaActions.programRules, prompt: prompt) { return guided }
-        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)], compact: runsOnDevice) else { return nil }
-        let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
-        return clean.isEmpty ? nil : clean
+        return await build(key: key, system: runsOnDevice ? buildSystemPrompt(compact: true) : systemPrompt, prompt: prompt)
     }
 
     /// A breathing exercise made to what the person typed. The provider gets those words and, if the screen has them, a line on how they are right now
@@ -1804,14 +1815,6 @@ final class AICoachEngine: ObservableObject {
         return ctx
     }
 
-    /// With no goal weight set, the plan is maintenance at the estimated energy use: that estimate, read from the snapshot ("ESTIMATED DAILY ENERGY USE: 2390 kcal"),
-    /// or nil when there is a goal (or no estimate), in which case the model's own target stands.
-    nonisolated static func maintenanceKcal(in snapshot: String) -> Int? {
-        guard snapshot.contains("GOAL WEIGHT: not set"),
-              let r = snapshot.range(of: #"ESTIMATED DAILY ENERGY USE: (\d+)"#, options: .regularExpression) else { return nil }
-        return Int(snapshot[r].filter(\.isNumber))
-    }
-
     /// "TODAY AGAINST YESTERDAY AND THE 30-DAY AVERAGE": the comparisons worked out in code and labelled, so the model never has to subtract, never takes a baseline for
     /// yesterday's figure, and never calls a figure that has a value "not available". Today is the newest day with a reading for that figure.
     enum CompareColumn { case recovery, hrv, rhr, sleep, strain, spo2, resp }
@@ -1874,15 +1877,6 @@ final class AICoachEngine: ObservableObject {
     nonisolated static func timeLine(_ now: Date = Date()) -> String {
         let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "HH:mm"
         return "THE TIME NOW: \(f.string(from: now)). Suggest nothing for an hour that has already passed; late in the evening, think of the evening and bedtime."
-    }
-
-    /// The maintenance plan for a person with no goal weight, written without a model: their estimated energy use, protein at 1.6 g per kg and fat at 28% of energy.
-    nonisolated static func maintenancePlanReply(kcal: Int) -> String {
-        let object: [String: Any] = ["targetKcal": kcal, "paceKgPerWeek": 0.0, "proteinPerKg": 1.6, "fatShare": 0.28,
-                                     "explanation": "With no goal weight set, this is maintenance: your estimated daily energy use of \(kcal) kcal, protein at 1.6 g per kg and fat at 28 percent of energy. Set a goal weight and I can set a pace.",
-                                     "reasons": ["Estimated daily energy use \(kcal) kcal, from your profile"], "cautions": [] as [String]]
-        let json = (try? JSONSerialization.data(withJSONObject: object)).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
-        return "A starting point from your profile.\n```anya-plan\n" + json + "\n```"
     }
 
     /// The day block without its NEXT STEP paragraph (the lines that follow it, such as patterns, are not part of this block).
@@ -2134,6 +2128,10 @@ final class AICoachEngine: ObservableObject {
         // Last ~14 days, newest first for readability.
         let recent = Array(days.suffix(recentDays)).reversed()
         if let current = latestBodyStateDay(in: days) {
+            let today = Repository.localDayKey(Date())
+            if current.day < today {
+                lines.append("NO READINGS FOR TODAY (\(today)) YET. The newest are from \(current.day): say which day a figure is from and never present it as today's.")
+            }
             lines.append("")
             lines.append(Self.bodyStateSummary(current: current, history: days))
         }

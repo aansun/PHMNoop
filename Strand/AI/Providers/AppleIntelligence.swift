@@ -251,24 +251,6 @@ struct GeneratedProgramOutline {
     var dayTitles: [String]
 }
 
-@available(iOS 26.0, macOS 26.0, *)
-@Generable
-struct GeneratedNutritionPlan {
-    @Guide(description: "3 to 6 plain sentences on how the target, pace and macros follow from this person's own figures (weight, trend, sleep, recovery, training, intake, any Lab Book value)")
-    var explanation: String
-    @Guide(description: "Daily kilocalories, never below 1200", .range(1200...4500))
-    var targetKcal: Int
-    @Guide(description: "Kilograms per week in tenths: -10 to 5, negative to lose", .range(-10...5))
-    var paceTenthsKgPerWeek: Int
-    @Guide(description: "Protein in tenths of a gram per kg a day: 8 to 24", .range(8...24))
-    var proteinTenthsPerKg: Int
-    @Guide(description: "Fat as a percent of energy: 20 to 35", .range(20...35))
-    var fatPercent: Int
-    @Guide(description: "One short line per data point the plan rests on", .maximumCount(5))
-    var reasons: [String]
-    @Guide(description: "What to watch or take to a clinician, one line each; empty when nothing", .maximumCount(3))
-    var cautions: [String]
-}
 #endif
 
 extension AppleIntelligenceClient {
@@ -338,24 +320,6 @@ extension AppleIntelligenceClient {
             guard !days.isEmpty, let block = json(["name": outline.name, "note": outline.note, "days": days] as [String: Any]) else { return nil }
             return outline.explanation + "\n```anya-program\n" + block + "\n```"
         } catch { NSLog("[AnyaGuided] program failed: %@", String(describing: error)); return nil }
-        #else
-        return nil
-        #endif
-    }
-
-    /// A nutrition plan as the line and `anya-plan` block the Strategy screen reads.
-    /// `maintenanceKcal` is set when the person has no goal weight: the plan is then maintenance at their estimated energy use, whatever the model wrote.
-    static func nutritionPlan(rules: String, prompt: String, maintenanceKcal: Int? = nil) async -> String? {
-        #if canImport(FoundationModels)
-        guard #available(iOS 26.0, macOS 26.0, *), case .available = SystemLanguageModel.default.availability else { return nil }
-        let llm = LanguageModelSession(instructions: rules)
-        do {
-            let p = try await llm.respond(to: prompt, generating: GeneratedNutritionPlan.self, options: GenerationOptions(maximumResponseTokens: 700)).content
-            let object: [String: Any] = ["targetKcal": maintenanceKcal ?? p.targetKcal, "paceKgPerWeek": maintenanceKcal == nil ? Double(p.paceTenthsKgPerWeek) / 10 : 0.0, "proteinPerKg": Double(p.proteinTenthsPerKg) / 10,
-                                         "fatShare": Double(p.fatPercent) / 100, "explanation": p.explanation, "reasons": p.reasons, "cautions": p.cautions]
-            guard let block = json(object) else { return nil }
-            return "A suggestion, worked out on this iPhone.\n```anya-plan\n" + block + "\n```"
-        } catch { NSLog("[AnyaGuided] plan failed: %@", String(describing: error)); return nil }
         #else
         return nil
         #endif

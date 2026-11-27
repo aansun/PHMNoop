@@ -17,6 +17,7 @@ struct NunaAnyaSettingsView: View {
     @AppStorage(AICoachEngine.responseLanguageKey) private var language = "app"
     @AppStorage(AICoachEngine.responseStyleKey) private var style = "balanced"
     @AppStorage("coachBrief.enabled") private var briefOn = false
+    @AppStorage(NunaAnyaHome.greetingKey) private var homeGreeting = true
     @AppStorage(AudioCoachingPreferences.enabledKey) private var voiceOn = false
     @StateObject private var memory = CoachMemoryStore()
     @State private var confirmDeleteAll = false
@@ -79,6 +80,7 @@ struct NunaAnyaSettingsView: View {
                         NunaListRow("Morning brief", subtitle: LocalizedStringKey(briefOn ? String(localized: "Every day at \(Self.clock(CoachBriefScheduler.timeMinutes))") : String(localized: "Off")), systemImage: "sunrise", showsChevron: true)
                     }.buttonStyle(.plain)
                 }
+                NunaSettingsSwitch("Greet me from Home", subtitle: "Opening Anya on Home sends today's figures to your AI provider", systemImage: "hand.wave", isOn: $homeGreeting)
                 NunaAnyaEveningCard()
                 NunaSettingsCard {
                     NavigationLink(value: NunaAnyaRoute.voiceCoach) {

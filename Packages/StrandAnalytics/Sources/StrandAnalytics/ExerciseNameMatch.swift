@@ -71,6 +71,12 @@ public enum ExerciseNameMatch {
         return !wanted.contains(own) && !(own == .machine && wanted.contains(.smith))
     }
 
+    /// Whether an entry needs equipment outside what the person has. An entry with nothing recorded, or body weight, needs none.
+    public static func needsOther(entryEquipment: String?, than allowed: Set<Equipment>) -> Bool {
+        guard let own = equipment(libraryValue: entryEquipment), own != .bodyweight else { return false }
+        return !allowed.contains(own)
+    }
+
     /// Words that make a different exercise of the same movement. "Single" and "one" say the same thing.
     private static let variations: Set<String> = ["incline", "decline", "one", "reverse", "alternate", "alternating", "close", "wide", "rear", "front", "behind",
                                                   "overhead", "stiff", "legged", "sumo", "twist", "preacher", "concentration", "bent", "upright", "romanian",

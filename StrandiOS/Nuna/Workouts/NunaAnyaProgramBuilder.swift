@@ -29,6 +29,15 @@ struct NunaProgramBrief: Equatable {
         var title: LocalizedStringKey {
             switch self { case .fullGym: "Full gym"; case .dumbbells: "Dumbbells only"; case .bodyweight: "Bodyweight only"; case .homeBarbell: "Home: barbell and dumbbells" }
         }
+        /// What the library's exercises may need; nil when anything goes.
+        var allowed: Set<ExerciseNameMatch.Equipment>? {
+            switch self {
+            case .fullGym: return nil
+            case .dumbbells: return [.dumbbell]
+            case .bodyweight: return []
+            case .homeBarbell: return [.barbell, .dumbbell, .ezBar]
+            }
+        }
         var words: String {
             switch self {
             case .fullGym: return "a full gym (barbells, dumbbells, cables, machines)"
@@ -69,11 +78,22 @@ enum NunaAnyaProgramNames {
 
     /// The program with each exercise renamed to the library's where there is one. A name the library does not have stays as Anya wrote it,
     /// and is then treated as the person's own exercise (muscles filled in, a page and history like any other).
-    static func resolve(_ spec: AnyaProgramSpec) -> AnyaProgramSpec {
+    /// An entry that needs equipment the person said they do not have is not taken: the written name stays, with "Dumbbell" put in front when
+    /// dumbbells are all there is and it did not say, so it cannot be read as the barbell lift later.
+    static func resolve(_ spec: AnyaProgramSpec, gear: NunaProgramBrief.Gear = .fullGym) -> AnyaProgramSpec {
         var out = spec
         for d in out.days.indices {
             for i in out.days[d].items.indices {
-                if let lib = library(for: out.days[d].items[i].exercise) { out.days[d].items[i].exercise = lib.name }
+                let written = out.days[d].items[i].exercise
+                guard let lib = library(for: written) else { continue }
+                if let allowed = gear.allowed, ExerciseNameMatch.needsOther(entryEquipment: lib.equipment, than: allowed) {
+                    if gear == .dumbbells, ExerciseNameMatch.equipment(inName: written).isEmpty {
+                        let named = "Dumbbell " + written
+                        out.days[d].items[i].exercise = library(for: named).map { ExerciseNameMatch.needsOther(entryEquipment: $0.equipment, than: allowed) ? named : $0.name } ?? named
+                    }
+                    continue
+                }
+                out.days[d].items[i].exercise = lib.name
             }
         }
         return out
@@ -233,7 +253,7 @@ struct NunaAnyaProgramBuilder: View {
             if let p = AnyaActions.parseProgram(from: r) { found = p; break }
         }
         if let found {
-            spec = NunaAnyaProgramNames.resolve(found)
+            spec = NunaAnyaProgramNames.resolve(found, gear: brief.gear)
             explanation = reply.map(AnyaActions.proseOnly)
             change = ""
         } else if let reply {
