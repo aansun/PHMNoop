@@ -79,7 +79,7 @@ The animations are short screen recordings of the app on sample data.
 <tr>
 <td valign="top">
 
-The home screen is built to be read in a few seconds, then explored.
+The home screen is built to be read in a few seconds, then explored. The app opens on the PHMN wordmark with a turning ring and shows Home once its figures are read.
 
 - **Three rings, pinned.** Recovery (how recovered you are), Strain (how much the day has taken) and Sleep (how well you slept). They shrink into a bar as you scroll. The Strain ring shows
   **today's target range**, worked out from your Recovery, as a grey stretch with a white mark where it starts.
@@ -137,6 +137,8 @@ The Sleep screen carries the whole night.
 - **Need and debt**: your personal need and the debt you carry, which fades night by night.
 - **The night ends where the strap stopped recording**, not where the session happened to close.
 - **Edit the sleep or a nap** and undo a delete for ten seconds. The **sleep planner** sets your wake time, the bedtime to aim for and the alarm; **body clock** and **wind down** have their own screens.
+- **My Schedule** gives each weekday its own alarm, time and goal. An **early wake**, off by default and still experimental, may buzz the strap in the hour before your wake time, once your sleep goal is reached or your Recovery so far is green.
+- **Beat rhythm** (off until you turn it on and agree) plots one beat against the next for last night, with a card under Body clock. It describes the figures and never names a condition.
 - Anya names an evening habit (alcohol, late caffeine, a late meal) as the cause of a poor night **only if your own nights show it**.
 
 </td>
@@ -159,8 +161,8 @@ The Sleep screen carries the whole night.
 - **Pick a sport** from a page with All, Strain, Recovery and Sleep tabs (pin up to eight), see a map of where you are, and choose targets: **time**, **distance** and a **heart-rate zone** are three targets, each on or off by itself.
 - The sheet shows your **current Strain**, the **estimate after the activity** and the **Activity strain** itself against the range that suits today, with Anya's suggested session as the default.
 - **Activity settings**: zone buzz on the strap, the audio coach, keep the screen on.
-- The **live screen** has a Strain tab with a target ring and a Heart rate tab with a zone ring round a disc that beats at your pace, and sport-specific tiles. The strap **buzzes when
-  you drift out of your zone**, and a time or distance target is announced once. **End** and **Discard** are WHOOP-style questions, and a running activity can only be left through End.
+- The **live screen** has a Strain tab with a target ring and a Heart rate tab with a zone ring round a disc that beats at your pace and the zone written large, and sport-specific tiles; swipe between the two. The strap **buzzes when
+  you drift out of your zone**, and a time or distance target is announced once and then reads **Completed**. **End** and **Discard** are WHOOP-style questions, and a running activity can only be left through End.
 - It survives the app being away: the workout and its targets are saved as it runs.
 - **Live Activity** on the Lock Screen and in the Dynamic Island. The Lock Screen has two designs, **Default** and **Banner** (a card with the clock, the PHMN mark, the heart rate and a bar of the five zones), chosen in Optional features.
 
@@ -182,7 +184,7 @@ The Sleep screen carries the whole night.
 - **One log for every sport**, drawn after WHOOP's: when it ran with a heart-rate curve and the zones, the route on a map if one was recorded, key statistics that fit the sport (pace for a run, speed for a ride, time and heart rate for a class) and the Strain it added with your 30-day average. **Tap a zone** and its stretches light up on the curve.
   A session that never reached the first zone gets a low-intensity log that says so.
 - **Anya reads the session** against your own last 30 days of the same sport.
-- **Treadmill** sessions get a distance estimated from steps and your height, and **Edit activity** lets you correct distance, time and more afterwards.
+- **Treadmill** sessions get a distance and pace estimated from steps and your height, marked as an estimate (the live screen says when it is still calculating), and **Edit activity** lets you correct distance, time and more afterwards.
 - **Auto-detect** offers a workout it found (and names a sport only on evidence) as an *Activity detected* row to process, **Add activity** logs one by hand, **History** lists them by week, and **Training load** shows the balance of your last weeks.
 - **Strava**: workouts found there with heart rate are offered in Today's activities, and a session can be sent to Strava. Export a session as a FIT file or its route as GPX; a strength session goes up with its sets, calories and heart rate.
 
@@ -277,7 +279,7 @@ The **Breathing** tab is laid out like the Strength Trainer: **Progress** (minut
 - **Techniques** with a step-by-step page, a photographic background and an aura, grouped by kind of breathing, with **Resonance** and **Calm me** as sessions of their own. Heart a technique to keep it in **My Exercises**.
 - **Anya makes custom breathing exercises**, and the audio cue is off, soft tones or Anya's voice; the timer follows the clock, so it stays right with the screen locked.
 - A **breathing advisor** that picks a goal (calm, sleep, focus, energise, recover) and one of the templates from your live heart rate, HRV, stress, recovery and the time of day, on the phone, never a forceful technique on its own.
-- A session with haptics and a tone, a **scrolling breath line** to follow, and a report; **End** on a paused session asks before it saves. Every session is logged as a recovery activity. **Wind down**, **smart alarm**, **nap detection** and **hydration** keep their own screens.
+- A session with a countdown, haptics and a tone, a **scrolling breath line** to follow, a full screen turned on its side, and a report; **End** on a paused session asks before it saves. Every session is logged as a recovery activity. **Wind down**, **smart alarm**, **nap detection** and **hydration** keep their own screens.
 
 </td>
 <td width="250" valign="top">
@@ -299,9 +301,10 @@ The **Health** tab holds the slow things.
 - **Fitness age**: a weekly **Body age** from nine inputs, each shown as the years it adds or takes away, with the **pace of aging** on a ruler from −1.0× to 3.0× and its own trend pages. Which inputs have data is shown, and an input without data is not guessed.
 - **Lab Book**: a ring of your markers by status, every marker as a card with its range from your own report, a page per marker with the readings over time, and one **Add a result** flow to type a result, import a file (a CSV template to fill in, or a FHIR file) or choose the marker. Weight and waist
   use the WHO reference when your report has none.
+- **Blood pressure**: the readings your cuff saves to Apple Health (copied, read-only) or that you type in, the latest pair on a gauge, a week and month chart and what the ranges mean. **Your readings and your data** puts a week of pressure beside sleep, Strain, weight, journal and breathing, and a reminder can ask for a morning and an evening reading. The strap does not measure blood pressure.
 - **Health monitor**: your vitals (respiration, blood oxygen, resting heart rate, HRV, temperature) against your own range, calibrated over seven nights and settled at fourteen; **Stress monitor**: today's stress in three parts (total, outside activity, asleep) once 14 nights are in.
 - **Vital signs**: live heart rate on a timeline of the day, and an **early warning** that watches for a body under strain without saying more than the numbers show.
-- **Weight** and body composition (type a measurement or import it), **VO₂ max** (estimated, or typed in), **mood** check-ins, **menstrual cycle** and a rhythm view.
+- **Weight** and body composition (type a measurement or import it), **VO₂ max** (estimated, or typed in), **mood** check-ins and **menstrual cycle**.
 - **Nutrition**: what is left to eat today in a ring, protein, carbs and fat against your targets, and a diary by meal. Add food by typing the numbers, from saved or recent foods, or by telling Anya (text or photo). **Strategy** sets a pace, a daily target and the macros,
   shows the week against the target, and offers a weekly check-in. Import from Cronometer or MacroFactor is in the settings.
 - **Achievements**: a level, your data streak, your best and lowest days.
@@ -379,7 +382,7 @@ All off by default, all with your own keys, none sends anything until you ask.
 
 | Connection | What it does |
 |---|---|
-| **Apple Health** | Reads steps, weight, waist and more; writes steps and workouts back. On a sideloaded free-ID build HealthKit is not available, see [docs/SIGNING.md](docs/SIGNING.md) |
+| **Apple Health** | Reads steps, weight, waist, blood pressure and more; writes steps and workouts back. On a sideloaded free-ID build HealthKit is not available, see [docs/SIGNING.md](docs/SIGNING.md) |
 | **Strava** | Uploads GPS, treadmill and gym sessions, by hand or automatically. You create a Strava API app and enter its Client ID and Secret, kept in the Keychain. Needs Strava premium |
 | **Hevy** | Imports workouts and routines, read-only. The app never writes to Hevy. The Hevy API is part of Hevy Pro |
 | **Weather and air** | OpenWeather and IQAir, your own keys. Only your place, rounded to about a kilometre, is sent |
@@ -391,7 +394,7 @@ All off by default, all with your own keys, none sends anything until you ask.
 <tr>
 <td valign="top">
 
-The **More** tab is the settings hub, laid out after WHOOP's: **Account and settings** (My Account, Device Settings, App Settings, Privacy Settings), **Support** (How it works, What's new, Feedback, About), a search for the individual setting (type
+The **More** tab is the settings hub, laid out after WHOOP's: **Account and settings** (My Account, Device Settings, App Settings, Privacy Settings), **Support** (How it works, What's new, Feedback, About, and a **Ko-fi** button under them), a search for the individual setting (type
 "live activity" and it opens the right switch) and the app version at the bottom. Choices are drop-downs and every setting is one card.
 
 - **My Account** has your profile and levels, **Achievements**, your **persona** (age and sex; weight and height are read from Apple Health), your **targets** and your **heart-rate zones** with the maximum heart rate.
@@ -403,7 +406,7 @@ The **More** tab is the settings hub, laid out after WHOOP's: **Account and sett
     heart-rate zone coaching, a stress check with a minute of guided breathing, a **sitting reminder** inside the hours you choose, a **strap off-body** reminder after ten minutes, and the **Siri and Shortcuts** actions.
   - *Optional features*: water tracker, **auto-detect workouts** (it only suggests, never saves on its own), journal reminder, **screen on during workouts**, Live Activity, screen on while syncing, and cycle awareness (only on this iPhone).
   - *Application*: which of vital signs, stress, sleep, water, lab book, nutrition, nap, Strength Trainer and Trends are shown.
-- **Advanced and experiments**: the Strain method, continuous overnight HRV, power saving, **Experiments** (Rhythm, Live Sessions, sleep staging V2, an estimated SpO₂, wake refinement from motion, a personal stress baseline and the **WHOOP 5/MG wake alarm**), and a **Test Centre** for diagnostics.
+- **Advanced and experiments**: the Strain method, continuous overnight HRV, power saving, **Experiments** (Beat rhythm, Live Sessions, sleep staging V2, an estimated SpO₂, wake refinement from motion, a personal stress baseline and the **WHOOP 5/MG wake alarm**), and a **Test Centre** for diagnostics.
 - **Data and Privacy**: **Data and integrations**, **Backup** and **Privacy**.
 - **Support**: **How it works**, **What's new**, **Feedback** (opens a GitHub issue, see below) and **About** with the open-source notices.
 
@@ -431,6 +434,7 @@ The **More** tab is the settings hub, laid out after WHOOP's: **Account and sett
 - **Import** WHOOP CSV and Apple Health exports, **back up** and restore to a folder (the backup carries what PHMN keeps outside its database too), **export** a PDF report of your trends, and export a session as FIT or GPX.
 - **Privacy** lists exactly what can leave the phone and its live state: a text summary to an AI provider (and the words or photo of a meal you ask Anya to estimate), Strava, Apple Health, weather and air, and your own exports and backups, and nothing else. It also opens iOS Settings for every permission,
   and can delete the Apple Health data PHMN imported without touching the strap's.
+- The **Ko-fi** button opens the support page in your browser. The picture is part of the app, so nothing is asked of Ko-fi until you tap it.
 - **Feedback** has no service behind it. *Share feedback* and *Report a problem* open a new issue on this repository in your browser, with its outline started for you; you write the rest and send it on GitHub, so you need a GitHub account. The app adds only its version, your iOS version, the model of your iPhone and the language,
   never health data, and makes no contact with GitHub until you tap a button.
 - **Updates.** Once a day, after onboarding and the terms, the app reads the version number of the latest release on this repository (nothing about you is sent) and puts a row in the bell when a newer one exists. It cannot install anything: a sideloader does that. Turn the daily check off and it makes no request at all.
@@ -449,6 +453,7 @@ PHMN adds several calculations on top of NOOP's, and each one is written down wi
 - **Resting heart rate** as the mean of the night's longest session, with its limits stated.
 - **Sleep**: where a night ends, how debt builds, and when a habit is named as a cause.
 - **Nutrition**: the trend weight, what the body spends, the daily target and macros, the weekly check-in, and the WHO references an Anya plan is shown against. **Lab Book ranges** and where a WHO reference stands in for one.
+- **Blood pressure** beside your other data, and the **early wake** decision.
 - **Workout detection**, **training load**, **readiness**, **treadmill distance**, **weather and air advice** and the **breathing advisor**.
 
 ---

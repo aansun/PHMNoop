@@ -12,7 +12,7 @@ showing a number.
 Contents: [Effort](#effort) · [Effort target and plan](#effort-target-and-plan) · [Session reads](#session-reads) ·
 [Resting heart rate](#resting-heart-rate) · [Sleep](#sleep) · [Training load](#training-load-and-readiness) ·
 [Treadmill distance](#treadmill-distance) · [Body age](#body-age) · [Pace of aging](#pace-of-aging) · [Stress](#stress) · [Workout detection](#workout-detection) · [Weather and air](#weather-and-air) ·
-[Breathing](#breathing) · [Nutrition](#nutrition) · [Lab Book ranges](#lab-book-ranges) · [Ranges and colours](#ranges-and-colours)
+[Breathing](#breathing) · [Nutrition](#nutrition) · [Lab Book ranges](#lab-book-ranges) · [Blood pressure](#blood-pressure) · [Early wake](#early-wake) · [Ranges and colours](#ranges-and-colours)
 
 ---
 
@@ -145,7 +145,7 @@ A treadmill gives the strap no GPS and no speed, but it counts steps. Distance =
 - walking: 0.413 of your height;
 - running: rising from 0.413 at 110 steps a minute to 0.70 at 180, linearly by cadence.
 
-It needs at least 50 steps, 30 seconds and a height between 120 and 230 cm, and you can replace it with the treadmill's own reading afterwards. Code: `TreadmillDistance`.
+It needs at least 50 steps, 30 seconds and a height between 120 and 230 cm, and you can replace it with the treadmill's own reading afterwards. While a session runs, the higher of the strap's and the phone's step counts is used. Code: `TreadmillDistance`.
 
 ## Body age
 
@@ -230,6 +230,16 @@ A reading is placed against the range **copied from your own report**; PHMN ship
 - **Waist**: below 94 cm for men and 80 cm for women (WHO expert consultation, 2008), by the sex on your profile.
 
 A range from your own report always wins over these. They apply to kg and cm only; a reading in another unit has no reference rather than a converted one. Code: `WhoBodyReference`.
+
+## Blood pressure
+
+The readings are your cuff's, from Apple Health or typed in; PHMN measures none. A pair is placed in a general adult range: **normal** under 120 and under 80, **above ideal** 120 to 139 or 80 to 89, **high** 140 or more or 90 or more, **very high** 180 or more or 120 or more, and **low** under 90 or under 60. These are not a diagnosis.
+
+Beside your other data (sleep, Strain, weight, journal) the comparison is plain arithmetic: one mean a day, so a day measured five times weighs no more than a day measured once, then the mean of the days on each side. A level such as hours slept is split at the middle of your own days. A side needs **5 days** before anything is said (it is marked *early* under 10), and a gap under **3** systolic and **2** diastolic counts as none, as does one where the two figures point opposite ways. Around a breathing session, a reading counts as before or after when taken within 30 minutes of it. It says which side read higher, never why. Code: `PressureLinks`.
+
+## Early wake
+
+Off by default and experimental. The wake time stays armed on the strap; this only ever brings the buzz forward, within the **hour** before it and not in its last 2 minutes. The night is read from the data the strap has handed over so far, which must be no older than **20 minutes**. With *sleep goal*, it buzzes once the sleep so far reaches your chosen share of your sleep need; with *green*, once there are at least **4 hours** of sleep and Recovery on the night so far is 67 or more. Both figures are estimates that later data can move. Code: `SmartWake`.
 
 ## Ranges and colours
 
