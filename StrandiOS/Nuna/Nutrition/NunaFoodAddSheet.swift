@@ -330,13 +330,15 @@ struct NunaFoodAddSheet: View {
         let image = coach.supportsImages ? photoBase64 : nil
         // A small on-device model now and then answers in prose; one more try with the same words is usually enough.
         var spec: AnyaFoodSpec?
-        var answered = false
+        var answered = false, noFood = false
         for _ in 0..<2 {
             guard let reply = await coach.estimateFood(description, imageBase64: image) else { continue }
             answered = true
             if let f = AnyaActions.parseFood(from: reply) { spec = f; break }
+            if AnyaActions.namesNoFood(reply) { noFood = true; break }
         }
         if let spec { estimate = spec }
+        else if noFood, image != nil { estimateError = String(localized: "Anya sees no food or drink in this photo. Try another one, or type what you ate.") }
         else if answered { estimateError = String(localized: "Anya couldn't read that as food. Try naming each item and its portion.") }
         else { estimateError = String(localized: "Anya couldn't answer. Check her connection in More, then try again.") }
     }

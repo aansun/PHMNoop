@@ -163,5 +163,8 @@ final class AnyaFoodFallbackTests: XCTestCase {
         XCTAssertEqual(AnyaActions.parseFood(from: "Estimate: \(items) done")?.meal, "lunch")
         XCTAssertNil(AnyaActions.parseFood(from: "I can't tell what that is."))
         XCTAssertNil(AnyaActions.parseFood(from: "{\"other\":1}"))
+        XCTAssertTrue(AnyaActions.namesNoFood("Only flowers here.\n```anya-food\n{\"items\":[]}\n```"))
+        XCTAssertFalse(AnyaActions.namesNoFood("I can't tell what that is."), "prose is worth a second try")
+        XCTAssertFalse(AnyaActions.namesNoFood("```anya-food\n\(items)\n```"))
     }
 }

@@ -435,6 +435,15 @@ public enum AnyaActions {
         return food(obj)
     }
 
+    /// Whether a reply is a food answer that names nothing: its list of items is there and empty, as for a photo with no food in it. Asking again
+    /// would only send the same words and picture twice.
+    public static func namesNoFood(_ reply: String) -> Bool {
+        guard let open = reply.firstIndex(of: "{"), let close = reply.lastIndex(of: "}"), open < close,
+              let data = String(reply[open...close]).data(using: .utf8),
+              let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], let items = obj["items"] as? [Any] else { return false }
+        return items.isEmpty
+    }
+
     // MARK: Parsing a reply
 
     /// The kinds of block a fence may carry, by the name after `anya-`.

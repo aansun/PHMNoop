@@ -9918,5 +9918,6 @@
  "HRV down %lld ms on the night before": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "HRV turun %lld ms dari malam sebelumnya"}}}},
  "No readings for today yet. Recovery on %@ was %lld%%": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum ada data hari ini. Recovery %1$@ adalah %2$lld%%"}}}},
  "Greet me from Home": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sapa aku dari Home"}}}},
- "Opening Anya on Home sends today's figures to your AI provider": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membuka Anya di Home mengirim angka hari ini ke penyedia AI-mu"}}}}
+ "Opening Anya on Home sends today's figures to your AI provider": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membuka Anya di Home mengirim angka hari ini ke penyedia AI-mu"}}}},
+ "Anya sees no food or drink in this photo. Try another one, or type what you ate.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Anya tidak melihat makanan atau minuman di foto ini. Coba foto lain, atau ketik apa yang kamu makan."}}}}
 }, "version":"1.0" }
