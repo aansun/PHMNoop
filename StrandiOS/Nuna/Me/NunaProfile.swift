@@ -367,7 +367,7 @@ struct NunaProfileView: View {
                 }
             }.buttonStyle(.plain)
             Button { router.pendingMetricKey = "body_age" } label: {
-                profileCard(title: "Fitness age", subtitle: fitnessAge.map { String(localized: "\(Int($0.rounded())) years") } ?? String(localized: "Needs a few more days of data before it can be worked out."),
+                profileCard(title: "Body age", subtitle: fitnessAge.map { String(localized: "\(Int($0.rounded())) years") } ?? String(localized: "Needs a few more days of data before it can be worked out."),
                             chevron: true) {
                     Circle().fill(RadialGradient(colors: [Color(red: 0.2, green: 0.2, blue: 0.22), Color(red: 0.62, green: 0.28, blue: 0.75).opacity(0.85)], center: .center, startRadius: 12, endRadius: 36))
                         .overlay(Circle().strokeBorder(Color(red: 0.75, green: 0.35, blue: 0.9), lineWidth: 1.5)).frame(width: 66, height: 66)

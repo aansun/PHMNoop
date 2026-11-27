@@ -30,7 +30,7 @@ struct NunaAboutView: View {
             }
             .padding(.top, 10)
             VStack(spacing: 12) {
-                Text("PHMN reads your strap on this iPhone, with Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for fitness age.")
+                Text("PHMN reads your strap on this iPhone, with Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for the VO₂max estimate.")
                 Text("Not a medical device. It does not diagnose or detect disease and does not replace a professional. Not affiliated with WHOOP, Inc.")
             }
             .font(.nuna(size: 12.5, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textMuted).multilineTextAlignment(.center).textCase(nil)

@@ -1,10 +1,10 @@
-# Fitness age (Body age)
+# Body age
 
 A weekly number you can read at a glance, and the **pace of aging** that follows from it.
 
 ## What it is
 
-Fitness age is a **wellness comparison**, not a biological or clinical age. It answers one question: *"How do my habits and fitness of the last seven days compare with the typical person of my age, expressed in years?"*
+Body age is a **wellness comparison**, not a biological or clinical age. It answers one question: *"How do my habits and fitness of the last seven days compare with the typical person of my age, expressed in years?"*
 Below your real age, you are doing better than typical; above it, worse. It says nothing about how old your body, cells or organs are, and it carries no medical meaning.
 
 It is worked out **on the phone**, from data the app already holds. Nothing is sent anywhere.
@@ -49,7 +49,7 @@ The engine carries a **±5-year band** (`bandYears`) as the honest size of its e
 
 ## The week and the number
 
-- **The latest seven days** make the number the Fitness age page and the Health tab show; both read it through one function, so they cannot differ.
+- **The latest seven days** make the number the Body age page and the Health tab show; both read it through one function, so they cannot differ.
 - **Weekly, on Saturday.** The weekly job stores the week's Body age under that Saturday (`body_age` in `metricSeries`, with `vitality` beside it for the computed source). The trend pages and the pace read those weekly values.
 - The week is read by one reader (`VitalityWeekReader`) for the stored number, the page's breakdown and the Health tab, so the number stored, the factors listed and the figure drawn are made from the same week the same way.
 

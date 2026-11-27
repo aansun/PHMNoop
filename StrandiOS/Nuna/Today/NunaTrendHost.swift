@@ -56,7 +56,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .debt: return "Sleep debt"
         case .vo2max: return "VO₂ max"
         case .skinTemp: return "Skin temperature"
-        case .fitnessAge: return "Fitness age"
+        case .fitnessAge: return "Body age"
         case .paceOfAging: return "Pace of aging"
         case .weight: return "Weight"
         case .leanBodyMass: return "Lean body mass"

@@ -154,8 +154,8 @@ enum PHMNChangelog {
             date: "November 2026",
             items: [
                 "**Recovery, Strain, Sleep.** Three scores, three names you already know, and a page behind every number that shows how it is made.",
-                "**Body age.** Nine habits, each shown as the years it gives or takes, with a pace of aging on top. Which one costs you most? It replaces Fitness age and Vitality, and your history is rebuilt the first time you open it.",
-                "**A Health tab.** Fitness age, Health monitor, Stress monitor and Lab Book: the slow things in one place.",
+                "**Body age.** Nine habits, each shown as the years it gives or takes, with a pace of aging on top. Which one costs you most? It replaces the earlier age score and Vitality, and your history is rebuilt the first time you open it.",
+                "**A Health tab.** Body age, Health monitor, Stress monitor and Lab Book: the slow things in one place.",
                 "**Stress, 0 to 3.** Heart rate and HRV against your own baseline, split into total, outside activity and asleep. It switches on after 14 nights.",
                 "**Fairer Strain.** Light and intermittent work finally shows, and a desk day nets almost nothing.",
                 "**Home, rebuilt.** Highlights, a Day In Review, tonight's sleep, your journal, your plan and a dashboard that is yours.",
@@ -223,7 +223,7 @@ enum PHMNChangelog {
             ],
             fixes: [
                 "**Light stays light.** Switching to Light in the Nuna look is no longer undone.",
-                "**Score rings** keep a full track in every style and theme, and the Fitness age orb reads on light themes.",
+                "**Score rings** keep a full track in every style and theme, and the Body age orb reads on light themes.",
                 "**Scrolling** on Today and Trends is smoother, and the tab bar shows only on the main page of a tab.",
                 "**The live workout** shows End only while paused, and switches between Effort and Heart rate at once.",
             ]

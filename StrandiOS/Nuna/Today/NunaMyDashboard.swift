@@ -107,7 +107,7 @@ extension NunaTrendPage {
         case .stressTotal: return String(localized: "Total day stress")
         case .stressNonActivity: return String(localized: "Non activity stress")
         case .stressSleep: return String(localized: "Sleep stress")
-        case .fitnessAge: return String(localized: "Fitness age")
+        case .fitnessAge: return String(localized: "Body age")
         case .paceOfAging: return String(localized: "Pace of aging")
         }
     }

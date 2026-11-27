@@ -88,7 +88,7 @@ struct NunaFitnessAgeTrendView: View {
         let pts = inWindow
         let average: Double? = pts.isEmpty ? nil : pts.map(\.value).reduce(0, +) / Double(pts.count)
         NunaDetailScreen("Trend view", centersTitle: true) {
-            NunaTrendNameBox(icon: isPace ? NunaIcons.paceOfAging : NunaIcons.fitnessAge, title: isPace ? "Pace of aging" : "Fitness age")
+            NunaTrendNameBox(icon: isPace ? NunaIcons.paceOfAging : NunaIcons.fitnessAge, title: isPace ? "Pace of aging" : "Body age")
             header(pts, average)
             Text(verbatim: sentence(pts, average)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                 .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
@@ -136,26 +136,26 @@ struct NunaFitnessAgeTrendView: View {
 
     private func sentence(_ pts: [Point], _ average: Double?) -> String {
         guard let average else {
-            return isPace ? String(localized: "No pace of aging in this period yet. It needs at least six weekly fitness age readings over five weeks.")
-                          : String(localized: "No fitness age in this period yet. Wear your strap day and night to see trends.")
+            return isPace ? String(localized: "No pace of aging in this period yet. It needs at least six weekly Body age readings over five weeks.")
+                          : String(localized: "No Body age in this period yet. Wear your strap day and night to see trends.")
         }
         if isPace {
             if average > 1.05 { return String(localized: "Your pace of aging averaged \(fmt(average))x in this period: you aged faster than the calendar.") }
             if average < 0.95 { return String(localized: "Your pace of aging averaged \(fmt(average))x in this period: you aged more slowly than the calendar.") }
             return String(localized: "Your pace of aging averaged \(fmt(average))x in this period: you aged at about the same rate as the calendar.")
         }
-        guard showsCalendar else { return String(localized: "Your fitness age averaged \(fmt(average)) in this period.") }
+        guard showsCalendar else { return String(localized: "Your Body age averaged \(fmt(average)) in this period.") }
         let calendar = pts.map { calendarAge(on: $0.date) }.reduce(0, +) / Double(pts.count)
         let gap = average - calendar
-        if abs(gap) < 0.5 { return String(localized: "Your fitness age averaged \(fmt(average)) in this period, about the same as your calendar age.") }
-        return gap > 0 ? String(localized: "Your fitness age averaged \(fmt(average)) in this period, \(fmt(gap)) years older than your calendar age.")
-                       : String(localized: "Your fitness age averaged \(fmt(average)) in this period, \(fmt(-gap)) years younger than your calendar age.")
+        if abs(gap) < 0.5 { return String(localized: "Your Body age averaged \(fmt(average)) in this period, about the same as your calendar age.") }
+        return gap > 0 ? String(localized: "Your Body age averaged \(fmt(average)) in this period, \(fmt(gap)) years older than your calendar age.")
+                       : String(localized: "Your Body age averaged \(fmt(average)) in this period, \(fmt(-gap)) years younger than your calendar age.")
     }
 
     private var legend: some View {
         HStack(spacing: 18) {
             Spacer(minLength: 0)
-            legendItem(tint, "Fitness age")
+            legendItem(tint, "Body age")
             legendItem(NunaPalette.textPrimary, "Calendar age")
         }
         .padding(.horizontal, 2).padding(.top, 4)
@@ -172,8 +172,8 @@ struct NunaFitnessAgeTrendView: View {
         NunaCard {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("View your fitness age").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                    Text("See your latest fitness age and pace of aging, and what drives them.").font(.nunaWords(size: 14)).tracking(0).textCase(nil)
+                    Text("View your Body age").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    Text("See your latest Body age and pace of aging, and what drives them.").font(.nunaWords(size: 14)).tracking(0).textCase(nil)
                         .foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
@@ -277,7 +277,7 @@ struct NunaFitnessAgeTrendView: View {
             }
         }
         .frame(height: 340)
-        .accessibilityLabel(Text(isPace ? "Pace of aging" : "Fitness age"))
+        .accessibilityLabel(Text(isPace ? "Pace of aging" : "Body age"))
     }
 
     /// A figure beside its point, kept inside the plot so the newest one is never cut off at the right edge.

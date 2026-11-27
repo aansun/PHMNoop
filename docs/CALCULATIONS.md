@@ -149,7 +149,7 @@ It needs at least 50 steps, 30 seconds and a height between 120 and 230 cm, and 
 
 ## Body age
 
-The fitness age the iOS app shows is a **Body age**: the age plus the years that nine inputs add or take away, each read against a break-even (resting heart rate 60, steps 7,000, sleep 7.5 h, regularity 70%, zones 1 to 3 at 92 min a week,
+The **Body age** the iOS app shows is the age plus the years that nine inputs add or take away, each read against a break-even (resting heart rate 60, steps 7,000, sleep 7.5 h, regularity 70%, zones 1 to 3 at 92 min a week,
 zones 4 to 5 at 10 min, strength at 45 min, lean body mass 78%, and the median VO₂ max for your age and sex). The inputs are combined as log-hazards, shrunk by 0.75 for their overlap and turned into years by the Gompertz doubling time of 8 years.
 The whole model, with its sources and its limits, is in **[FITNESS_AGE.md](FITNESS_AGE.md)**. Code: `VitalityEngine`, `VitalityWeekReader`, `BodyAgeHistory`.
 

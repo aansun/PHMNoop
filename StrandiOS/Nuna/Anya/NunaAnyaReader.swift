@@ -581,7 +581,7 @@ enum NunaAnyaReader {
                     NunaAnyaQuestion(title: String(localized: "Summarise my day"), prompt: "Summarise my day so far in a few sentences, using my numbers.")]
         case .health:
             return [NunaAnyaQuestion(title: String(localized: "Explain my HRV"), prompt: "Explain what my HRV is telling me today, compared with my own baseline."),
-                    NunaAnyaQuestion(title: String(localized: "What is fitness age?"), prompt: "What is fitness age and how is mine worked out in this app?"),
+                    NunaAnyaQuestion(title: String(localized: "What is Body age?"), prompt: "What is Body age and how is mine worked out in this app?"),
                     NunaAnyaQuestion(title: String(localized: "Check my lab results"), prompt: "Look at my Lab Book markers and tell me neutrally what stands out.")]
         case .sleep:
             return [NunaAnyaQuestion(title: String(localized: "Why did I wake up?"), prompt: "Why might I have woken up several times last night? Use my sleep numbers."),

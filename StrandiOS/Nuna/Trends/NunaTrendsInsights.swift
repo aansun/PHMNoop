@@ -216,7 +216,7 @@ enum NunaSignals {
         .init(id: "resp_rate", source: "my-whoop", title: String(localized: "Respiratory rate"), group: "Breathing and oxygen", unit: "/min", digits: 1),
         .init(id: "skin_temp", source: "my-whoop", title: String(localized: "Skin temperature"), group: "Body", unit: "°C", digits: 1),
         .init(id: "weight", source: "apple-health", title: String(localized: "Weight"), group: "Body", unit: "kg", digits: 1),
-        .init(id: "body_age", source: "my-whoop", title: String(localized: "Fitness age"), group: "Body", unit: "yr", digits: 0),
+        .init(id: "body_age", source: "my-whoop", title: String(localized: "Body age"), group: "Body", unit: "yr", digits: 0),
         .init(id: "steps_est", source: "my-whoop", title: String(localized: "Steps"), group: "Activity", unit: "", digits: 0),
         .init(id: "stress", source: "my-whoop", title: String(localized: "Stress"), group: "Activity", unit: "/ 3", digits: 1),
         .init(id: "sleep_total_min", source: "my-whoop", title: String(localized: "Sleep duration"), group: "Sleep", unit: "min", digits: 0),
