@@ -181,14 +181,23 @@ extension NunaDetailScreen {
 struct NunaPageArrival: ViewModifier {
     let ready: Bool
     var patience: Double = 1
+    /// Turns a spinner while a long read is still going, for a page that waits long enough to look stuck.
+    var spins = false
     @State private var overdue = false
+    @State private var slow = false
 
     func body(content: Content) -> some View {
         content
             // Only the fade is animated: the layout settling at the same moment is not.
             .animation(.easeOut(duration: 0.22)) { $0.opacity(ready || overdue ? 1 : 0) }
+            .overlay {
+                if spins, slow, !ready, !overdue { ProgressView().tint(NunaPalette.textSecondary) }
+            }
             .task {
-                try? await Task.sleep(nanoseconds: UInt64(patience * 1_000_000_000))
+                // A read that is over within a second shows no spinner at all.
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                slow = true
+                try? await Task.sleep(nanoseconds: UInt64(max(patience - 1, 0) * 1_000_000_000))
                 overdue = true
             }
     }
