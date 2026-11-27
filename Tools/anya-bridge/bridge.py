@@ -134,28 +134,34 @@ class Bridge:
         print(time.strftime("%H:%M:%S"), text, flush=True)
 
     @staticmethod
-    def text_of(content):
+    def text_of(content, note_images=True):
         if isinstance(content, str):
             return content
         parts = []
         for block in content or []:
             if block.get("type") == "text":
                 parts.append(block.get("text", ""))
-            elif block.get("type") == "image":
-                parts.append("[an image was attached; this test bridge cannot pass images on]")
+            elif block.get("type") == "image" and note_images:
+                parts.append("[an image was attached to this earlier message]")
         return "\n".join(parts)
 
     def prompt_of(self, messages):
         """`claude -p` takes one prompt, so earlier turns are written out above the new one."""
         if len(messages) == 1:
-            return self.text_of(messages[0]["content"])
+            return self.text_of(messages[0]["content"], note_images=False)
         earlier = []
         for m in messages[:-1]:
             text = self.text_of(m["content"]).strip()
             if text:
                 earlier.append(("Person: " if m["role"] == "user" else "You (Anya): ") + text)
         return ("<conversation_so_far>\n" + "\n\n".join(earlier) + "\n</conversation_so_far>\n\n"
-                "Continue it: answer the person's new message below, as Anya.\n\n" + self.text_of(messages[-1]["content"]))
+                "Continue it: answer the person's new message below, as Anya.\n\n" + self.text_of(messages[-1]["content"], note_images=False))
+
+    @staticmethod
+    def images_of(messages):
+        """The pictures sent with the new message. A picture from an earlier turn is only mentioned."""
+        content = messages[-1].get("content") if messages else None
+        return [b for b in content if b.get("type") == "image"] if isinstance(content, list) else []
 
     def start(self, body):
         tools = body.get("tools") or []
@@ -166,6 +172,11 @@ class Bridge:
         command = ["claude", "-p", "--model", model, "--effort", effort, "--system-prompt", system,
                    "--tools", "", "--strict-mcp-config", "--setting-sources", "", "--disable-slash-commands", "--no-session-persistence",
                    "--output-format", "stream-json", "--include-partial-messages", "--verbose"]
+        messages = body.get("messages") or []
+        images = self.images_of(messages)
+        if images:
+            # Pictures only travel as whole messages, one JSON line each.
+            command += ["--input-format", "stream-json"]
         if tools:
             mcp = {"mcpServers": {"anya": {"command": sys.executable, "args": [
                 os.path.abspath(__file__), "--mcp", "http://127.0.0.1:%d/_mcp/%s" % (self.port, session.id)]}}}
@@ -177,9 +188,13 @@ class Bridge:
                                            stderr=subprocess.PIPE, text=True)
         with self.lock:
             self.sessions[session.id] = session
-        prompt = self.prompt_of(body.get("messages") or [])
+        prompt = self.prompt_of(messages)
         if self.show:
-            self.log("--- system (%d chars)\n%s\n--- prompt\n%s" % (len(system), system, prompt))
+            sizes = ", ".join("%d KB" % (len((b.get("source") or {}).get("data", "")) * 3 // 4 // 1024) for b in images)
+            self.log("--- system (%d chars)\n%s\n--- prompt%s\n%s" % (len(system), system, " (pictures: %s)" % sizes if images else "", prompt))
+        if images:
+            line = {"type": "user", "message": {"role": "user", "content": images + [{"type": "text", "text": prompt}]}}
+            prompt = json.dumps(line) + "\n"
 
         def pump():
             errors = []
