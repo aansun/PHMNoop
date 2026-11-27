@@ -364,7 +364,7 @@ enum NunaAnyaReader {
 
         if plan > 0 {
             let weights = await NunaFoodStore.weights(days: 120, repo: repo)
-            let kg = NutritionMath.trend(weights).last?.kg ?? (profile.weightKg > 0 ? profile.weightKg : 70)
+            let kg = NunaFoodStore.planWeightKg(weights: weights, profile: profile) ?? 70
             let m = NutritionMath.macroTargets(kcal: plan, weightKg: kg, proteinPerKg: d.object(forKey: NunaNutritionPrefs.proteinPerKg) as? Double ?? NunaNutritionPrefs.defaultProteinPerKg,
                                                fatShare: d.object(forKey: NunaNutritionPrefs.fatShare) as? Double ?? NunaNutritionPrefs.defaultFatShare)
             let left = plan - eaten

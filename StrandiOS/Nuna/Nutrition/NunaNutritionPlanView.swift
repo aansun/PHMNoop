@@ -27,8 +27,7 @@ struct NunaNutritionPlanView: View {
     @State private var askError: String?
 
     private static let paces: [Double] = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5]
-    private var trendKg: Double? { NutritionMath.trend(weights).last?.kg }
-    private var weightKg: Double { trendKg ?? (profile.weightKg > 0 ? profile.weightKg : 70) }
+    private var weightKg: Double { NunaFoodStore.planWeightKg(weights: weights, profile: profile) ?? 70 }
     private var computedTarget: Double? { maintenance.map { NutritionMath.dailyTarget(maintenanceKcal: $0.kcal, weeklyChangeKg: pace) } }
     private var macros: NutritionMath.Macros? { hasPlan && targetKcal > 0 ? NutritionMath.macroTargets(kcal: targetKcal, weightKg: weightKg, proteinPerKg: proteinPerKg, fatShare: fatShare) : nil }
     private var checkIn: NutritionMath.CheckIn? {

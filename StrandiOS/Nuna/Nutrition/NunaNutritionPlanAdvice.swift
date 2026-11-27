@@ -14,8 +14,7 @@ enum NunaNutritionPlanAdvice {
         let trend = NutritionMath.trend(weights)
         let month = await NunaFoodStore.intakeByDay(days: 30, repo: repo)
         guard let burn = NunaFoodStore.maintenance(intake: month, weights: weights, profile: profile) else { return nil }
-        let weight = trend.last?.kg ?? (profile.weightKg > 0 ? profile.weightKg : nil)
-        guard let weight else { return nil }
+        guard let weight = NunaFoodStore.planWeightKg(weights: weights, profile: profile) else { return nil }
         let goal = UserDefaults.standard.double(forKey: NunaGoals.targetWeightKg)
         var kidney = false
         if coach.includeOnDeviceSignals {
@@ -30,7 +29,7 @@ enum NunaNutritionPlanAdvice {
         let burnSource = burn.source == .foodAndWeight ? String(localized: "from your food and weight") : String(localized: "a rough estimate from your profile")
 
         var reasons = [
-            String(localized: "Weight \(number(weight, 1)) kg\(trend.last.map { " (\($0.day))" } ?? "")"),
+            String(localized: "Weight \(number(weight, 1)) kg\(trend.last.map { " (\(date($0.day)))" } ?? "")"),
             String(localized: "Daily burn about \(number(burn.kcal)) kcal, \(burnSource)"),
         ]
         if goal > 0 {
@@ -70,6 +69,14 @@ enum NunaNutritionPlanAdvice {
 
         return AnyaPlanSpec(targetKcal: plan.targetKcal, paceKgPerWeek: plan.paceKgPerWeek, proteinPerKg: plan.proteinPerKg, fatShare: plan.fatShare,
                             explanation: explanation, reasons: reasons, cautions: cautions)
+    }
+
+    /// A stored day key as the person reads a date.
+    private static func date(_ key: String) -> String {
+        let parser = DateFormatter(); parser.locale = Locale(identifier: "en_US_POSIX"); parser.dateFormat = "yyyy-MM-dd"
+        guard let day = parser.date(from: key) else { return key }
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM")
+        return f.string(from: day)
     }
 
     private static func within(_ value: Int, _ low: Int, _ high: Int) -> String { value < low ? "below" : (value > high ? "above" : "inside") }

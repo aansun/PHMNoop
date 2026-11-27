@@ -26,7 +26,7 @@ struct NunaNutritionView: View {
     @State private var addMeal: NunaMeal?
     @State private var deleting: FoodEntryRow?
     @State private var checkIn: NutritionMath.CheckIn?
-    @State private var weightKg: Double?
+    @State private var weights: [NutritionMath.WeightPoint] = []
     @State private var addInAnya = false
     @State private var loaded = false
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
@@ -45,7 +45,7 @@ struct NunaNutritionView: View {
     private var target: Double? { hasPlan && targetKcal > 0 ? targetKcal : nil }
     private var macroTargets: NutritionMath.Macros? {
         guard let target else { return nil }
-        return NutritionMath.macroTargets(kcal: target, weightKg: weightKg ?? (profile.weightKg > 0 ? profile.weightKg : 70), proteinPerKg: proteinPerKg, fatShare: fatShare)
+        return NutritionMath.macroTargets(kcal: target, weightKg: NunaFoodStore.planWeightKg(weights: weights, profile: profile) ?? 70, proteinPerKg: proteinPerKg, fatShare: fatShare)
     }
     private var checkInDue: Bool {
         guard checkIn != nil, offset == 0 else { return false }
@@ -84,8 +84,7 @@ struct NunaNutritionView: View {
         await csvProtein.load(repo: repo, key: "protein_g", source: "nutrition-csv", days: 120)
         await csvCarbs.load(repo: repo, key: "carbs_g", source: "nutrition-csv", days: 120)
         await csvFat.load(repo: repo, key: "fat_g", source: "nutrition-csv", days: 120)
-        let weights = await NunaFoodStore.weights(days: 120, repo: repo)
-        weightKg = NutritionMath.trend(weights).last?.kg
+        weights = await NunaFoodStore.weights(days: 120, repo: repo)
         if hasPlan, target != nil {
             checkIn = NutritionMath.checkIn(trend: NutritionMath.trend(weights), intake: await NunaFoodStore.intakeByDay(days: 30, repo: repo), endDay: Repository.localDayKey(Date()),
                                             plannedKgPerWeek: pace, currentTarget: targetKcal)

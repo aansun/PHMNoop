@@ -146,6 +146,12 @@ enum NunaFoodStore {
         return map.map { NutritionMath.WeightPoint(day: $0.key, kg: $0.value) }.sorted { $0.day < $1.day }
     }
 
+    /// The body weight a nutrition plan is worked from: the trend of the weigh-ins, else the profile; nil when neither is known.
+    /// Every screen that turns a plan into grams asks this, so one plan cannot show two protein figures.
+    static func planWeightKg(weights: [NutritionMath.WeightPoint], profile: ProfileStore) -> Double? {
+        NutritionMath.trend(weights).last?.kg ?? (profile.weightKg > 0 ? profile.weightKg : nil)
+    }
+
     /// What the body spends per day and where that figure came from.
     enum MaintenanceSource { case foodAndWeight, profile }
 

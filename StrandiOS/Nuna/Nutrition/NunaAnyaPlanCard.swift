@@ -21,6 +21,8 @@ struct NunaAnyaPlanCard: View {
     @State private var applied = false
     @State private var labCautions: [String] = []
     @State private var showNutrition = false
+    /// Nil until the weigh-ins are read: grams and BMI wait for them rather than show the profile's figure first.
+    @State private var weights: [NutritionMath.WeightPoint]?
 
     /// What the model flagged, then every Lab Book value that sits outside the range from the person's own report, worked out here rather than left to the model.
     private var allCautions: [String] { spec.cautions + labCautions }
@@ -28,8 +30,10 @@ struct NunaAnyaPlanCard: View {
     private var newPace: Double { spec.paceKgPerWeek ?? pace }
     private var newProtein: Double { spec.proteinPerKg ?? proteinPerKg }
     private var newFat: Double { spec.fatShare ?? fatShare }
-    private var macros: NutritionMath.Macros {
-        NutritionMath.macroTargets(kcal: spec.targetKcal, weightKg: profile.weightKg > 0 ? profile.weightKg : 70, proteinPerKg: newProtein, fatShare: newFat)
+    private var bodyKg: Double? { weights.flatMap { NunaFoodStore.planWeightKg(weights: $0, profile: profile) } }
+    private var macros: NutritionMath.Macros? {
+        guard weights != nil else { return nil }
+        return NutritionMath.macroTargets(kcal: spec.targetKcal, weightKg: bodyKg ?? 70, proteinPerKg: newProtein, fatShare: newFat)
     }
 
     var body: some View {
@@ -52,11 +56,11 @@ struct NunaAnyaPlanCard: View {
                     NunaDivider()
                     line("Pace", paceText(newPace), was: nil)
                     NunaDivider()
-                    line("Protein", "\(nutFmt(newProtein, 1)) g/kg · \(nutFmt(macros.proteinG)) g", was: nil)
+                    line("Protein", "\(nutFmt(newProtein, 1)) g/kg · \(nutFmt(macros?.proteinG)) g", was: nil)
                     NunaDivider()
-                    line("Fat", "\(Int((newFat * 100).rounded()))% · \(nutFmt(macros.fatG)) g", was: nil)
+                    line("Fat", "\(Int((newFat * 100).rounded()))% · \(nutFmt(macros?.fatG)) g", was: nil)
                     NunaDivider()
-                    line("Carbs", String(localized: "the rest · \(nutFmt(macros.carbsG)) g"), was: nil)
+                    line("Carbs", String(localized: "the rest · \(nutFmt(macros?.carbsG)) g"), was: nil)
                 }
                 if let explanation = spec.explanation {
                     VStack(alignment: .leading, spacing: 6) {
@@ -111,6 +115,7 @@ struct NunaAnyaPlanCard: View {
         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(LinearGradient(colors: NunaAnyaWing.colors, startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5))
         .sheet(isPresented: $showNutrition) { NunaQuickPanel(route: NunaTodayRoute.nutrition) }
         .task {
+            weights = await NunaFoodStore.weights(days: 120, repo: repo)
             let markers = NunaLabGrouping.markers(await NunaLabStore.load(repo))
             labCautions = markers.compactMap { m -> String? in
                 guard m.category != .bodyMeasurement, let latest = m.latest, let s = m.latestStatus, s != .within, let r = m.ownRange else { return nil }
@@ -127,8 +132,8 @@ struct NunaAnyaPlanCard: View {
     /// protein per kg, and the shares of energy from fat and carbohydrate.
     private var whoLines: [WhoLine] {
         var out: [WhoLine] = []
-        let kg = profile.weightKg, cm = profile.heightCm
-        if kg > 20, let r = WhoBodyReference.weightRangeKg(heightCm: cm) {
+        let cm = profile.heightCm
+        if let kg = bodyKg, kg > 20, let r = WhoBodyReference.weightRangeKg(heightCm: cm) {
             let bmi = kg / pow(cm / 100, 2)
             let word: String
             switch WhoNutritionReference.bmiClass(bmi) {
@@ -143,9 +148,11 @@ struct NunaAnyaPlanCard: View {
         out.append(WhoLine(text: protein >= WhoNutritionReference.proteinSafeGPerKg
                            ? String(localized: "Protein \(nutFmt(protein, 1)) g/kg is above the WHO safe level of intake, 0.83 g/kg a day.")
                            : String(localized: "Protein \(nutFmt(protein, 1)) g/kg is under the WHO safe level of intake, 0.83 g/kg a day."), fits: protein >= WhoNutritionReference.proteinSafeGPerKg))
-        if let s = WhoNutritionReference.shares(proteinG: macros.proteinG, carbsG: macros.carbsG, fatG: macros.fatG) {
-            out.append(WhoLine(text: String(localized: "Fat is \(Int((s.fat * 100).rounded()))% of the energy; WHO suggests 20 to 35%."), fits: WhoNutritionReference.fatShareRange.contains(s.fat)))
-            out.append(WhoLine(text: String(localized: "Carbohydrate is \(Int((s.carbs * 100).rounded()))% of the energy; WHO suggests 55 to 75%."), fits: WhoNutritionReference.carbShareRange.contains(s.carbs)))
+        // Shares of the daily target, as the plan's own reasons state them.
+        if let macros, spec.targetKcal > 0 {
+            let fat = macros.fatG * 9 / spec.targetKcal, carbs = macros.carbsG * 4 / spec.targetKcal
+            out.append(WhoLine(text: String(localized: "Fat is \(Int((fat * 100).rounded()))% of the energy; WHO suggests 20 to 35%."), fits: WhoNutritionReference.fatShareRange.contains(fat)))
+            out.append(WhoLine(text: String(localized: "Carbohydrate is \(Int((carbs * 100).rounded()))% of the energy; WHO suggests 55 to 75%."), fits: WhoNutritionReference.carbShareRange.contains(carbs)))
         }
         return out
     }
