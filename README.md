@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/phmn-icon.png" alt="PHMN" width="96">
+</p>
+
 <h1 align="center">PHMN</h1>
 
 <p align="center"><b>NOOP, reshaped around my own routine.</b></p>
