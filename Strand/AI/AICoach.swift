@@ -355,8 +355,10 @@ final class AICoachEngine: ObservableObject {
             case "zh": languageName = "Chinese"
             default: return ""
             }
+            // The pronouns a companion uses, where the language has a formal and a familiar pair.
+            let address = language == "id" ? " Speak to the person as \"kamu\" and call yourself \"aku\"; never \"Anda\" or \"saya\"." : ""
             return """
-            LANGUAGE: Reply in natural, everyday \(languageName), the way people talk. Keep established health and product terms in their original form: Recovery, Strain, Sleep, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline, Apple Health, Strava, GPS, and Live Activity. Do not translate metric names or units.
+            LANGUAGE: Reply in natural, everyday \(languageName), the way people talk.\(address) Keep established health and product terms in their original form: Recovery, Strain, Sleep, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline, Apple Health, Strava, GPS, and Live Activity. Do not translate metric names or units.
             """
         }()
         let languagePrompt = localizedLanguageOverlay.isEmpty ? "" : "\n\n\(localizedLanguageOverlay)"
@@ -429,7 +431,7 @@ final class AICoachEngine: ObservableObject {
     static func answerStyleBlock(_ defaults: UserDefaults = .standard) -> String {
         var out = ""
         switch defaults.string(forKey: responseLanguageKey) ?? "app" {
-        case "id": out += "\n\nLANGUAGE: Always reply in natural, everyday Indonesian, whatever language the question is in. Keep established health and product terms in their original form: Recovery, Strain, Sleep, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline."
+        case "id": out += "\n\nLANGUAGE: Always reply in natural, everyday Indonesian, whatever language the question is in. Speak to the person as \"kamu\" and call yourself \"aku\"; never \"Anda\" or \"saya\". Keep established health and product terms in their original form: Recovery, Strain, Sleep, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline."
         case "en": out += "\n\nLANGUAGE: Always reply in clear, concise English, whatever language the question is in."
         default: break
         }

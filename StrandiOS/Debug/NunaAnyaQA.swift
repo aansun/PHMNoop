@@ -76,13 +76,17 @@ enum NunaAnyaQA {
 
         // Artefacts and the brief.
         if on("food") {
-        let meal = "2 telur dadar dan 1 piring nasi goreng"
+        let args = CommandLine.arguments
+        let meal = args.firstIndex(of: "--qa-food").flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil } ?? "2 telur dadar dan 1 piring nasi goreng"
         let (food, tf) = await timed { await coach.estimateFood(meal) }
         out["food"] = ["input": meal, "output": food ?? "nil", "seconds": tf]
         }
         if on("program") {
         let (prog, tp) = await timed { await coach.suggestProgram(brief: "3 days a week, dumbbells only, build muscle, 45 minutes, intermediate", trainingSummary: "Chest 6 sets last week, back 4, legs 2, shoulders 4. Legs recovered, chest not fully recovered.") }
-        out["program"] = ["output": prog ?? "nil", "parsed": prog.flatMap { AnyaActions.parseProgram(from: $0) } != nil, "seconds": tp]
+        // Which of the names the exercise library knows (what the screen would show a photo and muscles for), and which it does not.
+        let items = prog.flatMap { AnyaActions.parseProgram(from: $0) }?.days.flatMap(\.items) ?? []
+        let matches = items.map { "\($0.exercise) -> " + (NunaAnyaProgramNames.library(for: $0.exercise)?.name ?? "(not in the library)") }
+        out["program"] = ["output": prog ?? "nil", "parsed": prog.flatMap { AnyaActions.parseProgram(from: $0) } != nil, "seconds": tp, "matches": matches]
         }
         if on("breath") {
         let (br, tbr) = await timed { await coach.suggestBreath(request: "calm down before sleep, 5 minutes", context: "") }
