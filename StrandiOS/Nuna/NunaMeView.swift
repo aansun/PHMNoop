@@ -13,6 +13,7 @@ struct NunaMeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 NunaHeader("Settings", onBack: pushed ? { dismiss() } : nil) {
+                    NunaKofiCup()
                     NavigationLink(value: NunaMeRoute.search) {
                         NunaGlyph("magnifyingglass", pointSize: 16).foregroundStyle(NunaPalette.textPrimary)
                             .frame(width: 44, height: 44)
@@ -35,7 +36,6 @@ struct NunaMeView: View {
                 }
                 Text(verbatim: NunaAppVersion.text).font(.nuna(size: 13, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                     .frame(maxWidth: .infinity).padding(.top, 30)
-                NunaKofiButton().frame(maxWidth: .infinity).padding(.top, 18)
             }
             .padding(.horizontal, 20).padding(.top, 14).padding(.bottom, 130)
         }
@@ -45,24 +45,18 @@ struct NunaMeView: View {
     }
 }
 
-/// The "Support me on Ko-fi" button as Ko-fi draws it: their cup, their wording and the navy chosen there, whatever the app's skin. It opens the support
-/// page in the browser. The picture is part of the app, so nothing is asked of Ko-fi until the button is tapped.
-private struct NunaKofiButton: View {
+/// "Support me on Ko-fi", as Ko-fi's cup beside the search button, where it is seen without scrolling. It opens the support page in the browser. The
+/// picture is part of the app, so nothing is asked of Ko-fi until it is tapped.
+private struct NunaKofiCup: View {
     private static let page = URL(string: "https://ko-fi.com/S4U32BCYG3")!
 
     var body: some View {
         Link(destination: Self.page) {
-            HStack(spacing: 9) {
-                Image("KofiCup").resizable().scaledToFit().frame(height: 20)
-                Text(verbatim: "Support me on Ko-fi").font(.system(size: 16, weight: .bold)).tracking(0).textCase(nil).foregroundStyle(Color.white)
-                    .lineLimit(1).minimumScaleFactor(0.8)
-            }
-            .padding(.horizontal, 18).frame(height: 46)
-            // The shadow is the button's alone: put on the whole label it would shade the wording too.
-            .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(NunaPalette.kofiButton).shadow(color: .black.opacity(0.3), radius: 1.5, x: 1, y: 1))
-            .contentShape(Rectangle())
+            Image("KofiCup").resizable().scaledToFit().frame(height: 24)
+                .frame(width: 44, height: 44).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(Text(verbatim: "Support me on Ko-fi"))
         .accessibilityHint(Text("Opens ko-fi.com in your browser"))
     }
 }
