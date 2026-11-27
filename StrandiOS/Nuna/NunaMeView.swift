@@ -13,7 +13,7 @@ struct NunaMeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 NunaHeader("Settings", onBack: pushed ? { dismiss() } : nil) {
-                    NunaKofiCup()
+                    NunaKofiBadge()
                     NavigationLink(value: NunaMeRoute.search) {
                         NunaGlyph("magnifyingglass", pointSize: 16).foregroundStyle(NunaPalette.textPrimary)
                             .frame(width: 44, height: 44)
@@ -45,15 +45,15 @@ struct NunaMeView: View {
     }
 }
 
-/// "Support me on Ko-fi", as Ko-fi's cup beside the search button, where it is seen without scrolling. It opens the support page in the browser. The
+/// Ko-fi's "Support me on Ko-fi" badge beside the search button, where it is seen without scrolling. It opens the support page in the browser. The
 /// picture is part of the app, so nothing is asked of Ko-fi until it is tapped.
-private struct NunaKofiCup: View {
+private struct NunaKofiBadge: View {
     private static let page = URL(string: "https://ko-fi.com/S4U32BCYG3")!
 
     var body: some View {
         Link(destination: Self.page) {
-            Image("KofiCup").resizable().scaledToFit().frame(height: 24)
-                .frame(width: 44, height: 44).contentShape(Rectangle())
+            Image("KofiBadge").resizable().scaledToFit().frame(height: 40)
+                .frame(height: 44).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(verbatim: "Support me on Ko-fi"))

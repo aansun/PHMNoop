@@ -12,7 +12,7 @@ Blood pressure, a new Beat rhythm page, a fuller sleep planner, and pages that o
 - **Live activity.** The dial names your heart rate and shows the zone large, you can swipe between Strain and Heart Rate from anywhere, and a reached target reads Completed.
 - **Treadmill.** Distance and pace appear after the session, and the live screen says when the distance is still being calculated.
 - **Smoother pages.** Today, Health and the detail pages come in whole and fade in, instead of filling in card by card.
-- **Support on Ko-fi.** The Ko-fi cup beside search on More opens the support page in your browser.
+- **Support on Ko-fi.** The Ko-fi badge beside search on More opens the support page in your browser.
 
 ### Bug Fixing
 - **Strava treadmill upload.** An indoor session without a route is now accepted by Strava.
