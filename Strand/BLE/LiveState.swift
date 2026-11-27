@@ -89,6 +89,9 @@ public final class LiveState: ObservableObject {
     /// under a WHOOP heading. Which of the two a surface needs depends on what it claims to be showing,
     /// and that is a question about the label rather than about this field.
     @Published public var batteryPct: Double? = nil
+    /// What straps have said about their certificate this run, by registry device id. Read through `strapCertificate(for:)`, which also finds what
+    /// was stored in an earlier run.
+    @Published public private(set) var strapCertificates: [String: StrapCertificateLog] = [:]
     /// Strap battery pack VOLTAGE (mV), decoded from the ~8-min BATTERY_LEVEL event (mv@21/@25) and the
     /// GET_EXTENDED_BATTERY_INFO response (#592). Shown on the Devices card as a "x.xx V" readout beside the
     /// percent; nil until the first battery event lands. Twin of the Android LiveState.batteryMv.
@@ -741,6 +744,24 @@ public final class LiveState: ObservableObject {
     /// — turning an O(n) `Array.removeFirst` on every line at steady state into one per `trimSlack` lines.
     /// Still hard-bounded (never exceeds `maxLogLines + trimSlack`).
     private static let trimSlack = 256
+
+    private static func strapCertificateKey(_ deviceId: String) -> String { "strapCertificate." + deviceId }
+
+    /// What the strap `deviceId` has reported about its certificate; nil when it never has.
+    public func strapCertificate(for deviceId: String) -> StrapCertificateLog? {
+        strapCertificates[deviceId] ?? UserDefaults.standard.data(forKey: Self.strapCertificateKey(deviceId))
+            .flatMap { try? JSONDecoder().decode(StrapCertificateLog.self, from: $0) }
+    }
+
+    /// Keeps a line the strap wrote about its certificate, and says so in the log when the verdict is no longer what it was.
+    public func noteStrapCertificate(_ report: StrapCertificateReport, deviceId: String, at date: Date) {
+        var entry = strapCertificate(for: deviceId) ?? StrapCertificateLog()
+        let was = entry.verdict
+        let changed = entry.record(report, at: date)
+        strapCertificates[deviceId] = entry
+        if let data = try? JSONEncoder().encode(entry) { UserDefaults.standard.set(data, forKey: Self.strapCertificateKey(deviceId)) }
+        if changed, let was, let now = entry.verdict { append(log: "Strap certificate: the strap now reports \(now.rawValue) (it reported \(was.rawValue) before)") }
+    }
 
     public func append(log line: String, domain: TestDomain? = nil) {
         // FIRST append of this process: rescue the previous process's durable tail into the generation ring

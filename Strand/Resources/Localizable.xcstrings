@@ -9841,5 +9841,14 @@
  "Sleep, activity, weight, journal and breathing": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur, aktivitas, berat, jurnal, napas"}}}},
  "Calculating": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menghitung"}}}},
  "live.target.completed": {"extractionState": "extracted_with_value", "localizations": {"en": {"stringUnit": {"state": "new", "value": "Completed"}}, "id": {"stringUnit": {"state": "translated", "value": "Completed"}}}},
- "Opens ko-fi.com in your browser": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membuka ko-fi.com di browser"}}}}
+ "Opens ko-fi.com in your browser": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membuka ko-fi.com di browser"}}}},
+ "Strap certificate": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sertifikat strap"}}}},
+ "Valid": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Valid"}}}},
+ "Not valid": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak valid"}}}},
+ "No report yet": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum ada laporan"}}}},
+ "Last reported %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Terakhir dilaporkan %@"}}}},
+ "Reported since %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dilaporkan sejak %@"}}}},
+ "Changed from %@ on %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Berubah dari %1$@ pada %2$@"}}}},
+ "Another line from the strap: %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Baris lain dari strap: %@"}}}},
+ "The strap has not said anything about it yet. PHMN reads it from the strap's log while connected.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strap belum menyebutkannya. PHMN membacanya dari log strap saat tersambung."}}}}
 }, "version":"1.0" }

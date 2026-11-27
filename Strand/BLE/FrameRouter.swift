@@ -34,8 +34,12 @@ public final class FrameRouter {
         didSet {
             rawDumpedRespCmds.removeAll(); loggedFirmwareGate = nil; deviceId = nil
             rejectTally = FrameRejectTally(); loggedRejectReasons.removeAll()
+            certificateScanner = StrapCertificateScanner()
         }
     }
+
+    /// Joins the console's chunks to find what the strap says about its certificate. Per connection: half a line never carries over.
+    private var certificateScanner = StrapCertificateScanner()
 
     /// Rejected frames on this connection, per reason, plus the one named counter for the class that
     /// used to pass the gates (payload CRC32 verified, envelope not). Reset per connection alongside the
@@ -785,6 +789,19 @@ public final class FrameRouter {
         guard parsed.typeName == "CONSOLE_LOGS",
               let txt = parsed.parsed["log"]?.stringValue, !txt.isEmpty else { return }
         state.append(log: "strap: \(String(txt.prefix(300)))")
+        noteCertificate(txt, parsed: parsed)
+    }
+
+    /// Without a device id the line cannot be attributed to a strap, so it is only logged.
+    private func noteCertificate(_ text: String, parsed: ParsedFrame) {
+        guard let deviceId else { return }
+        let reports = certificateScanner.ingest(text, sequence: parsed.parsed["console_sequence"]?.intValue)
+        guard !reports.isEmpty else { return }
+        // The strap's own time for the chunk when it is believable (a line can be handed over long after it was written), else now.
+        let now = Date()
+        let written = parsed.parsed["unix"]?.intValue.map { Date(timeIntervalSince1970: TimeInterval($0)) }
+        let when = written.flatMap { now.timeIntervalSince($0) > -300 && now.timeIntervalSince($0) < 60 * 86_400 ? min($0, now) : nil } ?? now
+        for report in reports { state.noteStrapCertificate(report, deviceId: deviceId, at: when) }
     }
 
     func dispatchLiveGestureIfFresh(frame: [UInt8], now: Int = Int(Date().timeIntervalSince1970)) {
