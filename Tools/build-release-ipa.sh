@@ -50,7 +50,8 @@ find "$APP" -type f -print0 | while IFS= read -r -d '' f; do
 done
 "$ROOT/Tools/prepare-ios-sideload-app.sh" "$APP"
 
-(cd "$WORK/pkg" && zip -qry "$WORK/release.ipa" Payload)
+# -X leaves out the owner numbers and extra times the archive would otherwise carry for each file.
+(cd "$WORK/pkg" && zip -qryX "$WORK/release.ipa" Payload)
 
 # The check is made on what is in the IPA, unpacked again, not on the folder it was made from.
 mkdir -p "$WORK/check"
