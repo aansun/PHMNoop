@@ -1465,7 +1465,9 @@ final class AICoachEngine: ObservableObject {
         // The on-device model fills in a form, so its answer is always the shape the sheet reads.
         if provider == .appleIntelligence, imageBase64 == nil, !text.isEmpty, let meal = await AppleIntelligenceClient.estimateMeal(String(text.prefix(600))) { return meal }
         var prompt = AnyaActions.foodInstruction + "\n\nWhat the person ate:\n" + (text.isEmpty ? "(see the photo)" : String(text.prefix(600)))
-        if imageBase64 != nil { prompt += "\n\nA photo of the meal is attached. Estimate each item you can see at the portion shown, and use the description for anything the photo does not show." }
+        if imageBase64 != nil { prompt += "\n\nA photo of the meal is attached. Estimate each item you can see at the portion shown, and use the description for anything the photo does not show. "
+            + "Where the picture prints figures (a nutrition label, a menu, an app screen), list every item printed with them and copy its figures exactly; "
+            + "never state a count or size the picture does not show." }
         // A short system prompt of its own: the coach's (her persona, every block she can draw, the day's rhythm, memories) has nothing to do with a food
         // estimate, and it crowds a small model into answering in prose.
         return await build(key: key, system: Self.foodSystemPrompt + Self.languageBlock(), prompt: prompt, image: supportsImages ? imageBase64 : nil)
