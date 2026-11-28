@@ -41,7 +41,7 @@ struct NunaAnyaPlanCard: View {
     }
 
     private var card: some View {
-        Group {
+        NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 10) {
                     NunaIconTile("target")
@@ -111,8 +111,6 @@ struct NunaAnyaPlanCard: View {
                 }
             }
         }
-        .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(LinearGradient(colors: NunaAnyaWing.colors, startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5))
         .sheet(isPresented: $showNutrition) { NunaQuickPanel(route: NunaTodayRoute.nutrition) }
         .task {
             weights = await NunaFoodStore.weights(days: 120, repo: repo)

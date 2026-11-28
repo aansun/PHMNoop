@@ -66,7 +66,7 @@ struct NunaNutritionPlanView: View {
         let over = hasPlan && eaten > (target ?? .infinity)
         return NunaScoreHero(caption: "Daily target", fraction: target.map { hasPlan && $0 > 0 ? eaten / $0 : 0 } ?? 0, number: nutFmt(target),
                              suffix: hasPlan ? String(localized: "kcal · \(nutFmt(eaten)) eaten today") : String(localized: "kcal · not started yet"),
-                             name: LocalizedStringKey(paceShort(pace)), color: over ? NunaPalette.warning : NunaPalette.charge,
+                             color: over ? NunaPalette.warning : NunaPalette.charge,
                              hasNote: false, showsCaptionRow: false, ringTitle: "Target", ringSize: 280) { EmptyView() }
             .padding(.top, 4)
     }
@@ -193,9 +193,6 @@ struct NunaNutritionPlanView: View {
         if p == 0 { return String(localized: "Maintain") }
         return (p < 0 ? "−" : "+") + nutFmt(abs(p), 2).replacingOccurrences(of: "0$", with: "", options: .regularExpression)
     }
-
-    /// The pace in the few characters the ring has room for.
-    private func paceShort(_ p: Double) -> String { p == 0 ? paceAmount(p) : "\(paceAmount(p)) \(String(localized: "kg/week"))" }
 
     private var maintenanceNote: String {
         switch maintenance?.source {

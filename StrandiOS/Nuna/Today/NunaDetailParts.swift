@@ -344,7 +344,8 @@ struct NunaScoreHero<Note: View>: View {
     let number: String
     var unit: String = ""
     var suffix: String = ""
-    let name: LocalizedStringKey
+    /// The word under the figure inside the ring; nil leaves it out.
+    var name: LocalizedStringKey?
     let color: Color
     let note: Note
     /// Colour of the word in the ring (a verdict in place of the metric name); nil keeps the ink colour.
@@ -369,7 +370,7 @@ struct NunaScoreHero<Note: View>: View {
     private var showInfo: Bool { externalInfo?.wrappedValue ?? ownInfo }
 
     init(caption: LocalizedStringKey, chip: LocalizedStringKey? = nil, chipColor: Color? = nil, fraction: Double, number: String,
-         unit: String = "", suffix: String = "", name: LocalizedStringKey, nameColor: Color? = nil, gradient: [Color]? = nil, target: ClosedRange<Double>? = nil, color: Color, hasNote: Bool = true,
+         unit: String = "", suffix: String = "", name: LocalizedStringKey? = nil, nameColor: Color? = nil, gradient: [Color]? = nil, target: ClosedRange<Double>? = nil, color: Color, hasNote: Bool = true,
          showsCaptionRow: Bool = true, ringTitle: LocalizedStringKey? = nil, ringLevel: NunaLevel? = nil, ringSize: CGFloat = 300, info: Binding<Bool>? = nil, @ViewBuilder note: () -> Note) {
         self.caption = caption; self.chip = chip; self.chipColor = chipColor; self.fraction = fraction; self.number = number
         self.unit = unit; self.suffix = suffix; self.name = name; self.nameColor = nameColor; self.gradient = gradient; self.target = target; self.color = color; self.hasNote = hasNote; self.note = note()
@@ -399,7 +400,7 @@ struct NunaScoreHero<Note: View>: View {
                         }
                     }
                     if !suffix.isEmpty { Text(verbatim: suffix).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-                    Text(name).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(nameColor ?? NunaPalette.textPrimary)
+                    if let name { Text(name).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(nameColor ?? NunaPalette.textPrimary) }
                     if let ringLevel {
                         HStack(spacing: 4) {
                             ForEach(0..<3, id: \.self) { i in
