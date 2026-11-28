@@ -72,7 +72,7 @@ What PHMN adds on top of NOOP. Everything NOOP already does is still there and i
 | **Workouts** | Time, distance and zone targets, a live screen with strap buzz outside your zone, Lock Screen Live Activity, treadmill distance and a summary read against your last 30 days |
 | **Strength Trainer** | Programs, 876 exercises with demos, a full-screen session the strap can advance, muscle map and records |
 | **Health** | **Body age** and pace of aging, **blood pressure**, Lab Book, **Nutrition**, weight, VO₂ max and mood |
-| **Anya** | A coach that explains the figure you tap, plans the day, and logs a meal, a lab result or a workout from your words. Your own AI provider, Apple Intelligence, or none |
+| **Anya** | A coach that converses, looks up your own data to answer, explains the figure you tap, plans the day, and logs a meal, a lab result or a workout from your words. She keeps what you tell her **about you**, learns the food figures you correct, and can check in if you ask her to. Your own AI provider, Apple Intelligence, or none |
 | **Breathing** | Guided sessions with a countdown and voice or tones, exercises Anya writes, and an advisor that picks one for the moment |
 | **Plans and journal** | Weekly plans with activities and behaviours, and a journal Anya can fill from your own words |
 | **Look and language** | The new design or the original NOOP look, three styles, widgets, English and Indonesian |
@@ -84,6 +84,7 @@ All off by default, with your own keys: **Apple Health** (steps, weight, blood p
 ### Data and privacy
 
 - Everything is computed and stored on your phone. **Privacy** lists exactly what can leave it, and its live state.
+- With the Anthropic provider and data access on, Anya looks things up on the phone to answer you; what she looks up goes to the provider. The journal, blood pressure and lab results are included only if you also share patterns and Lab Book.
 - Back up and restore to a folder, import WHOOP CSV and Apple Health exports, export a PDF report, FIT or GPX.
 - **Updates:** once a day the app reads the number of the latest release here, sending nothing about you; you can turn it off.
 - **Feedback** opens a GitHub issue in your browser, and the **Ko-fi** button opens the support page. Neither is contacted until you tap.
@@ -101,7 +102,7 @@ PHMN adds several calculations on top of NOOP's, and each one is written down wi
 - **Cardio and muscular split**, **workout reads** against your last 30 days, and the 30-day average pills.
 - **Resting heart rate** as the mean of the night's longest session, with its limits stated.
 - **Sleep**: where a night ends, how debt builds, and when a habit is named as a cause.
-- **Nutrition**: the trend weight, what the body spends, the daily target and macros, the weekly check-in, and the WHO references an Anya plan is shown against. **Lab Book ranges** and where a WHO reference stands in for one.
+- **Nutrition**: the trend weight, what the body spends, the daily target and macros, the plan Anya explains, the food figures it learns from you, the weekly check-in, and the WHO references a plan is shown against. **Lab Book ranges** and where a WHO reference stands in for one.
 - **Blood pressure** beside your other data, and the **early wake** decision.
 - **Workout detection**, **training load**, **readiness**, **treadmill distance**, **weather and air advice** and the **breathing advisor**.
 

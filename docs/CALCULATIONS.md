@@ -216,11 +216,14 @@ Everything is arithmetic over what you logged and weighed, in `NutritionMath` (p
 - **Weekly check-in**: the trend over the last 7 to 14 days against the pace you planned. It needs 5 days of food in the week and weigh-ins across a week; it suggests a change to the target of at most 250 kcal either way, in steps of 10, and stays quiet under 50 kcal.
 - **Anya speaking up**: over the target by more than 5% today (10% for a finished day), behind where the day should be (a quarter of the target by early afternoon, rising to nine tenths late), protein under 60% of its target in the evening,
   nothing logged by noon, or on track. One line at most, and the card has no Add button when the day is already over.
-- **Anya's plan** is a suggestion from her, worked out from your profile, weight, food, sleep, recovery, training and, when you share it, the Lab Book. The app clamps every number (1,200 to 4,500 kcal, pace −1 to +0.5 kg a week, protein 0.8 to 2.4 g per kg, fat 20 to 40%) and shows it
-  against the WHO references below before you apply it.
+- **The plan Anya explains** is worked out by rule (`NutritionPlanner`), not by the model. With a goal weight 1 kg or more away, the pace is 0.5 kg a week down when there are at least 3 kg to go and that is no more than 0.7% of body weight, else 0.25 kg;
+  0.25 kg a week up for a gain; otherwise the weight is held. No loss is planned under a BMI of 18.5, and the pace is eased until the target is at least 1,200 kcal. Protein is 1.8 g per kg while changing weight, 1.6 while holding, 1.0 when a kidney result on your shared report is outside its range;
+  fat is 28% of the energy and carbohydrate the rest. The weight is the trend weight, else the profile's, the same one every page uses. A provider only puts the figures into words, and its words are used only if they quote no other figure. Nothing changes until you apply it; a plan proposed inside a chat is still clamped (1,200 to 4,500 kcal, pace −1 to +0.5 kg a week, protein 0.8 to 2.4 g per kg, fat 20 to 40%).
+- **Your food figures** (`FoodMemory`): figures you change on an estimate are kept on the phone and replace the next estimate of the same food name in the same unit, scaled by the count (0.1 to 10 times). No model is trained and nothing extra is sent.
+- **Energy burned** beside the ring is the chosen day's own: the strap's heart-rate estimate of the whole day, resting included, or Apple Health's active energy when the strap has none, labelled accordingly.
 - **WHO references used**: healthy adult BMI 18.5 to 24.9; a safe level of protein intake of 0.83 g per kg a day; fat 20 to 35% and carbohydrate 55 to 75% of the energy.
 
-Code: `NutritionMath`, `WhoNutritionReference`, `NunaNutritionView`, `NunaNutritionPlanView`, `NunaAnyaPlanCard`.
+Code: `NutritionMath`, `NutritionPlanner`, `FoodMemory`, `WhoNutritionReference`, `NunaNutritionView`, `NunaNutritionPlanView`, `NunaAnyaPlanCard`.
 
 ## Lab Book ranges
 
