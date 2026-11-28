@@ -29,6 +29,8 @@ struct NunaNutritionView: View {
     @State private var weights: [NutritionMath.WeightPoint] = []
     @State private var addInAnya = false
     @State private var loaded = false
+    /// Energy burned by day. The strap's figure is the whole day with rest included, Apple Health's the active part alone.
+    @State private var burn: [String: (kcal: Double, activeOnly: Bool)] = [:]
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @AppStorage(NunaNutritionPrefs.nudges) private var nudgesOn = true
 
@@ -85,6 +87,11 @@ struct NunaNutritionView: View {
         await csvCarbs.load(repo: repo, key: "carbs_g", source: "nutrition-csv", days: 120)
         await csvFat.load(repo: repo, key: "fat_g", source: "nutrition-csv", days: 120)
         weights = await NunaFoodStore.weights(days: 120, repo: repo)
+        // The same sources in the same order as the Calories card, but never a figure carried over from another day.
+        var energy: [String: (kcal: Double, activeOnly: Bool)] = [:]
+        for row in await repo.appleDailyRows() { if let k = row.activeKcal, k > (energy[row.day]?.kcal ?? 0) { energy[row.day] = (k, true) } }
+        for p in await repo.exploreSeries(key: "energy_kcal", source: "my-whoop", days: 120) where p.value > 0 { energy[p.day] = (p.value, false) }
+        burn = energy
         if hasPlan, target != nil {
             checkIn = NutritionMath.checkIn(trend: NutritionMath.trend(weights), intake: await NunaFoodStore.intakeByDay(days: 30, repo: repo), endDay: Repository.localDayKey(Date()),
                                             plannedKgPerWeek: pace, currentTarget: targetKcal)
@@ -115,7 +122,7 @@ struct NunaNutritionView: View {
 
     // MARK: Hero
 
-    /// The ring with what is left in the middle, what was eaten on one side and the active burn on the other.
+    /// The ring with what is left in the middle, what was eaten on one side and the energy burned that day on the other.
     private var hero: some View {
         let left = (target ?? 0) - eaten
         let over = target != nil && left < 0
@@ -130,7 +137,7 @@ struct NunaNutritionView: View {
                             .foregroundStyle(NunaPalette.textSecondary)
                     }.padding(.horizontal, 24)
                 }
-                sideFigure(offset == 0 ? (today.calories.map { nutFmt($0) } ?? "–") : "–", "Active burn").frame(maxWidth: .infinity)
+                sideFigure(burn[dayKey].map { nutFmt($0.kcal) } ?? "–", burn[dayKey]?.activeOnly == true ? "Active burn" : "Burned").frame(maxWidth: .infinity)
             }
             NavigationLink { NunaNutritionPlanView() } label: {
                 HStack(spacing: 6) {
@@ -276,7 +283,7 @@ struct NunaNutritionView: View {
             VStack(alignment: .leading, spacing: 12) {
                 nunaTrendsCap("Weekly check-in")
                 Text(verbatim: checkInText(c)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                Text(verbatim: "\(nutFmt(targetKcal)) → \(nutFmt(c.newTarget)) kcal").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: "\(nutFmt(targetKcal)) → " + String(localized: "\(nutFmt(c.newTarget)) kcal")).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 HStack(spacing: 10) {
                     Button { targetKcal = c.newTarget; lastCheckIn = Repository.localDayKey(Date()); checkIn = nil } label: {
                         Text("Apply").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 46)
@@ -308,7 +315,7 @@ struct NunaNutritionView: View {
                 HStack {
                     Text(meal.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
-                    if !list.isEmpty { Text(verbatim: "\(nutFmt(total)) kcal").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary) }
+                    if !list.isEmpty { Text(verbatim: String(localized: "\(nutFmt(total)) kcal")).font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary) }
                     Button { addMeal = meal } label: { Image(systemName: "plus").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 40, height: 44) }
                         .buttonStyle(.plain).accessibilityLabel(Text("Add food"))
                 }

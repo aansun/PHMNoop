@@ -324,7 +324,7 @@ struct NunaAnyaSheet: View {
                     HStack { Spacer(minLength: 40)
                         Text(verbatim: t.text).font(NunaAnyaType.asked).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) }
                 } else {
-                    NunaAnyaReply(text: t.text, font: NunaAnyaType.reply, lineSpacing: NunaAnyaType.replySpacing, question: question(before: t)).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
+                    NunaAnyaReply(text: t.text, font: NunaAnyaType.reply, lineSpacing: NunaAnyaType.replySpacing, question: question(before: t), messageID: t.id).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text(verbatim: NunaAnyaTools.activity(coach.lookingUp)).font(NunaAnyaType.thinking).foregroundStyle(NunaPalette.textSecondary).textCase(nil) } }
@@ -550,7 +550,7 @@ extension NunaAnyaSheet {
                 }
             } else {
                 VStack(alignment: .leading, spacing: 14) {
-                    NunaAnyaReply(text: t.text, font: NunaAnyaType.reply, lineSpacing: NunaAnyaType.replySpacing, color: nil, question: question(before: t))
+                    NunaAnyaReply(text: t.text, font: NunaAnyaType.reply, lineSpacing: NunaAnyaType.replySpacing, color: nil, question: question(before: t), messageID: t.id)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     if t.id == turns.last?.id { feedbackRow(copying: AnyaActions.proseOnly(t.text), note: String(t.text.prefix(80))) }
                 }

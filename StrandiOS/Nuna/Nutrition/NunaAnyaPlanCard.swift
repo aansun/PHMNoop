@@ -52,7 +52,7 @@ struct NunaAnyaPlanCard: View {
                     Spacer(minLength: 0)
                 }
                 VStack(spacing: 0) {
-                    line("Daily target", "\(nutFmt(spec.targetKcal)) kcal", was: hasPlan && targetKcal > 0 && abs(targetKcal - spec.targetKcal) >= 1 ? "\(nutFmt(targetKcal))" : nil)
+                    line("Daily target", String(localized: "\(nutFmt(spec.targetKcal)) kcal"), was: hasPlan && targetKcal > 0 && abs(targetKcal - spec.targetKcal) >= 1 ? "\(nutFmt(targetKcal))" : nil)
                     NunaDivider()
                     line("Pace", paceText(newPace), was: nil)
                     NunaDivider()

@@ -244,7 +244,7 @@ struct NunaNutritionPlanView: View {
                 if let c = checkIn {
                     Text(verbatim: String(localized: "Your trend weight moved \(nutFmt(c.actualKgPerWeek, 2)) kg a week, against the \(nutFmt(c.plannedKgPerWeek, 2)) kg you planned. A change of \(nutFmt(abs(c.changeKcal))) kcal a day would bring you back to the plan."))
                         .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    Text(verbatim: "\(nutFmt(targetKcal)) → \(nutFmt(c.newTarget)) kcal").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: "\(nutFmt(targetKcal)) → " + String(localized: "\(nutFmt(c.newTarget)) kcal")).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     HStack(spacing: 10) {
                         Button { targetKcal = c.newTarget; lastCheckIn = Repository.localDayKey(Date()) } label: {
                             Text("Apply").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 46)

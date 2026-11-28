@@ -1,5 +1,6 @@
 #if os(iOS)
 import Foundation
+import StrandAnalytics
 
 /// ChatGPT/Codex client authenticated by `ChatGPTAuthService`.
 ///
@@ -155,7 +156,7 @@ struct ChatGPTClient: AIProviderClient {
             var content = input[lastUserIndex]["content"] as? [[String: Any]] ?? []
             content.append([
                 "type": "input_image",
-                "image_url": "data:image/png;base64,\(inlineImage)"
+                "image_url": "data:\(AIImageType.mime(base64: inlineImage));base64,\(inlineImage)"
             ])
             input[lastUserIndex]["content"] = content
         }

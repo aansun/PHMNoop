@@ -44,8 +44,12 @@ enum NunaExerciseKind: Equatable {
         return .weighted
     }
 
+    /// Moves the library files under stretching that are done as reps, not held.
+    private static let countedStretches: Set<String> = ["superman", "frog hops", "inchworm", "crossover reverse lunge", "sit squats", "split squats",
+                                                        "front leg raises", "rear leg raises", "side leg raises", "scissor kick", "toe touchers", "windmills", "groiners"]
+
     private static func isTimed(_ n: String, _ lib: NunaLibraryExercise?) -> Bool {
-        if lib?.category == "stretching" { return true }
+        if let lib, lib.category == "stretching", !countedStretches.contains(lib.name.lowercased()) { return true }
         if n.contains("push up to") || n.contains("push-up to") { return false }
         return ["plank", "wall sit", "isometric", "l-sit", "stretch", "dead hang", " hold", "hollow body"].contains { n.contains($0) }
     }

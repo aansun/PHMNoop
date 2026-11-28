@@ -33,10 +33,10 @@ struct NunaAnyaAttachPicker: ViewModifier {
     private func loadPhoto(_ item: PhotosPickerItem) {
         Task {
             guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data),
-                  let resized = image.preparingThumbnail(of: CGSize(width: 1600, height: 1600)), let png = resized.pngData() else {
+                  let resized = image.preparingThumbnail(of: CGSize(width: 1600, height: 1600)) else {
                 error = String(localized: "The selected photo could not be read."); photoItem = nil; return
             }
-            attachment = .image(name: String(localized: "Photo"), base64: png.base64EncodedString()); photoItem = nil
+            attachment = .image(name: String(localized: "Photo"), base64: NunaFoodPhoto.jpeg(resized).base64EncodedString()); photoItem = nil
         }
     }
 

@@ -17,7 +17,7 @@ public enum AnyaTools {
 
     /// The daily figures she can ask for, by the name used in a request.
     public static let metrics = ["recovery", "strain", "sleep_hours", "deep_hours", "rem_hours", "sleep_efficiency", "hrv", "resting_hr",
-                                 "respiratory_rate", "spo2", "skin_temp_change", "steps", "active_kcal"]
+                                 "respiratory_rate", "spo2", "skin_temp_change", "steps", "energy_burned_kcal"]
     public static let bodySeries = ["weight", "body_age", "vo2max"]
     public static let logKinds = ["journal", "blood_pressure", "lab_results"]
 

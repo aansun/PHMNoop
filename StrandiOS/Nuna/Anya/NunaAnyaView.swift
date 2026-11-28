@@ -361,7 +361,7 @@ struct NunaAnyaView: View {
             }
         case .assistant:
             VStack(alignment: .leading, spacing: 10) {
-                NunaAnyaReply(text: m.text, question: question(before: m)).frame(maxWidth: .infinity, alignment: .leading)
+                NunaAnyaReply(text: m.text, question: question(before: m), messageID: m.id).frame(maxWidth: .infinity, alignment: .leading)
                 HStack(spacing: 8) {
                     if coach.dataConsent {
                         Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)

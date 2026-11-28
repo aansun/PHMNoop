@@ -95,11 +95,11 @@ enum NunaAnyaTools {
             case "spo2": return d.spo2Pct
             case "skin_temp_change": return d.skinTempDevC
             case "steps": return steps[d.day] ?? d.steps.map(Double.init)
-            case "active_kcal": return d.activeKcalEst
+            case "energy_burned_kcal": return d.activeKcalEst
             default: return nil
             }
         }
-        let units = "Units: recovery 0-100, strain 0-\(UnitFormatter.effortScaleMax(scale)), hours, efficiency %, HRV ms, resting HR bpm, breaths a minute, SpO2 %, skin temperature change °C."
+        let units = "Units: recovery 0-100, strain 0-\(UnitFormatter.effortScaleMax(scale)), hours, efficiency %, HRV ms, resting HR bpm, breaths a minute, SpO2 %, skin temperature change °C, energy burned in kcal for the whole day with resting energy included."
         return "\(r.from) to \(r.to). \(units)\n"
             + AnyaTools.table(columns: wanted, rows: days.map { d in (d.day, wanted.map { value($0, d) }) }, group: AnyaTools.group(input, days: r.days))
     }

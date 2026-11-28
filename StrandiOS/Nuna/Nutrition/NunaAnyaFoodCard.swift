@@ -31,6 +31,7 @@ struct NunaAnyaFoodCard: View {
     @State private var adding = false
     @State private var addedCount: Int?
     @State private var showNutrition = false
+    @Environment(\.nunaAnyaCardID) private var cardID
 
     init(spec: AnyaFoodSpec, fixed: (meal: NunaMeal, day: String)? = nil, onAdded: (() -> Void)? = nil) {
         self.spec = spec; self.fixed = fixed; self.onAdded = onAdded
@@ -102,6 +103,15 @@ struct NunaAnyaFoodCard: View {
             }
         }
         .sheet(isPresented: $showNutrition) { NunaQuickPanel(route: NunaTodayRoute.nutrition) }
+        .onAppear(perform: restore)
+    }
+
+    /// A card already added shows what was added, and offers nothing to add again.
+    private func restore() {
+        guard addedCount == nil, let used = NunaAnyaCardUses.use(cardID) else { return }
+        excluded = Set(used.excluded)
+        scale = Dictionary(uniqueKeysWithValues: used.scale.compactMap { key, f in Int(key).map { ($0, f) } })
+        addedCount = used.count
     }
 
     private static func name(_ m: NunaMeal) -> String {
@@ -224,6 +234,7 @@ struct NunaAnyaFoodCard: View {
     }
 
     private func add() async {
+        guard NunaAnyaCardUses.use(cardID) == nil else { restore(); return }
         adding = true; defer { adding = false }
         let day = fixed?.day ?? Repository.localDayKey(date)
         let target = fixed?.meal ?? meal
@@ -236,6 +247,8 @@ struct NunaAnyaFoodCard: View {
         }
         await NunaFoodStore.add(entries, repo: repo)
         remember()
+        NunaAnyaCardUses.record(NunaAnyaCardUse(count: entries.count, excluded: excluded.sorted(),
+                                                scale: Dictionary(uniqueKeysWithValues: scale.map { (String($0.key), $0.value) })), for: cardID)
         addedCount = entries.count
         onAdded?()
     }

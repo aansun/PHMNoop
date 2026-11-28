@@ -14,6 +14,8 @@ struct NunaAnyaReply: View {
     var color: Color? = NunaPalette.textPrimary
     /// What the person asked. A question about a week draws a 7-day chart, whatever window the reply named.
     var question: String?
+    /// The message the reply belongs to, so a card that writes something remembers it did when the conversation is opened again.
+    var messageID: UUID?
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
 
@@ -28,8 +30,8 @@ struct NunaAnyaReply: View {
     var body: some View {
         let blocks = AnyaActions.parse(text)
         VStack(alignment: .leading, spacing: 12) {
-            ForEach(Array(blocks.enumerated()), id: \.offset) { _, b in
-                switch b {
+            ForEach(Array(blocks.enumerated()), id: \.offset) { place, b in
+                Group { switch b {
                 case .text(let t):
                     Text(NunaAnyaSheet.markdown(t)).font(font).lineSpacing(lineSpacing).foregroundStyle(color ?? .primary)
                         .textSelection(.enabled).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
@@ -40,9 +42,50 @@ struct NunaAnyaReply: View {
                 case .food(let f): NunaAnyaFoodCard(spec: f)
                 case .plan(let p): NunaAnyaPlanCard(spec: p)
                 case .breath(let b): NunaAnyaBreathCard(spec: b)
-                }
+                } }
+                .environment(\.nunaAnyaCardID, messageID.map { "\($0.uuidString)#\(place)" })
             }
         }
+    }
+}
+
+// MARK: - What a card has already written
+
+/// What a card in the chat wrote, with the choices it was made with, so the card reads the same when the conversation is opened again.
+struct NunaAnyaCardUse: Codable, Equatable {
+    var count: Int
+    var excluded: [Int] = []
+    var scale: [String: Double] = [:]
+}
+
+/// The cards already used, kept on the device by message and place in the reply; the newest 200.
+enum NunaAnyaCardUses {
+    static let key = "nuna.anya.cardsUsed"
+    private struct Entry: Codable { var id: String; var use: NunaAnyaCardUse }
+
+    private static var entries: [Entry] {
+        UserDefaults.standard.data(forKey: key).flatMap { try? JSONDecoder().decode([Entry].self, from: $0) } ?? []
+    }
+
+    static func use(_ id: String?) -> NunaAnyaCardUse? {
+        guard let id else { return nil }
+        return entries.first { $0.id == id }?.use
+    }
+
+    static func record(_ use: NunaAnyaCardUse, for id: String?) {
+        guard let id else { return }
+        let kept = Array(([Entry(id: id, use: use)] + entries.filter { $0.id != id }).prefix(200))
+        if let data = try? JSONEncoder().encode(kept) { UserDefaults.standard.set(data, forKey: key) }
+    }
+}
+
+private struct NunaAnyaCardIDKey: EnvironmentKey { static let defaultValue: String? = nil }
+
+extension EnvironmentValues {
+    /// Which card of which message a card is; nil for a card that is not part of a kept conversation.
+    var nunaAnyaCardID: String? {
+        get { self[NunaAnyaCardIDKey.self] }
+        set { self[NunaAnyaCardIDKey.self] = newValue }
     }
 }
 
@@ -110,6 +153,7 @@ struct NunaAnyaProgramCard: View {
     @State private var saved = false
     @State private var saving = false
     @State private var showGym = false
+    @Environment(\.nunaAnyaCardID) private var cardID
 
     var body: some View {
         NunaCard(small: true) {
@@ -150,6 +194,7 @@ struct NunaAnyaProgramCard: View {
             }
         }
         .sheet(isPresented: $showGym) { NunaQuickPanel(route: NunaWorkoutRoute.gym) }
+        .onAppear { if NunaAnyaCardUses.use(cardID) != nil { saved = true } }
     }
 
     private func target(_ it: AnyaProgramItem) -> String {
@@ -161,6 +206,7 @@ struct NunaAnyaProgramCard: View {
     }
 
     private func save() async {
+        guard NunaAnyaCardUses.use(cardID) == nil else { saved = true; return }
         guard let store = await repo.storeHandle() else { return }
         saving = true; defer { saving = false }
         let now = Int(Date().timeIntervalSince1970)
@@ -195,6 +241,7 @@ struct NunaAnyaProgramCard: View {
         }
         await NunaCustomExercises.remember(picks, repo: repo, coach: model.coach)
         await repo.refresh()
+        NunaAnyaCardUses.record(NunaAnyaCardUse(count: spec.days.count), for: cardID)
         saved = true
     }
 }
@@ -248,6 +295,7 @@ struct NunaAnyaLabCard: View {
     @State private var saving = false
     @State private var savedCount: Int?
     @State private var showLab = false
+    @Environment(\.nunaAnyaCardID) private var cardID
 
     private var needsDay: Bool { spec.day == nil && spec.results.contains { $0.day == nil } }
     private var fallbackKey: String { Repository.localDayKey(fallbackDay) }
@@ -295,6 +343,7 @@ struct NunaAnyaLabCard: View {
             }
         }
         .sheet(isPresented: $showLab) { NunaQuickPanel(route: NunaTodayRoute.labBook) }
+        .onAppear { if let used = NunaAnyaCardUses.use(cardID) { savedCount = used.count; excluded = Set(used.excluded) } }
     }
 
     @ViewBuilder private func line(_ i: Int, _ r: AnyaLabResult) -> some View {
@@ -331,10 +380,12 @@ struct NunaAnyaLabCard: View {
     }
 
     private func save() async {
+        if let used = NunaAnyaCardUses.use(cardID) { savedCount = used.count; return }
         let rows = chosen
         guard !rows.isEmpty else { return }
         saving = true; defer { saving = false }
         await NunaLabStore.save(NunaLabStore.storedRows(rows, source: "anya-lab", deviceId: repo.deviceId), repo: repo)
+        NunaAnyaCardUses.record(NunaAnyaCardUse(count: rows.count, excluded: excluded.sorted()), for: cardID)
         savedCount = rows.count
     }
 }

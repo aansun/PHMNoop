@@ -26,7 +26,7 @@ struct AnthropicClient: AIProviderClient {
         var turns = wire(messages)
         if let inlineImage, !inlineImage.isEmpty, let last = messages.last, last.role == .user {
             turns[turns.count - 1] = ["role": "user", "content": [
-                ["type": "image", "source": ["type": "base64", "media_type": "image/png", "data": inlineImage]],
+                ["type": "image", "source": ["type": "base64", "media_type": AIImageType.mime(base64: inlineImage), "data": inlineImage]],
                 ["type": "text", "text": last.content],
             ]]
         }
@@ -97,7 +97,7 @@ struct AnthropicClient: AIProviderClient {
         var body = wire(messages)
         if let inlineImage, !inlineImage.isEmpty, let last = messages.last, last.role == .user {
             body[body.count - 1] = ["role": "user", "content": [
-                ["type": "image", "source": ["type": "base64", "media_type": "image/png", "data": inlineImage]],
+                ["type": "image", "source": ["type": "base64", "media_type": AIImageType.mime(base64: inlineImage), "data": inlineImage]],
                 ["type": "text", "text": last.content],
             ]]
         }
@@ -124,7 +124,7 @@ struct AnthropicClient: AIProviderClient {
         var turns = wire(messages)
         if let inlineImage, !inlineImage.isEmpty, let last = messages.last, last.role == .user {
             turns[turns.count - 1] = ["role": "user", "content": [
-                ["type": "image", "source": ["type": "base64", "media_type": "image/png", "data": inlineImage]],
+                ["type": "image", "source": ["type": "base64", "media_type": AIImageType.mime(base64: inlineImage), "data": inlineImage]],
                 ["type": "text", "text": last.content],
             ]]
         }

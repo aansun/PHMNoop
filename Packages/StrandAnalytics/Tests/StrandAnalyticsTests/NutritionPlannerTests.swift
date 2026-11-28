@@ -47,4 +47,10 @@ final class NutritionPlannerTests: XCTestCase {
         XCTAssertEqual(FigureGuard.unknownFigures(in: "Target 2250 kcal dan karbo 55%", facts: facts), [2250])
         XCTAssertEqual(FigureGuard.figures(in: "0,500 dan 1,200 dan 12.5"), [0.5, 1200, 12.5])
     }
+
+    func testDecimalsFollowTheCard() {
+        let words = "Turun 0.5 kg dari 79.3 kg, target 1.915 kcal, WHO 0.83 g. Selesai."
+        XCTAssertEqual(FigureGuard.localised(words, decimalSeparator: ","), "Turun 0,5 kg dari 79,3 kg, target 1.915 kcal, WHO 0,83 g. Selesai.")
+        XCTAssertEqual(FigureGuard.localised(words, decimalSeparator: "."), words)
+    }
 }

@@ -118,7 +118,7 @@ struct GeminiClient: AIProviderClient {
     ) async throws {
         var contents = GeminiClient.buildContents(from: messages)
         if let image = inlineImage {
-            GeminiClient.appendImage(image, mimeType: "image/png", to: &contents)
+            GeminiClient.appendImage(image, mimeType: AIImageType.mime(base64: image), to: &contents)
         }
 
         let body: [String: Any] = [

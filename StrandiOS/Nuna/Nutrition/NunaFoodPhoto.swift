@@ -5,13 +5,23 @@ import Vision
 
 /// Photos of meals: resizing one for the provider, reading food names from it on the phone for providers that cannot see, and the camera.
 enum NunaFoodPhoto {
-    /// The photo shrunk to at most 1280 points on a side, as a PNG (base64) for the provider and as an image for the thumbnail.
+    /// The photo shrunk to at most 1280 points on a side, as a JPEG (base64) for the provider and as an image for the thumbnail.
     static func prepare(_ data: Data) -> (image: UIImage, base64: String)? {
         guard let source = UIImage(data: data) else { return nil }
         let longest = max(source.size.width, source.size.height)
         let scaled = longest > 1280 ? (source.preparingThumbnail(of: CGSize(width: 1280, height: 1280)) ?? source) : source
-        guard let png = scaled.pngData() else { return nil }
-        return (scaled, png.base64EncodedString())
+        return (scaled, jpeg(scaled).base64EncodedString())
+    }
+
+    /// A picture as JPEG, a fraction of the size of PNG for a photo; whatever is clear in it comes out white.
+    static func jpeg(_ image: UIImage) -> Data {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = image.scale; format.opaque = true
+        return UIGraphicsImageRenderer(size: image.size, format: format).jpegData(withCompressionQuality: 0.85) { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(origin: .zero, size: image.size))
+            image.draw(at: .zero)
+        }
     }
 
     /// Words the classifier uses for any food picture; they say nothing about what is on the plate.

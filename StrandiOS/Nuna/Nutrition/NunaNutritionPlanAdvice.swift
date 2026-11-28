@@ -64,7 +64,12 @@ enum NunaNutritionPlanAdvice {
             ]
             if let bmi { facts.append(String(format: "BMI %.1f (WHO adult range 18.5 to 24.9).", bmi)) }
             let given = facts.joined(separator: "\n")
-            if let words = await coach.explainNutritionPlan(facts: given), FigureGuard.unknownFigures(in: words, facts: given).isEmpty { explanation = words }
+            if let words = await coach.explainNutritionPlan(facts: given), FigureGuard.unknownFigures(in: words, facts: given).isEmpty {
+                let language = UserDefaults.standard.string(forKey: AICoachEngine.responseLanguageKey) ?? "app"
+                let separator = language == "id" ? "," : (language == "en" ? "." : AppLanguage.activeLocale.decimalSeparator ?? ".")
+                let unit = language == "id" ? "kkal" : (language == "en" ? "kcal" : String(localized: "kcal"))
+                explanation = FigureGuard.localised(words, decimalSeparator: separator).replacingOccurrences(of: "kcal", with: unit)
+            }
         }
 
         return AnyaPlanSpec(targetKcal: plan.targetKcal, paceKgPerWeek: plan.paceKgPerWeek, proteinPerKg: plan.proteinPerKg, fatShare: plan.fatShare,

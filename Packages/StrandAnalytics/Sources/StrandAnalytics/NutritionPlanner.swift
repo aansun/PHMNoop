@@ -96,6 +96,13 @@ public enum FigureGuard {
         }
     }
 
+    /// The text with its decimal points written as `decimalSeparator`, to match the figures shown beside it. Only a point followed by one or two
+    /// digits is a decimal; three digits are a thousands group and stay as they are.
+    public static func localised(_ text: String, decimalSeparator: String) -> String {
+        guard decimalSeparator == "," else { return text }
+        return text.replacingOccurrences(of: #"(?<=\d)\.(?=\d{1,2}(?!\d))"#, with: ",", options: .regularExpression)
+    }
+
     /// Figures of `text` that the facts do not hold, allowing for rounding. Small counts ("two weeks", "7 days") are let through.
     public static func unknownFigures(in text: String, facts: String) -> [Double] {
         let known = figures(in: facts)
