@@ -34,6 +34,9 @@ not fit yours, and I make no promise that it will.
 The strap protocol, storage and base scores underneath are NOOP's. What I changed is what sits on top: a new design, a coach that reads your day, a Health tab, a workout module with a
 Strength Trainer of its own, weekly plans, and the explanations behind every number. A few calculations differ too, and they are listed under [Things to know before you use it](#things-to-know-before-you-use-it).
 
+> **A note on where it stands.** The interface and its experience are designed with care, and the way the app is used is meant to stay. The accuracy of the data keeps being worked on.
+> That will take a long while, because it needs real data collected over a long period, for as long as I wear this strap.
+
 **What stays true**
 
 - Everything is computed and stored **on the phone**. There is no PHMN server, no account and no telemetry.
