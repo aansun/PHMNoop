@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "3.2.1",
+          "buildVersion": "479",
+          "date": "2026-11-28",
+          "localizedDescription": "Anya converses and looks up your own data, learns your food figures, and the nutrition and gym pages are redrawn.",
+          "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.2.1/PHMN-v3.2.1-ios-unsigned.ipa",
+          "size": 85759371,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "3.2.0",
           "buildVersion": "476",
           "date": "2026-11-27",
@@ -42,12 +51,12 @@
           "NSSpeechRecognitionUsageDescription": "PHMN transcribes your question on-device so you can ask the coach out loud instead of typing. Audio never leaves your iPhone."
         }
       },
-      "version": "3.2.0",
-      "buildVersion": "476",
-      "versionDate": "2026-11-27",
-      "versionDescription": "Blood pressure, a new Beat rhythm page, a fuller sleep planner, and pages that open complete.",
-      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.2.0/PHMN-v3.2.0-ios-unsigned.ipa",
-      "size": 85498909,
+      "version": "3.2.1",
+      "buildVersion": "479",
+      "versionDate": "2026-11-28",
+      "versionDescription": "Anya converses and looks up your own data, learns your food figures, and the nutrition and gym pages are redrawn.",
+      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v3.2.1/PHMN-v3.2.1-ios-unsigned.ipa",
+      "size": 85759371,
       "minOSVersion": "17.0"
     }
   ],
