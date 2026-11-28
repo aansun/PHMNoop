@@ -38,18 +38,21 @@ struct NunaDetailHeader: View {
     }
 
     var body: some View {
-        if centersTitle || settingsPage {
-            ZStack {
+        // Every page has its name small and in the middle. A page that sets a date and a picture beside it, or a menu that names it, keeps the left.
+        if centersTitle || settingsPage || (subtitle == nil && titleSymbol == nil && switcher == nil) {
+            // Side by side rather than stacked, so a wide control at the end narrows the title instead of lying over it.
+            HStack(spacing: 8) {
+                if showsBack { backButton }
+                else if trailing != nil || onAnya != nil { Color.clear.frame(width: 44, height: 44) }
+                Text(title).font(.nuna(size: settingsPage ? nunaSettingsTitleSize : 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: .infinity).accessibilityAddTraits(.isHeader)
                 HStack(spacing: 10) {
-                    if showsBack { backButton }
-                    Spacer(minLength: 8)
                     if let trailing { trailing }
                     if let onAnya {
                         Button(action: onAnya) { AnyaMark(size: 32).frame(width: 44, height: 44) }.accessibilityLabel(Text("Ask Anya"))
                     }
                 }
-                Text(title).font(.nuna(size: settingsPage ? nunaSettingsTitleSize : 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7).padding(.horizontal, 56).accessibilityAddTraits(.isHeader)
+                .frame(minWidth: 44, alignment: .trailing)
             }
         } else {
             leadingTitleBar

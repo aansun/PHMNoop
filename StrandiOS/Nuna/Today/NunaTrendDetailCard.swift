@@ -285,27 +285,30 @@ struct NunaTrendDetailCard: View {
                 rangeSwitch
             })
         }
-        return AnyView(HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textSecondary)
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: shownValue).font(.nuna(size: 44, weight: .bold, design: NunaType.design))
-                        .tracking(nunaTrackingNumber(44)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                    if !unit.isEmpty {
-                        Text(verbatim: unit).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+        return AnyView(VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textSecondary)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(verbatim: shownValue).font(.nuna(size: 44, weight: .bold, design: NunaType.design))
+                            .tracking(nunaTrackingNumber(44)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                        if !unit.isEmpty {
+                            Text(verbatim: unit).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        }
                     }
                 }
-                if let shownChip { NunaChip(shownChip.text, color: shownChip.color) }
-                if let shownNote {
-                    Text(verbatim: shownNote).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                Spacer(minLength: 0)
+                VStack(alignment: .trailing, spacing: 12) {
+                    rangeSwitch
+                    dateStepper
                 }
             }
-            Spacer(minLength: 0)
-            VStack(alignment: .trailing, spacing: 12) {
-                rangeSwitch
-                dateStepper
+            // The status takes a line of its own: a chip keeps its words on one line, and beside the switch a long one pushed the card off the screen.
+            if let shownChip { NunaChip(shownChip.text, color: shownChip.color) }
+            if let shownNote {
+                Text(verbatim: shownNote).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         })
     }

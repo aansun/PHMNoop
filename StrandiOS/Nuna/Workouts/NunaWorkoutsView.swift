@@ -115,16 +115,10 @@ struct NunaWorkoutsView: View {
     // MARK: Header
 
     private var header: some View {
-        HStack(spacing: 10) {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.left").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44)
-            }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
-            Text("Workouts").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-            Spacer()
+        NunaDetailHeader(title: "Workouts", trailing: AnyView(HStack(spacing: 10) {
             roundLink(.gym, "act:strength-trainer", "Strength Trainer")
             roundLink(.settings, NunaIcons.featureSettings, "Workout settings")
-        }
+        }), centersTitle: true)
     }
 
     private func roundLink(_ r: NunaWorkoutRoute, _ icon: String, _ label: LocalizedStringKey) -> some View {

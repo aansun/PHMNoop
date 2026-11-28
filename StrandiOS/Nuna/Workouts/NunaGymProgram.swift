@@ -59,10 +59,12 @@ struct NunaProgramEditor: View {
     var body: some View {
         NunaDetailScreen(isNew ? "New program" : "Edit program", trailing: AnyView(saveButton), centersTitle: true) {
             summaryCard
-            NunaFormField("Name") { TextField("", text: $name, prompt: Text("Push · chest, shoulders, triceps").foregroundStyle(NunaPalette.textMuted)) }
+            // What the person wrote keeps its own capitals, in a look that sets labels in capitals.
+            NunaFormField("Name") { TextField("", text: $name, prompt: Text("Push · chest, shoulders, triceps").foregroundStyle(NunaPalette.textMuted)).textCase(nil) }
             NunaFormField("Note") {
                 TextField("", text: $note, prompt: Text("Anything you want to remember").foregroundStyle(NunaPalette.textMuted), axis: .vertical).lineLimit(1...4)
                     .onChange(of: note) { new in if new.count > WhoopStore.maxProgramNoteLength { note = String(new.prefix(WhoopStore.maxProgramNoteLength)) } }
+                    .textCase(nil)
             }
             NunaTitleRow(title: "Exercises") { EmptyView() }
             exercises
@@ -143,7 +145,7 @@ struct NunaProgramEditor: View {
                 HStack(alignment: .top, spacing: 12) {
                     Button { if let lib { demo = lib } else { video = item.exercise } } label: { NunaExerciseThumb(lib, width: 58, height: 44) }.buttonStyle(.plain)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(verbatim: item.exercise).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
+                        Text(verbatim: item.exercise).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading).textCase(nil)
                         if let known { Text(verbatim: known).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1) }
                         else { Text("Choose its muscles in the menu").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).textCase(nil) }
                     }
