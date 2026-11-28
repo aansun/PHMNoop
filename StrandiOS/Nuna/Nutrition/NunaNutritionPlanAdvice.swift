@@ -71,6 +71,16 @@ enum NunaNutritionPlanAdvice {
                             explanation: explanation, reasons: reasons, cautions: cautions)
     }
 
+    /// The plan on show as the provider is told it, so a follow-up question is answered about these figures.
+    static func told(_ spec: AnyaPlanSpec) -> String {
+        let button = String(localized: "Apply this plan")
+        var lines = ["A nutrition plan is on show; nothing is set until the person taps the button labelled \"\(button)\". Daily target \(Int(spec.targetKcal.rounded())) kcal."]
+        if let pace = spec.paceKgPerWeek { lines.append("Pace \(pace) kg a week.") }
+        if let protein = spec.proteinPerKg { lines.append(String(format: "Protein %.1f g per kg.", protein)) }
+        if let fat = spec.fatShare { lines.append("Fat \(Int((fat * 100).rounded()))% of energy; carbohydrate is the rest.") }
+        return (lines + spec.reasons + spec.cautions).joined(separator: "\n")
+    }
+
     /// A stored day key as the person reads a date.
     private static func date(_ key: String) -> String {
         let parser = DateFormatter(); parser.locale = Locale(identifier: "en_US_POSIX"); parser.dateFormat = "yyyy-MM-dd"

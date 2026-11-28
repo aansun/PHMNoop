@@ -72,6 +72,8 @@ struct NunaAnyaSheet: View {
     var outlook = false
     /// Set with `outlook` in the late afternoon: the sheet opens on the Day In Review instead (the day looked back on, and tonight's bedtime to commit to).
     var review = false
+    /// Set by Strategy's "Ask Anya for a plan": the sheet opens on a nutrition plan worked out now, with the card that applies it.
+    var planRequest = false
     @EnvironmentObject private var coach: AICoachEngine
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
@@ -105,6 +107,9 @@ struct NunaAnyaSheet: View {
     /// The Day In Review on show, and whether tonight's bedtime was committed to.
     @State private var reviewData: NunaDayReview?
     @State private var reviewCommitted = NunaReviewGate.committedBedtime() != nil
+    /// The nutrition plan on show, and whether there was too little in the profile to work one out.
+    @State private var planSpec: AnyaPlanSpec?
+    @State private var planFailed = false
 
     /// Provider replies use light markdown (bold, lists); show it formatted and keep line breaks.
     static func markdown(_ s: String) -> AttributedString {
@@ -124,7 +129,7 @@ struct NunaAnyaSheet: View {
     private var notice: String? {
         if withholdsFigures { return nil }
         // On Home what she greeted with is what a follow-up answers.
-        return [read.map { NunaMark.plain($0.headline + ($0.detail.map { ". " + $0 } ?? "")) }, isHome ? explanation : nil, NunaAnyaMemory.summary(module)].compactMap { $0 }.joined(separator: "\n\n").nilIfEmpty
+        return [read.map { NunaMark.plain($0.headline + ($0.detail.map { ". " + $0 } ?? "")) }, isHome ? explanation : nil, planSpec.map(NunaNutritionPlanAdvice.told), NunaAnyaMemory.summary(module)].compactMap { $0 }.joined(separator: "\n\n").nilIfEmpty
     }
 
     var body: some View {
@@ -151,6 +156,10 @@ struct NunaAnyaSheet: View {
             if outlook { await loadOutlook() }
             if isHome { home = await NunaAnyaHome.summary(repo: repo, profile: profile) }
             loaded = true
+            if planRequest, planSpec == nil {
+                planSpec = await NunaNutritionPlanAdvice.make(repo: repo, profile: profile, coach: coach)
+                planFailed = planSpec == nil
+            }
             // Anya greets once the figures are up; a kept greeting shows at once.
             if isHome, let home, explanation == nil {
                 explanation = NunaAnyaHome.cachedGreeting(home, coach: coach)
@@ -494,6 +503,15 @@ extension NunaAnyaSheet {
     @ViewBuilder private var floatingMessage: some View {
         if outlook {
             outlookMessage
+        } else if planRequest {
+            if let planSpec {
+                NunaAnyaPlanCard(spec: planSpec, onDiscard: { dismiss() })
+            } else if planFailed {
+                Text("A plan needs your weight, height and age in your profile first.")
+                    .font(NunaAnyaType.reply).foregroundStyle(.white.opacity(0.7)).lineSpacing(NunaAnyaType.replySpacing).fixedSize(horizontal: false, vertical: true)
+            } else {
+                HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Working it out…").font(NunaAnyaType.thinking).foregroundStyle(.white.opacity(0.7)) }
+            }
         } else if isHome, let home {
             VStack(alignment: .leading, spacing: 18) {
                 if explaining {

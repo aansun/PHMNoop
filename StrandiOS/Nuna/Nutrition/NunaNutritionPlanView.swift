@@ -22,9 +22,7 @@ struct NunaNutritionPlanView: View {
     @State private var showGoal = false
     @EnvironmentObject private var coach: AICoachEngine
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
-    @State private var asking = false
-    @State private var suggestion: AnyaPlanSpec?
-    @State private var askError: String?
+    @State private var showPlan = false
 
     private static let paces: [Double] = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5]
     private var weightKg: Double { NunaFoodStore.planWeightKg(weights: weights, profile: profile) ?? 70 }
@@ -49,6 +47,7 @@ struct NunaNutritionPlanView: View {
         .sheet(isPresented: $showGoal) {
             NunaNumberSheet(title: "Goal weight", unit: "kg", initial: goalKg > 0 ? goalKg : weightKg, range: 25...250, step: 0.5, decimals: 1) { goalKg = $0 }
         }
+        .sheet(isPresented: $showPlan) { NunaAnyaSheet(context: "nutrition", planRequest: true) }
         .task(id: "\(repo.refreshSeq)-\(changes.seq)") { await load() }
     }
 
@@ -167,31 +166,20 @@ struct NunaNutritionPlanView: View {
 
     private var anyaAsk: some View {
         VStack(spacing: 10) {
-            Button { Task { await askAnya() } } label: {
+            Button { showPlan = true } label: {
                 HStack(spacing: 8) {
-                    if asking { ProgressView().tint(NunaPalette.textPrimary) } else { Image(systemName: "sparkles").font(.nuna(size: 15, weight: .bold)) }
-                    Text(asking ? "Working it out…" : "Ask Anya for a plan").font(.nuna(size: 16, weight: .bold))
+                    Image(systemName: "sparkles").font(.nuna(size: 15, weight: .bold))
+                    Text("Ask Anya for a plan").font(.nuna(size: 16, weight: .bold))
                 }
                 .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54)
                 .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(LinearGradient(colors: NunaAnyaWing.colors, startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5))
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain).disabled(asking || !coach.isConfigured).opacity(asking || !coach.isConfigured ? 0.5 : 1)
+            .buttonStyle(.plain).disabled(!coach.isConfigured).opacity(coach.isConfigured ? 1 : 0.5)
             if !coach.isConfigured {
                 Text("Connect Anya in More to use this.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
             }
-            if let askError { Text(verbatim: askError).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.warning).fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
-            if let suggestion { NunaAnyaPlanCard(spec: suggestion, onDiscard: { self.suggestion = nil }).id(suggestion.targetKcal) }
         }
-    }
-
-    private func askAnya() async {
-        asking = true; suggestion = nil; askError = nil
-        defer { asking = false }
-        guard let spec = await NunaNutritionPlanAdvice.make(repo: repo, profile: profile, coach: coach) else {
-            askError = String(localized: "A plan needs your weight, height and age in your profile first."); return
-        }
-        suggestion = spec
     }
 
     private func paceLabel(_ p: Double) -> String {

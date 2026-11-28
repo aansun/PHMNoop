@@ -4,7 +4,7 @@ import StrandDesign
 import StrandAnalytics
 
 /// A nutrition plan Anya worked out from the person's data. It shows the numbers next to what is set now, the data each rests on and anything to take to a
-/// clinician; nothing changes until the person taps Apply. Used in the Anya chat and on the Strategy screen.
+/// clinician; nothing changes until the person taps Apply. Used in the Anya chat and in the sheet Strategy opens.
 struct NunaAnyaPlanCard: View {
     let spec: AnyaPlanSpec
     /// Called when the person discards the suggestion; the screen drops it so nothing is left behind.
