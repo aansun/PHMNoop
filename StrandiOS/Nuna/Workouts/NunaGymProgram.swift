@@ -57,7 +57,8 @@ struct NunaProgramEditor: View {
     }
 
     var body: some View {
-        NunaDetailScreen(isNew ? "New program" : "Edit program", trailing: AnyView(saveButton)) {
+        NunaDetailScreen(isNew ? "New program" : "Edit program", trailing: AnyView(saveButton), centersTitle: true) {
+            summaryCard
             NunaFormField("Name") { TextField("", text: $name, prompt: Text("Push · chest, shoulders, triceps").foregroundStyle(NunaPalette.textMuted)) }
             NunaFormField("Note") {
                 TextField("", text: $note, prompt: Text("Anything you want to remember").foregroundStyle(NunaPalette.textMuted), axis: .vertical).lineLimit(1...4)
@@ -65,7 +66,6 @@ struct NunaProgramEditor: View {
             }
             NunaTitleRow(title: "Exercises") { EmptyView() }
             exercises
-            summaryCard
             Text("Every target is optional: this is the plan, not the record. What you lift is entered during the session. Sessions already logged from this program are kept.")
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
             if !isNew {
@@ -301,7 +301,7 @@ struct NunaProgramEditor: View {
                 HStack {
                     tile("Exercises", "\(items.count)", nil)
                     tile("Sets", "\(totalSets)", nil)
-                    tile("Estimated", "\(estimatedMinutes)", "min")
+                    tile("Estimated", "\(estimatedMinutes)", String(localized: "min"))
                 }
             }
         }
@@ -427,19 +427,13 @@ struct NunaProgramDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     if let program, let w = asWorkout {
-                        NunaWorkoutHero(image: image, title: program.name, byline: Text("My program"),
+                        NunaWorkoutHero(image: image, title: dayName(program.name), byline: planName(program.name).map { Text(verbatim: $0) } ?? Text("My program"),
                                         stats: [("\(w.minutes)", "min", "Est duration"), ("\(items.count)", nil, "Exercises"), ("\(w.totalSets)", nil, "Total sets")])
-                        VStack(alignment: .leading, spacing: 26) {
+                        VStack(alignment: .leading, spacing: NunaSpacing.section) {
+                            if !items.isEmpty { aboutCard(equipment: w.equipmentText, muscles: w.groupsText) }
+                            if let note = program.note, !note.isEmpty { noteCard(note) }
                             progressCard
-                            if let note = program.note, !note.isEmpty {
-                                Text(verbatim: note).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
-                            }
-                            NunaDivider()
-                            if !items.isEmpty {
-                                fact("Equipment", w.equipmentText)
-                                fact("Muscle groups", w.groupsText)
-                            }
-                            exerciseList
+                            exerciseList.padding(.top, 8)
                         }
                         .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 130)
                     } else if loaded {
@@ -490,12 +484,48 @@ struct NunaProgramDetailView: View {
         .accessibilityLabel(Text("Program menu"))
     }
 
-    private func fact(_ label: LocalizedStringKey, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(label).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-            Text(verbatim: value).font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+    /// A program Anya saved is named "plan · day". The day is what tells it from its siblings, so it is the title and the plan goes under it.
+    private func dayName(_ name: String) -> String {
+        let parts = name.components(separatedBy: " · ")
+        return parts.count > 1 ? parts.dropFirst().joined(separator: " · ") : name
+    }
+
+    private func planName(_ name: String) -> String? {
+        let parts = name.components(separatedBy: " · ")
+        return parts.count > 1 ? parts[0] : nil
+    }
+
+    /// What the program needs and works, as the rows under a score are drawn.
+    private func aboutCard(equipment: String, muscles: String) -> some View {
+        NunaCard {
+            VStack(spacing: 0) {
+                about("dumbbell", "Equipment", equipment)
+                NunaDivider()
+                about("figure.strengthtraining.traditional", "Muscle groups", muscles)
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func about(_ icon: String, _ label: LocalizedStringKey, _ value: String) -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 30)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: value).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, 12)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func noteCard(_ note: String) -> some View {
+        NunaCard {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Note").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: note).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            }
+        }
     }
 
     // MARK: Progress
@@ -531,14 +561,15 @@ struct NunaProgramDetailView: View {
         if runs.isEmpty {
             // Nothing to draw yet: a line, not an empty chart with its switch.
             if loaded {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Progress").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                    Text("Run this routine a couple of times and its progress shows here.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                NunaCard {
+                    VStack(alignment: .leading, spacing: 8) {
+                        NunaWeeklyTitle(title: "Progress", opens: false)
+                        Text("Run this routine a couple of times and its progress shows here.").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    }
                 }
-                .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-                .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
-        } else { chartCard }
+        } else { NunaCard { chartCard } }
     }
 
     /// The volume the runs of this routine added up to, a bar a day over a week or a month and a bar a week over six months, as the heart rate variability page draws
@@ -648,7 +679,7 @@ struct NunaProgramDetailView: View {
                         }
                         Spacer(minLength: 8)
                         if let s = item.targetSets {
-                            Text(verbatim: NunaExerciseKind.of(item.exercise).targetText(sets: s, reps: item.targetRepsLow) ?? "\(s)").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: NunaExerciseKind.of(item.exercise).targetText(sets: s, reps: item.targetRepsLow, upTo: item.targetRepsHigh) ?? "\(s)").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         }
                     }
                     .padding(.horizontal, 8).padding(.vertical, 6).padding(.trailing, 8)

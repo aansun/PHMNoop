@@ -42,7 +42,8 @@ struct NunaWeeklyTrendCard: View {
     var body: some View {
         let card = NunaCard {
             VStack(alignment: .leading, spacing: 14) {
-                NunaWeeklyTitle(title: title)
+                // A chevron only where the card goes somewhere.
+                NunaWeeklyTitle(title: title, opens: destination != nil || MetricCatalog.metric(key: key, source: source) != nil)
                 chart
             }
         }
@@ -235,12 +236,13 @@ struct NunaWeeklyHeading: View {
 /// The title of a weekly card: the same type as the figure titles on the cards above it, with a slim chevron.
 struct NunaWeeklyTitle: View {
     let title: LocalizedStringKey
+    var opens = true
     var body: some View {
         HStack {
             Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.8).accessibilityAddTraits(.isHeader)
             Spacer(minLength: 8)
-            Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            if opens { Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
         }
     }
 }

@@ -17,8 +17,9 @@ struct NunaApplicationsView: View {
         NunaDetailScreen("Application") {
             NunaCard(small: true) {
                 VStack(spacing: 0) {
-                    // Strength Trainer opens straight to its own page; Trends opens over this one (it has no back button of its own).
-                    NavigationLink { NunaGymPage() } label: {
+                    // Strength Trainer opens straight to its own page, by its route so the rows on it can push theirs; Trends opens over this one (it has no
+                    // back button of its own).
+                    NavigationLink(value: NunaWorkoutRoute.gym) {
                         NunaListRow("Strength Trainer", subtitle: "Programs, progress and sessions", systemImage: "act:strength-trainer", showsChevron: true)
                     }.buttonStyle(.plain)
                     NunaDivider()
@@ -52,6 +53,7 @@ struct NunaApplicationsView: View {
         }
         // These are screens of the Today stack; this stack needs to know how to open them.
         .nunaTodayDestinations()
+        .nunaWorkoutDestinations()
     }
 
     private func app(_ route: NunaTodayRoute, _ title: LocalizedStringKey, _ subtitle: LocalizedStringKey, _ icon: String) -> some View {

@@ -273,7 +273,7 @@
  "Add your height and weight": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Isi tinggi dan berat badanmu"}}}},
  "%lld of 7 on target": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld dari 7 sesuai target"}}}},
  "The line is your target. On target means within 10% of it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Garis adalah targetmu. Sesuai target berarti dalam 10% darinya."}}}},
- "Nothing to change. A check-in needs at least 5 days of food logged this week and weigh-ins across a week; when your trend drifts from your pace, a suggestion shows up here and on the Nutrition page.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak ada yang perlu diubah. Check-in butuh minimal 5 hari makanan tercatat minggu ini dan timbangan sepanjang seminggu; saat tren menyimpang dari lajumu, saran muncul di sini dan di halaman Nutrition."}}}},
+ "Nothing to change. A check-in needs at least 5 days of food logged this week and weigh-ins across a week; when your trend drifts from your pace, a suggestion shows up here and on the Nutrition page.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak ada yang perlu diubah. Check-in butuh minimal 5 hari makanan tercatat minggu ini dan timbangan sepanjang seminggu; saat tren menyimpang dari lajumu, saran muncul di sini dan di halaman Nutrisi."}}}},
  "Meal estimate": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Perkiraan makanan"}}}},
  "%lld kcal · estimated by Anya": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld kkal · diperkirakan oleh Anya"}}}},
  "Added %lld to the diary": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld ditambahkan ke diary"}}}},
@@ -9925,5 +9925,15 @@
  "Forget my figures and use Anya's": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lupakan angkaku, pakai angka Anya"}}}},
  "Figures you change are remembered and used the next time Anya estimates this food.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Angka yang kamu ubah diingat dan dipakai saat Anya memperkirakan makanan ini lagi."}}}},
  "Your food figures": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Angka makananmu"}}}},
- "Nothing yet. Change a figure with the pencil on an estimate and it is remembered here.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum ada. Ubah angka lewat ikon pensil pada perkiraan, nanti diingat di sini."}}}}
+ "Nothing yet. Change a figure with the pencil on an estimate and it is remembered here.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum ada. Ubah angka lewat ikon pensil pada perkiraan, nanti diingat di sini."}}}},
+ "kcal · %@ eaten today": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "kkal · %@ dimakan hari ini"}}}},
+ "kcal · not started yet": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "kkal · belum dimulai"}}}},
+ "Target from this pace": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Target dari laju ini"}}}},
+ "Your target is set to %@ kcal. Tap to use the figure from this pace.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Targetmu disetel %@ kkal. Ketuk untuk memakai angka dari laju ini."}}}},
+ "%lld%% chosen": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "dipilih %lld%%"}}}},
+ "%lld%% of energy": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld%% energi"}}}},
+ "Eaten this week": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dimakan minggu ini"}}}},
+ "On target means within 10%% of %@ kcal.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sesuai target berarti dalam 10%% dari %@ kkal."}}}},
+ "the rest": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "sisanya"}}}},
+ "kg/week": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "kg/minggu"}}}}
 }, "version":"1.0" }

@@ -92,11 +92,13 @@ enum NunaExerciseKind: Equatable {
         }
     }
 
-    /// A program line's target: "3 × 10", or "3 × 00:45" for a hold.
-    func targetText(sets: Int?, reps: Int?) -> String? {
+    /// A program line's target: "3 × 10", "3 × 6–10" when the plan gives a range, or "3 × 00:45" for a hold.
+    func targetText(sets: Int?, reps: Int?, upTo: Int? = nil) -> String? {
         guard let sets else { return nil }
         guard let reps else { return "\(sets)" }
-        return self == .timed ? "\(sets) × \(Self.clock(reps))" : "\(sets) × \(reps)"
+        if self == .timed { return "\(sets) × \(Self.clock(reps))" }
+        if let upTo, upTo > reps { return "\(sets) × \(reps)–\(upTo)" }
+        return "\(sets) × \(reps)"
     }
 }
 #endif

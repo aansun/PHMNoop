@@ -36,10 +36,13 @@ struct NunaNutritionPlanView: View {
     }
 
     var body: some View {
-        NunaDetailScreen("Strategy") {
-            planCard
+        NunaDetailScreen("Strategy", centersTitle: true) {
+            hero
+            planPanel
+            if hasPlan, targetKcal > 0 { macroTiles }
+            if !hasPlan { startButton }
             if coachEnabled { anyaAsk }
-            if hasPlan, targetKcal > 0 { weekCard; checkInCard }
+            if hasPlan, targetKcal > 0 { weekSection; checkInCard }
             NunaExpandRow(title: "How this is worked out", subtitle: "", systemImage: "function",
                           text: "Your trend weight smooths each weigh-in so water and salt swings don't read as fat. What your body spends is worked out from what you ate and how the trend moved, at 7,700 kcal per kg, once there are two weeks of both; until then it comes from your profile. The target is that figure plus your pace. Protein follows your body weight, fat is a share of the calories and carbs are the rest. Everything is an estimate from your own numbers, not medical advice.")
         }
@@ -57,72 +60,106 @@ struct NunaNutritionPlanView: View {
 
     // MARK: Plan
 
-    private var planCard: some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    nunaTrendsCap("Your plan")
-                    Spacer()
-                    if hasPlan { Button { hasPlan = false; targetKcal = 0 } label: { Text("Remove").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }.buttonStyle(.plain) }
-                }.padding(.bottom, 6)
-                row("Goal weight") {
-                    Button { showGoal = true } label: { value(goalKg > 0 ? "\(nutFmt(goalKg, 1)) kg" : String(localized: "Not set")) }.buttonStyle(.plain)
+    /// The day's target in the ring, filled by how much of it has been eaten today. Before a plan is started the ring is empty and says so.
+    private var hero: some View {
+        let target = hasPlan && targetKcal > 0 ? targetKcal : computedTarget
+        let eaten = intake[Repository.localDayKey(Date())] ?? 0
+        let over = hasPlan && eaten > (target ?? .infinity)
+        return NunaScoreHero(caption: "Daily target", fraction: target.map { hasPlan && $0 > 0 ? eaten / $0 : 0 } ?? 0, number: nutFmt(target),
+                             suffix: hasPlan ? String(localized: "kcal · \(nutFmt(eaten)) eaten today") : String(localized: "kcal · not started yet"),
+                             name: LocalizedStringKey(paceShort(pace)), color: over ? NunaPalette.warning : NunaPalette.charge,
+                             hasNote: false, showsCaptionRow: false, ringTitle: "Target", ringSize: 280) { EmptyView() }
+            .padding(.top, 4)
+    }
+
+    /// What the target is made from, under the ring that shows it.
+    private var planPanel: some View {
+        NunaSignalPanel {
+            Button { showGoal = true } label: {
+                editable(NunaFigureRow(title: "Goal weight", icon: "scalemass", value: goalKg > 0 ? nutFmt(goalKg, 1) : String(localized: "Not set"), unit: goalKg > 0 ? "kg" : ""))
+            }.buttonStyle(.plain)
+            NunaDivider()
+            NunaMenu {
+                ForEach(Self.paces, id: \.self) { p in
+                    NunaMenuItem(verbatim: paceLabel(p), selected: pace == p) { pace = p; recalculate() }
                 }
+            } label: { editable(NunaFigureRow(title: "Pace", icon: "speedometer", value: paceAmount(pace), unit: pace == 0 ? "" : String(localized: "kg/week"))) }
+            NunaDivider()
+            NunaFigureRow(title: "Daily burn", icon: "flame", value: maintenance.map { nutFmt($0.kcal) } ?? "–", unit: maintenance == nil ? "" : String(localized: "kcal"))
+                .padding(.trailing, 22)
+            note(maintenanceNote)
+            if hasPlan, let c = computedTarget, abs(c - targetKcal) >= 10 {
                 NunaDivider()
-                row("Pace") {
-                    NunaMenu {
-                        ForEach(Self.paces, id: \.self) { p in
-                            NunaMenuItem(verbatim: paceLabel(p), selected: pace == p) { pace = p; recalculate() }
-                        }
-                    } label: { value(paceLabel(pace)) }
-                }
-                NunaDivider()
-                row("Daily burn") {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        value(maintenance.map { "\(nutFmt($0.kcal)) kcal" } ?? "–")
-                        Text(maintenanceNote).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                    }
-                }
-                NunaDivider()
-                row("Daily target") {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        value(hasPlan && targetKcal > 0 ? "\(nutFmt(targetKcal)) kcal" : (computedTarget.map { "\(nutFmt($0)) kcal" } ?? "–"))
-                        if hasPlan, let c = computedTarget, abs(c - targetKcal) >= 10 {
-                            Button { recalculate() } label: { Text(verbatim: String(localized: "Reset to \(nutFmt(c))")).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }.buttonStyle(.plain)
-                        }
-                    }
-                }
-                if let c = computedTarget, c <= NutritionMath.floorKcal + 0.5 {
-                    Text(verbatim: String(localized: "This pace would go under \(nutFmt(NutritionMath.floorKcal)) kcal, so the target stops there.")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).textCase(nil).padding(.top, 8)
-                }
-                if hasPlan {
-                    NunaDivider()
-                    row("Protein") {
-                        NunaMenu {
-                            ForEach([1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4], id: \.self) { v in
-                                NunaMenuItem(verbatim: "\(nutFmt(v, 1)) g/kg", selected: proteinPerKg == v) { proteinPerKg = v }
-                            }
-                        } label: { value("\(nutFmt(proteinPerKg, 1)) g/kg · \(nutFmt(macros?.proteinG)) g") }
-                    }
-                    NunaDivider()
-                    row("Fat") {
-                        NunaMenu {
-                            ForEach([0.20, 0.25, 0.28, 0.30, 0.35, 0.40], id: \.self) { v in
-                                NunaMenuItem(verbatim: "\(Int(v * 100))%", selected: abs(fatShare - v) < 0.001) { fatShare = v }
-                            }
-                        } label: { value("\(Int((fatShare * 100).rounded()))% · \(nutFmt(macros?.fatG)) g") }
-                    }
-                    NunaDivider()
-                    row("Carbs") { value(String(localized: "the rest · \(nutFmt(macros?.carbsG)) g")) }
-                }
-                if !hasPlan {
-                    Button { startPlan() } label: {
-                        Text("Start this plan").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 50)
-                            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    }.buttonStyle(.plain).disabled(computedTarget == nil).opacity(computedTarget == nil ? 0.5 : 1).padding(.top, 14)
-                    Text("A starting point from your own numbers. Not medical advice.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(.top, 8)
-                }
+                Button { recalculate() } label: {
+                    editable(NunaFigureRow(title: "Target from this pace", icon: "arrow.counterclockwise", value: nutFmt(c), unit: String(localized: "kcal")))
+                }.buttonStyle(.plain)
+                note(String(localized: "Your target is set to \(nutFmt(targetKcal)) kcal. Tap to use the figure from this pace."))
             }
+            if let c = computedTarget, c <= NutritionMath.floorKcal + 0.5 {
+                Text(verbatim: String(localized: "This pace would go under \(nutFmt(NutritionMath.floorKcal)) kcal, so the target stops there."))
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).textCase(nil).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
+            }
+        }
+    }
+
+    /// A row that can be changed carries a chevron.
+    private func editable<Row: View>(_ row: Row) -> some View {
+        HStack(spacing: 10) {
+            row
+            Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted).frame(width: 12)
+        }
+        .contentShape(Rectangle())
+    }
+
+    private func note(_ text: String) -> some View {
+        Text(verbatim: text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            .frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 44).padding(.bottom, 8)
+    }
+
+    /// The three macros of the target, in the order and colours of the Nutrition page. Protein and fat are chosen here; carbs are what is left.
+    private var macroTiles: some View {
+        HStack(alignment: .top, spacing: 10) {
+            macroTile("Carbs", grams: macros?.carbsG, kcalPerGram: 4, detail: String(localized: "the rest"), color: NunaPalette.effort, editable: false)
+            NunaMenu {
+                ForEach([1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4], id: \.self) { v in
+                    NunaMenuItem(verbatim: "\(nutFmt(v, 1)) g/kg", selected: proteinPerKg == v) { proteinPerKg = v }
+                }
+            } label: { macroTile("Protein", grams: macros?.proteinG, kcalPerGram: 4, detail: "\(nutFmt(proteinPerKg, 1)) g/kg", color: NunaPalette.charge, editable: true) }
+            NunaMenu {
+                ForEach([0.20, 0.25, 0.28, 0.30, 0.35, 0.40], id: \.self) { v in
+                    NunaMenuItem(verbatim: "\(Int(v * 100))%", selected: abs(fatShare - v) < 0.001) { fatShare = v }
+                }
+            } label: { macroTile("Fat", grams: macros?.fatG, kcalPerGram: 9, detail: String(localized: "\(Int((fatShare * 100).rounded()))% chosen"), color: NunaPalette.warning, editable: true) }
+        }
+    }
+
+    private func macroTile(_ title: LocalizedStringKey, grams: Double?, kcalPerGram: Double, detail: String, color: Color, editable: Bool) -> some View {
+        let share = targetKcal > 0 ? (grams ?? 0) * kcalPerGram / targetKcal : 0
+        return NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 12, bottom: 14, trailing: 12)) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 4) {
+                    Text(title).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                    Spacer(minLength: 0)
+                    if editable { Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 10, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
+                }
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text(verbatim: nutFmt(grams)).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                    Text(verbatim: "g").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                NunaProgressBar(fraction: share, color: color)
+                Text(verbatim: String(localized: "\(Int((share * 100).rounded()))% of energy")).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.6).textCase(nil)
+                Text(verbatim: detail).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).lineLimit(1).minimumScaleFactor(0.6).textCase(nil)
+            }
+        }
+    }
+
+    private var startButton: some View {
+        VStack(spacing: 8) {
+            Button { startPlan() } label: {
+                Text("Start this plan").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52)
+                    .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            }.buttonStyle(.plain).disabled(computedTarget == nil).opacity(computedTarget == nil ? 0.5 : 1)
+            Text("A starting point from your own numbers. Not medical advice.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
     }
 
@@ -157,23 +194,20 @@ struct NunaNutritionPlanView: View {
         suggestion = spec
     }
 
-    private func row<T: View>(_ label: LocalizedStringKey, @ViewBuilder trailing: () -> T) -> some View {
-        HStack(alignment: .center) {
-            Text(label).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            Spacer(minLength: 10)
-            trailing()
-        }.padding(.vertical, 12)
-    }
-
-    private func value(_ text: String) -> some View {
-        Text(verbatim: text).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.trailing).textCase(nil)
-    }
-
     private func paceLabel(_ p: Double) -> String {
         if p == 0 { return String(localized: "Maintain weight") }
         let amount = nutFmt(abs(p), 2).replacingOccurrences(of: "0$", with: "", options: .regularExpression)
         return p < 0 ? String(localized: "Lose \(amount) kg a week") : String(localized: "Gain \(amount) kg a week")
     }
+
+    /// The pace as a signed figure, or the word for holding still.
+    private func paceAmount(_ p: Double) -> String {
+        if p == 0 { return String(localized: "Maintain") }
+        return (p < 0 ? "−" : "+") + nutFmt(abs(p), 2).replacingOccurrences(of: "0$", with: "", options: .regularExpression)
+    }
+
+    /// The pace in the few characters the ring has room for.
+    private func paceShort(_ p: Double) -> String { p == 0 ? paceAmount(p) : "\(paceAmount(p)) \(String(localized: "kg/week"))" }
 
     private var maintenanceNote: String {
         switch maintenance?.source {
@@ -194,42 +228,25 @@ struct NunaNutritionPlanView: View {
 
     // MARK: Week
 
-    private var weekCard: some View {
+    /// The last seven days of the diary, drawn as the app's other weekly cards are, with how many of them landed on the target.
+    private var weekSection: some View {
         let today = Date()
-        let days: [(key: String, label: String)] = (0..<7).reversed().map { back in
-            let d = Calendar.current.date(byAdding: .day, value: -back, to: today) ?? today
-            let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEEEE")
-            return (Repository.localDayKey(d), f.string(from: d))
-        }
-        let ceiling = max(targetKcal * 1.35, days.compactMap { intake[$0.key] }.max() ?? 0)
-        let onTarget = days.filter { d in intake[d.key].map { $0 >= targetKcal * 0.9 && $0 <= targetKcal * 1.1 } ?? false }.count
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    nunaTrendsCap("This week")
-                    Spacer()
-                    NunaChip(LocalizedStringKey("\(onTarget) of 7 on target"), color: onTarget >= 5 ? NunaPalette.charge : nil)
-                }
-                GeometryReader { geo in
-                    ZStack(alignment: .bottomLeading) {
-                        HStack(alignment: .bottom, spacing: 10) {
-                            ForEach(days, id: \.key) { d in
-                                let v = intake[d.key]
-                                let ok = v.map { $0 >= targetKcal * 0.9 && $0 <= targetKcal * 1.1 } ?? false
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .fill(v == nil ? NunaPalette.tile : (ok ? NunaPalette.charge : NunaPalette.warning))
-                                    .frame(height: max(6, geo.size.height * CGFloat((v ?? ceiling * 0.06) / max(ceiling, 1))))
-                                    .frame(maxWidth: .infinity)
-                            }
-                        }
-                        Rectangle().fill(NunaPalette.textMuted).frame(height: 1)
-                            .offset(y: -geo.size.height * CGFloat(targetKcal / max(ceiling, 1)))
-                    }
-                    .frame(width: geo.size.width, height: geo.size.height, alignment: .bottomLeading)
-                }.frame(height: 110)
-                HStack(spacing: 10) { ForEach(days, id: \.key) { d in Text(verbatim: d.label).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity) } }
-                Text("The line is your target. On target means within 10% of it.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+        let keys = (0..<7).map { Repository.localDayKey(Calendar.current.date(byAdding: .day, value: -$0, to: today) ?? today) }
+        let target = targetKcal
+        let hit: (Double) -> Bool = { $0 >= target * 0.9 && $0 <= target * 1.1 }
+        let onTarget = keys.filter { intake[$0].map(hit) ?? false }.count
+        return VStack(spacing: 10) {
+            NunaWeeklyTrendCard(title: "Eaten this week", key: "diary_kcal", style: .bars, color: NunaPalette.charge,
+                                barFill: { v, _ in hit(v) ? NunaPalette.charge : NunaPalette.warning },
+                                labelFill: { v, _ in hit(v) ? NunaPalette.charge : NunaPalette.warning },
+                                points: keys.compactMap { k in intake[k].map { (day: k, value: $0) } }, valueText: { nutFmt($0) }, autoScale: true)
+            HStack(spacing: 10) {
+                Text(verbatim: String(localized: "On target means within 10% of \(nutFmt(target)) kcal.")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                    .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                Spacer(minLength: 6)
+                NunaChip(LocalizedStringKey("\(onTarget) of 7 on target"), color: onTarget >= 5 ? NunaPalette.charge : nil)
             }
+            .padding(.horizontal, 4)
         }
     }
 
