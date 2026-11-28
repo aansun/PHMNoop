@@ -30,9 +30,12 @@ struct NunaExploreWorkout: Identifiable {
     var exerciseCount: Int { routine.moves.count }
     var totalSets: Int { routine.moves.reduce(0) { $0 + $1.sets } }
 
-    /// Five minutes to get ready, then about 40 seconds of work and the planned rest for every set, rounded to five minutes.
-    var minutes: Int {
-        let seconds = routine.moves.reduce(0) { $0 + $1.sets * (40 + $1.rest) }
+    var minutes: Int { Self.estimatedMinutes(routine.moves.map { (sets: $0.sets, rest: $0.rest) }) }
+
+    /// How long a routine takes, the one answer for every page that states it: five minutes to get ready, then about 40 seconds of work and the
+    /// planned rest for every set, rounded to five minutes.
+    static func estimatedMinutes(_ moves: [(sets: Int, rest: Int)]) -> Int {
+        let seconds = moves.reduce(0) { $0 + $1.sets * (40 + $1.rest) }
         let raw = Double(seconds) / 60 + 5
         return max(10, Int((raw / 5).rounded()) * 5)
     }
@@ -294,7 +297,7 @@ struct NunaWorkoutHero: View {
                     Text(verbatim: title).font(.nuna(size: 34, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                         .fixedSize(horizontal: false, vertical: true)
                     byline.font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    HStack(alignment: .top, spacing: 0) {
+                    HStack(alignment: .top, spacing: 14) {
                         ForEach(Array(stats.enumerated()), id: \.offset) { _, st in stat(st.value, unit: st.unit, label: st.label) }
                     }.padding(.top, 10)
                 }
@@ -310,6 +313,7 @@ struct NunaWorkoutHero: View {
                 if let unit { Text(unit).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
             }
             Text(label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

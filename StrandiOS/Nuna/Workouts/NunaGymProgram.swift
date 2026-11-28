@@ -50,10 +50,9 @@ struct NunaProgramEditor: View {
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
     private var canSave: Bool { !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !saving }
     private var totalSets: Int { items.reduce(0) { $0 + ($1.targetSets ?? 1) } }
-    /// A rough length: each set takes about 45 seconds plus the planned rest.
+    /// A rough length, worked out the same way the program's own page works it out.
     private var estimatedMinutes: Int {
-        let secs = items.reduce(0) { $0 + ($1.targetSets ?? 1) * (45 + ($1.restSec ?? LiftPlanItem.defaultRestSec)) }
-        return Int((Double(secs) / 60).rounded())
+        NunaExploreWorkout.estimatedMinutes(items.map { (sets: $0.targetSets ?? 1, rest: $0.restSec ?? LiftPlanItem.defaultRestSec) })
     }
 
     var body: some View {
